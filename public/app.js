@@ -486,7 +486,98 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
+// Navbar functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const navToggle = document.getElementById('navToggle');
+  const navMenu = document.getElementById('navMenu');
+  const connectWalletNav = document.getElementById('connectWalletNav');
+  const connectWalletMain = document.getElementById('connectWallet');
+  const walletStatusMini = document.getElementById('walletStatusMini');
+  const walletAddressMini = document.getElementById('walletAddressMini');
+  
+  // Mobile menu toggle
+  if (navToggle) {
+    navToggle.addEventListener('click', function() {
+      navMenu.classList.toggle('active');
+      this.classList.toggle('active');
+    });
+  }
+  
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.nav-container') && navMenu.classList.contains('active')) {
+      navMenu.classList.remove('active');
+      navToggle.classList.remove('active');
+    }
+  });
+  
+  // Connect wallet from navbar
+  if (connectWalletNav) {
+    connectWalletNav.addEventListener('click', function() {
+      if (typeof connectWallet === 'function') {
+        connectWallet();
+      } else if (connectWalletMain) {
+        connectWalletMain.click();
+      }
+    });
+  }
+  
+  // Update wallet status in navbar
+  function updateNavWalletStatus(address) {
+    if (address) {
+      walletStatusMini.classList.remove('hidden');
+      connectWalletNav.classList.add('hidden');
+      walletAddressMini.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    } else {
+      walletStatusMini.classList.add('hidden');
+      connectWalletNav.classList.remove('hidden');
+    }
+  }
+  
+  // Listen for wallet connection events
+  window.addEventListener('walletConnected', function(e) {
+    updateNavWalletStatus(e.detail.address);
+  });
+  
+  // Scroll effect for navbar
+  window.addEventListener('scroll', function() {
+    const navbar = document.querySelector('.navbar');
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+  
+  // Role-based link visibility (based on your existing logic)
+  function updateNavForRole(role) {
+    const adminLink = document.getElementById('adminLink');
+    const dashboardLink = document.getElementById('dashboardLink');
+    
+    // Show/hide admin link based on role
+    if (adminLink) {
+      if (role === 'administrator') {
+        adminLink.classList.remove('hidden');
+      } else {
+        adminLink.classList.add('hidden');
+      }
+    }
+    
+    // Show dashboard link if user is logged in
+    if (dashboardLink) {
+      if (role && role !== 'public') {
+        dashboardLink.classList.remove('hidden');
+      } else {
+        dashboardLink.classList.add('hidden');
+      }
+    }
+  }
+  
+  // Check initial wallet state
+  if (typeof web3 !== 'undefined' && web3.currentProvider.selectedAddress) {
+    updateNavWalletStatus(web3.currentProvider.selectedAddress);
+  }
+});
 // Ethereum event listeners
 if (window.ethereum) {
     window.ethereum.on('accountsChanged', () => location.reload());

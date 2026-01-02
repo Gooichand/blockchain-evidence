@@ -1,215 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 Evid-DGC | Secure Blockchain Evidence Management System</title>
-    <link rel="stylesheet" href="styles.css?v=7">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
-    
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-KEYDE0ZH4Z');
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
-    <script src="config.js?v=7"></script>
-    <script src="storage.js?v=7"></script>
-    <script src="analytics.js"></script>
-    <script src="app.js?v=7"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔐 EVID-DGC | Secure Blockchain Evidence Management System</title>
+
+  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "G-KEYDE0ZH4Z");
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <script src="config.js?v=7"></script>
+  <script src="storage.js?v=7"></script>
+  <script src="analytics.js"></script>
+  <script src="app.js?v=8"></script>
 </head>
+
 <body>
-    <div class="particles" id="particles"></div>
+  <!-- Enhanced Navigation Bar - Simplified Version -->
+  <nav class="navbar glass">
+    <div class="nav-container">
+      <!-- Logo/Brand -->
+      <div class="nav-brand">
+        <a href="index.html" class="brand-link">
+          <span class="brand-icon">🔐</span>
+          <span class="brand-text">EVID-DGC</span>
+          <span class="brand-tagline">Blockchain Evidence System</span>
+        </a>
+      </div>
 
+      <!-- Main Navigation Links - Simplified -->
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html" class="nav-link active">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-text">Home</span>
+        </a>
+        <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link">
+          <span class="nav-icon">💻</span>
+          <span class="nav-text">GitHub</span>
+        </a>
+        <a href="documentation.html" class="nav-link">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">Documentation</span>
+        </a>
+        <a href="faq.html" class="nav-link">
+          <span class="nav-icon">❓</span>
+          <span class="nav-text">FAQ</span>
+        </a>
+      </div>
+
+      <!-- Wallet/User Status Section -->
+      <div class="nav-user" id="navUserSection">
+        <div class="wallet-status-mini hidden" id="walletStatusMini">
+          <div class="wallet-indicator">
+            <span class="indicator-dot"></span>
+            <span class="wallet-address-mini" id="walletAddressMini"></span>
+          </div>
+          <button onclick="disconnectWallet()" class="btn-logout" title="Disconnect">
+            🔌
+          </button>
+        </div>
+        <button id="connectWalletNav" class="btn-wallet-connect pulse">
+          🦊 Connect Wallet
+        </button>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================= Project Overview ================= -->
+  <section id="project-overview">
     <div class="container">
-        <div class="header">
-            <h1>🔐 EVID-DGC</h1>
-            <p>🌟 Next-Generation Blockchain Evidence Management System 🌟</p>
+      <h2>What is This System?</h2>
+      
+      <p>
+        This is a <strong>Blockchain Evidence Management System</strong> designed to
+        securely store, verify, and track digital evidence using blockchain immutability
+        and cryptographic verification.
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Why Blockchain?</h3>
+          <ul>
+            <li><strong>Immutable Records:</strong> Once evidence is recorded, it cannot be altered.</li>
+            <li><strong>Transparent Audit Trail:</strong> Every action is permanently logged.</li>
+            <li><strong>Hash Verification:</strong> Any tampering is instantly detectable.</li>
+          </ul>
         </div>
 
-        <!-- Wallet Connection -->
-        <div id="walletSection" class="card">
-            <div class="card-header">
-                <h2>🦊 Connect Your Digital Wallet</h2>
-                <p>Connect your MetaMask wallet to access the system</p>
-            </div>
-            <div class="card-body">
-                <button id="connectWallet" class="btn btn-primary pulse">
-                    🚀 Connect MetaMask Wallet
-                </button>
-            </div>
+        <div class="feature-card">
+          <h3>Key Roles in the System</h3>
+          <ul>
+            <li><strong>Investigator:</strong> Uploads and manages evidence.</li>
+            <li><strong>Forensic Analyst:</strong> Reviews and verifies evidence.</li>
+            <li><strong>Court Official:</strong> Accesses verified evidence for legal proceedings.</li>
+            <li><strong>Administrator:</strong> Manages users and system settings.</li>
+          </ul>
         </div>
+      </div>
 
-        <!-- Wallet Status -->
-        <div id="walletStatus" class="wallet-status hidden">
-            <h3>✅ Wallet Connected!</h3>
-            <div id="walletAddress" class="wallet-address"></div>
-            <div class="wallet-actions">
-                <button onclick="disconnectWallet()" class="btn btn-outline btn-sm">
-                    🔌 Disconnect Wallet
-                </button>
-            </div>
-        </div>
+      <p class="cta-text">
+        Connect your wallet below to securely access the system.
+      </p>
+    </div>
+  </section>
+  <!-- ==================================================== -->
 
-        <!-- Registration Section -->
-        <div id="registrationSection" class="card hidden">
-            <div class="card-header">
-                <h2>👤 User Registration</h2>
-                <p>Select your role and register (Administrator accounts are created by existing admins only)</p>
-            </div>
-            
-            <div class="role-selection">
-                <h3>🎯 Select Your Role</h3>
-                <div class="role-grid">
-                    <div class="role-card" data-role="1">
-                        <div class="role-card-content">
-                            <div class="role-icon">👁️</div>
-                            <div class="role-title">Public Viewer</div>
-                            <div class="role-description">View public cases and evidence</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="2">
-                        <div class="role-card-content">
-                            <div class="role-icon">🕵️</div>
-                            <div class="role-title">Investigator</div>
-                            <div class="role-description">Create and manage investigations</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="3">
-                        <div class="role-card-content">
-                            <div class="role-icon">🔬</div>
-                            <div class="role-title">Forensic Analyst</div>
-                            <div class="role-description">Analyze evidence</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="4">
-                        <div class="role-card-content">
-                            <div class="role-icon">⚖️</div>
-                            <div class="role-title">Legal Professional</div>
-                            <div class="role-description">Legal review</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="5">
-                        <div class="role-card-content">
-                            <div class="role-icon">🏛️</div>
-                            <div class="role-title">Court Official</div>
-                            <div class="role-description">Court proceedings</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="6">
-                        <div class="role-card-content">
-                            <div class="role-icon">📋</div>
-                            <div class="role-title">Evidence Manager</div>
-                            <div class="role-description">Manage evidence lifecycle</div>
-                        </div>
-                    </div>
-                    <div class="role-card" data-role="7">
-                        <div class="role-card-content">
-                            <div class="role-icon">🔍</div>
-                            <div class="role-title">Auditor</div>
-                            <div class="role-description">System auditing</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="particles" id="particles"></div>
 
-            <form id="registrationForm" class="registration-form">
-                <div class="form-group">
-                    <label for="fullName">👤 Full Name *</label>
-                    <input type="text" id="fullName" class="form-control" placeholder="Enter your full name" required>
-                </div>
+  <div class="container">
 
-                <input type="hidden" id="userRole" value="">
-
-                <div id="professionalFields" class="professional-fields">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="badgeNumber">🏷️ Badge/ID Number</label>
-                            <input type="text" id="badgeNumber" class="form-control" placeholder="Enter badge number">
-                        </div>
-                        <div class="form-group">
-                            <label for="department">🏢 Department</label>
-                            <input type="text" id="department" class="form-control" placeholder="Enter department">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="jurisdiction">🌍 Jurisdiction</label>
-                        <input type="text" id="jurisdiction" class="form-control" placeholder="Enter jurisdiction">
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">
-                        ✨ Register & Enter System
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Already Registered -->
-        <div id="alreadyRegisteredSection" class="card hidden">
-            <div class="card-header">
-                <h2>🎉 Welcome Back!</h2>
-            </div>
-            <div class="user-info">
-                <div class="user-avatar">👤</div>
-                <div class="user-details">
-                    <h3 id="userName">Loading...</h3>
-                    <span id="userRoleName" class="badge">Loading...</span>
-                    <p><strong>Department:</strong> <span id="userDepartment">Loading...</span></p>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button id="goToDashboard" class="btn btn-primary">
-                    🚀 Go to Dashboard
-                </button>
-                <button onclick="logout()" class="btn btn-outline">
-                    🚪 Switch Account
-                </button>
-            </div>
-        </div>
-
-        <!-- Login Options -->
-        <div class="card">
-            <div class="card-header">
-                <h2>🔑 Already Have an Account?</h2>
-            </div>
-            <div class="card-body text-center">
-                <button onclick="logout()" class="btn btn-outline">
-                    🔄 Clear Session & Login Again
-                </button>
-            </div>
-        </div>
+    <div class="header">
+      <h1>🔐 EVID-DGC</h1>
+      <p>🌟 Next-Generation Blockchain Evidence Management System 🌟</p>
     </div>
 
-    <!-- Loading Modal -->
-    <div id="loadingModal" class="modal">
-        <div class="modal-content">
-            <div class="spinner"></div>
-            <h3>⚡ Processing...</h3>
-        </div>
+    <!-- Wallet Connection -->
+    <div id="walletSection" class="card">
+      <div class="card-header">
+        <h2>🦊 Connect Your Digital Wallet</h2>
+        <p>Connect your MetaMask wallet to access the system</p>
+      </div>
+      <div class="card-body">
+        <button id="connectWallet" class="btn btn-primary pulse">
+          🚀 Connect MetaMask Wallet
+        </button>
+      </div>
     </div>
 
-    <script>
-        // Create particles
-        function createParticles() {
-            const particles = document.getElementById('particles');
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                particles.appendChild(particle);
-            }
-        }
+    <!-- Wallet Status -->
+    <div id="walletStatus" class="wallet-status hidden">
+      <h3>✅ Wallet Connected!</h3>
+      <div id="walletAddress" class="wallet-address"></div>
+      <div class="wallet-actions">
+        <button onclick="disconnectWallet()" class="btn btn-outline btn-sm">
+          🔌 Disconnect Wallet
+        </button>
+      </div>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            createParticles();
-        });
-    </script>
+    <!-- Registration Section -->
+    <div id="registrationSection" class="card hidden">
+      <div class="card-header">
+        <h2>👤 User Registration</h2>
+        <p>Select your role and register (Admin accounts are created by existing admins only)</p>
+      </div>
+
+      <div class="role-selection">
+        <h3>🎯 Select Your Role</h3>
+        <div class="role-grid">
+
+          <div class="role-card" data-role="1">
+            <div class="role-card-content">
+              <div class="role-icon">👁️</div>
+              <div class="role-title">Public Viewer</div>
+              <div class="role-description">View public cases</div>
+            </div>
+          </div>
+
+          <div class="role-card" data-role="2">
+            <div class="role-card-content">
+              <div class="role-icon">🕵️</div>
+              <div class="role-title">Investigator</div>
+              <div class="role-description">Create and manage investigations</div>
+            </div>
+          </div>
+
+          <div class="role-card" data-role="3">
+            <div class="role-card-content">
+              <div class="role-icon">🔬</div>
+              <div class="role-title">Forensic Analyst</div>
+              <div class="role-description">Analyze and verify evidence</div>
+            </div>
+          </div>
+
+          <div class="role-card" data-role="5">
+            <div class="role-card-content">
+              <div class="role-icon">🏛️</div>
+              <div class="role-title">Court Official</div>
+              <div class="role-description">Legal proceedings</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <form id="registrationForm" class="registration-form">
+        <div class="form-group">
+          <label for="fullName">👤 Full Name *</label>
+          <input type="text" id="fullName" class="form-control" required />
+        </div>
+
+        <input type="hidden" id="userRole" />
+
+        <div id="professionalFields" class="professional-fields">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="badgeNumber">🏷️ Badge / ID</label>
+              <input type="text" id="badgeNumber" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="department">🏢 Department</label>
+              <input type="text" id="department" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jurisdiction">🌍 Jurisdiction</label>
+            <input type="text" id="jurisdiction" class="form-control" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+          ✨ Register & Enter System
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Loading Modal -->
+  <div id="loadingModal" class="modal">
+    <div class="modal-content">
+      <div class="spinner"></div>
+      <h3>⚡ Processing...</h3>
+    </div>
+  </div>
+
+  <script src="navbar.js?v=1"></script>
+  <script>
+    function createParticles() {
+      const particles = document.getElementById("particles");
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement("div");
+        particle.className = "particle";
+        particle.style.left = Math.random() * 100 + "%";
+        particle.style.animationDelay = Math.random() * 20 + "s";
+        particle.style.animationDuration = Math.random() * 10 + 10 + "s";
+        particles.appendChild(particle);
+      }
+    }
+    document.addEventListener("DOMContentLoaded", createParticles);
+  </script>
 </body>
 </html>
