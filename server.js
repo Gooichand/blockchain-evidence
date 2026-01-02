@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const rateLimit = require('express-rate-limit');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,6 +23,7 @@ const limiter = rateLimit({
     max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
+app.use('/api/auth', authRoutes);
 
 // Admin rate limiting (stricter)
 const adminLimiter = rateLimit({
