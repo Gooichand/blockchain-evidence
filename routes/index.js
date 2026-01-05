@@ -16,5 +16,3 @@ router.use('/cases', caseRoutes);
 router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;
-
-module.exports = router;
