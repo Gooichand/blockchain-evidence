@@ -5,8 +5,6 @@ const swaggerSpec = require("./config/swagger");
 
 // Routes
 const apiRoutes = require('./routes');
-const authRoutes = require('./routes/auth.routes');
-const auditLogsRoutes = require('./routes/auditLogs.routes');
 
 // Middlewares
 const { limiter } = require('./middlewares/rateLimiter.middleware');
@@ -25,8 +23,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/', limiter);
 
 // API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/audit-logs", auditLogsRoutes);
 app.use("/api", apiRoutes);
 
 /**
