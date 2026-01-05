@@ -69,6 +69,12 @@ router.post('/', caseController.createCase);
  *         required: true
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *           enum: [view, edit, approve]
+ *         description: Action to perform
  *     security:
  *       - UserWallet: []
  */
@@ -80,6 +86,18 @@ router.get('/:caseId', checkCasePermission, caseController.getCaseById);
  *   put:
  *     summary: Update case status
  *     tags: [Cases]
+ *     parameters:
+ *       - in: path
+ *         name: caseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *           enum: [view, edit, approve]
+ *         description: Action to perform
  *     security:
  *       - UserWallet: []
  */
@@ -91,6 +109,18 @@ router.put('/:caseId/status', checkCasePermission, caseController.updateCaseStat
  *   post:
  *     summary: Assign case to a role
  *     tags: [Cases]
+ *     parameters:
+ *       - in: path
+ *         name: caseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *           enum: [view, edit, approve]
+ *         description: Action to perform
  *     security:
  *       - UserWallet: []
  */
