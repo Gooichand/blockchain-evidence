@@ -14,7 +14,7 @@ const generateToken = (user) => {
 };
 
 if (!process.env.JWT_SECRET) {
-  console.warn("Warning: JWT_SECRET is not defined in environment variables.");
+  throw new Error("CRITICAL: JWT_SECRET is not defined in environment variables. Application cannot start without it.");
 }
 
 module.exports = generateToken;
