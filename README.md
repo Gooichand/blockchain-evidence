@@ -50,7 +50,12 @@ http://localhost:8080  # Frontend only
 │   ├── app.js               # Main application logic
 │   ├── storage.js           # Database client
 │   └── styles.css           # Styling
-├── server.js                 # Express API server
+├── routes/                   # API Route definitions
+├── controllers/              # Business logic & Supabase queries
+├── middlewares/              # Auth & Rate limiting middlewares
+├── config/                   # Configuration (Supabase, Swagger)
+├── utils/                    # Shared utility functions
+├── server.js                 # Express API server (Entry point)
 ├── database-schema.sql       # Database setup
 ├── setup-first-admin.sql     # First admin creation
 └── package.json             # Dependencies
