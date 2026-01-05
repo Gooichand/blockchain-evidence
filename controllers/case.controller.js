@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const supabase = require('../config/supabase');
 const { validateWalletAddress } = require('../utils/validation');
 
@@ -126,8 +127,8 @@ exports.createCase = async (req, res) => {
             return res.status(400).json({ error: 'Case title is required' });
         }
 
-        // Generate case ID
-        const caseId = `CASE-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+        // Generate case ID using a more robust method to avoid collisions
+        const caseId = `CASE-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
         const { data: newCase, error } = await supabase
             .from('cases')
