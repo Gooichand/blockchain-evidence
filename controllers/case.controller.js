@@ -277,6 +277,14 @@ exports.assignCase = async (req, res) => {
             throw error;
         }
 
+        // Deactivate previous active assignments for this role to avoid duplicates
+        await supabase
+            .from('case_assignments')
+            .update({ status: 'INACTIVE' })
+            .eq('case_id', req.caseData.id)
+            .eq('assigned_role', role)
+            .eq('status', 'ACTIVE');
+
         // Create assignment record
         await supabase
             .from('case_assignments')
