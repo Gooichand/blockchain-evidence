@@ -29,7 +29,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/audit-logs", auditLogsRoutes);
 app.use("/api", apiRoutes);
 
-// Health check
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: API health check
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server is running
+ */
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'healthy',
