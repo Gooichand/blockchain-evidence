@@ -6,11 +6,15 @@ const generateToken = (user) => {
       id: user.id,
       email: user.email
     },
-    process.env.JWT_SECRET || "dev_secret_key",
+    process.env.JWT_SECRET,
     {
       expiresIn: "1h"
     }
   );
 };
+
+if (!process.env.JWT_SECRET) {
+  console.warn("Warning: JWT_SECRET is not defined in environment variables.");
+}
 
 module.exports = generateToken;
