@@ -1,6 +1,34 @@
 const supabase = require('../config/supabase');
 const { validateWalletAddress } = require('../utils/validation');
 
+// Middleware to authenticate user via wallet address
+const authenticate = async (req, res, next) => {
+    try {
+        const userWallet = req.headers['x-user-wallet'];
+
+        if (!userWallet || !validateWalletAddress(userWallet)) {
+            return res.status(401).json({ error: 'Invalid user wallet' });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('wallet_address', userWallet)
+            .eq('is_active', true)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ error: 'User not found or inactive' });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('Authentication error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Middleware to verify admin permissions
 const verifyAdmin = async (req, res, next) => {
     try {
@@ -35,33 +63,19 @@ const checkCasePermission = async (req, res, next) => {
     try {
         const { caseId } = req.params;
         const { action } = req.query; // view, edit, approve, delete
-        const userWallet = req.headers['x-user-wallet'];
-
-        if (!userWallet || !validateWalletAddress(userWallet)) {
-            return res.status(401).json({ error: 'Invalid user wallet' });
-        }
-
-        // Get user info
-        const { data: user } = await supabase
-            .from('users')
-            .select('*')
-            .eq('wallet_address', userWallet)
-            .eq('is_active', true)
-            .single();
+        const user = req.user;
 
         if (!user) {
-            return res.status(401).json({ error: 'User not found or inactive' });
+            return res.status(401).json({ error: 'Authentication required' });
         }
 
         // Admin and auditor have special permissions
         if (user.role === 'admin') {
-            req.user = user;
             return next();
         }
 
         if (user.role === 'auditor') {
             if (action === 'view') {
-                req.user = user;
                 return next();
             }
             return res.status(403).json({ error: 'Auditors have read-only access' });
@@ -138,7 +152,6 @@ const checkCasePermission = async (req, res, next) => {
             return res.status(403).json({ error: 'You can only access your own cases' });
         }
 
-        req.user = user;
         req.caseData = caseData;
         next();
     } catch (error) {
@@ -148,6 +161,7 @@ const checkCasePermission = async (req, res, next) => {
 };
 
 module.exports = {
+    authenticate,
     verifyAdmin,
     checkCasePermission
 };

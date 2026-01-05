@@ -1,9 +1,12 @@
 const express = require('express');
 const caseController = require('../controllers/case.controller');
 const evidenceRoutes = require('./evidence.routes');
-const { checkCasePermission } = require('../middlewares/auth.middleware');
+const { authenticate, checkCasePermission } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
+
+// Apply authentication to all case routes
+router.use(authenticate);
 
 // Nested evidence routes
 router.use('/:caseId/evidence', evidenceRoutes);

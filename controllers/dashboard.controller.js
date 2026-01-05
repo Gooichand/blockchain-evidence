@@ -4,23 +4,7 @@ const { validateWalletAddress } = require('../utils/validation');
 // Get dashboard statistics for user
 exports.getStats = async (req, res) => {
     try {
-        const userWallet = req.headers['x-user-wallet'];
-
-        if (!userWallet || !validateWalletAddress(userWallet)) {
-            return res.status(401).json({ error: 'Invalid user wallet' });
-        }
-
-        // Get user info
-        const { data: user } = await supabase
-            .from('users')
-            .select('*')
-            .eq('wallet_address', userWallet)
-            .eq('is_active', true)
-            .single();
-
-        if (!user) {
-            return res.status(401).json({ error: 'User not found or inactive' });
-        }
+        const user = req.user;
 
         let stats = {};
 

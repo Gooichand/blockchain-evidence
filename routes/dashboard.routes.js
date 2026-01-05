@@ -1,5 +1,6 @@
 const express = require('express');
 const dashboardController = require('../controllers/dashboard.controller');
+const { authenticate } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
@@ -12,6 +13,6 @@ const router = express.Router();
  *     security:
  *       - UserWallet: []
  */
-router.get('/stats', dashboardController.getStats);
+router.get('/stats', authenticate, dashboardController.getStats);
 
 module.exports = router;

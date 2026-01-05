@@ -5,23 +5,7 @@ const { validateWalletAddress } = require('../utils/validation');
 // Get cases visible to current user
 exports.getCases = async (req, res) => {
     try {
-        const userWallet = req.headers['x-user-wallet'];
-
-        if (!userWallet || !validateWalletAddress(userWallet)) {
-            return res.status(401).json({ error: 'Invalid user wallet' });
-        }
-
-        // Get user info
-        const { data: user } = await supabase
-            .from('users')
-            .select('*')
-            .eq('wallet_address', userWallet)
-            .eq('is_active', true)
-            .single();
-
-        if (!user) {
-            return res.status(401).json({ error: 'User not found or inactive' });
-        }
+        const user = req.user;
 
         let query = supabase.from('cases').select(`
             *,
@@ -100,24 +84,8 @@ exports.getCaseById = async (req, res) => {
 // Create new case (Investigators only)
 exports.createCase = async (req, res) => {
     try {
-        const userWallet = req.headers['x-user-wallet'];
         const { title, description, crimeType, location, suspects } = req.body;
-
-        if (!userWallet || !validateWalletAddress(userWallet)) {
-            return res.status(401).json({ error: 'Invalid user wallet' });
-        }
-
-        // Get user info
-        const { data: user } = await supabase
-            .from('users')
-            .select('*')
-            .eq('wallet_address', userWallet)
-            .eq('is_active', true)
-            .single();
-
-        if (!user) {
-            return res.status(401).json({ error: 'User not found or inactive' });
-        }
+        const user = req.user;
 
         if (user.role !== 'investigator' && user.role !== 'admin') {
             return res.status(403).json({ error: 'Only investigators can create cases' });

@@ -1,5 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/user.controller');
+const { authenticate } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ const router = express.Router();
  *       404:
  *         description: User not found
  */
-router.get('/:wallet', userController.getUserByWallet);
+router.get('/:wallet', authenticate, userController.getUserByWallet);
 
 // Prevent user self-deletion
 router.post('/delete-self', userController.deleteSelf);
