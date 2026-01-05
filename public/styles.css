@@ -155,6 +155,7 @@ body {
     align-items: center;
     gap: 8px;
     margin: 0 30px;
+    list-style: none;
 }
 
 .nav-link {
@@ -190,7 +191,6 @@ body {
 .nav-icon {
     font-size: 1.2rem;
 }
-
 
 /* User/Wallet Section */
 .nav-user {
@@ -288,12 +288,13 @@ body {
     padding: 0;
 }
 
-.toggle-bar {
-    width: 100%;
+.nav-toggle span {
+    display: block;
     height: 3px;
-    background: var(--primary-red);
-    border-radius: 3px;
-    transition: all var(--transition-medium);
+    width: 100%;
+    background-color: var(--primary-red);
+    border-radius: 2px;
+    transition: var(--transition-medium);
 }
 
 /* Responsive Navbar */
@@ -368,9 +369,6 @@ body {
 /* =========================================================
    Enhanced Project Overview
    ========================================================= */
-/* =========================================================
-   Enhanced Project Overview
-   ========================================================= */
 #project-overview {
     padding: 60px 20px;
     background: linear-gradient(135deg, rgba(211, 47, 47, 0.02) 0%, rgba(255, 255, 255, 1) 100%);
@@ -378,7 +376,7 @@ body {
     position: relative;
     overflow: hidden;
     margin-top: 0;
-    text-align: center; /* Add this line */
+    text-align: center;
 }
 
 #project-overview::before {
@@ -394,9 +392,9 @@ body {
 #project-overview .container {
     position: relative;
     z-index: 1;
-    display: flex; /* Add this */
-    flex-direction: column; /* Add this */
-    align-items: center; /* Add this */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #project-overview h2 {
@@ -406,8 +404,8 @@ body {
     margin-bottom: 20px;
     position: relative;
     display: inline-block;
-    text-align: center; /* Ensure text alignment */
-    width: 100%; /* Make it full width */
+    text-align: center;
+    width: 100%;
 }
 
 #project-overview h2::after {
@@ -428,7 +426,7 @@ body {
     max-width: 800px;
     margin: 0 auto 30px;
     line-height: 1.8;
-    text-align: center; /* Ensure paragraph text is centered */
+    text-align: center;
 }
 
 #project-overview h3 {
@@ -437,7 +435,7 @@ body {
     margin-top: 40px;
     margin-bottom: 16px;
     font-weight: 700;
-    text-align: center; /* Ensure h3 is centered */
+    text-align: center;
 }
 
 /* Feature Grid for Project Overview */
@@ -498,6 +496,15 @@ body {
 
 .feature-card strong {
     color: var(--primary-red);
+}
+
+#project-overview ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    margin: 30px auto;
+    list-style: none;
 }
 
 #project-overview li {
@@ -1324,5 +1331,276 @@ body {
     .card {
         box-shadow: none;
         border: 1px solid #000;
+    }
+}
+
+/* =========================================================
+   Additional Missing Styles
+   ========================================================= */
+/* Ensure all interactive elements have proper cursor */
+button,
+.nav-link,
+.role-card,
+.btn-wallet-connect,
+.btn-logout {
+    cursor: pointer;
+}
+
+/* Improve accessibility for focus states */
+button:focus,
+.nav-link:focus,
+.form-control:focus,
+.btn-wallet-connect:focus,
+.btn-logout:focus {
+    outline: 2px solid var(--primary-red);
+    outline-offset: 2px;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+.nav-link,
+.role-card,
+.form-control,
+.card {
+    transition: all var(--transition-medium);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Error states */
+.error {
+    border-color: var(--primary-red) !important;
+}
+
+.error-message {
+    color: var(--primary-red);
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Success states */
+.success {
+    border-color: #4CAF50 !important;
+}
+
+.success-message {
+    color: #4CAF50;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: var(--charcoal);
+    color: var(--white);
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    font-size: 0.875rem;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+}
+
+.badge-warning {
+    background-color: #FFF3E0;
+    color: #F57C00;
+}
+
+.badge-error {
+    background-color: #FFEBEE;
+    color: var(--primary-red);
+}
+
+/* Divider */
+.divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 32px 0;
+    position: relative;
+}
+
+.divider-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--white);
+    padding: 0 16px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Avatar */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--red-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Progress bar */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--light-gray);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--red-gradient);
+    border-radius: 4px;
+    transition: width var(--transition-medium);
+}
+
+/* Countdown timer */
+.countdown {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.countdown-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-red);
+    background: var(--white);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid var(--border-light);
+    min-width: 50px;
+}
+
+.countdown-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+}
+
+.empty-state p {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Notification badge */
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-red);
+    color: var(--white);
+    font-size: 0.75rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .countdown-value {
+        font-size: 1.2rem;
+        min-width: 40px;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .countdown {
+        gap: 4px;
+    }
+    
+    .countdown-value {
+        font-size: 1rem;
+        min-width: 35px;
+        padding: 6px 8px;
+    }
+    
+    .countdown-label {
+        font-size: 0.7rem;
     }
 }

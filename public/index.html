@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🔐 EVID-DGC | Secure Blockchain Evidence Management System</title>
 
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css?v=8" />
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
@@ -13,249 +14,195 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag("js", new Date());
     gtag("config", "G-KEYDE0ZH4Z");
   </script>
 
+  <!-- Web3 -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+
+  <!-- App Dependencies -->
   <script src="config.js?v=7"></script>
   <script src="storage.js?v=7"></script>
   <script src="analytics.js"></script>
-  <script src="app.js?v=8"></script>
 </head>
 
 <body>
-  <!-- Enhanced Navigation Bar - Simplified Version -->
-  <nav class="navbar glass">
-    <div class="nav-container">
-      <!-- Logo/Brand -->
-      <div class="nav-brand">
-        <a href="index.html" class="brand-link">
-          <span class="brand-icon">🔐</span>
-          <span class="brand-text">EVID-DGC</span>
-          <span class="brand-tagline">Blockchain Evidence System</span>
-        </a>
-      </div>
 
-      <!-- Main Navigation Links - Simplified -->
-      <div class="nav-menu" id="navMenu">
-        <a href="index.html" class="nav-link active">
-          <span class="nav-icon">🏠</span>
-          <span class="nav-text">Home</span>
-        </a>
-        <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link">
-          <span class="nav-icon">💻</span>
-          <span class="nav-text">GitHub</span>
-        </a>
-        <a href="documentation.html" class="nav-link">
-          <span class="nav-icon">📚</span>
-          <span class="nav-text">Documentation</span>
-        </a>
-        <a href="faq.html" class="nav-link">
-          <span class="nav-icon">❓</span>
-          <span class="nav-text">FAQ</span>
-        </a>
-      </div>
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar glass">
+  <div class="nav-container">
 
-      <!-- Wallet/User Status Section -->
-      <div class="nav-user" id="navUserSection">
-        <div class="wallet-status-mini hidden" id="walletStatusMini">
-          <div class="wallet-indicator">
-            <span class="indicator-dot"></span>
-            <span class="wallet-address-mini" id="walletAddressMini"></span>
-          </div>
-          <button onclick="disconnectWallet()" class="btn-logout" title="Disconnect">
-            🔌
-          </button>
-        </div>
-        <button id="connectWalletNav" class="btn-wallet-connect pulse">
-          🦊 Connect Wallet
-        </button>
-      </div>
+    <div class="nav-brand">
+      <a href="index.html" class="brand-link">
+        <span class="brand-icon">🔐</span>
+        <span class="brand-text">EVID-DGC</span>
+        <span class="brand-tagline">Blockchain Evidence System</span>
+      </a>
+    </div>
 
-      <!-- Mobile Menu Toggle -->
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-        <span class="toggle-bar"></span>
-        <span class="toggle-bar"></span>
-        <span class="toggle-bar"></span>
+    <div class="nav-menu" id="navMenu">
+      <a href="index.html" class="nav-link active">🏠 Home</a>
+      <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link">💻 GitHub</a>
+      <a href="documentation.html" class="nav-link">📚 Documentation</a>
+      <a href="faq.html" class="nav-link">❓ FAQ</a>
+    </div>
+
+    <div class="nav-user">
+      <div id="walletStatusMini" class="wallet-status-mini hidden">
+        <span class="wallet-address-mini" id="walletAddressMini"></span>
+        <button onclick="disconnectWallet()" class="btn-logout" title="Disconnect">🔌</button>
+      </div>
+      <button id="connectWalletNav" class="btn-wallet-connect pulse">
+        🦊 Connect Wallet
       </button>
     </div>
-  </nav>
 
-  <!-- ================= Project Overview ================= -->
-  <section id="project-overview">
-    <div class="container">
-      <h2>What is This System?</h2>
-      
-      <p>
-        This is a <strong>Blockchain Evidence Management System</strong> designed to
-        securely store, verify, and track digital evidence using blockchain immutability
-        and cryptographic verification.
-      </p>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
 
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h3>Why Blockchain?</h3>
-          <ul>
-            <li><strong>Immutable Records:</strong> Once evidence is recorded, it cannot be altered.</li>
-            <li><strong>Transparent Audit Trail:</strong> Every action is permanently logged.</li>
-            <li><strong>Hash Verification:</strong> Any tampering is instantly detectable.</li>
-          </ul>
-        </div>
-
-        <div class="feature-card">
-          <h3>Key Roles in the System</h3>
-          <ul>
-            <li><strong>Investigator:</strong> Uploads and manages evidence.</li>
-            <li><strong>Forensic Analyst:</strong> Reviews and verifies evidence.</li>
-            <li><strong>Court Official:</strong> Accesses verified evidence for legal proceedings.</li>
-            <li><strong>Administrator:</strong> Manages users and system settings.</li>
-          </ul>
-        </div>
-      </div>
-
-      <p class="cta-text">
-        Connect your wallet below to securely access the system.
-      </p>
-    </div>
-  </section>
-  <!-- ==================================================== -->
-
-  <div class="particles" id="particles"></div>
-
+<!-- ================= INTRO ================= -->
+<section id="project-overview">
   <div class="container">
+    <h2>What is This System?</h2>
+    <p>
+      A <strong>Blockchain Evidence Management System</strong> ensuring tamper-proof,
+      auditable, and verifiable digital evidence.
+    </p>
 
-    <div class="header">
-      <h1>🔐 EVID-DGC</h1>
-      <p>🌟 Next-Generation Blockchain Evidence Management System 🌟</p>
-    </div>
-
-    <!-- Wallet Connection -->
-    <div id="walletSection" class="card">
-      <div class="card-header">
-        <h2>🦊 Connect Your Digital Wallet</h2>
-        <p>Connect your MetaMask wallet to access the system</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Why Blockchain?</h3>
+        <ul>
+          <li>Immutable evidence storage</li>
+          <li>Transparent audit trails</li>
+          <li>Cryptographic integrity checks</li>
+        </ul>
       </div>
-      <div class="card-body">
-        <button id="connectWallet" class="btn btn-primary pulse">
-          🚀 Connect MetaMask Wallet
-        </button>
-      </div>
-    </div>
 
-    <!-- Wallet Status -->
-    <div id="walletStatus" class="wallet-status hidden">
-      <h3>✅ Wallet Connected!</h3>
-      <div id="walletAddress" class="wallet-address"></div>
-      <div class="wallet-actions">
-        <button onclick="disconnectWallet()" class="btn btn-outline btn-sm">
-          🔌 Disconnect Wallet
-        </button>
+      <div class="feature-card">
+        <h3>System Roles</h3>
+        <ul>
+          <li>Investigator</li>
+          <li>Forensic Analyst</li>
+          <li>Court Official</li>
+          <li>Administrator</li>
+        </ul>
       </div>
     </div>
+  </div>
+</section>
 
-    <!-- Registration Section -->
-    <div id="registrationSection" class="card hidden">
-      <div class="card-header">
-        <h2>👤 User Registration</h2>
-        <p>Select your role and register (Admin accounts are created by existing admins only)</p>
-      </div>
+<div class="particles" id="particles"></div>
 
-      <div class="role-selection">
-        <h3>🎯 Select Your Role</h3>
-        <div class="role-grid">
+<div class="container">
 
-          <div class="role-card" data-role="1">
-            <div class="role-card-content">
-              <div class="role-icon">👁️</div>
-              <div class="role-title">Public Viewer</div>
-              <div class="role-description">View public cases</div>
-            </div>
-          </div>
-
-          <div class="role-card" data-role="2">
-            <div class="role-card-content">
-              <div class="role-icon">🕵️</div>
-              <div class="role-title">Investigator</div>
-              <div class="role-description">Create and manage investigations</div>
-            </div>
-          </div>
-
-          <div class="role-card" data-role="3">
-            <div class="role-card-content">
-              <div class="role-icon">🔬</div>
-              <div class="role-title">Forensic Analyst</div>
-              <div class="role-description">Analyze and verify evidence</div>
-            </div>
-          </div>
-
-          <div class="role-card" data-role="5">
-            <div class="role-card-content">
-              <div class="role-icon">🏛️</div>
-              <div class="role-title">Court Official</div>
-              <div class="role-description">Legal proceedings</div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <form id="registrationForm" class="registration-form">
-        <div class="form-group">
-          <label for="fullName">👤 Full Name *</label>
-          <input type="text" id="fullName" class="form-control" required />
-        </div>
-
-        <input type="hidden" id="userRole" />
-
-        <div id="professionalFields" class="professional-fields">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="badgeNumber">🏷️ Badge / ID</label>
-              <input type="text" id="badgeNumber" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label for="department">🏢 Department</label>
-              <input type="text" id="department" class="form-control" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="jurisdiction">🌍 Jurisdiction</label>
-            <input type="text" id="jurisdiction" class="form-control" />
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-success">
-          ✨ Register & Enter System
-        </button>
-      </form>
-    </div>
-
+  <!-- ================= HEADER ================= -->
+  <div class="header">
+    <h1>🔐 EVID-DGC</h1>
+    <p>Next-Gen Blockchain Evidence Platform</p>
   </div>
 
-  <!-- Loading Modal -->
-  <div id="loadingModal" class="modal">
-    <div class="modal-content">
-      <div class="spinner"></div>
-      <h3>⚡ Processing...</h3>
+  <!-- ================= WALLET ================= -->
+  <div id="walletSection" class="card">
+    <div class="card-header">
+      <h2>🦊 Connect Wallet</h2>
+      <p>Use MetaMask to access the system</p>
+    </div>
+    <div class="card-body">
+      <button id="connectWallet" class="btn btn-primary pulse">
+        🚀 Connect MetaMask Wallet
+      </button>
     </div>
   </div>
 
-  <script src="navbar.js?v=1"></script>
-  <script>
-    function createParticles() {
-      const particles = document.getElementById("particles");
-      for (let i = 0; i < 50; i++) {
-        const particle = document.createElement("div");
-        particle.className = "particle";
-        particle.style.left = Math.random() * 100 + "%";
-        particle.style.animationDelay = Math.random() * 20 + "s";
-        particle.style.animationDuration = Math.random() * 10 + 10 + "s";
-        particles.appendChild(particle);
-      }
+  <div id="walletStatus" class="wallet-status hidden">
+    <h3>✅ Wallet Connected</h3>
+    <div id="walletAddress" class="wallet-address"></div>
+    <button onclick="disconnectWallet()" class="btn btn-outline btn-sm">
+      🔌 Disconnect
+    </button>
+  </div>
+
+  <!-- ================= REGISTRATION ================= -->
+  <div id="registrationSection" class="card hidden">
+    <div class="card-header">
+      <h2>👤 User Registration</h2>
+      <p>Admins are created by existing administrators only</p>
+    </div>
+
+    <div class="role-selection">
+      <h3>🎯 Select Role</h3>
+      <div class="role-grid">
+
+        <div class="role-card" data-role="1">👁️ Public Viewer</div>
+        <div class="role-card" data-role="2">🕵️ Investigator</div>
+        <div class="role-card" data-role="3">🔬 Forensic Analyst</div>
+        <div class="role-card" data-role="5">🏛️ Court Official</div>
+
+      </div>
+    </div>
+
+    <form id="registrationForm">
+      <input type="hidden" id="userRole" />
+
+      <label>Full Name *</label>
+      <input type="text" id="fullName" required />
+
+      <div id="professionalFields">
+        <input type="text" id="badgeNumber" placeholder="Badge / ID" />
+        <input type="text" id="department" placeholder="Department" />
+        <input type="text" id="jurisdiction" placeholder="Jurisdiction" />
+      </div>
+
+      <button type="submit" class="btn btn-success">
+        ✨ Register & Continue
+      </button>
+    </form>
+  </div>
+
+  <!-- ================= ALREADY REGISTERED ================= -->
+  <div id="alreadyRegisteredSection" class="card hidden">
+    <h2>✅ Welcome Back</h2>
+    <p id="userName"></p>
+    <span id="userRoleName"></span>
+    <p id="userDepartment"></p>
+
+    <button id="goToDashboard" class="btn btn-primary">
+      🚀 Go to Dashboard
+    </button>
+  </div>
+
+</div>
+
+<!-- ================= LOADING ================= -->
+<div id="loadingModal" class="modal">
+  <div class="modal-content">
+    <div class="spinner"></div>
+    <h3>Processing…</h3>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="navbar.js?v=1"></script>
+<script src="app.js?v=8"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const particles = document.getElementById("particles");
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.style.left = Math.random() * 100 + "%";
+      p.style.animationDelay = Math.random() * 10 + "s";
+      particles.appendChild(p);
     }
-    document.addEventListener("DOMContentLoaded", createParticles);
-  </script>
+  });
+</script>
+
 </body>
 </html>
