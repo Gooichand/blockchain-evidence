@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const supabase = require('../config/supabase');
 const auditLoggerService = require('../services/auditLogger.service');
 
@@ -66,8 +67,8 @@ exports.uploadEvidence = async (req, res) => {
         const { title, description, evidenceType, fileHash, blockchainTxHash } = req.body;
         const user = req.user;
 
-        // Generate evidence ID
-        const evidenceId = `EVID-${caseId.split('-').pop()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+        // Generate evidence ID using crypto for better collision resistance
+        const evidenceId = `EVID-${caseId.split('-').pop()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
         const { data: newEvidence, error } = await supabase
             .from('evidence')
