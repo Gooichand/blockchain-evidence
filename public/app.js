@@ -77,6 +77,15 @@ function initializeHamburgerMenu() {
  * Attempts to request accounts from window.ethereum; on success, sets the global `userAccount`, updates the wallet UI, and checks the user's registration status. If no provider is present, assigns a fixed demo address, updates UI, and checks registration. Shows loading and error alerts as needed and records analytics events when `trackUserAction` is available.
  */
 async function connectWallet() {
+    // Reset any previous errors
+    closeErrorModal();
+
+    // Check Internet Connection
+    if (!navigator.onLine) {
+        showErrorModal('No Internet Connection', 'Please check your network settings and try again.');
+        return;
+    }
+
     try {
         // Show loader
         const loader = document.getElementById('loader');
@@ -86,36 +95,49 @@ async function connectWallet() {
 
         showLoading(true);
 
-        // Track wallet connection attempt (safe check)
+        // Track wallet connection attempt
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connect_attempt', 'authentication');
         }
 
-        // Demo mode for testing without MetaMask
+        // Check if MetaMask is installed
         if (!window.ethereum) {
-            userAccount = '0x1234567890123456789012345678901234567890';
+            // Demo mode fallback or Install Prompt
+            if (config.DEMO_MODE) {
+                userAccount = '0x1234567890123456789012345678901234567890';
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                updateWalletUI();
+                await checkRegistrationStatus();
+                showLoading(false);
+                hideLoader();
+                return;
+            }
 
-            // Artificial delay to show loader in demo mode
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            updateWalletUI();
-            await checkRegistrationStatus();
             showLoading(false);
-
-            // Hide loader
-            if (loader) loader.classList.add('hidden');
-            if (loaderMessage) loaderMessage.classList.add('hidden');
+            hideLoader();
+            showErrorModal(
+                'MetaMask Not Found',
+                'MetaMask is not installed. Please install it to use this application.',
+                'Install MetaMask',
+                () => window.open('https://metamask.io/download/', '_blank')
+            );
             return;
         }
 
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts.length === 0) {
-            showAlert('No accounts found. Please unlock MetaMask.', 'error');
+        // Check Network
+        if (config.TARGET_CHAIN_ID && !(await checkNetwork())) {
             showLoading(false);
+            hideLoader();
+            return; // checkNetwork handles the UI
+        }
 
-            // Hide loader
-            if (loader) loader.classList.add('hidden');
-            if (loaderMessage) loaderMessage.classList.add('hidden');
+        // Request Accounts
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        if (accounts.length === 0) {
+            showLoading(false);
+            hideLoader();
+            showErrorModal('Account Access Required', 'Please unlock your MetaMask wallet and select an account.');
             return;
         }
 
@@ -123,33 +145,52 @@ async function connectWallet() {
         updateWalletUI();
         await checkRegistrationStatus();
 
-        // Track successful wallet connection (safe check)
+        // Track successful connection
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connected', 'authentication');
         }
 
         showLoading(false);
+        hideLoader();
 
-        // Hide loader
-        if (loader) loader.classList.add('hidden');
-        if (loaderMessage) loaderMessage.classList.add('hidden');
     } catch (error) {
         showLoading(false);
-
-        // Hide loader
-        const loader = document.getElementById('loader');
-        const loaderMessage = document.getElementById('loaderMessage');
-        if (loader) loader.classList.add('hidden');
-        if (loaderMessage) loaderMessage.classList.add('hidden');
+        hideLoader();
 
         console.error('Wallet connection error:', error);
-        showAlert('Failed to connect wallet: ' + error.message, 'error');
 
-        // Track wallet connection failure (safe check)
+        // Handle specific error codes
+        if (error.code === 4001) {
+            // User rejected the request
+            showErrorModal(
+                'Connection Rejected',
+                'You rejected the connection request. This app requires a wallet connection to function.',
+                'Try Again',
+                connectWallet
+            );
+        } else if (error.code === -32002) {
+            // Request pending
+            showErrorModal(
+                'Check MetaMask',
+                'A connection request is already pending. Please check your MetaMask extension popups.'
+            );
+        } else {
+            // Generic or other errors
+            showErrorModal('Connection Failed', error.message || 'An unexpected error occurred.');
+        }
+
+        // Track failure
         if (typeof trackUserAction === 'function') {
             trackUserAction('wallet_connect_failed', 'authentication');
         }
     }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    const loaderMessage = document.getElementById('loaderMessage');
+    if (loader) loader.classList.add('hidden');
+    if (loaderMessage) loaderMessage.classList.add('hidden');
 }
 
 function updateWalletUI() {
@@ -594,4 +635,75 @@ document.addEventListener('DOMContentLoaded', function () {
 if (window.ethereum) {
     window.ethereum.on('accountsChanged', () => location.reload());
     window.ethereum.on('chainChanged', () => location.reload());
+}
+
+// Error Handling & Network Helpers
+function showErrorModal(title, description, actionText = null, actionCallback = null) {
+    const modal = document.getElementById('errorModal');
+    const titleEl = document.getElementById('errorTitle');
+    const descEl = document.getElementById('errorDescription');
+    const actionBtn = document.getElementById('errorActionBtn');
+
+    if (modal && titleEl && descEl) {
+        titleEl.textContent = title;
+        descEl.innerHTML = description; // Allow HTML for links
+
+        if (actionText && actionCallback) {
+            actionBtn.textContent = actionText;
+            actionBtn.onclick = actionCallback;
+            actionBtn.classList.remove('hidden');
+        } else {
+            actionBtn.classList.add('hidden');
+        }
+
+        modal.classList.add('active');
+    } else {
+        // Fallback if modal is missing
+        showAlert(`${title}: ${description.replace(/<[^>]*>/g, '')}`, 'error');
+    }
+}
+
+function closeErrorModal() {
+    const modal = document.getElementById('errorModal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function checkNetwork() {
+    if (!window.ethereum) return false;
+
+    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+    // config.TARGET_CHAIN_ID is '0xaa36a7' (Sepolia)
+    if (currentChainId.toLowerCase() !== config.TARGET_CHAIN_ID.toLowerCase()) {
+        const networkName = config.NETWORK_NAME;
+
+        showErrorModal(
+            'Wrong Network',
+            `Please switch your wallet to <strong>${networkName}</strong> to continue.`,
+            `Switch to ${networkName}`,
+            async () => {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: config.TARGET_CHAIN_ID }],
+                    });
+                    closeErrorModal();
+                    // Reload or re-connect could happen here, chainChanged event will reload page
+                } catch (switchError) {
+                    // This error code indicates that the chain has not been added to MetaMask.
+                    if (switchError.code === 4902) {
+                        showErrorModal(
+                            'Network Not Found',
+                            `The ${networkName} is not added to your MetaMask. Please add it manually.`,
+                            null, null
+                        );
+                    } else {
+                        showErrorModal('Switch Failed', 'Failed to switch network. Please try explicitly from your wallet.');
+                    }
+                }
+            }
+        );
+        return false;
+    }
+    return true;
 }

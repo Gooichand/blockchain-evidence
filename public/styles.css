@@ -2176,3 +2176,33 @@ select.form-control {
     font-size: 16px;
     margin-top: 10px;
 }
+
+/* Error Modal Styles */
+.error-content {
+    text-align: center;
+    padding: 30px;
+    max-width: 400px;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    animation: bounce 0.5s infinite alternate;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
+}

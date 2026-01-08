@@ -220,6 +220,7 @@
         </div>
     </div>
 
+
     <!-- Loading Modal -->
     <div id="loadingModal" class="modal">
         <div class="modal-content">
@@ -227,6 +228,20 @@
             <h3>⚡ Processing...</h3>
         </div>
     </div>
+
+    <!-- Error/Alert Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error-content">
+            <div class="error-icon">⚠️</div>
+            <h3 id="errorTitle">Error</h3>
+            <p id="errorDescription">Something went wrong.</p>
+            <div id="errorActions" class="modal-actions">
+                <button id="errorActionBtn" class="btn btn-primary hidden"></button>
+                <button onclick="closeErrorModal()" class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // Create particles
