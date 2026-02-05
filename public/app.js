@@ -39,21 +39,58 @@ function initializeApp() {
 }
 
 // Navigation functions
+// Accessibility-aware motion preference helper
+function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Reusable smooth scroll helpers
+function smoothScrollToElement(element, options = {}) {
+    if (!element) return;
+    const behavior = prefersReducedMotion() ? 'auto' : (options.behavior || 'smooth');
+
+    // Use native scrollIntoView when available
+    if (typeof element.scrollIntoView === 'function') {
+        try {
+            element.scrollIntoView({ behavior, block: options.block || 'start', inline: options.inline || 'nearest' });
+            return;
+        } catch (e) {
+            // Fall through to fallback
+        }
+    }
+
+    // Fallback to window scrolling
+    const top = element.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top, behavior });
+}
+
+function smoothScrollToId(id) {
+    if (!id) return;
+    const cleaned = ('' + id).replace(/^#/, '');
+    const element = document.getElementById(cleaned);
+    if (!element) return;
+
+    smoothScrollToElement(element);
+
+    // Update the URL hash without forcing an extra jump
+    try {
+        if (history && history.replaceState) {
+            history.replaceState(null, '', '#' + cleaned);
+        } else {
+            location.hash = '#' + cleaned;
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
 function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
+    window.scrollTo({ top: 0, behavior });
 }
 
 function scrollToSection(sectionId) {
-    const element = document.getElementById(sectionId);
-    if (element) {
-        element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
+    smoothScrollToId(sectionId);
 }
 
 // Email login functions
@@ -582,10 +619,7 @@ function initializeScrollUp() {
         });
 
         scrollBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            scrollToTop();
         });
     }
 }
@@ -747,6 +781,7 @@ window.EVID_DGC = {
     logout,
     showAlert,
     scrollToSection,
+    smoothScrollToId,
     handleEmailRegistration,
     handleEmailLogin
 };
@@ -758,4 +793,20 @@ window.addEventListener('error', function(event) {
 
 window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
+});
+
+// On initial load, if there's a hash in the URL, perform an accessibility-aware smooth scroll.
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        if (location.hash) {
+            const id = location.hash.replace(/^#/, '');
+            // Small delay to let browser place focus/initial jump, then smooth-scroll to the element.
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el) smoothScrollToElement(el);
+            }, 60);
+        }
+    } catch (e) {
+        // ignore
+    }
 });
