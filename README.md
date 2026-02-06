@@ -49,7 +49,6 @@ Digital evidence management often faces challenges like data tampering, lack of 
 **EVID-DGC** addresses these issues by leveraging blockchain-inspired principles and robust role-based access control. By utilizing a secure Supabase backend and providing immutable audit logs, the system ensures that every action—from evidence upload to court review—is tracked and verifiable, maintaining the highest standards of digital forensic integrity.
 
 ---
-**calmed your contribute certificate after your pr is merged** https://evid-dgc-certificates.onrender.com/
 ## ✨ Working Features
 
 ### Core System (Production Ready)
