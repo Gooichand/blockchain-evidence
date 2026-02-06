@@ -2,11 +2,13 @@
 
 /* High Text Contrast - WCAG 2.0 AAA 1.4.6 */
 .low-contrast-text {
-    color: #000000 !important; /* Changed from light gray */
+    color: #000000 !important;
+    /* Changed from light gray */
 }
 
 .secondary-text {
-    color: #4a5568 !important; /* Improved contrast ratio */
+    color: #4a5568 !important;
+    /* Improved contrast ratio */
 }
 
 /* Focus Indicators - WCAG 2.1 AA 2.4.7 */
@@ -146,6 +148,11 @@ input[type="submit"],
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

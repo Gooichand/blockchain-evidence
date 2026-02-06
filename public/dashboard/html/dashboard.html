@@ -11,10 +11,10 @@
         content="Access your role-specific dashboard for secure evidence management and blockchain operations.">
     <meta name="robots" content="noindex, nofollow">
 
-    <link rel="stylesheet" href="styles.css?v=8">
-    <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="stylesheet" href="../../css/styles.css?v=8">
+    <link rel="icon" href="../../assets/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="../../assets/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../assets/favicon.png">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -34,7 +34,7 @@
     <nav class="navbar">
         <div class="navbar-left">
             <div class="navbar-brand">
-                <img src="logo.png" alt="EVID-DGC Logo" class="navbar-logo">
+                <img src="../../assets/logo-32x32.png" alt="EVID-DGC Logo" class="navbar-logo">
                 <span>EVID-DGC</span>
             </div>
         </div>
@@ -91,14 +91,14 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="storage.js"></script>
-    <script src="dashboard-fix.js"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/storage.js"></script>
+    <script src="../js/dashboard-fix.js"></script>
     <script>
         // Role mapping for dashboard routing
         const ROLE_DASHBOARDS = {
             // String-based roles
-            'admin': 'admin.html',
+            'admin': '../../admin/html/admin.html',
             'investigator': 'dashboard-investigator.html',
             'forensic_analyst': 'dashboard-analyst.html',
             'legal_professional': 'dashboard-legal.html',
@@ -115,7 +115,7 @@
             '5': 'dashboard-court.html',
             '6': 'dashboard-manager.html',
             '7': 'dashboard-auditor.html',
-            '8': 'admin.html',
+            '8': '../../admin/html/admin.html',
             1: 'dashboard-public.html',
             2: 'dashboard-investigator.html',
             3: 'dashboard-analyst.html',
@@ -123,7 +123,7 @@
             5: 'dashboard-court.html',
             6: 'dashboard-manager.html',
             7: 'dashboard-auditor.html',
-            8: 'admin.html'
+            8: '../../admin/html/admin.html'
         };
 
         const ROLE_NAMES = {
@@ -189,13 +189,13 @@
                 // Get user data and determine role
                 let userData = await getUserInfo(userAccount);
                 let finalRole = localStorage.getItem('selectedRole');
-                
+
                 // If no selected role, try to get from user data
                 if (!finalRole && userData && userData.role) {
                     finalRole = userData.role;
                     localStorage.setItem('selectedRole', finalRole);
                 }
-                
+
                 // If still no role, default to public_viewer
                 if (!finalRole) {
                     finalRole = 'public_viewer';
@@ -222,7 +222,7 @@
 
                 // Route to appropriate dashboard
                 const dashboardUrl = getDashboardUrl(finalRole);
-                    
+
                 console.log(`Redirecting ${finalRole} to ${dashboardUrl}`);
 
                 // Track dashboard access

@@ -5,19 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin | EVID-DGC</title>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="favicon.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="../../assets/favicon.ico" type="image/png">
+    <link rel="shortcut icon" href="../../assets/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../assets/favicon.ico">
+    <link rel="stylesheet" href="../../css/styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="config.js"></script>
-    <script src="storage.js"></script>
-    <script src="simple-notifications.js"></script>
-    <script src="indian-apis.js"></script>
-    <script src="fixed-navbar.js"></script>
-    <script src="role-change-approval.js"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/storage.js"></script>
+    <script src="../../js/simple-notifications.js"></script>
+    <script src="../../js/indian-apis.js"></script>
+    <script src="../../js/fixed-navbar.js"></script>
+    <script src="../js/role-change-approval.js"></script>
 </head>
 
 <body>
@@ -237,7 +237,7 @@
             await loadRoleTestingDashboard();
             await loadPendingRoleRequests();
             initializeEventListeners();
-            
+
             // Test notification after everything loads
             setTimeout(() => {
                 if (window.simpleNotifications) {
@@ -696,7 +696,7 @@
                     </td>
                 </tr>
             `).join('');
-            
+
             lucide.createIcons();
         }
 
@@ -797,7 +797,7 @@
             };
 
             localStorage.setItem(`evidUser_${wallet}`, JSON.stringify(adminData));
-            
+
             // Log admin action
             logAdminAction('create_admin', wallet, {
                 email: email,
@@ -821,9 +821,9 @@
                 userData.department = 'Administration';
                 userData.promotedBy = currentAdmin;
                 userData.promotedAt = new Date().toISOString();
-                
+
                 localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
-                
+
                 // Log admin action
                 logAdminAction('promote_admin', walletAddress, {
                     previousRole: userData.role,
@@ -848,9 +848,9 @@
                 userData.is_active = false;
                 userData.deactivatedBy = currentAdmin;
                 userData.deactivatedAt = new Date().toISOString();
-                
+
                 localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
-                
+
                 // Log admin action
                 logAdminAction('deactivate_user', walletAddress, {
                     userName: userName,
@@ -876,12 +876,12 @@
 
             const existingLogs = JSON.parse(localStorage.getItem('adminAuditLog') || '[]');
             existingLogs.unshift(auditLog);
-            
+
             // Keep only last 100 logs
             if (existingLogs.length > 100) {
                 existingLogs.splice(100);
             }
-            
+
             localStorage.setItem('adminAuditLog', JSON.stringify(existingLogs));
         }
 
@@ -948,7 +948,7 @@
             if (typeof role === 'number') {
                 const roleMap = {
                     1: 'Public Viewer',
-                    2: 'Investigator', 
+                    2: 'Investigator',
                     3: 'Forensic Analyst',
                     4: 'Legal Professional',
                     5: 'Court Official',
@@ -969,7 +969,7 @@
             if (typeof role === 'number') {
                 const classMap = {
                     1: 'public',
-                    2: 'investigator', 
+                    2: 'investigator',
                     3: 'forensic',
                     4: 'legal',
                     5: 'court',
@@ -1038,16 +1038,16 @@
         async function requestRoleChange(targetWallet, currentRole) {
             const roles = ['public_viewer', 'investigator', 'forensic_analyst', 'legal_professional', 'court_official', 'evidence_manager', 'auditor', 'admin'];
             const roleNames = roles.map(r => r.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
-            
-            let options = roles.map((role, i) => 
+
+            let options = roles.map((role, i) =>
                 role !== currentRole ? `<option value="${role}">${roleNames[i]}</option>` : ''
             ).join('');
-            
+
             const newRole = prompt(`Select new role for ${targetWallet.substring(0, 8)}...:\n\n${roleNames.join('\n')}\n\nEnter role:`);
             if (!newRole || !roles.includes(newRole)) return;
-            
+
             const reason = prompt('Reason for role change (optional):') || '';
-            
+
             try {
                 await window.roleChangeApproval.requestRoleChange(targetWallet, newRole, reason);
                 showAlert('Role change request submitted for approval', 'success');
@@ -1056,7 +1056,7 @@
                 showAlert('Error: ' + error.message, 'error');
             }
         }
-        
+
         async function loadPendingRoleRequests() {
             try {
                 const container = document.getElementById('pending-requests');
@@ -1106,142 +1106,142 @@
 </body>
 
 </html>
-    <style>
-        .card-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .wallet-address {
-            font-family: monospace;
-            font-size: 0.9em;
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .badge-admin {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .inactive-user {
-            opacity: 0.6;
-            background: #f8f9fa;
-        }
-        
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 0.8em;
-        }
-        
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 0;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .modal-actions {
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-    </style>
-    <style>
-        .test-account {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
-        }
-        
-        .test-account:hover {
-            background: #ffeaa7;
-        }
-    </style>
+<style>
+    .card-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .wallet-address {
+        font-family: monospace;
+        font-size: 0.9em;
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-admin {
+        background: #dc3545;
+        color: white;
+    }
+
+    .inactive-user {
+        opacity: 0.6;
+        background: #f8f9fa;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.8em;
+    }
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 0;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-actions {
+        padding: 20px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        color: #6b7280;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+</style>
+<style>
+    .test-account {
+        background: #fff3cd;
+        border-left: 3px solid #ffc107;
+    }
+
+    .test-account:hover {
+        background: #ffeaa7;
+    }
+</style>
