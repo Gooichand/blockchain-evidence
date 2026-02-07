@@ -114,35 +114,141 @@ The system implements 8 distinct roles to ensure strict access control:
 
 ```text
 ├── contracts/                          # Smart contract files
-│   └── EvidenceStorage.sol            # Main evidence storage contract
-├── docs/                              # Complete documentation
-│   ├── USER_GUIDE.md                 # User manual for all roles
-│   ├── DEVELOPER_GUIDE.md             # Development setup and workflow
-│   ├── SECURITY.md                   # Security practices and policies
-│   ├── DEPLOYMENT.md                 # Production deployment guide
-│   ├── MAINTENANCE.md                # System maintenance procedures
-│   └── swagger.js                    # API documentation (OpenAPI)
-├── public/                            # Frontend application files
-│   ├── index.html                    # Main landing page
-│   ├── app.js                        # Core frontend logic
-│   ├── config.js                     # Configuration settings
-│   ├── styles.css                    # Global styling
-│   ├── admin.html                    # Administrator dashboard
-│   ├── dashboard*.html               # Role-specific dashboards (8 roles)
-│   ├── case-*.html                   # Case management interfaces
-│   ├── evidence-*.html               # Evidence management pages
-│   ├── *-manager.js                  # Feature-specific managers
-│   ├── *-styles.css                  # Component-specific styles
-│   └── *.js                          # Feature modules and utilities
-├── server.js                          # Express.js backend server
+│   └── EvidenceStorage.sol             # Main evidence storage contract
+├── docs/                               # Complete documentation
+│   ├── USER_GUIDE.md                   # User manual for all roles
+│   ├── DEVELOPER_GUIDE.md              # Development setup and workflow
+│   ├── SECURITY.md                     # Security practices and policies
+│   ├── DEPLOYMENT.md                   # Production deployment guide
+│   ├── MAINTENANCE.md                  # System maintenance procedures
+│   └── swagger.js                      # API documentation (OpenAPI)
+├── public/                             # Frontend application files
+
+│   ├── index.html                      # Main landing page
+│   ├── app.js                          # Core frontend logic
+│   ├── config.js                       # Configuration settings
+│   ├── styles.css                      # Global styling
+│   ├── navbar.js                       # Navigation bar logic
+│   ├── notifications.js                # Notification system
+│   ├── storage.js                      # Local storage utilities
+│   ├── favicon.ico                     # Site icon
+│   ├── logo-32x32.png                  # Application logo
+
+│   # Authentication & Security
+│   ├── forgot-password.js              # Password reset logic
+│   ├── reset-password.html             # Password reset page
+│   ├── two-factor-auth.js              # Two-factor authentication logic
+│   ├── two-factor-auth.css             # 2FA styling
+│   ├── two-factor-integration.js       # 2FA integration logic
+│   ├── password-security.js            # Password policy enforcement
+│   ├── password-security.css           # Password security styling
+│   ├── password-strength.js            # Password strength checker
+│   ├── password-policy-admin.js        # Admin password policy controls
+│   ├── session-manager.js              # Session management logic
+│   ├── session-timeout.js              # Auto logout functionality
+│   ├── session-timeout-admin.js        # Admin session controls
+│   ├── session-timeout.css             # Session timeout styling
+│   ├── privacy.html                    # Privacy policy page
+│   ├── data-protection.html            # Data protection information
+
+│   # Account & User Management
+│   ├── account-settings.html           # User account settings page
+│   ├── account-settings.js             # Account settings logic
+│   ├── account-settings-styles.css     # Account settings styling
+│   ├── profile.html                    # User profile page
+│   ├── user-roles.html                 # Role assignment interface
+│   ├── role-manager.js                 # Role management logic
+│   ├── role-selection-wizard.js        # Role selection workflow
+│   ├── role-wizard.js                  # Role wizard controller
+│   ├── role-wizard-styles.css          # Role wizard styling
+│   ├── role-change-approval.js         # Role change approval logic
+│   ├── role-landing-system.js          # Role-based landing system
+│   ├── comprehensive-registration.js   # Registration workflow
+
+│   # Dashboards
+│   ├── dashboard.html                  # Main dashboard entry
+│   ├── dashboard-public.html           # Public dashboard
+│   ├── dashboard-investigator.html     # Investigator dashboard
+│   ├── dashboard-analyst.html          # Analyst dashboard
+│   ├── dashboard-auditor.html          # Auditor dashboard
+│   ├── dashboard-court.html            # Court dashboard
+│   ├── dashboard-legal.html            # Legal dashboard
+│   ├── dashboard-manager.html          # Manager dashboard
+│   ├── dashboard-navigator.js          # Dashboard routing logic
+│   ├── admin.html                      # Administrator dashboard
+
+│   # Case Management
+│   ├── case-management.html            # Case management interface
+│   ├── cases.html                      # Case list page
+│   ├── case-status-manager.js          # Case status logic
+│   ├── case-status-styles.css          # Case status styling
+│   ├── case-summary-exporter.js        # Case export utility
+│   ├── case-timeline.html              # Case timeline view
+│   ├── case-hash-manifest.js           # Case integrity tracking
+
+│   # Evidence Management
+│   ├── evidence-manager.html           # Evidence management interface
+│   ├── evidence-display.js             # Evidence display logic
+│   ├── evidence-display.css            # Evidence display styling
+│   ├── enhanced-evidence-upload.js     # Enhanced upload system
+│   ├── enhanced-upload-styles.css      # Upload styling
+│   ├── evidence-preview.js             # Evidence preview logic
+│   ├── evidence-preview.css            # Preview styling
+│   ├── evidence-preview-styles.css     # Additional preview styles
+│   ├── evidence-preview-system.js      # Preview system controller
+│   ├── evidence-tagging.html           # Evidence tagging page
+│   ├── evidence-tagging.js             # Tagging logic
+│   ├── evidence-verification.html      # Evidence verification page
+│   ├── evidence-verification.js        # Verification logic
+│   ├── evidence-viewers.js             # Evidence viewers
+│   ├── evidence-export.html            # Evidence export page
+│   ├── evidence-exporter.js            # Export logic
+│   ├── evidence-comparison.html        # Evidence comparison page
+│   ├── evidence-comparison.js          # Comparison logic
+│   ├── evidence-comparison.css         # Comparison styling
+
+│   # Policy & Compliance
+│   ├── retention-policy.html           # Retention policy interface
+│   ├── retention-policy.js             # Retention logic
+│   ├── retention-policy-manager.js     # Policy management logic
+│   ├── retention-policy-styles.css     # Policy styling
+│   ├── legal-hold-management.html      # Legal hold interface
+│   ├── audit-trail.html                # Audit trail page
+│   ├── activity-feed-widget.js         # Activity tracking widget
+│   ├── blockchain-feedback.js          # Blockchain feedback system
+
+│   # UI/UX & Accessibility
+│   ├── accessibility-manager.js        # Accessibility controls
+│   ├── accessibility-fixes.css         # Accessibility fixes
+│   ├── responsive-improvements.css     # Responsive design updates
+│   ├── empty-states-system.js          # Empty state handling
+│   ├── stability-fixes.css             # UI stability fixes
+│   ├── enhanced-stability.js           # Stability improvements
+│   ├── fixed-navbar.js                 # Navbar fixes
+
+│   # Help & Support
+│   ├── help-center.html                # Help center page
+│   ├── help-center.js                  # Help center logic
+│   ├── help-center-styles.css          # Help center styling
+
+│   # System Monitoring
+│   ├── system-health.html              # System health dashboard
+│   ├── timeline-visualization.html     # Timeline visualization
+│   ├── timeline-visualization.js       # Timeline logic
+
+│   # Utilities
+│   ├── enhanced-error-handling.js      # Error handling utilities
+│   └── tag-manager.js                  # Tag management logic
+
+├── server.js                           # Express.js backend server
 ├── complete-database-setup-fixed.sql  # Complete database schema
-├── package.json                       # Dependencies and scripts
-├── render.yaml                        # Render.com deployment config
-├── .env.example                       # Environment variables template
-├── .gitignore                         # Git ignore rules
-├── LICENSE                            # Apache 2.0 license
-├── SECURITY.md                        # Security policy
-└── README.md                          # Project documentation
+├── package.json                        # Dependencies and scripts
+├── render.yaml                         # Render.com deployment config
+├── .env.example                        # Environment variables template
+├── .gitignore                          # Git ignore rules
+├── LICENSE                             # Apache 2.0 license
+├── SECURITY.md                         # Security policy
+└── README.md                           # Project documentation
 ```
 
 ### Key File Descriptions
