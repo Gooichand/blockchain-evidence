@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Components Showcase | Blockchain Evidence</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="enhanced-professional-ui.css">
+    <link rel="stylesheet" href="modern-components.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <header class="header-nav">
+        <div class="navbar-container">
+            <div class="nav-brand">
+                <span>🎨 UI Showcase</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="home"></i>
+                    <span>Back to Home</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" style="max-width: 1200px; padding: 3rem 2rem;">
+        <!-- Hero Section -->
+        <div class="hero-section" style="padding: 5rem 2rem; margin-bottom: 3rem;">
+            <div class="hero-content">
+                <h1>Enhanced UI Components</h1>
+                <p class="hero-subtitle">Professional design system for blockchain evidence management</p>
+                <p class="hero-description">Explore all available components and styling options</p>
+            </div>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="square"></i>
+                </div>
+                <h2>Button Styles</h2>
+                <p>Various button types and sizes</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                    <button class="btn btn-primary">
+                        <i data-lucide="check"></i>
+                        <span>Primary</span>
+                    </button>
+                    <button class="btn btn-success">
+                        <i data-lucide="check-circle"></i>
+                        <span>Success</span>
+                    </button>
+                    <button class="btn btn-warning">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>Warning</span>
+                    </button>
+                    <button class="btn btn-danger">
+                        <i data-lucide="x-circle"></i>
+                        <span>Danger</span>
+                    </button>
+                    <button class="btn btn-outline">
+                        <i data-lucide="more-horizontal"></i>
+                        <span>Outline</span>
+                    </button>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Button Sizes</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-primary btn-sm">
+                        <span>Small</span>
+                    </button>
+                    <button class="btn btn-primary">
+                        <span>Default</span>
+                    </button>
+                    <button class="btn btn-primary btn-lg">
+                        <span>Large</span>
+                    </button>
+                    <button class="btn btn-primary pulse">
+                        <span>Pulse Effect</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Badges -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="tag"></i>
+                </div>
+                <h2>Status Badges</h2>
+                <p>Display status and roles</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+                    <span class="status-badge active">Active</span>
+                    <span class="status-badge pending">Pending</span>
+                    <span class="status-badge inactive">Inactive</span>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Role Badges</h3>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <span class="badge badge-admin">Administrator</span>
+                    <span class="badge badge-investigator">Investigator</span>
+                    <span class="badge badge-forensic">Forensic Analyst</span>
+                    <span class="badge badge-legal">Legal Professional</span>
+                    <span class="badge badge-court">Court Official</span>
+                    <span class="badge badge-manager">Evidence Manager</span>
+                    <span class="badge badge-auditor">Auditor</span>
+                    <span class="badge badge-public">Public Viewer</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Boxes -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="info"></i>
+                </div>
+                <h2>Info Boxes</h2>
+                <p>Contextual information displays</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div class="info-box">
+                    <div class="info-box-icon">
+                        <i data-lucide="info"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <h4>Information</h4>
+                        <p>This is a standard information box for neutral messages and helpful tips.</p>
+                    </div>
+                </div>
+                
+                <div class="info-box success">
+                    <div class="info-box-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <h4>Success</h4>
+                        <p>Operation completed successfully! Your data has been saved.</p>
+                    </div>
+                </div>
+                
+                <div class="info-box warning">
+                    <div class="info-box-icon">
+                        <i data-lucide="alert-triangle"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <h4>Warning</h4>
+                        <p>Please review the information carefully before proceeding.</p>
+                    </div>
+                </div>
+                
+                <div class="info-box error">
+                    <div class="info-box-icon">
+                        <i data-lucide="alert-circle"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <h4>Error</h4>
+                        <p>An error occurred. Please try again or contact support if the problem persists.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="activity"></i>
+                </div>
+                <h2>Progress Indicators</h2>
+                <p>Show loading and completion states</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">25% Complete</h4>
+                <div class="progress-bar" style="margin-bottom: 2rem;">
+                    <div class="progress-bar-fill" style="width: 25%;"></div>
+                </div>
+                
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">50% Complete</h4>
+                <div class="progress-bar" style="margin-bottom: 2rem;">
+                    <div class="progress-bar-fill" style="width: 50%;"></div>
+                </div>
+                
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">75% Complete</h4>
+                <div class="progress-bar" style="margin-bottom: 2rem;">
+                    <div class="progress-bar-fill" style="width: 75%;"></div>
+                </div>
+                
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">100% Complete</h4>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Components -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="edit"></i>
+                </div>
+                <h2>Form Elements</h2>
+                <p>Enhanced input fields and controls</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div class="form-grid" style="margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label>
+                            <i data-lucide="user"></i>
+                            <span>Full Name</span>
+                        </label>
+                        <input type="text" class="form-control" placeholder="John Doe">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i data-lucide="mail"></i>
+                            <span>Email Address</span>
+                        </label>
+                        <input type="email" class="form-control" placeholder="john@example.com">
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Custom Checkboxes & Radios</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" checked>
+                        <span>I agree to the terms and conditions</span>
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox">
+                        <span>Send me email notifications</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <label class="custom-radio">
+                        <input type="radio" name="option" checked>
+                        <span>Option 1</span>
+                    </label>
+                    <label class="custom-radio">
+                        <input type="radio" name="option">
+                        <span>Option 2</span>
+                    </label>
+                    <label class="custom-radio">
+                        <input type="radio" name="option">
+                        <span>Option 3</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading States -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="loader"></i>
+                </div>
+                <h2>Loading States</h2>
+                <p>Various loading indicators</p>
+            </div>
+            <div class="card-body" style="padding: 2rem; text-align: center;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Default Loader</h4>
+                <div class="loader"></div>
+                
+                <h4 style="margin-bottom: 1rem; margin-top: 2rem; color: var(--text-primary);">Modern Spinner</h4>
+                <div class="spinner-modern"></div>
+                
+                <h4 style="margin-bottom: 1rem; margin-top: 2rem; color: var(--text-primary);">Skeleton Loading</h4>
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Variations -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="layout"></i>
+                </div>
+                <h2>Card Layouts</h2>
+                <p>Different card styles and configurations</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <div class="role-card">
+                        <div class="role-icon">
+                            <i data-lucide="shield"></i>
+                        </div>
+                        <div class="role-title">Role Card</div>
+                        <div class="role-description">Interactive card for role selection with hover effects</div>
+                    </div>
+                    
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">
+                            <i data-lucide="check"></i>
+                        </div>
+                        <h3>Step Card</h3>
+                        <p>Used for process flows and step-by-step guides</p>
+                    </div>
+                    
+                    <div class="doc-item">
+                        <div class="doc-icon">
+                            <i data-lucide="book"></i>
+                        </div>
+                        <h3>Documentation Card</h3>
+                        <p>Perfect for documentation sections and resource links</p>
+                        <a href="#" class="btn btn-sm btn-outline">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Info Component -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="user"></i>
+                </div>
+                <h2>User Info Display</h2>
+                <p>Profile and user information components</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>John Doe</h3>
+                        <p><strong>Role:</strong> <span class="badge badge-investigator">Investigator</span></p>
+                        <p><strong>Status:</strong> <span class="status-badge active">Active</span></p>
+                        <p><strong>Department:</strong> Digital Forensics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Container -->
+        <div class="cta-container">
+            <h2 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 2rem;">Ready to Get Started?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.125rem;">
+                All these components are ready to use in your application
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-lg pulse">
+                    <i data-lucide="rocket"></i>
+                    <span>Get Started</span>
+                </button>
+                <a href="index.html" class="btn btn-outline btn-lg">
+                    <i data-lucide="home"></i>
+                    <span>Back to Home</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Color Palette -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i data-lucide="palette"></i>
+                </div>
+                <h2>Color Palette</h2>
+                <p>Professional color scheme</p>
+            </div>
+            <div class="card-body" style="padding: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 100px; background: #1e3a5f; border-radius: 0.75rem; margin-bottom: 0.5rem; box-shadow: var(--shadow-md);"></div>
+                        <strong>Primary Navy</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem;">#1e3a5f</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 100px; background: #2563eb; border-radius: 0.75rem; margin-bottom: 0.5rem; box-shadow: var(--shadow-md);"></div>
+                        <strong>Primary Blue</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem;">#2563eb</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 100px; background: #10b981; border-radius: 0.75rem; margin-bottom: 0.5rem; box-shadow: var(--shadow-md);"></div>
+                        <strong>Accent Emerald</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem;">#10b981</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 100px; background: #f59e0b; border-radius: 0.75rem; margin-bottom: 0.5rem; box-shadow: var(--shadow-md);"></div>
+                        <strong>Accent Gold</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem;">#f59e0b</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container" style="text-align: center;">
+            <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.125rem;">
+                Professional UI Components v2.0
+            </p>
+            <p style="color: rgba(255, 255, 255, 0.8);">
+                Blockchain Evidence Management System
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollUpBtn" class="scroll-up-btn">
+        <i data-lucide="arrow-up"></i>
+    </button>
+
+    <script src="ui-enhancements.js"></script>
+    <script>
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Scroll up button
+        const scrollBtn = document.getElementById('scrollUpBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

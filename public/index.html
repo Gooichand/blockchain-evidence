@@ -8,6 +8,8 @@
     <meta name="description"
         content="Professional blockchain evidence management for law enforcement, forensic analysts, and legal professionals.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="enhanced-professional-ui.css">
+    <link rel="stylesheet" href="modern-components.css">
     <link rel="stylesheet" href="password-security.css">
     <link rel="stylesheet" href="css/latest-release.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -21,6 +23,7 @@
         crossorigin="anonymous"></script>
     <script src="app.js"></script>
     <script src="forgot-password.js"></script>
+    <script src="ui-enhancements.js"></script>
 </head>
 
 <body>
@@ -73,30 +76,29 @@
     <!-- Animated Background -->
     <div class="particles" id="particles"></div>
 
-    <div class="container" id="main-content">
-        <!-- Hero Section -->
-        <div class="hero-section">
-            <div class="hero-content">
-                <div class="hero-icon">
-                    <img src="logo-32x32.png" alt="Logo" class="hero-logo" style="height: 120px; width: 120px;">
-                </div>
-                <h1>Blockchain Evidence Management System</h1>
-                <p class="hero-subtitle">Blockchain Evidence Management System</p>
-                <p class="hero-description">Secure, transparent, and immutable evidence management for law enforcement
-                    and legal professionals.</p>
+    <!-- Hero Section (Full Width) -->
+    <div class="hero-section" id="main-content">
+        <div class="hero-content">
+            <div class="hero-icon">
+                <img src="logo-32x32.png" alt="Logo" class="hero-logo" style="height: 120px; width: 120px;">
             </div>
+            <h1>Blockchain Evidence Management System</h1>
+            <p class="hero-subtitle">Blockchain Evidence Management System</p>
+            <p class="hero-description">Secure, transparent, and immutable evidence management for law enforcement
+                and legal professionals.</p>
         </div>
+    </div>
 
-        <!-- How It Works Section -->
-        <div class="how-it-works-section" id="how-it-works">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="workflow"></i>
-                    </div>
-                    <h2>How It Works</h2>
-                    <p>Simple 4-step process to secure your evidence</p>
+    <!-- How It Works Section (Full Width) -->
+    <section class="full-width-section" id="how-it-works">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i data-lucide="workflow"></i>
                 </div>
+                <h2>How It Works</h2>
+                <p>Simple 4-step process to secure your evidence</p>
+            </div>
                 <div class="steps-container">
                     <div class="step-item">
                         <div class="step-number">1</div>
@@ -146,19 +148,20 @@
                         Start Using EVID-DGC
                     </button>
                 </div>
-            </div>
         </div>
+    </section>
 
-        <!-- Login Options -->
-        <div class="card" id="login-options">
-            <div class="card-header">
-                <div class="card-icon">
+    <!-- Login Options Section (Full Width) -->
+    <section class="full-width-section" id="login-options">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-icon">
                     <i data-lucide="log-in"></i>
                 </div>
                 <h2>Login Options</h2>
                 <p>Choose your authentication method</p>
             </div>
-            <div class="card-body">
+            <div class="section-content">
                 <div class="login-plan-grid">
                     <div class="plan-option" onclick="scrollToSection('walletSection')">
                         <div class="plan-icon">
@@ -177,7 +180,9 @@
                 </div>
             </div>
         </div>
+    </section>
 
+    <div class="container">
         <!-- Wallet Connection -->
         <div id="walletSection" class="card">
             <div class="card-header">
@@ -416,15 +421,17 @@
         </div>
 
         <!-- Documentation Section -->
-        <div class="documentation-section" id="documentation">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="book-open"></i>
-                    </div>
-                    <h2>Documentation</h2>
-                    <p>Complete guides and resources</p>
+    </div>
+
+    <section class="full-width-section" id="documentation">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i data-lucide="book-open"></i>
                 </div>
+                <h2>Documentation</h2>
+                <p>Complete guides and resources</p>
+            </div>
                 <div class="doc-grid">
                     <div class="doc-item">
                         <div class="doc-icon">
@@ -459,19 +466,22 @@
                         <a href="troubleshooting.html" class="btn btn-sm btn-outline">Get Help</a>
                     </div>
                 </div>
-            </div>
         </div>
+    </section>
 
+    <div class="container">
         <!-- FAQ Section -->
-        <div class="faq-section" id="faq">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="help-circle"></i>
-                    </div>
-                    <h2>Frequently Asked Questions</h2>
-                    <p>Find answers to common questions</p>
+    </div>
+
+    <section class="full-width-section" id="faq">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i data-lucide="help-circle"></i>
                 </div>
+                <h2>Frequently Asked Questions</h2>
+                <p>Find answers to common questions</p>
+            </div>
                 <div class="faq-list">
                     <div class="faq-item">
                         <div class="faq-question">
@@ -585,19 +595,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
+    </section>
 
-        <!-- Contact Section -->
-        <div class="contact-section" id="contact">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="phone"></i>
-                    </div>
-                    <h2>Contact & Support</h2>
-                    <p>Get in touch with our team</p>
+    <section class="full-width-section" id="contact">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i data-lucide="phone"></i>
                 </div>
+                <h2>Contact & Support</h2>
+                <p>Get in touch with our team</p>
+            </div>
                 <div class="contact-grid">
                     <div class="contact-item">
                         <div class="contact-icon">
@@ -624,9 +633,8 @@
                         <a href="quickstart.html">View Docs</a>
                     </div>
                 </div>
-            </div>
         </div>
-    </div>
+    </section>
 
     <!-- Email Login Modal -->
     <div id="emailLoginModal" class="modal">
