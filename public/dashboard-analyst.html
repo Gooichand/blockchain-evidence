@@ -214,8 +214,8 @@
                         <p><strong>Priority:</strong> <span style="color: #ef4444; font-weight: bold;">HIGH</span></p>
                         <p><strong>Requested:</strong> March 15, 2024</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary">Start Analysis</button>
-                            <button class="btn btn-sm btn-outline">View Details</button>
+                            <button class="btn btn-sm btn-primary" onclick="startAnalysis('FOR-2024-001')">Start Analysis</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceDetails('FOR-2024-001')">View Details</button>
                         </div>
                     </div>
 
@@ -230,8 +230,8 @@
                         <p><strong>Priority:</strong> <span style="color: #f59e0b; font-weight: bold;">MEDIUM</span></p>
                         <p><strong>Started:</strong> March 14, 2024</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-warning">Continue Analysis</button>
-                            <button class="btn btn-sm btn-outline">Progress Report</button>
+                           <button class="btn btn-sm btn-warning" onclick="continueAnalysis('FOR-2024-002')"> Continue Analysis</button>
+                           <button class="btn btn-sm btn-outline" onclick="showProgressReport('FOR-2024-002')">Progress Report</button>
                         </div>
                     </div>
 
@@ -246,8 +246,8 @@
                         <p><strong>Priority:</strong> <span style="color: #10b981; font-weight: bold;">LOW</span></p>
                         <p><strong>Completed:</strong> March 13, 2024</p>
                         <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-success">View Report</button>
-                            <button class="btn btn-sm btn-outline">Archive</button>
+                            <button class="btn btn-sm btn-success" onclick="viewAnalysisReport('FOR-2024-003')">View Report</button>
+                           <button class="btn btn-sm btn-outline" onclick="archiveEvidence('FOR-2024-003')">Archive</button>
                         </div>
                     </div>
                 </div>
@@ -382,6 +382,39 @@
                 window.location.href = 'index.html';
             }
         }
+
+        function startAnalysis(caseId) {
+            alert(`🧪 Starting analysis for case: ${caseId}`);
+            console.log("Start Analysis:", caseId);
+                }
+
+        function viewEvidenceDetails(caseId) {
+            alert(`📂 Viewing evidence details for case: ${caseId}`);
+            console.log("View Details:", caseId);
+        }
+
+        function continueAnalysis(caseId) {
+            alert(`▶ Continuing analysis for case: ${caseId}`);
+            console.log("Continue Analysis:", caseId);
+        }
+
+        function showProgressReport(caseId) {
+            alert(`📊 Showing progress report for case: ${caseId}`);
+            console.log("Progress Report:", caseId);
+        }
+
+        function viewAnalysisReport(caseId) {
+            alert(`📑 Viewing final report for case: ${caseId}`);
+            console.log("View Report:", caseId);
+        }
+
+        function archiveEvidence(caseId) {
+            if (confirm(`Are you sure you want to archive case: ${caseId}?`)) {
+                alert(`📦 Case ${caseId} archived successfully.`);
+                console.log("Archived:", caseId);
+            }
+        }
+
     </script>
 </body>
 
