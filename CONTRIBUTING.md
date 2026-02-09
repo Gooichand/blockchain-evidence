@@ -83,7 +83,7 @@ Thank you for your interest in contributing to EVID-DGC! We welcome contribution
    ```
 
 3. **Set up Database**:
-   - Open Supabase SQL Editor
+   - Open Supabase SQL Editor(search for "SQL Editor" in the Supabase dashboard)
    - Run `complete-database-setup.sql`
    - Verify tables are created
 
