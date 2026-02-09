@@ -42,7 +42,9 @@ Thank you for your interest in contributing to EVID-DGC! We welcome contribution
 4. **Set up environment**:
    ```bash
    cp .env.example .env
-   # Edit .env with your Supabase credentials
+   # Edit the .env file with your Supabase credentials
+   # Ensure the file is named .env (not .env.example), otherwise the Node server will fail to start
+
    ```
 5. **Start development server**:
    ```bash
@@ -68,12 +70,16 @@ Thank you for your interest in contributing to EVID-DGC! We welcome contribution
 
 2. **Configure Environment**:
    ```bash
-   # Copy example environment file
-   cp .env.example .env
-   
-   # Edit .env with your credentials
+   # Copy the example environment configuration file
+      cp .env.example .env
+
+   # Update the .env file with your Supabase credentials
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_KEY=your_supabase_anon_key
+
+   # The SUPABASE_URL can be found in the Supabase Dashboard:
+   # Project Settings → Data API
+   
    ```
 
 3. **Set up Database**:
