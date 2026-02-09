@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,21 +9,9 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
-    <header class="header-nav">
-        <div class="navbar-container">
-            <div class="nav-brand">
-                <i data-lucide="shield-check" class="brand-icon"></i>
-                <span>EVID-DGC</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link">
-                    <i data-lucide="home"></i>
-                    <span>Home</span>
-                </a>
-            </nav>
-        </div>
-    </header>
+    <script src="fixed-navbar.js"></script>
 
     <div class="container">
         <div class="card">
@@ -40,7 +29,8 @@
                     <section>
                         <h2>1. Acceptance of Terms</h2>
                         <p>
-                            By accessing or using the EVID-DGC platform, you agree to be bound by these Terms of Service.
+                            By accessing or using the EVID-DGC platform, you agree to be bound by these Terms of
+                            Service.
                             If you do not agree to these terms, you must not use the platform.
                         </p>
                     </section>
@@ -48,8 +38,10 @@
                     <section>
                         <h2>2. Description of Service</h2>
                         <p>
-                            EVID-DGC is a secure blockchain-based evidence management system designed for law enforcement
-                            agencies, legal professionals, and authorized personnel to manage and verify digital evidence.
+                            EVID-DGC is a secure blockchain-based evidence management system designed for law
+                            enforcement
+                            agencies, legal professionals, and authorized personnel to manage and verify digital
+                            evidence.
                         </p>
                         <ul>
                             <li>Blockchain-based evidence hash storage</li>
@@ -73,7 +65,8 @@
                         <h2>4. Blockchain Usage</h2>
                         <p>
                             You acknowledge that blockchain transactions are immutable and publicly verifiable.
-                            Once evidence hashes and transaction data are recorded on-chain, they cannot be altered or deleted.
+                            Once evidence hashes and transaction data are recorded on-chain, they cannot be altered or
+                            deleted.
                         </p>
                         <ul>
                             <li>Evidence hashes are permanently stored on blockchain</li>
@@ -85,8 +78,10 @@
                     <section>
                         <h2>5. Evidence Integrity</h2>
                         <p>
-                            Users are responsible for ensuring that uploaded evidence is accurate, complete, and unaltered.
-                            EVID-DGC provides cryptographic verification but does not validate the authenticity of content itself.
+                            Users are responsible for ensuring that uploaded evidence is accurate, complete, and
+                            unaltered.
+                            EVID-DGC provides cryptographic verification but does not validate the authenticity of
+                            content itself.
                         </p>
                     </section>
 
@@ -113,7 +108,8 @@
                         <h2>8. Service Availability</h2>
                         <p>
                             We strive to maintain high availability but do not guarantee uninterrupted access.
-                            Maintenance, upgrades, or blockchain network issues may result in temporary service disruptions.
+                            Maintenance, upgrades, or blockchain network issues may result in temporary service
+                            disruptions.
                         </p>
                     </section>
 
@@ -121,7 +117,8 @@
                         <h2>9. Termination</h2>
                         <p>
                             We reserve the right to suspend or terminate access to the platform if you violate these
-                            Terms of Service or engage in activities that compromise system security or legal compliance.
+                            Terms of Service or engage in activities that compromise system security or legal
+                            compliance.
                         </p>
                     </section>
 
@@ -147,9 +144,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

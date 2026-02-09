@@ -22,21 +22,7 @@
 </head>
 
 <body>
-    <nav class="dashboard-nav">
-        <div class="container">
-            <div class="nav-content">
-                <a href="index.html" class="nav-brand">
-                    <img src="logo.png" alt="EVID-DGC Logo" class="navbar-logo">
-                    EVID-DGC
-                </a>
-                <div class="nav-items">
-                    <span id="userRole" class="badge">Loading...</span>
-                    <span id="userWallet" class="wallet-display">Loading...</span>
-                    <button class="btn btn-outline btn-sm" onclick="logout()">🚪 Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <script src="fixed-navbar.js"></script>
 
     <div class="container">
         <!-- Evidence Upload Section -->
@@ -69,7 +55,8 @@
                         <label for="evidenceFile">📁 Evidence File *</label>
                         <input type="file" id="evidenceFile" class="form-control" required>
                         <div class="file-format-info">
-                            <strong>Supported formats:</strong> PDF, JPG, PNG, GIF, MP4, AVI, MOV, MP3, WAV, M4A, DOC, DOCX, XLS, XLSX, TXT, ZIP, RAR<br>
+                            <strong>Supported formats:</strong> PDF, JPG, PNG, GIF, MP4, AVI, MOV, MP3, WAV, M4A, DOC,
+                            DOCX, XLS, XLSX, TXT, ZIP, RAR<br>
                             <strong>Maximum size:</strong> 100MB (varies by format)
                         </div>
                     </div>
@@ -647,6 +634,7 @@
             word-break: break-all;
         }
     </style>
+    <script src="footer.js"></script>
 </body>
 
 </html>

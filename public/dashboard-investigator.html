@@ -125,7 +125,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .btn-loading {
@@ -153,6 +155,7 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -318,8 +321,10 @@
                         <p><strong>Location:</strong> Downtown Office Building</p>
                         <p><strong>Date:</strong> March 15, 2024</p>
                         <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-001')">View Details</button>
-                            <button class="btn btn-sm btn-outline" onclick="addEvidence('INV-2024-001')">Add Evidence</button>
+                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-001')">View
+                                Details</button>
+                            <button class="btn btn-sm btn-outline" onclick="addEvidence('INV-2024-001')">Add
+                                Evidence</button>
                         </div>
                     </div>
 
@@ -332,8 +337,10 @@
                         <p><strong>Location:</strong> Financial District</p>
                         <p><strong>Date:</strong> March 12, 2024</p>
                         <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-002')">View Details</button>
-                            <button class="btn btn-sm btn-outline" onclick="requestAnalysis('INV-2024-002')">Request Analysis</button>
+                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-002')">View
+                                Details</button>
+                            <button class="btn btn-sm btn-outline" onclick="requestAnalysis('INV-2024-002')">Request
+                                Analysis</button>
                         </div>
                     </div>
 
@@ -346,8 +353,10 @@
                         <p><strong>Location:</strong> Retail Store</p>
                         <p><strong>Date:</strong> March 10, 2024</p>
                         <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline" onclick="viewReport('INV-2024-003')">View Report</button>
-                            <button class="btn btn-sm btn-outline" onclick="archiveCase('INV-2024-003')">Archive</button>
+                            <button class="btn btn-sm btn-outline" onclick="viewReport('INV-2024-003')">View
+                                Report</button>
+                            <button class="btn btn-sm btn-outline"
+                                onclick="archiveCase('INV-2024-003')">Archive</button>
                         </div>
                     </div>
                 </div>
@@ -454,14 +463,14 @@
             // Load real data from localStorage
             const cases = JSON.parse(localStorage.getItem('cases') || '[]');
             const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
-            
+
             const activeCases = cases.filter(c => c.status === 'OPEN').length;
             const pendingReviews = evidence.filter(e => e.status === 'Pending').length;
-            
+
             document.getElementById('activeCases').textContent = activeCases;
             document.getElementById('evidenceItems').textContent = evidence.length;
             document.getElementById('pendingReviews').textContent = pendingReviews;
-            
+
             // Update cases grid with real data
             const casesGrid = document.getElementById('casesGrid');
             if (cases.length > 0) {
@@ -482,11 +491,11 @@
                 `).join('');
             }
         }
-        
+
         function viewCaseDetails(caseId) {
             const cases = JSON.parse(localStorage.getItem('cases') || '[]');
             let caseData = cases.find(c => c.id === caseId);
-            
+
             // If not found in stored cases, use default data
             if (!caseData) {
                 const defaultCases = {
@@ -523,7 +532,7 @@
                 };
                 caseData = defaultCases[caseId];
             }
-            
+
             if (caseData) {
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
@@ -615,12 +624,12 @@
             const description = document.getElementById('evidenceDescription').value;
             const type = document.getElementById('evidenceType').value;
             const file = document.getElementById('evidenceFile').files[0];
-            
+
             if (!title || !type) {
                 alert('Please fill in required fields (Title and Type)');
                 return;
             }
-            
+
             const evidenceId = 'EVD-' + Date.now();
             const evidence = {
                 id: evidenceId,
@@ -635,15 +644,15 @@
                 status: 'Verified',
                 hash: 'sha256:' + Math.random().toString(36).substring(2, 15)
             };
-            
+
             // Save to localStorage
             const evidenceList = JSON.parse(localStorage.getItem('evidence') || '[]');
             evidenceList.unshift(evidence);
             localStorage.setItem('evidence', JSON.stringify(evidenceList));
-            
+
             // Close modal
             document.querySelector('.modal').remove();
-            
+
             // Show success message
             showToast('✅ Evidence uploaded successfully!', 'success');
             loadDashboardData();
@@ -674,7 +683,7 @@
                     </button>
                 </div>
             `;
-            
+
             // Add toast styles
             toast.style.cssText = `
                 position: fixed;
@@ -688,10 +697,10 @@
                 z-index: 1000;
                 animation: slideIn 0.3s ease;
             `;
-            
+
             document.body.appendChild(toast);
             lucide.createIcons();
-            
+
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.remove();
@@ -713,12 +722,12 @@
                     createdBy: currentUser.fullName || 'Investigator',
                     createdAt: new Date().toISOString()
                 };
-                
+
                 // Save to localStorage
                 const cases = JSON.parse(localStorage.getItem('cases') || '[]');
                 cases.unshift(newCase);
                 localStorage.setItem('cases', JSON.stringify(cases));
-                
+
                 alert(`✅ Case created successfully!\n\nCase ID: ${caseId}\nTitle: ${caseTitle}\nStatus: OPEN`);
                 loadDashboardData();
             }
@@ -729,7 +738,7 @@
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*,video/*,.pdf,.doc,.docx,.txt';
-            input.onchange = function(e) {
+            input.onchange = function (e) {
                 const file = e.target.files[0];
                 if (file) {
                     const evidenceId = 'EVD-' + Date.now();
@@ -743,13 +752,13 @@
                         status: 'Verified',
                         hash: 'sha256:' + Math.random().toString(36).substring(2, 15)
                     };
-                    
+
                     // Save to localStorage
                     const evidenceList = JSON.parse(localStorage.getItem('evidence') || '[]');
                     evidenceList.unshift(evidence);
                     localStorage.setItem('evidence', JSON.stringify(evidenceList));
-                    
-                    alert(`✅ Evidence uploaded successfully!\n\nEvidence ID: ${evidenceId}\nFile: ${file.name}\nSize: ${(file.size/1024).toFixed(2)} KB\nStatus: Verified`);
+
+                    alert(`✅ Evidence uploaded successfully!\n\nEvidence ID: ${evidenceId}\nFile: ${file.name}\nSize: ${(file.size / 1024).toFixed(2)} KB\nStatus: Verified`);
                     loadDashboardData();
                 }
             };
@@ -760,12 +769,12 @@
             const searchTerm = prompt('Enter search term (case ID, title, or location):');
             if (searchTerm) {
                 const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-                const results = cases.filter(c => 
+                const results = cases.filter(c =>
                     c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     c.location.toLowerCase().includes(searchTerm.toLowerCase())
                 );
-                
+
                 if (results.length > 0) {
                     let resultText = `🔍 Search Results for "${searchTerm}":\n\n`;
                     results.forEach(c => {
@@ -781,7 +790,7 @@
         function generateReport() {
             const cases = JSON.parse(localStorage.getItem('cases') || '[]');
             const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
-            
+
             const report = {
                 generatedBy: currentUser.fullName || 'Investigator',
                 generatedAt: new Date().toISOString(),
@@ -790,7 +799,7 @@
                 activeCases: cases.filter(c => c.status === 'OPEN').length,
                 closedCases: cases.filter(c => c.status === 'CLOSED').length
             };
-            
+
             alert(`📊 Investigation Report\n\nGenerated by: ${report.generatedBy}\nDate: ${new Date(report.generatedAt).toLocaleDateString()}\n\nTotal Cases: ${report.totalCases}\nActive Cases: ${report.activeCases}\nClosed Cases: ${report.closedCases}\nTotal Evidence: ${report.totalEvidence}\n\n✅ Report generated successfully!`);
         }
 
@@ -806,6 +815,7 @@
             }
         }
     </script>
+    <script src="footer.js"></script>
 </body>
 
 </html>

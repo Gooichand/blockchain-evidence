@@ -1,29 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Evidence Retention Policy - EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Evidence Retention Policy - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <style>
-        .retention-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .policy-card { background: white; border-radius: 8px; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .expiry-warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; margin: 10px 0; }
-        .legal-hold { background: #fecaca; border-left: 4px solid #ef4444; }
-        .retention-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .evidence-list { max-height: 400px; overflow-y: auto; }
-        .status-expired { color: #ef4444; font-weight: bold; }
-        .status-warning { color: #f59e0b; font-weight: bold; }
-        .status-active { color: #10b981; }
+        .retention-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .policy-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .expiry-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .legal-hold {
+            background: #fecaca;
+            border-left: 4px solid #ef4444;
+        }
+
+        .retention-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .evidence-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-expired {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .status-warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        .status-active {
+            color: #10b981;
+        }
     </style>
 </head>
+
 <body>
     <div class="retention-container">
         <h1>📅 Evidence Retention Policy Management</h1>
-        
+
         <!-- Policy Management Section -->
         <div class="policy-card">
             <h2>Retention Policies</h2>
@@ -51,7 +104,8 @@
         <div class="policy-card">
             <h2>Bulk Operations</h2>
             <div class="bulk-controls">
-                <button onclick="showBulkPolicyModal()" class="btn btn-primary">Apply Policy to Multiple Evidence</button>
+                <button onclick="showBulkPolicyModal()" class="btn btn-primary">Apply Policy to Multiple
+                    Evidence</button>
                 <button onclick="showBulkLegalHoldModal()" class="btn btn-warning">Bulk Legal Hold</button>
                 <button onclick="generateRetentionReport()" class="btn btn-secondary">Generate Report</button>
             </div>
@@ -102,5 +156,7 @@
     </div>
 
     <script src="retention-policy.js"></script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

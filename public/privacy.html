@@ -1,29 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Privacy Policy | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Privacy Policy | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
-    <header class="header-nav">
-        <div class="navbar-container">
-            <div class="nav-brand">
-                <i data-lucide="shield-check" class="brand-icon"></i>
-                <span>EVID-DGC</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link">
-                    <i data-lucide="home"></i>
-                    <span>Home</span>
-                </a>
-            </nav>
-        </div>
-    </header>
+    <script src="fixed-navbar.js"></script>
 
     <div class="container">
         <div class="card">
@@ -41,17 +32,20 @@
                         <h3>Blockchain Data</h3>
                         <ul>
                             <li><strong>Wallet Addresses:</strong> Your MetaMask wallet address for authentication</li>
-                            <li><strong>Evidence Hashes:</strong> Cryptographic hashes of evidence files (NOT the actual files)</li>
-                            <li><strong>Transaction Records:</strong> Blockchain transaction hashes for audit trails</li>
+                            <li><strong>Evidence Hashes:</strong> Cryptographic hashes of evidence files (NOT the actual
+                                files)</li>
+                            <li><strong>Transaction Records:</strong> Blockchain transaction hashes for audit trails
+                            </li>
                             <li><strong>Timestamps:</strong> When evidence was submitted or accessed</li>
                         </ul>
-                        
+
                         <h3>Application Data</h3>
                         <ul>
                             <li><strong>User Profile:</strong> Name, role, department, jurisdiction</li>
                             <li><strong>Case Information:</strong> Case numbers, titles, descriptions</li>
                             <li><strong>Activity Logs:</strong> System access and action records</li>
-                            <li><strong>Evidence Metadata:</strong> File names, types, sizes (stored securely off-chain)</li>
+                            <li><strong>Evidence Metadata:</strong> File names, types, sizes (stored securely off-chain)
+                            </li>
                         </ul>
                     </section>
 
@@ -83,7 +77,8 @@
                         <h2>3. Data Security</h2>
                         <ul>
                             <li><strong>Encryption:</strong> All data encrypted in transit and at rest</li>
-                            <li><strong>Access Controls:</strong> Role-based permissions and multi-factor authentication</li>
+                            <li><strong>Access Controls:</strong> Role-based permissions and multi-factor authentication
+                            </li>
                             <li><strong>Blockchain Security:</strong> Immutable records on distributed ledger</li>
                             <li><strong>Regular Audits:</strong> Security assessments and penetration testing</li>
                         </ul>
@@ -97,7 +92,8 @@
                             <li><strong>Deletion:</strong> Request deletion where legally permissible</li>
                             <li><strong>Portability:</strong> Export your data in standard formats</li>
                         </ul>
-                        <p><strong>Note:</strong> Some rights may be limited due to legal evidence preservation requirements.</p>
+                        <p><strong>Note:</strong> Some rights may be limited due to legal evidence preservation
+                            requirements.</p>
                     </section>
 
                     <section>
@@ -110,9 +106,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

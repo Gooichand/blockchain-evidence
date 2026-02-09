@@ -1,34 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Evidence Integrity Verification - EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Evidence Integrity Verification - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <style>
-        .verification-container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .upload-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center; margin: 20px 0; cursor: pointer; transition: all 0.3s; }
-        .upload-zone:hover { border-color: #007bff; background: #f8f9fa; }
-        .upload-zone.dragover { border-color: #007bff; background: #e3f2fd; }
-        .verification-result { padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
-        .result-verified { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .result-tampered { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .result-pending { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
-        .hash-display { font-family: monospace; background: #f8f9fa; padding: 10px; border-radius: 4px; word-break: break-all; margin: 10px 0; }
-        .qr-code { margin: 20px 0; text-align: center; }
-        .verification-details { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-verify { background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .btn-download { background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        .file-info { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; }
-        .verification-history { max-height: 300px; overflow-y: auto; }
-        .public-portal { background: #e8f5e8; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .verification-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .upload-zone.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .verification-result {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-verified {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result-tampered {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result-pending {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .hash-display {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .qr-code {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .verification-details {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-verify {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-download {
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .verification-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .public-portal {
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
     </style>
 </head>
+
 <body>
     <div class="verification-container">
         <h1>🔍 Evidence Integrity Verification</h1>
-        
+
         <!-- Public Verification Portal -->
         <div class="public-portal">
             <h2>🌐 Public Verification Portal</h2>
@@ -45,13 +145,13 @@
                 </div>
             </div>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
-            
+
             <!-- Evidence ID Input -->
             <div style="margin: 20px 0;">
                 <label for="evidenceId">Evidence ID (optional):</label>
                 <input type="text" id="evidenceId" placeholder="Enter evidence ID to verify against specific record">
             </div>
-            
+
             <button id="verifyBtn" class="btn-verify" onclick="verifyFile()" disabled>
                 🔍 Verify File Integrity
             </button>
@@ -73,7 +173,8 @@
         <!-- Bulk Verification -->
         <div class="verification-details">
             <h2>Bulk Verification</h2>
-            <input type="file" id="bulkFileInput" multiple style="display: none;" onchange="handleBulkFileSelect(event)">
+            <input type="file" id="bulkFileInput" multiple style="display: none;"
+                onchange="handleBulkFileSelect(event)">
             <button onclick="document.getElementById('bulkFileInput').click()" class="btn btn-secondary">
                 📂 Select Multiple Files
             </button>
@@ -94,5 +195,7 @@
     <!-- QR Code Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="evidence-verification.js"></script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

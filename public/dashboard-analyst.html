@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Analyst | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Analyst | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -376,6 +378,38 @@
             alert('🔄 Refreshing analysis queue...\n\nUpdating:\n• New evidence submissions\n• Priority changes\n• Analysis progress\n• Equipment availability\n• Lab scheduling');
         }
 
+        function startAnalysis(caseId) {
+            alert('🔬 Starting Analysis\n\nCase ID: ' + caseId + '\n\nInitializing:\n• Evidence verification\n• Lab equipment preparation\n• Protocol selection\n• Analysis workflow\n• Documentation setup');
+            // Add your analysis start logic here
+        }
+
+        function viewEvidenceDetails(caseId) {
+            alert('📋 Evidence Details\n\nCase ID: ' + caseId + '\n\nViewing:\n• Evidence metadata\n• Chain of custody\n• Collection information\n• Storage location\n• Related documents');
+            // Redirect to evidence details page or open modal
+        }
+
+        function continueAnalysis(caseId) {
+            alert('▶️ Continue Analysis\n\nCase ID: ' + caseId + '\n\nResuming:\n• Previous analysis state\n• Work in progress\n• Partial results\n• Next analysis steps\n• Equipment allocation');
+            // Add your continue analysis logic here
+        }
+
+        function showProgressReport(caseId) {
+            alert('📊 Progress Report\n\nCase ID: ' + caseId + '\n\nShowing:\n• Completion percentage\n• Timeline status\n• Tasks completed\n• Pending procedures\n• Resource utilization');
+            // Display progress report modal or page
+        }
+
+        function viewAnalysisReport(caseId) {
+            alert('📄 Analysis Report\n\nCase ID: ' + caseId + '\n\nReport includes:\n• Methodology\n• Findings\n• Conclusions\n• Supporting data\n• Expert opinion\n• Recommendations');
+            // Redirect to report viewer
+        }
+
+        function archiveEvidence(caseId) {
+            if (confirm('Archive this evidence?\n\nCase ID: ' + caseId + '\n\nThis will move the evidence to the archive and mark analysis as complete.')) {
+                alert('✅ Evidence Archived\n\nCase ID: ' + caseId + '\n\nArchived successfully:\n• Analysis complete\n• Report finalized\n• Data preserved\n• Storage updated');
+                // Add your archive logic here
+            }
+        }
+
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 localStorage.clear();
@@ -416,6 +450,7 @@
         }
 
     </script>
+    <script src="footer.js"></script>
 </body>
 
 </html>

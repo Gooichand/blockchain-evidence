@@ -1,50 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Case Evidence Timeline - EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Case Evidence Timeline - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css">
     <style>
-        .timeline-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .timeline-controls { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .control-group { display: inline-block; margin: 0 15px 10px 0; }
-        .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .timeline-wrapper { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #timeline { height: 500px; border: 1px solid #ddd; border-radius: 4px; }
-        .timeline-fullscreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: white; }
-        .timeline-fullscreen #timeline { height: calc(100vh - 120px); }
-        .evidence-popup { max-width: 400px; padding: 15px; }
-        .evidence-popup img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; }
-        .evidence-type-photo { background-color: #3b82f6; }
-        .evidence-type-document { background-color: #10b981; }
-        .evidence-type-video { background-color: #8b5cf6; }
-        .evidence-type-audio { background-color: #f59e0b; }
-        .evidence-type-physical { background-color: #ef4444; }
-        .timeline-legend { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .legend-color { width: 16px; height: 16px; border-radius: 3px; }
-        .timeline-stats { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0; }
-        .export-options { margin: 15px 0; }
-        .btn-export { background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 0 5px; }
-        .btn-fullscreen { background: #17a2b8; color: white; }
-        .timeline-gap { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .mobile-timeline { display: none; }
+        .timeline-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .timeline-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            display: inline-block;
+            margin: 0 15px 10px 0;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .timeline-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #timeline {
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .timeline-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            background: white;
+        }
+
+        .timeline-fullscreen #timeline {
+            height: calc(100vh - 120px);
+        }
+
+        .evidence-popup {
+            max-width: 400px;
+            padding: 15px;
+        }
+
+        .evidence-popup img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .evidence-type-photo {
+            background-color: #3b82f6;
+        }
+
+        .evidence-type-document {
+            background-color: #10b981;
+        }
+
+        .evidence-type-video {
+            background-color: #8b5cf6;
+        }
+
+        .evidence-type-audio {
+            background-color: #f59e0b;
+        }
+
+        .evidence-type-physical {
+            background-color: #ef4444;
+        }
+
+        .timeline-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .timeline-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .export-options {
+            margin: 15px 0;
+        }
+
+        .btn-export {
+            background: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .btn-fullscreen {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .timeline-gap {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .mobile-timeline {
+            display: none;
+        }
+
         @media (max-width: 768px) {
-            .timeline-controls { padding: 15px; }
-            .control-group { display: block; margin-bottom: 15px; }
-            #timeline { height: 300px; }
-            .mobile-timeline { display: block; }
-            .desktop-timeline { display: none; }
+            .timeline-controls {
+                padding: 15px;
+            }
+
+            .control-group {
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            #timeline {
+                height: 300px;
+            }
+
+            .mobile-timeline {
+                display: block;
+            }
+
+            .desktop-timeline {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="timeline-container">
         <h1>📊 Case Evidence Timeline</h1>
-        
+
         <!-- Timeline Controls -->
         <div class="timeline-controls">
             <div class="control-group">
@@ -53,7 +189,7 @@
                     <option value="">Select a case...</option>
                 </select>
             </div>
-            
+
             <div class="control-group">
                 <label for="typeFilter">Filter by Type:</label>
                 <select id="typeFilter" onchange="filterTimeline()">
@@ -65,20 +201,20 @@
                     <option value="physical">Physical</option>
                 </select>
             </div>
-            
+
             <div class="control-group">
                 <label for="dateRange">Date Range:</label>
                 <input type="date" id="startDate" onchange="filterTimeline()">
                 <input type="date" id="endDate" onchange="filterTimeline()">
             </div>
-            
+
             <div class="control-group">
                 <label for="uploaderFilter">Filter by Uploader:</label>
                 <select id="uploaderFilter" onchange="filterTimeline()">
                     <option value="all">All Uploaders</option>
                 </select>
             </div>
-            
+
             <div class="control-group">
                 <button onclick="resetFilters()" class="btn btn-secondary">Reset Filters</button>
                 <button onclick="toggleFullscreen()" class="btn btn-fullscreen">⛶ Fullscreen</button>
@@ -112,7 +248,7 @@
         <!-- Timeline Wrapper -->
         <div class="timeline-wrapper desktop-timeline">
             <div id="timeline"></div>
-            
+
             <!-- Timeline Controls -->
             <div style="margin-top: 15px; text-align: center;">
                 <button onclick="zoomIn()" class="btn btn-secondary">🔍 Zoom In</button>
@@ -154,5 +290,7 @@
     <script src="https://unpkg.com/vis-timeline@7.7.3/standalone/umd/vis-timeline-graph2d.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="timeline-visualization.js"></script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

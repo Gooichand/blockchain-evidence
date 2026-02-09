@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Case Management | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Case Management | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="case-status-styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
+
 <body>
     <!-- Navigation Header -->
     <header class="header-nav">
@@ -265,32 +269,32 @@
     <script src="case-status-manager.js"></script>
     <script>
         // Additional case management functionality
-        
+
         function showCreateCaseModal() {
             document.getElementById('createCaseModal').classList.add('active');
         }
-        
+
         function closeCreateCaseModal() {
             document.getElementById('createCaseModal').classList.remove('active');
             document.getElementById('createCaseForm').reset();
         }
-        
+
         function showStatisticsModal() {
             document.getElementById('statisticsModal').classList.add('active');
             loadStatistics();
         }
-        
+
         function closeStatisticsModal() {
             document.getElementById('statisticsModal').classList.remove('active');
         }
-        
+
         async function createCase() {
             const currentUser = caseStatusManager.getCurrentUser();
             if (!currentUser) {
                 caseStatusManager.showError('Please log in to create cases');
                 return;
             }
-            
+
             const formData = {
                 title: document.getElementById('caseTitle').value,
                 description: document.getElementById('caseDescription').value,
@@ -300,7 +304,7 @@
                 estimated_completion: document.getElementById('estimatedCompletion').value,
                 created_by: currentUser.wallet_address
             };
-            
+
             try {
                 const response = await fetch('/api/cases', {
                     method: 'POST',
@@ -309,9 +313,9 @@
                     },
                     body: JSON.stringify(formData)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     caseStatusManager.showSuccess('Case created successfully');
                     closeCreateCaseModal();
@@ -324,15 +328,15 @@
                 caseStatusManager.showError('Failed to create case');
             }
         }
-        
+
         async function loadStatistics() {
             const timeframe = document.getElementById('statsTimeframe').value;
             const currentUser = caseStatusManager.getCurrentUser();
-            
+
             try {
                 const response = await fetch(`/api/cases/statistics?timeframe=${timeframe}&userWallet=${currentUser?.wallet_address || ''}`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     renderStatistics(data.statistics);
                 }
@@ -340,10 +344,10 @@
                 console.error('Load statistics error:', error);
             }
         }
-        
+
         function renderStatistics(stats) {
             const container = document.getElementById('statisticsContent');
-            
+
             container.innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-section">
@@ -393,57 +397,57 @@
                 </div>
             `;
         }
-        
+
         function clearFilters() {
             document.querySelectorAll('.case-filter').forEach(filter => {
                 filter.value = '';
             });
             caseStatusManager.applyFilters();
         }
-        
+
         async function exportCases() {
             const currentUser = caseStatusManager.getCurrentUser();
             if (!currentUser) {
                 caseStatusManager.showError('Please log in to export cases');
                 return;
             }
-            
+
             try {
                 const params = new URLSearchParams(caseStatusManager.currentFilters);
                 params.append('export', 'true');
-                
+
                 const response = await fetch(`/api/cases/export?${params}`);
                 const blob = await response.blob();
-                
+
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `cases_export_${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
                 window.URL.revokeObjectURL(url);
-                
+
                 caseStatusManager.showSuccess('Cases exported successfully');
             } catch (error) {
                 console.error('Export cases error:', error);
                 caseStatusManager.showError('Failed to export cases');
             }
         }
-        
+
         function logout() {
             localStorage.clear();
             window.location.href = 'index.html';
         }
-        
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            
+
             // Bind create case form
             document.getElementById('createCaseForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 createCase();
             });
-            
+
             // Check authentication
             const currentUser = localStorage.getItem('currentUser');
             if (!currentUser) {
@@ -452,5 +456,7 @@
             }
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

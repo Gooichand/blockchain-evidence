@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,21 +11,9 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
-    <header class="header-nav">
-        <div class="navbar-container">
-            <div class="nav-brand">
-                <i data-lucide="shield-check" class="brand-icon"></i>
-                <span>EVID-DGC</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link">
-                    <i data-lucide="home"></i>
-                    <span>Home</span>
-                </a>
-            </nav>
-        </div>
-    </header>
+    <script src="fixed-navbar.js"></script>
 
     <div class="container">
         <div class="card">
@@ -164,9 +153,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

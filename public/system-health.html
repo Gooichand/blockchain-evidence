@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>System Health & Status - EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>System Health & Status - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
     <nav class="dashboard-nav">
         <div class="container">
@@ -338,13 +342,15 @@
             margin-bottom: 16px;
         }
 
-        .uptime-stats, .performance-stats {
+        .uptime-stats,
+        .performance-stats {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
 
-        .uptime-item, .perf-item {
+        .uptime-item,
+        .perf-item {
             display: flex;
             justify-content: space-between;
             padding: 8px 12px;
@@ -372,11 +378,11 @@
             function startCountdown() {
                 let countdown = refreshInterval;
                 const countdownElement = document.getElementById('refreshCountdown');
-                
+
                 countdownTimer = setInterval(() => {
                     countdown--;
                     countdownElement.textContent = countdown;
-                    
+
                     if (countdown <= 0) {
                         countdown = refreshInterval;
                         updateLastRefreshTime();
@@ -385,7 +391,7 @@
             }
 
             function updateLastRefreshTime() {
-                document.getElementById('lastUpdated').textContent = 
+                document.getElementById('lastUpdated').textContent =
                     `Last updated: ${new Date().toLocaleTimeString()}`;
             }
 
@@ -401,7 +407,7 @@
             document.getElementById('toggleAutoRefresh').addEventListener('click', (e) => {
                 autoRefreshEnabled = !autoRefreshEnabled;
                 const button = e.target;
-                
+
                 if (autoRefreshEnabled) {
                     button.innerHTML = '<i data-lucide="pause"></i> Pause Auto-refresh';
                     startCountdown();
@@ -410,12 +416,14 @@
                     if (countdownTimer) clearInterval(countdownTimer);
                     document.getElementById('refreshCountdown').textContent = '--';
                 }
-                
+
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
             });
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

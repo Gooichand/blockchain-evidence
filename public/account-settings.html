@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Account Settings | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Account Settings | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="accessibility-fixes.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -78,7 +82,7 @@
                                     <small class="form-help">Email cannot be changed</small>
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="department">Department/Organization</label>
@@ -89,7 +93,7 @@
                                     <input type="text" id="jurisdiction" class="form-control">
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="badgeNumber">Badge/ID Number</label>
@@ -101,7 +105,7 @@
                                     <small class="form-help">Contact admin to change role</small>
                                 </div>
                             </div>
-                            
+
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
                                     <i data-lucide="save"></i>
@@ -134,7 +138,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="newPassword">New Password *</label>
-                                        <input type="password" id="newPassword" class="form-control" required minlength="6">
+                                        <input type="password" id="newPassword" class="form-control" required
+                                            minlength="6">
                                         <div class="password-strength">
                                             <div class="strength-bar">
                                                 <div class="strength-fill"></div>
@@ -163,7 +168,8 @@
                                     </div>
                                     <div class="security-action">
                                         <span id="twoFactorStatus" class="status-badge disabled">Disabled</span>
-                                        <button id="twoFactorToggle" class="btn btn-outline" onclick="toggleTwoFactor()">
+                                        <button id="twoFactorToggle" class="btn btn-outline"
+                                            onclick="toggleTwoFactor()">
                                             Enable
                                         </button>
                                     </div>
@@ -263,10 +269,12 @@
     <script src="accessibility-manager.js"></script>
     <script src="account-settings.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
             initializeAccountSettings();
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

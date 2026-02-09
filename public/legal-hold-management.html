@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Legal Hold Management | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Legal Hold Management | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="retention-policy-styles.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
+
 <body>
     <header class="header-nav">
         <div class="navbar-container">
@@ -67,7 +71,8 @@
                             <option value="released">Released</option>
                             <option value="expired">Expired</option>
                         </select>
-                        <input type="text" id="holdSearchInput" placeholder="Search holds..." onkeyup="searchLegalHolds()">
+                        <input type="text" id="holdSearchInput" placeholder="Search holds..."
+                            onkeyup="searchLegalHolds()">
                     </div>
                 </div>
 
@@ -163,10 +168,10 @@
                             <input type="text" id="holdCourtOrder" class="form-control">
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="holdReason">Legal Hold Reason *</label>
-                        <textarea id="holdReason" class="form-control" rows="3" required 
+                        <textarea id="holdReason" class="form-control" rows="3" required
                             placeholder="Describe the legal basis for this hold..."></textarea>
                     </div>
 
@@ -185,7 +190,7 @@
                     <div class="form-group">
                         <label for="holdEvidence">Select Evidence</label>
                         <div class="evidence-selector">
-                            <input type="text" id="evidenceSearchInput" class="form-control" 
+                            <input type="text" id="evidenceSearchInput" class="form-control"
                                 placeholder="Search evidence to add to hold...">
                             <div class="evidence-search-results" id="evidenceSearchResults"></div>
                             <div class="selected-evidence" id="selectedEvidence"></div>
@@ -195,7 +200,7 @@
                     <div class="form-group">
                         <label for="holdStakeholders">Notify Stakeholders</label>
                         <div class="stakeholder-selector">
-                            <input type="text" id="stakeholderInput" class="form-control" 
+                            <input type="text" id="stakeholderInput" class="form-control"
                                 placeholder="Enter wallet addresses or email addresses...">
                             <div class="selected-stakeholders" id="selectedStakeholders"></div>
                         </div>
@@ -231,7 +236,7 @@
                 <form id="createPolicyForm">
                     <div class="form-group">
                         <label for="policyName">Policy Name *</label>
-                        <input type="text" id="policyName" class="form-control" required 
+                        <input type="text" id="policyName" class="form-control" required
                             placeholder="e.g., Criminal Evidence - 7 Years">
                     </div>
 
@@ -242,7 +247,7 @@
                         </div>
                         <div class="form-group">
                             <label for="policyJurisdiction">Jurisdiction</label>
-                            <input type="text" id="policyJurisdiction" class="form-control" 
+                            <input type="text" id="policyJurisdiction" class="form-control"
                                 placeholder="e.g., Federal, State, Local">
                         </div>
                     </div>
@@ -275,7 +280,7 @@
 
                     <div class="form-group">
                         <label for="policyLegalBasis">Legal Basis *</label>
-                        <textarea id="policyLegalBasis" class="form-control" rows="3" required 
+                        <textarea id="policyLegalBasis" class="form-control" rows="3" required
                             placeholder="Cite relevant laws, regulations, or organizational policies..."></textarea>
                     </div>
 
@@ -316,7 +321,7 @@
     <script src="retention-policy-manager.js"></script>
     <script>
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
             loadLegalHolds();
             loadRetentionPolicies();
@@ -337,7 +342,7 @@
 
         function renderLegalHolds(holds) {
             const grid = document.getElementById('legalHoldsGrid');
-            
+
             if (holds.length === 0) {
                 grid.innerHTML = '<p class="empty-state">No legal holds found</p>';
                 return;
@@ -397,7 +402,7 @@
 
         function renderRetentionPolicies(policies) {
             const grid = document.getElementById('retentionPoliciesGrid');
-            
+
             if (policies.length === 0) {
                 grid.innerHTML = '<p class="empty-state">No retention policies found</p>';
                 return;
@@ -456,7 +461,7 @@
 
         function renderExpiringEvidence(evidence) {
             const list = document.getElementById('expiringEvidenceList');
-            
+
             if (evidence.length === 0) {
                 list.innerHTML = '<p class="empty-state">No expiring evidence found</p>';
                 return;
@@ -499,9 +504,9 @@
         }
 
         // Form Handlers
-        document.getElementById('createLegalHoldForm').addEventListener('submit', async function(e) {
+        document.getElementById('createLegalHoldForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const formData = {
                 caseId: document.getElementById('holdCaseId').value,
                 reason: document.getElementById('holdReason').value,
@@ -522,9 +527,9 @@
             }
         });
 
-        document.getElementById('createPolicyForm').addEventListener('submit', async function(e) {
+        document.getElementById('createPolicyForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const formData = {
                 name: document.getElementById('policyName').value,
                 retentionDays: parseInt(document.getElementById('policyRetentionDays').value),
@@ -581,5 +586,7 @@
             }
         }
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

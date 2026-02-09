@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png"><link rel="shortcut icon" href="favicon.png" type="image/png"><title>Evidence Tagging System - EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Evidence Tagging System - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <style>
@@ -31,14 +34,14 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .tag-search {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
@@ -51,7 +54,8 @@
             font-weight: 500;
         }
 
-        .form-group input, .form-group select {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #ddd;
@@ -82,7 +86,7 @@
             padding: 10px 15px;
             background: white;
             border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .tag-badge {
@@ -182,7 +186,7 @@
             background: white;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .evidence-header {
@@ -236,7 +240,7 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
@@ -261,7 +265,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         .modal-content {
@@ -341,6 +345,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="tagging-container">
         <div class="tagging-header">
@@ -446,7 +451,7 @@
     <script src="evidence-tagging.js"></script>
     <script>
         // Additional helper functions
-        window.evidenceTagging.filterBySelectedTags = async function() {
+        window.evidenceTagging.filterBySelectedTags = async function () {
             const selectedTagIds = Array.from(this.selectedTags);
             if (selectedTagIds.length === 0) {
                 this.showMessage('Please select tags to filter by', 'warning');
@@ -490,5 +495,7 @@
             window.evidenceTagging.renderFilteredEvidence(sampleEvidence);
         });
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>

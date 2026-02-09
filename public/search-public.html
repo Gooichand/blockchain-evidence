@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -129,6 +130,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -386,6 +388,7 @@
             from {
                 transform: rotate(0deg);
             }
+
             to {
                 transform: rotate(360deg);
             }
@@ -434,6 +437,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="navbar-container"></div>
 
@@ -484,7 +488,7 @@
                     <option value="archived">Archived</option>
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="dateFromFilter">
                     <i data-lucide="calendar"></i>
@@ -492,7 +496,7 @@
                 </label>
                 <input type="date" id="dateFromFilter" onchange="applyAdvancedFilters()">
             </div>
-            
+
             <div class="filter-group">
                 <label for="dateToFilter">
                     <i data-lucide="calendar"></i>
@@ -500,7 +504,7 @@
                 </label>
                 <input type="date" id="dateToFilter" onchange="applyAdvancedFilters()">
             </div>
-            
+
             <button class="reset-filters-btn" onclick="resetAdvancedFilters()">
                 <i data-lucide="x-circle"></i>
                 Reset Filters
@@ -525,7 +529,7 @@
                 </select>
             </div>
             <div id="resultsContainer"></div>
-            
+
             <!-- Pagination -->
             <div class="pagination" id="pagination" style="display: none;">
                 <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
@@ -565,7 +569,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            
+
             // Allow search on Enter key
             document.getElementById('searchInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -582,7 +586,7 @@
             advancedFiltersVisible = !advancedFiltersVisible;
             const filtersDiv = document.getElementById('advancedFilters');
             const toggleText = document.getElementById('filterToggleText');
-            
+
             if (advancedFiltersVisible) {
                 filtersDiv.style.display = 'grid';
                 toggleText.textContent = 'Hide Advanced Filters';
@@ -590,7 +594,7 @@
                 filtersDiv.style.display = 'none';
                 toggleText.textContent = 'Show Advanced Filters';
             }
-            
+
             lucide.createIcons();
         }
 
@@ -599,7 +603,7 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('dateFromFilter').value = '';
             document.getElementById('dateToFilter').value = '';
-            
+
             const query = document.getElementById('searchInput').value.trim();
             if (query) {
                 performSearch();
@@ -634,9 +638,9 @@
                     ...(casesData.cases || []).map(c => ({ ...c, type: 'case' })),
                     ...(evidenceData.evidence || []).map(e => ({ ...e, type: 'evidence' }))
                 ];
-                
+
                 console.log('Loaded data:', searchData.length, 'items');
-                
+
                 // Hide error message if data loaded successfully
                 document.getElementById('errorMessage').style.display = 'none';
             } catch (error) {
@@ -647,16 +651,16 @@
 
         function setFilter(filter, element) {
             currentFilter = filter;
-            
+
             // Update active button
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             element.classList.add('active');
-            
+
             // Re-render icons after updating
             lucide.createIcons();
-            
+
             // Re-run search if there's a query
             const query = document.getElementById('searchInput').value.trim();
             if (query) {
@@ -666,46 +670,46 @@
 
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            
+
             // Hide previous results
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('noResults').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('pagination').style.display = 'none';
-            
+
             if (!query) {
                 showError('Please enter a search term');
                 return;
             }
-            
+
             // Show loading
             document.getElementById('loadingIndicator').style.display = 'block';
-            
+
             try {
                 // Get advanced filter values
                 const statusFilter = document.getElementById('statusFilter').value;
                 const dateFrom = document.getElementById('dateFromFilter').value;
                 const dateTo = document.getElementById('dateToFilter').value;
-                
+
                 // Filter data based on query and filters
                 filteredResults = searchData.filter(item => {
                     // Filter by type
                     if (currentFilter !== 'all' && item.type !== currentFilter.replace('s', '')) {
                         return false;
                     }
-                    
+
                     // Filter by status
                     if (statusFilter && item.status !== statusFilter) {
                         return false;
                     }
-                    
+
                     // Filter by date range
                     if (dateFrom || dateTo) {
                         const itemDate = new Date(item.created_at || item.upload_date);
                         if (dateFrom && itemDate < new Date(dateFrom)) return false;
                         if (dateTo && itemDate > new Date(dateTo)) return false;
                     }
-                    
+
                     // Search in relevant fields
                     const searchFields = [
                         item.case_number,
@@ -714,23 +718,23 @@
                         item.file_name,
                         item.status
                     ].filter(Boolean).join(' ').toLowerCase();
-                    
+
                     return searchFields.includes(query);
                 });
-                
+
                 // Hide loading
                 document.getElementById('loadingIndicator').style.display = 'none';
-                
+
                 // Reset to first page
                 currentPage = 1;
-                
+
                 // Display results
                 if (filteredResults.length > 0) {
                     displayResults();
                 } else {
                     document.getElementById('noResults').style.display = 'block';
                 }
-                
+
             } catch (error) {
                 document.getElementById('loadingIndicator').style.display = 'none';
                 showError('Error performing search: ' + error.message);
@@ -742,43 +746,43 @@
             const endIndex = startIndex + resultsPerPage;
             const resultsToShow = filteredResults.slice(startIndex, endIndex);
             const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
-            
+
             document.getElementById('searchResults').style.display = 'block';
-            document.getElementById('resultsCount').textContent = 
+            document.getElementById('resultsCount').textContent =
                 `${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''} found`;
-            
+
             const container = document.getElementById('resultsContainer');
             container.innerHTML = '';
-            
+
             resultsToShow.forEach(result => {
                 const card = createResultCard(result);
                 container.appendChild(card);
             });
-            
+
             // Update pagination
             if (totalPages > 1) {
                 document.getElementById('pagination').style.display = 'flex';
-                document.getElementById('paginationInfo').textContent = 
+                document.getElementById('paginationInfo').textContent =
                     `Page ${currentPage} of ${totalPages}`;
                 document.getElementById('prevBtn').disabled = currentPage === 1;
                 document.getElementById('nextBtn').disabled = currentPage === totalPages;
             }
-            
+
             lucide.createIcons();
         }
 
         function changePage(direction) {
             const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
             const newPage = currentPage + direction;
-            
+
             if (newPage >= 1 && newPage <= totalPages) {
                 currentPage = newPage;
                 displayResults();
-                
+
                 // Scroll to top of results
-                document.getElementById('searchResults').scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
+                document.getElementById('searchResults').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
             }
         }
@@ -787,9 +791,9 @@
             const card = document.createElement('div');
             card.className = 'result-card';
             card.onclick = () => viewResult(result);
-            
+
             const isCase = result.type === 'case';
-            
+
             card.innerHTML = `
                 <div class="result-header">
                     <div>
@@ -840,7 +844,7 @@
                     </div>
                 ` : ''}
             `;
-            
+
             return card;
         }
 
@@ -854,7 +858,7 @@
 
         function sortResults() {
             const sortValue = document.getElementById('sortDropdown').value;
-            
+
             // Sort the filtered results array
             filteredResults.sort((a, b) => {
                 switch (sortValue) {
@@ -862,22 +866,22 @@
                         const dateA = new Date(a.created_at || a.upload_date);
                         const dateB = new Date(b.created_at || b.upload_date);
                         return dateB - dateA;
-                    
+
                     case 'date-asc':
                         const dateA2 = new Date(a.created_at || a.upload_date);
                         const dateB2 = new Date(b.created_at || b.upload_date);
                         return dateA2 - dateB2;
-                    
+
                     case 'title':
                         const titleA = (a.title || a.file_name || '').toLowerCase();
                         const titleB = (b.title || b.file_name || '').toLowerCase();
                         return titleA.localeCompare(titleB);
-                    
+
                     default: // relevance
                         return 0;
                 }
             });
-            
+
             // Reset to first page and display
             currentPage = 1;
             displayResults();
@@ -886,10 +890,10 @@
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
             });
         }
 
@@ -907,5 +911,7 @@
             errorDiv.style.display = 'block';
         }
     </script>
+    <script src="footer.js"></script>
 </body>
+
 </html>
