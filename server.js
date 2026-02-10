@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const sendError = require("./utils/sendError");
 
 const app = express();
 const server = createServer(app);
@@ -295,7 +296,7 @@ const verifyAdmin = async (req, res, next) => {
         const { adminWallet } = req.body;
 
         if (!adminWallet || !validateWalletAddress(adminWallet)) {
-            return res.status(400).json({ error: 'Invalid admin wallet address' });
+           return sendError(res, 400, 'Invalid target wallet address');
         }
 
         // For local development, allow any wallet to be admin (since we're using localStorage)
@@ -480,7 +481,7 @@ app.post('/api/notifications/create', async (req, res) => {
         const { userWallet, title, message, type, data } = req.body;
 
         if (!validateWalletAddress(userWallet)) {
-            return res.status(400).json({ error: 'Invalid wallet address' });
+            return sendError(res, 400, 'Invalid wallet address');
         }
 
         // Create notification object
