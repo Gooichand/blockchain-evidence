@@ -1,116 +1,166 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.png" type="image/png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.png" type="image/png" />
     <title>Privacy Policy | EVID-DGC</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="responsive-improvements.css">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="responsive-improvements.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <script src="fixed-navbar.js"></script>
 
     <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="shield"></i>
-                </div>
-                <h1>Privacy Policy</h1>
-                <p>Last updated: February 2026</p>
-            </div>
-            <div class="card-body">
-                <div class="privacy-content">
-                    <section>
-                        <h2>1. Information We Collect</h2>
-                        <h3>Blockchain Data</h3>
-                        <ul>
-                            <li><strong>Wallet Addresses:</strong> Your MetaMask wallet address for authentication</li>
-                            <li><strong>Evidence Hashes:</strong> Cryptographic hashes of evidence files (NOT the actual
-                                files)</li>
-                            <li><strong>Transaction Records:</strong> Blockchain transaction hashes for audit trails
-                            </li>
-                            <li><strong>Timestamps:</strong> When evidence was submitted or accessed</li>
-                        </ul>
-
-                        <h3>Application Data</h3>
-                        <ul>
-                            <li><strong>User Profile:</strong> Name, role, department, jurisdiction</li>
-                            <li><strong>Case Information:</strong> Case numbers, titles, descriptions</li>
-                            <li><strong>Activity Logs:</strong> System access and action records</li>
-                            <li><strong>Evidence Metadata:</strong> File names, types, sizes (stored securely off-chain)
-                            </li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2>2. What Goes On-Chain vs Off-Chain</h2>
-                        <div class="data-storage-grid">
-                            <div class="storage-item on-chain">
-                                <h3><i data-lucide="link"></i> On Blockchain (Public)</h3>
-                                <ul>
-                                    <li>Evidence file hashes (SHA-256)</li>
-                                    <li>Wallet addresses</li>
-                                    <li>Timestamps</li>
-                                    <li>Transaction hashes</li>
-                                </ul>
-                            </div>
-                            <div class="storage-item off-chain">
-                                <h3><i data-lucide="database"></i> Off-Chain (Private)</h3>
-                                <ul>
-                                    <li>Actual evidence files</li>
-                                    <li>Personal information</li>
-                                    <li>Case details</li>
-                                    <li>User profiles</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h2>3. Data Security</h2>
-                        <ul>
-                            <li><strong>Encryption:</strong> All data encrypted in transit and at rest</li>
-                            <li><strong>Access Controls:</strong> Role-based permissions and multi-factor authentication
-                            </li>
-                            <li><strong>Blockchain Security:</strong> Immutable records on distributed ledger</li>
-                            <li><strong>Regular Audits:</strong> Security assessments and penetration testing</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2>4. Your Rights</h2>
-                        <ul>
-                            <li><strong>Access:</strong> Request information about your data</li>
-                            <li><strong>Correction:</strong> Update inaccurate personal information</li>
-                            <li><strong>Deletion:</strong> Request deletion where legally permissible</li>
-                            <li><strong>Portability:</strong> Export your data in standard formats</li>
-                        </ul>
-                        <p><strong>Note:</strong> Some rights may be limited due to legal evidence preservation
-                            requirements.</p>
-                    </section>
-
-                    <section>
-                        <h2>5. Contact Information</h2>
-                        <p>For privacy-related questions: <strong>DGC2MHNE@proton.me</strong></p>
-                    </section>
-                </div>
-            </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">
+            <i data-lucide="shield"></i>
+          </div>
+          <h1>Privacy Policy</h1>
+          <p>Last updated: February 2026</p>
         </div>
+        <div class="card-body">
+          <div class="privacy-content">
+            <section style="--section-index: 0">
+              <h2>1. Information We Collect</h2>
+              <h3>Blockchain Data</h3>
+              <ul>
+                <li>
+                  <strong>Wallet Addresses:</strong> Your MetaMask wallet
+                  address for authentication
+                </li>
+                <li>
+                  <strong>Evidence Hashes:</strong> Cryptographic hashes of
+                  evidence files (NOT the actual files)
+                </li>
+                <li>
+                  <strong>Transaction Records:</strong> Blockchain transaction
+                  hashes for audit trails
+                </li>
+                <li>
+                  <strong>Timestamps:</strong> When evidence was submitted or
+                  accessed
+                </li>
+              </ul>
+
+              <h3>Application Data</h3>
+              <ul>
+                <li>
+                  <strong>User Profile:</strong> Name, role, department,
+                  jurisdiction
+                </li>
+                <li>
+                  <strong>Case Information:</strong> Case numbers, titles,
+                  descriptions
+                </li>
+                <li>
+                  <strong>Activity Logs:</strong> System access and action
+                  records
+                </li>
+                <li>
+                  <strong>Evidence Metadata:</strong> File names, types, sizes
+                  (stored securely off-chain)
+                </li>
+              </ul>
+            </section>
+
+            <section style="--section-index: 1">
+              <h2>2. What Goes On-Chain vs Off-Chain</h2>
+              <div class="data-storage-grid">
+                <div class="storage-item on-chain">
+                  <h3><i data-lucide="link"></i> On Blockchain (Public)</h3>
+                  <ul>
+                    <li>Evidence file hashes (SHA-256)</li>
+                    <li>Wallet addresses</li>
+                    <li>Timestamps</li>
+                    <li>Transaction hashes</li>
+                  </ul>
+                </div>
+                <div class="storage-item off-chain">
+                  <h3><i data-lucide="database"></i> Off-Chain (Private)</h3>
+                  <ul>
+                    <li>Actual evidence files</li>
+                    <li>Personal information</li>
+                    <li>Case details</li>
+                    <li>User profiles</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section style="--section-index: 2">
+              <h2>3. Data Security</h2>
+              <ul>
+                <li>
+                  <strong>Encryption:</strong> All data encrypted in transit and
+                  at rest
+                </li>
+                <li>
+                  <strong>Access Controls:</strong> Role-based permissions and
+                  multi-factor authentication
+                </li>
+                <li>
+                  <strong>Blockchain Security:</strong> Immutable records on
+                  distributed ledger
+                </li>
+                <li>
+                  <strong>Regular Audits:</strong> Security assessments and
+                  penetration testing
+                </li>
+              </ul>
+            </section>
+
+            <section style="--section-index: 3">
+              <h2>4. Your Rights</h2>
+              <ul>
+                <li>
+                  <strong>Access:</strong> Request information about your data
+                </li>
+                <li>
+                  <strong>Correction:</strong> Update inaccurate personal
+                  information
+                </li>
+                <li>
+                  <strong>Deletion:</strong> Request deletion where legally
+                  permissible
+                </li>
+                <li>
+                  <strong>Portability:</strong> Export your data in standard
+                  formats
+                </li>
+              </ul>
+              <p>
+                <strong>Note:</strong> Some rights may be limited due to legal
+                evidence preservation requirements.
+              </p>
+            </section>
+
+            <section style="--section-index: 4">
+              <h2>5. Contact Information</h2>
+              <p>
+                For privacy-related questions:
+                <strong>DGC2MHNE@proton.me</strong>
+              </p>
+            </section>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            lucide.createIcons();
-        });
+      document.addEventListener("DOMContentLoaded", function () {
+        lucide.createIcons();
+      });
+    </script>
+
+    <script>
+      window.addEventListener("load", () => {
+        document.querySelector(".container")?.classList.add("animate-in");
+      });
     </script>
     <script src="footer.js"></script>
-</body>
-
+  </body>
 </html>
