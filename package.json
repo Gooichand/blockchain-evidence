@@ -9,6 +9,9 @@
     "setup": "node contributor-setup.js",
     "contributor-setup": "node contributor-setup.js --contributor",
     "health": "curl http://localhost:3000/api/health || echo 'Server not running'",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "echo 'Linting not configured'",
     "build": "echo 'Build not required for this project'"
   },
@@ -62,7 +65,9 @@
     "vis-timeline": "^7.7.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.2.2"
   },
   "engines": {
     "node": ">=16.0.0"

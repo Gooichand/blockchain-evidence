@@ -87,10 +87,13 @@ app.use((req, res) => {
 });
 
 // ── Start server ────────────────────────────────────────────────────────────
-server.listen(PORT, () => {
-    console.log(`🔐 EVID-DGC API Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🔔 WebSocket notifications enabled`);
-});
+// Only start the server if this file is run directly (not when required for testing)
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`🔐 EVID-DGC API Server running on port ${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+        console.log(`🔔 WebSocket notifications enabled`);
+    });
+}
 
 module.exports = app;
