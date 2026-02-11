@@ -94,7 +94,6 @@
 
     <script src="config.js"></script>
     <script src="storage.js"></script>
-    <script src="dashboard-fix.js"></script>
     <script>
         // Role mapping for dashboard routing
         const ROLE_DASHBOARDS = {
@@ -257,9 +256,8 @@
 
                 updateProgress('Complete!', 100);
 
-                setTimeout(() => {
-                    window.location.href = dashboardUrl;
-                }, 500);
+                // Immediate redirect (no timeout)
+                window.location.href = dashboardUrl;
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
