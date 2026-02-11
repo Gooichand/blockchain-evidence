@@ -61,11 +61,12 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="filterDate">📅 Date Range</label>
-                        <input type="date" id="filterDateFrom" class="form-control"
-                            style="width: 48%; display: inline-block;">
-                        <input type="date" id="filterDateTo" class="form-control"
-                            style="width: 48%; display: inline-block; margin-left: 4%;">
+                        <label for="filterDateFrom">📅 From Date</label>
+                        <input type="date" id="filterDateFrom" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterDateTo">📅 To Date</label>
+                        <input type="date" id="filterDateTo" class="form-control">
                     </div>
                     <div class="form-group">
                         <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply Filters</button>
@@ -489,9 +490,21 @@
     <style>
         .filter-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 2fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
             gap: 20px;
             align-items: end;
+        }
+
+        @media (max-width: 900px) {
+            .filter-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         .audit-log {
