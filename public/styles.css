@@ -108,7 +108,7 @@
     left: 0;
     right: 0;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.98);
+    background: var(--nav-bg);
     padding: 20px;
     gap: 8px;
     border-bottom: 1px solid var(--border-light);
@@ -138,17 +138,38 @@
   --primary-red: #d32f2f;
   --primary-red-dark: #c41c3b;
   --primary-red-light: #ffebee;
-  --white: #ffffff;
-  --off-white: #ffffff;
-  --light-gray: #ffffff;
-  --medium-gray: #ffebee;
+  --bg-gradient: linear-gradient(135deg, #ffffff 0%, #fef2f2 50%, #dc2626 100%);
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --modal-bg: #ffffff;
   --text-primary: #8b0000;
   --text-secondary: #b22222;
   --text-muted: #dc143c;
   --border-light: #ffcdd2;
+  --input-bg: #ffffff;
+  --input-text: #000000;
   --shadow-light: 0 2px 8px rgba(220, 38, 38, 0.1);
   --shadow-medium: 0 4px 16px rgba(220, 38, 38, 0.15);
   --shadow-heavy: 0 8px 32px rgba(220, 38, 38, 0.2);
+}
+
+body.dark-theme {
+  --primary-red: #ff5252;
+  --primary-red-dark: #ff8a80;
+  --primary-red-light: #2b0b0e;
+  --bg-gradient: linear-gradient(135deg, #121212 0%, #1a0505 50%, #2b0b0b 100%);
+  --nav-bg: rgba(18, 18, 18, 0.95);
+  --card-bg: rgba(30, 30, 30, 0.95);
+  --modal-bg: #1e1e1e;
+  --text-primary: #ffebee;
+  --text-secondary: #ffcdd2;
+  --text-muted: #ef9a9a;
+  --border-light: #5c1818;
+  --input-text: #ffffff;
+  --input-bg: #2d2d2d;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -158,23 +179,19 @@
 }
 
 body {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 50%, #dc2626 100%);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg-gradient);
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
   font-weight: 400;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Header Navigation */
+
 .header-nav {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--nav-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(220, 38, 38, 0.2);
   position: sticky;
@@ -223,6 +240,7 @@ body {
   padding: 8px 16px;
   border-radius: 8px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -235,7 +253,7 @@ body {
   align-items: center;
   gap: 8px;
   background: var(--primary-red);
-  color: var(--white);
+  color: #ffffff;
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -269,7 +287,7 @@ body {
   margin: 0 auto;
   padding: 24px;
 
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05); 
   border-radius: 20px;
   backdrop-filter: blur(10px);
 
@@ -306,7 +324,7 @@ body {
 /* How It Works Section */
 .how-it-works-section {
   margin: 60px 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 40px;
   backdrop-filter: blur(10px);
@@ -322,8 +340,8 @@ body {
 }
 
 .step-item {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid rgba(220, 38, 38, 0.2);
+  background: var(--card-bg); 
+  border: 2px solid var(--border-light); 
   border-radius: 16px;
   padding: 32px 24px;
   text-align: center;
@@ -421,7 +439,7 @@ body {
 .hero-section {
   text-align: center;
   padding: 100px 0;
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 50%, #dc2626 100%);
+  background: var(--bg-gradient);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
@@ -524,7 +542,7 @@ body {
 
 /* Cards */
 .card {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 12px;
   padding: 32px;
@@ -640,7 +658,7 @@ body {
   padding: 16px 32px;
   font-size: clamp(0.95rem, 2vw, 1.1rem);
   font-weight: 600;
-  color: var(--white);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-light);
@@ -732,8 +750,8 @@ body {
   padding: 16px 20px;
   border: 2px solid var(--border-light);
   border-radius: 10px;
-  background: var(--white);
-  color: var(--text-primary);
+  background: var(--input-bg); 
+  color: var(--input-text); 
   font-size: clamp(0.95rem, 2vw, 1.1rem);
   font-family: "Inter", sans-serif;
   transition: all 0.2s ease;
@@ -821,7 +839,7 @@ body {
 }
 
 .role-card {
-  background: var(--white);
+  background: var(--card-bg);
   border: 2px solid var(--border-light);
   border-radius: 12px;
   padding: 24px;
@@ -873,7 +891,7 @@ body {
 
 /* Wallet Status */
 .wallet-status {
-  background: var(--white);
+  background: var(--card-bg);
   border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 24px;
@@ -999,7 +1017,7 @@ body {
 }
 
 .plan-option {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   border: 2px solid rgba(220, 38, 38, 0.2);
   border-radius: 12px;
   padding: 20px;
@@ -1069,7 +1087,7 @@ body.modal-open {
 }
 
 .modal-content {
-  background: var(--white);
+  background: var(--modal-bg);
   border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 32px;
@@ -1364,7 +1382,7 @@ body.modal-open {
 /* Documentation Section */
 .documentation-section {
   margin: 60px 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-gradient);
   border-radius: 20px;
   padding: 40px;
   backdrop-filter: blur(10px);
@@ -1378,7 +1396,7 @@ body.modal-open {
 }
 
 .doc-item {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 16px;
   padding: 24px;
@@ -1437,7 +1455,7 @@ body.modal-open {
 /* FAQ Section */
 .faq-section {
   margin: 60px 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 40px;
   backdrop-filter: blur(10px);
@@ -1448,7 +1466,7 @@ body.modal-open {
 }
 
 .faq-item {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 12px;
   margin-bottom: 16px;
@@ -1514,7 +1532,7 @@ body.modal-open {
 /* Contact Section */
 .contact-section {
   margin: 60px 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-gradient);
   border-radius: 20px;
   padding: 40px;
   backdrop-filter: blur(10px);
@@ -1528,7 +1546,7 @@ body.modal-open {
 }
 
 .contact-item {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-gradient);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 12px;
   padding: 24px;
@@ -1847,7 +1865,7 @@ body.modal-open {
 }
 
 .footer {
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 50%, #dc2626 100%);
+  background: var(--bg-gradient);
   color: var(--text-primary);
   margin-top: 80px;
   border-top: 1px solid rgba(220, 38, 38, 0.2);

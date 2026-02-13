@@ -41,6 +41,7 @@ function initializeApp() {
     }
 
     // Initialize components
+    initializeTheme();
     initializeNavigation();
     initializeScrollUp();
     initializeRoleSelection();
@@ -966,3 +967,41 @@ window.addEventListener("error", function (event) {
 window.addEventListener("unhandledrejection", function (event) {
   console.error("Unhandled promise rejection:", event.reason);
 });
+
+function initializeTheme() {
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+    const currentTheme = localStorage.getItem('theme');
+    
+    if (currentTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if(themeIcon) themeIcon.setAttribute('data-lucide', 'sun');
+        if(themeText) themeText.textContent = 'Light';
+    }
+    
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+    
+    body.classList.toggle('dark-theme');
+    
+    if (body.classList.contains('dark-theme')) {
+        localStorage.setItem('theme', 'dark');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeText.textContent = 'Light';
+    } else {
+        localStorage.setItem('theme', 'light');
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeText.textContent = 'Dark';
+    }
+    
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
