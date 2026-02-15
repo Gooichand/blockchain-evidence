@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sitemap | EVID-DGC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="logo-32x32.png">
+  <!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <style>
+
+    /* ================= ROOT COLORS ================= */
+
+    :root {
+      --primary-red: #d32f2f;
+      --primary-red-dark: #c41c3b;
+      --primary-red-light: #ffebee;
+
+      --white: #ffffff;
+
+      --text-primary: #8b0000;
+      --text-secondary: #b22222;
+      --text-muted: #dc143c;
+
+      --border-light: #ffcdd2;
+
+      --shadow-light: 0 2px 8px rgba(220, 38, 38, 0.1);
+      --shadow-medium: 0 4px 16px rgba(220, 38, 38, 0.15);
+      --shadow-heavy: 0 8px 32px rgba(220, 38, 38, 0.2);
+    }
+
+
+    /* ================= RESET ================= */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      background: #fdf6f6;
+      color: var(--text-primary);
+    }
+
+
+    /* ================= HERO ================= */
+
+    .hero {
+      background: linear-gradient(
+        135deg,
+        #fbe9e7,
+        #ffcdd2,
+        #ef9a9a,
+        #e53935
+      );
+
+      padding: 80px 60px;
+      border-radius: 20px;
+      margin: 40px;
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 70px;
+      font-weight: 800;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.15);
+      color: #e53935;
+    }
+
+    .hero p {
+      font-size: 22px;
+      color: #e53935;
+    }
+
+
+    /* ================= CONTAINER ================= */
+
+    .container {
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+
+
+    /* ================= GRID ================= */
+
+    .sitemap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+
+    /* ================= CARD ================= */
+
+    .sitemap-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: var(--shadow-medium);
+      border: 1px solid var(--border-light);
+
+      transition: 0.3s ease;
+    }
+
+    .sitemap-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-heavy);
+    }
+
+    .sitemap-card h2 {
+      color: var(--primary-red);
+      margin-bottom: 15px;
+      font-size: 22px;
+      border-bottom: 2px solid var(--border-light);
+      padding-bottom: 8px;
+    }
+
+
+    /* ================= LINKS ================= */
+
+    .sitemap-links {
+      list-style: none;
+    }
+
+    .sitemap-links li {
+      margin-bottom: 10px;
+    }
+
+    .sitemap-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .sitemap-links a:hover {
+      color: var(--primary-red-dark);
+      text-decoration: none;
+      color: #ef9a9a;
+    }
+
+
+    /* ================= FOOTER ================= */
+
+    footer {
+      margin-top: 80px;
+      padding: 20px;
+      background: #111;
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:768px){
+
+      .hero {
+        padding: 50px 25px;
+        margin: 20px;
+      }
+
+      .hero h1 {
+        font-size: 42px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+    }
+.sitemap-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sitemap-card h2 i {
+  width: 22px;
+  height: 22px;
+  color: var(--primary-red);
+}
+
+  </style>
+</head>
+
+
+<body>
+
+
+  <!-- HERO -->
+
+  <section class="hero">
+    <h1>Sitemap</h1>
+    <p>Browse all pages and sections of the EVID-DGC platform</p>
+  </section>
+
+
+
+  <!-- CONTENT -->
+
+  <div class="container">
+
+    <div class="sitemap-grid">
+
+
+      <!-- GENERAL -->
+
+      <div class="sitemap-card">
+        <h2>
+  <i data-lucide="home"></i> General
+</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="search-public.html">Public Search</a></li>
+          <li><a href="help-center.html">Help Center</a></li>
+        </ul>
+      </div>
+
+
+      <!-- AUTH --> 
+
+      <div class="sitemap-card">
+      <h2><i data-lucide="shield-check"></i> Authentication</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="reset-password.html">Reset Password</a></li>
+          <li><a href="forgot-password.html">Forgot Password</a></li>
+          <li><a href="two-factor-auth.html">Two-Factor Auth</a></li>
+          <li><a href="user-roles.html">User Roles</a></li>
+        </ul>
+      </div>
+
+
+      <!-- DASHBOARDS -->
+
+      <div class="sitemap-card">
+      <h2><i data-lucide="layout-dashboard"></i> Dashboards</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="dashboard.html">Main Dashboard</a></li>
+          <li><a href="dashboard-public.html">Public</a></li>
+          <li><a href="dashboard-investigator.html">Investigator</a></li>
+          <li><a href="dashboard-analyst.html">Analyst</a></li>
+          <li><a href="dashboard-legal.html">Legal</a></li>
+          <li><a href="dashboard-manager.html">Manager</a></li>
+          <li><a href="dashboard-auditor.html">Auditor</a></li>
+          <li><a href="dashboard-court.html">Court</a></li>
+        </ul>
+      </div>
+
+
+      <!-- CASE MANAGEMENT -->
+
+      <div class="sitemap-card">
+        <h2><i data-lucide="folder"></i> Case Management</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="case-management.html">Case Management</a></li>
+          <li><a href="cases.html">Case Listing</a></li>
+          <li><a href="case-timeline.html">Case Timeline</a></li>
+          <li><a href="timeline-visualization.html">Timeline View</a></li>
+        </ul>
+      </div>
+
+
+      <!-- EVIDENCE -->
+
+      <div class="sitemap-card">
+        <h2><i data-lucide="file-lock"></i> Evidence</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="evidence-manager.html">Evidence Manager</a></li>
+          <li><a href="evidence-upload.html">Upload Evidence</a></li>
+          <li><a href="evidence-preview.html">Preview Evidence</a></li>
+          <li><a href="evidence-comparison.html">Compare Evidence</a></li>
+          <li><a href="evidence-export.html">Export Evidence</a></li>
+          <li><a href="evidence-tagging.html">Tag Evidence</a></li>
+          <li><a href="evidence-verification.html">Verification</a></li>
+        </ul>
+      </div>
+
+
+      <!-- POLICY -->
+
+      <div class="sitemap-card">
+        <h2> <i data-lucide="file-text"></i>Policies & Legal</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="cookies.html">Cookies Policy</a></li>
+          <li><a href="terms.html">Terms & Conditions</a></li>
+          <li><a href="terms_of_service.html">Terms of Service</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="security_policy.html">Security Policy</a></li>
+          <li><a href="data-protection.html">Data Protection</a></li>
+        </ul>
+      </div>
+
+
+      <!-- ADMIN -->
+
+      <div class="sitemap-card">
+        <h2> <i data-lucide="settings"></i> Administration</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="admin.html">Admin Panel</a></li>
+          <li><a href="settings.html">Settings</a></li>
+          <li><a href="system-health.html">System Health</a></li>
+          <li><a href="audit-trail.html">Audit Trail</a></li>
+          <li><a href="legal-hold-management.html">Legal Hold</a></li>
+        </ul>
+      </div>
+
+
+      <!-- SUPPORT -->
+
+      <div class="sitemap-card">
+        <h2><i data-lucide="help-circle"></i> Support</h2>
+
+        <ul class="sitemap-links">
+          <li><a href="support.html">Support</a></li>
+          <li><a href="troubleshooting.html">Troubleshooting</a></li>
+          <li><a href="api-reference.html">API Reference</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+
+    </div>
+
+  </div>
+
+
+
+  <!-- FOOTER -->
+
+  <footer>
+    © 2025 EVID-DGC |
+    <a href="privacy.html">Privacy</a> |
+    <a href="cookies.html">Cookies</a> |
+    <a href="sitemap.html">Sitemap</a>
+  </footer>
+
+<script>
+  lucide.createIcons();
+</script>
+
+</body>
+</html>

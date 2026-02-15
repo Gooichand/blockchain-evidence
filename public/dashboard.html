@@ -153,7 +153,6 @@
             8: 'Administrator'
         };
 
-        let progressInterval;
         let retryCount = 0;
         const MAX_RETRIES = 2;
 
@@ -163,133 +162,81 @@
         });
 
         async function initializeDashboard() {
-            try {
-                updateProgress('Initializing dashboard...', 10);
+    const currentUserRaw = localStorage.getItem('currentUser');
+    if (!currentUserRaw) {
+        window.location.replace('index.html');
+        return;
+    }
 
-                // Initialize logout button
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', logout);
-                }
+    try {
+        let userAccount = currentUserRaw;
+        let userData = null;
 
-                updateProgress('Checking authentication...', 30);
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                // Get user account
-                const currentUserRaw = localStorage.getItem('currentUser');
-                console.log('Dashboard router - raw currentUser:', currentUserRaw);
-
-                if (!currentUserRaw) {
-                    throw new Error('Please log in first.');
-                }
-
-                let userAccount = currentUserRaw;
-                let userData = null;
-
-                // Parse if it's a JSON object (new format)
-                if (currentUserRaw.startsWith('{')) {
-                    try {
-                        const parsed = JSON.parse(currentUserRaw);
-                        userData = parsed.user;
-                        if (parsed.type === 'email') {
-                            userAccount = userData.email;
-                        } else {
-                            userAccount = userData.walletAddress || userData.address;
-                        }
-                    } catch (e) {
-                        console.error('Error parsing currentUser:', e);
-                    }
-                }
-
-                updateProgress('Loading user profile...', 50);
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                // Get user data if not already parsed
-                if (!userData) {
-                    userData = await getUserInfo(userAccount);
-                }
-
-                let finalRole = localStorage.getItem('selectedRole');
-
-                // If no selected role, try to get from user data
-                if (!finalRole && userData && userData.role) {
-                    finalRole = userData.role;
-                    localStorage.setItem('selectedRole', finalRole);
-                }
-
-                // If still no role, default to public_viewer
-                if (!finalRole) {
-                    finalRole = 'public_viewer';
-                    localStorage.setItem('selectedRole', finalRole);
-                }
-
-                console.log('Dashboard router - finalRole:', finalRole);
-
-                // Create user info
-                const userInfo = {
-                    role: finalRole,
-                    fullName: userData ? userData.fullName || userData.full_name || 'User' : 'User',
-                    walletAddress: userAccount
-                };
-
-                updateProgress('Preparing dashboard...', 70);
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                // Update navbar with user info
-                updateNavbarUserInfo(userInfo, userAccount);
-
-                updateProgress('Redirecting to dashboard...', 90);
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                // Route to appropriate dashboard
-                const dashboardUrl = getDashboardUrl(finalRole);
-
-                console.log(`Redirecting ${finalRole} to ${dashboardUrl}`);
-
-                // Track dashboard access
-                if (typeof gtag === 'function') {
-                    gtag('event', 'dashboard_access', {
-                        'user_role': ROLE_NAMES[finalRole] || 'Unknown',
-                        'dashboard_url': dashboardUrl
-                    });
-                }
-
-                updateProgress('Complete!', 100);
-
-                // Immediate redirect (no timeout)
-                window.location.href = dashboardUrl;
-
-            } catch (error) {
-                console.error('Dashboard initialization error:', error);
-                // Don't show error modal if it's just a temporary loading issue
-                if (retryCount < MAX_RETRIES) {
-                    retryCount++;
-                    console.log(`Retrying dashboard load (${retryCount}/${MAX_RETRIES})...`);
-                    setTimeout(() => {
-                        initializeDashboard();
-                    }, 1000);
-                } else {
-                    showError(error.message || 'Failed to load dashboard. Please try again.');
-                }
-            }
+        // Parse user info if stored as JSON
+        if (currentUserRaw.startsWith('{')) {
+            const parsed = JSON.parse(currentUserRaw);
+            userData = parsed.user;
+            userAccount = parsed.type === 'email'
+                ? userData.email
+                : userData.walletAddress || userData.address;
         }
 
-        async function getUserInfo(userAccount) {
-            let userInfo = null;
-
-            // Get from localStorage only
-            const savedUser = localStorage.getItem('evidUser_' + userAccount);
-            if (savedUser) {
-                try {
-                    userInfo = JSON.parse(savedUser);
-                    console.log('User info from localStorage:', userInfo);
-                } catch (e) {
-                    console.error('Error parsing user data:', e);
-                }
-            }
-
-            return userInfo;
+        // Load user profile if needed
+        if (!userData) {
+            userData = await getUserInfo(userAccount);
         }
+
+        // Resolve role
+        let finalRole = localStorage.getItem('selectedRole')
+            || userData?.role
+            || 'public_viewer';
+
+        localStorage.setItem('selectedRole', finalRole);
+
+        const dashboardUrl = getDashboardUrl(finalRole);
+
+        // Track access BEFORE redirect
+        if (typeof gtag === 'function') {
+            gtag('event', 'dashboard_access', {
+                user_role: ROLE_NAMES[finalRole] || 'Unknown',
+                dashboard_url: dashboardUrl
+            });
+        }
+        updateProgress('Redirecting...', 100);
+        window.location.replace(dashboardUrl);
+
+    } catch (error) {
+        // error logging
+        console.error('Dashboard error:', {
+            message: error.message,
+            stack: error.stack,
+            currentUser: localStorage.getItem('currentUser'),
+            retryCount
+        });
+        showError(`Failed: ${error.message || 'Unable to load dashboard'}`);
+
+    }
+}
+
+        const userCache = new Map();
+
+async function getUserInfo(userAccount) {
+    if (userCache.has(userAccount)) {
+        return userCache.get(userAccount);
+    }
+
+    const savedUser = localStorage.getItem('evidUser_' + userAccount);
+    if (!savedUser) return null;
+
+    try {
+        const parsed = JSON.parse(savedUser);
+        userCache.set(userAccount, parsed);
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
 
         function getDashboardUrl(role) {
             return ROLE_DASHBOARDS[role] || 'dashboard-public.html';
@@ -585,5 +532,5 @@
         document.head.appendChild(style);
     </script>
 </body>
-
+<!--  -->
 </html>
