@@ -768,73 +768,7 @@
                         };
             }
         
-            // Filter and validate users
-            const validUsers = users.filter(user => {
-                const validEmail = typeof user.email === 'string' &&
-                    user.email !== 'N/A' &&
-                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email.trim());
-                const validWallet = typeof user.wallet_address === 'string' && (
-                    /^0x[a-fA-F0-9]{40}$/.test(user.wallet_address) || user.wallet_address.startsWith('0xtest')
-                );
-                return validEmail && validWallet;
-            });
-        
-            userCount.textContent = `Total Users: ${validUsers.length}`;
-        
-            if (validUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No valid users found</td></tr>';
-                return;
-            }
-        
-            tbody.innerHTML = validUsers.map(user => `
-                <tr class="${!user.is_active ? 'inactive-user' : ''} ${user.account_type === 'test' ? 'test-account' : ''}">
-                    <td>${user.email} ${user.account_type === 'test' ? '<span class="badge" style="background: #ffc107; color: #000; font-size: 0.7em;">TEST</span>' : ''}</td>
-                    <td class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</td>
-                    <td><span class="badge badge-${getRoleClass(user.role)}">${formatRole(user.role)}</span></td>
-                    <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
-                    <td class="action-buttons">
-                        ${user.wallet_address !== currentAdmin ? `
-                            ${user.role !== 'admin' && user.role !== 8 ? `
-                                <button class="btn btn-sm btn-warning" onclick="makeAdmin('${user.wallet_address}', '${user.full_name}')" title="Make Admin">
-                                    <i data-lucide="shield-plus"></i>
-                                    Make Admin
-                                </button>
-                            ` : `
-                                <span class="badge badge-admin">Admin</span>
-                            `}
-                            <button class="btn btn-sm btn-danger" onclick="deactivateUser('${user.wallet_address}', '${user.full_name}')" title="Deactivate User">
-                                <i data-lucide="user-x"></i>
-                                Deactivate
-                            </button>
-                        ` : '<span class="text-muted">Current Admin</span>'}
-                    </td>
-                </tr>
-            `).join('');
-            lucide.createIcons();
-                    <td>${user.email} ${user.account_type === 'test' ? '<span class="badge" style="background: #ffc107; color: #000; font-size: 0.7em;">TEST</span>' : ''}</td>
-                    <td class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</td>
-                    <td><span class="badge badge-${getRoleClass(user.role)}">${formatRole(user.role)}</span></td>
-                    <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
-                    <td class="action-buttons">
-                        ${user.wallet_address !== currentAdmin ? `
-                            ${user.role !== 'admin' && user.role !== 8 ? `
-                                <button class="btn btn-sm btn-warning" onclick="makeAdmin('${user.wallet_address}', '${user.full_name}')" title="Make Admin">
-                                    <i data-lucide="shield-plus"></i>
-                                    Make Admin
-                                </button>
-                            ` : `
-                                <span class="badge badge-admin">Admin</span>
-                            `}
-                            <button class="btn btn-sm btn-danger" onclick="deactivateUser('${user.wallet_address}', '${user.full_name}')" title="Deactivate User">
-                                <i data-lucide="user-x"></i>
-                                Deactivate
-                            </button>
-                        ` : '<span class="text-muted">Current Admin</span>'}
-                    </td>
-                </tr>
-            `).join('');
-
-            lucide.createIcons();
+            // (Removed duplicate/unsafe code)
         }
 
         function showAddAdminModal() {
