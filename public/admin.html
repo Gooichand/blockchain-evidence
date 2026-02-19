@@ -673,37 +673,109 @@
                 return;
             }
 
-            tbody.innerHTML = users.map(user => `
-                    <tr class="${!user.is_active ? 'inactive-user' : ''} ${user.account_type === 'test' ? 'test-account' : ''}">
-                        <td>${user.email} ${user.account_type === 'test' ? '<span class="badge" style="background: #ffc107; color: #000; font-size: 0.7em;">TEST</span>' : ''}</td>
-                        <td class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</td>
-                        <td><span class="badge badge-${getRoleClass(user.role)}">${formatRole(user.role)}</span></td>
-                        <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
-                        <td class="action-buttons">
-                            ${user.wallet_address !== currentAdmin ? `
-                                ${user.role !== 'admin' && user.role !== 8 ? `
-                                    <button class="btn btn-sm btn-warning" onclick="makeAdmin('${user.wallet_address}', '${user.full_name}')" title="Make Admin">
-                                        <i data-lucide="shield-plus"></i>
-                                        Make Admin
-                                    </button>
-                                ` : `
-                                    <span class="badge badge-admin">Admin</span>
-                                `}
-                                <button class="btn btn-sm btn-danger" onclick="deactivateUser('${user.wallet_address}', '${user.full_name}')" title="Deactivate User">
-                                    <i data-lucide="user-x"></i>
-                                    Deactivate
-                                </button>
-                            ` : '<span class="text-muted">Current Admin</span>'}
-                        </td>
-                    </tr>
-                `).join('');
-                lucide.createIcons();
+            tbody.innerHTML = '';
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.className = (!user.is_active ? 'inactive-user ' : '') + (user.account_type === 'test' ? 'test-account' : '');
+
+                // Email cell (safe)
+                const tdEmail = document.createElement('td');
+                tdEmail.textContent = user.email;
+                if (user.account_type === 'test') {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge';
+                    badge.style.background = '#ffc107';
+                    badge.style.color = '#000';
+                    badge.style.fontSize = '0.7em';
+                    badge.textContent = 'TEST';
+                    tdEmail.appendChild(document.createTextNode(' '));
+                    tdEmail.appendChild(badge);
+                }
+                tr.appendChild(tdEmail);
+
+                // Wallet cell
+                const tdWallet = document.createElement('td');
+                tdWallet.className = 'wallet-address';
+                tdWallet.textContent = user.wallet_address.slice(0, 8) + '...' + user.wallet_address.slice(-6);
+                tr.appendChild(tdWallet);
+
+                // Role cell
+                const tdRole = document.createElement('td');
+                const spanRole = document.createElement('span');
+                spanRole.className = 'badge badge-' + getRoleClass(user.role);
+                spanRole.textContent = formatRole(user.role);
+                tdRole.appendChild(spanRole);
+                tr.appendChild(tdRole);
+
+                // Status cell
+                const tdStatus = document.createElement('td');
+                const spanStatus = document.createElement('span');
+                spanStatus.className = 'status-badge ' + (user.is_active ? 'status-active' : 'status-inactive');
+                spanStatus.textContent = user.is_active ? 'Active' : 'Inactive';
+                tdStatus.appendChild(spanStatus);
+                tr.appendChild(tdStatus);
+
+                // Actions cell
+                const tdActions = document.createElement('td');
+                tdActions.className = 'action-buttons';
+                if (user.wallet_address !== currentAdmin) {
+                    if (user.role !== 'admin' && user.role !== 8) {
+                        const btnAdmin = document.createElement('button');
+                        btnAdmin.className = 'btn btn-sm btn-warning';
+                        btnAdmin.title = 'Make Admin';
+                        btnAdmin.setAttribute('data-action', 'make-admin');
+                        btnAdmin.setAttribute('data-wallet-address', user.wallet_address);
+                        btnAdmin.setAttribute('data-full-name', user.full_name || '');
+                        btnAdmin.innerHTML = '<i data-lucide="shield-plus"></i> Make Admin';
+                        tdActions.appendChild(btnAdmin);
+                    } else {
+                        const spanAdmin = document.createElement('span');
+                        spanAdmin.className = 'badge badge-admin';
+                        spanAdmin.textContent = 'Admin';
+                        tdActions.appendChild(spanAdmin);
+                    }
+                    const btnDeactivate = document.createElement('button');
+                    btnDeactivate.className = 'btn btn-sm btn-danger';
+                    btnDeactivate.title = 'Deactivate User';
+                    btnDeactivate.setAttribute('data-action', 'deactivate-user');
+                    btnDeactivate.setAttribute('data-wallet-address', user.wallet_address);
+                    btnDeactivate.setAttribute('data-full-name', user.full_name || '');
+                    btnDeactivate.innerHTML = '<i data-lucide="user-x"></i> Deactivate';
+                    tdActions.appendChild(btnDeactivate);
+                } else {
+                    const spanCurrent = document.createElement('span');
+                    spanCurrent.className = 'text-muted';
+                    spanCurrent.textContent = 'Current Admin';
+                    tdActions.appendChild(spanCurrent);
+                }
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+                        // Delegated event listener for action buttons
+                        tbody.onclick = function(e) {
+                            const btn = e.target.closest('button[data-action]');
+                            if (!btn) return;
+                            const action = btn.getAttribute('data-action');
+                            const wallet = btn.getAttribute('data-wallet-address');
+                            const fullName = btn.getAttribute('data-full-name');
+                            if (action === 'make-admin') {
+                                makeAdmin(wallet, fullName);
+                            } else if (action === 'deactivate-user') {
+                                deactivateUser(wallet, fullName);
+                            }
+                        };
             }
         
             // Filter and validate users
             const validUsers = users.filter(user => {
-                const validEmail = typeof user.email === 'string' && user.email && user.email !== 'N/A';
-                const validWallet = typeof user.wallet_address === 'string' && /^0x[a-fA-F0-9]{40}$/.test(user.wallet_address);
+                const validEmail = typeof user.email === 'string' &&
+                    user.email !== 'N/A' &&
+                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email.trim());
+                const validWallet = typeof user.wallet_address === 'string' && (
+                    /^0x[a-fA-F0-9]{40}$/.test(user.wallet_address) || user.wallet_address.startsWith('0xtest')
+                );
                 return validEmail && validWallet;
             });
         
