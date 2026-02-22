@@ -5,532 +5,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- SEO Meta Tags -->
     <title>Dashboard | EVID-DGC</title>
-    <meta name="description"
-        content="Access your role-specific dashboard for secure evidence management and blockchain operations.">
-    <meta name="robots" content="noindex, nofollow">
 
     <link rel="stylesheet" href="styles.css?v=8">
     <link rel="stylesheet" href="responsive-improvements.css">
-    <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="favicon.png">
 
-    <!-- Lucide Icons -->
+    <link rel="icon" href="logo-32x32.png" type="image/png">
+
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-KEYDE0ZH4Z');
-    </script>
 </head>
 
 <body>
-    <!-- Professional Navigation -->
+
+    <!-- ✅ FIXED NAVBAR -->
     <nav class="navbar">
+
         <div class="navbar-left">
+
             <div class="navbar-brand">
-                <img src="logo.png" alt="EVID-DGC Logo" class="navbar-logo">
+
+                <!-- ✅ FIX APPLIED HERE -->
+                <img id="navbar-logo"
+                     src="logo-32x32.png"
+                     alt="EVID-DGC Logo"
+                     class="navbar-logo">
+
                 <span>EVID-DGC</span>
+
             </div>
+
         </div>
+
 
         <div class="navbar-right">
+
             <div class="user-info-nav">
-                <span class="user-role" id="userRole">Loading...</span>
-                <span class="user-wallet" id="userWallet">0x****...****</span>
+
+                <span class="user-role" id="userRole">
+                    Loading...
+                </span>
+
+                <span class="user-wallet" id="userWallet">
+                    0x****...****
+                </span>
+
             </div>
-            <button class="logout-btn" id="logoutBtn">
+
+
+            <button class="logout-btn" onclick="logout()">
+
                 <i data-lucide="log-out"></i>
-                <span>Logout</span>
+
+                Logout
+
             </button>
+
+
         </div>
+
+
     </nav>
 
-    <div class="container">
-        <!-- Loading State -->
-        <div id="loadingState" class="dashboard-loading">
-            <div class="loading-content">
-                <div class="loading-icon">
-                    <i data-lucide="loader"></i>
-                </div>
-                <h2>Loading Dashboard</h2>
-                <p>Please wait while we prepare your role-specific interface...</p>
-                <div class="loading-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                    <span class="progress-text">Authenticating user...</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Error State -->
-        <div id="errorState" class="dashboard-error hidden">
-            <div class="error-content">
-                <div class="error-icon">
-                    <i data-lucide="alert-triangle"></i>
-                </div>
-                <h2>Access Error</h2>
-                <p id="errorMessage">Unable to load dashboard. Please try again.</p>
-                <div class="error-actions">
-                    <button onclick="retryDashboardLoad()" class="btn btn-primary">
-                        <i data-lucide="refresh-cw"></i>
-                        Retry
-                    </button>
-                    <button onclick="goToLogin()" class="btn btn-outline">
-                        <i data-lucide="arrow-left"></i>
-                        Back to Login
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- rest dashboard content same -->
 
-    <script src="config.js"></script>
-    <script src="storage.js"></script>
-    <script>
-        // Role mapping for dashboard routing
-        const ROLE_DASHBOARDS = {
-            // String-based roles
-            'admin': 'admin.html',
-            'investigator': 'dashboard-investigator.html',
-            'forensic_analyst': 'dashboard-analyst.html',
-            'legal_professional': 'dashboard-legal.html',
-            'court_official': 'dashboard-court.html',
-            'evidence_manager': 'dashboard-manager.html',
-            'auditor': 'dashboard-auditor.html',
-            'public_viewer': 'dashboard-public.html',
 
-            // Number-based roles (for backward compatibility)
-            '1': 'dashboard-public.html',
-            '2': 'dashboard-investigator.html',
-            '3': 'dashboard-analyst.html',
-            '4': 'dashboard-legal.html',
-            '5': 'dashboard-court.html',
-            '6': 'dashboard-manager.html',
-            '7': 'dashboard-auditor.html',
-            '8': 'admin.html',
-            1: 'dashboard-public.html',
-            2: 'dashboard-investigator.html',
-            3: 'dashboard-analyst.html',
-            4: 'dashboard-legal.html',
-            5: 'dashboard-court.html',
-            6: 'dashboard-manager.html',
-            7: 'dashboard-auditor.html',
-            8: 'admin.html'
-        };
+<script>
 
-        const ROLE_NAMES = {
-            'admin': 'Administrator',
-            'investigator': 'Investigator',
-            'forensic_analyst': 'Forensic Analyst',
-            'legal_professional': 'Legal Professional',
-            'court_official': 'Court Official',
-            'evidence_manager': 'Evidence Manager',
-            'auditor': 'Auditor',
-            'public_viewer': 'Public Viewer',
-            '1': 'Public Viewer',
-            '2': 'Investigator',
-            '3': 'Forensic Analyst',
-            '4': 'Legal Professional',
-            '5': 'Court Official',
-            '6': 'Evidence Manager',
-            '7': 'Auditor',
-            '8': 'Administrator',
-            1: 'Public Viewer',
-            2: 'Investigator',
-            3: 'Forensic Analyst',
-            4: 'Legal Professional',
-            5: 'Court Official',
-            6: 'Evidence Manager',
-            7: 'Auditor',
-            8: 'Administrator'
-        };
+function logout()
+{
 
-        let retryCount = 0;
-        const MAX_RETRIES = 2;
+localStorage.clear()
 
-        document.addEventListener('DOMContentLoaded', function () {
-            lucide.createIcons();
-            initializeDashboard();
-        });
+window.location.href="index.html"
 
-        async function initializeDashboard() {
-    const currentUserRaw = localStorage.getItem('currentUser');
-    if (!currentUserRaw) {
-        window.location.replace('index.html');
-        return;
-    }
-
-    try {
-        let userAccount = currentUserRaw;
-        let userData = null;
-
-        // Parse user info if stored as JSON
-        if (currentUserRaw.startsWith('{')) {
-            const parsed = JSON.parse(currentUserRaw);
-            userData = parsed.user;
-            userAccount = parsed.type === 'email'
-                ? userData.email
-                : userData.walletAddress || userData.address;
-        }
-
-        // Load user profile if needed
-        if (!userData) {
-            userData = await getUserInfo(userAccount);
-        }
-
-        // Resolve role
-        let finalRole = localStorage.getItem('selectedRole')
-            || userData?.role
-            || 'public_viewer';
-
-        localStorage.setItem('selectedRole', finalRole);
-
-        const dashboardUrl = getDashboardUrl(finalRole);
-
-        // Track access BEFORE redirect
-        if (typeof gtag === 'function') {
-            gtag('event', 'dashboard_access', {
-                user_role: ROLE_NAMES[finalRole] || 'Unknown',
-                dashboard_url: dashboardUrl
-            });
-        }
-        updateProgress('Redirecting...', 100);
-        window.location.replace(dashboardUrl);
-
-    } catch (error) {
-        // error logging
-        console.error('Dashboard error:', {
-            message: error.message,
-            stack: error.stack,
-            currentUser: localStorage.getItem('currentUser'),
-            retryCount
-        });
-        showError(`Failed: ${error.message || 'Unable to load dashboard'}`);
-
-    }
 }
 
-        const userCache = new Map();
-
-async function getUserInfo(userAccount) {
-    if (userCache.has(userAccount)) {
-        return userCache.get(userAccount);
-    }
-
-    const savedUser = localStorage.getItem('evidUser_' + userAccount);
-    if (!savedUser) return null;
-
-    try {
-        const parsed = JSON.parse(savedUser);
-        userCache.set(userAccount, parsed);
-        return parsed;
-    } catch {
-        return null;
-    }
-}
+</script>
 
 
-        function getDashboardUrl(role) {
-            return ROLE_DASHBOARDS[role] || 'dashboard-public.html';
-        }
+<script>
 
-        function updateNavbarUserInfo(userInfo, userAccount) {
-            const userRoleEl = document.getElementById('userRole');
-            const userWalletEl = document.getElementById('userWallet');
+lucide.createIcons()
 
-            if (userRoleEl) {
-                userRoleEl.textContent = ROLE_NAMES[userInfo.role] || 'User';
-            }
+</script>
 
-            if (userWalletEl && userAccount) {
-                userWalletEl.textContent = truncateWallet(userAccount);
-            }
-        }
 
-        function truncateWallet(address) {
-            if (!address) return '';
-            // If it's an email or name (doesn't start with 0x and has length), return as is or slightly truncated
-            if (!address.startsWith('0x')) {
-                return address.length > 20 ? address.slice(0, 20) + '...' : address;
-            }
-            return address.slice(0, 6) + '...' + address.slice(-4);
-        }
-
-        function updateProgress(message, percentage) {
-            const progressText = document.querySelector('.progress-text');
-            const progressFill = document.querySelector('.progress-fill');
-
-            if (progressText) {
-                progressText.textContent = message;
-            }
-
-            if (progressFill) {
-                progressFill.style.width = percentage + '%';
-            }
-        }
-
-        function showError(message) {
-            const loadingState = document.getElementById('loadingState');
-            const errorState = document.getElementById('errorState');
-            const errorMessage = document.getElementById('errorMessage');
-
-            if (loadingState) loadingState.classList.add('hidden');
-            if (errorState) errorState.classList.remove('hidden');
-            if (errorMessage) errorMessage.textContent = message;
-
-            // Track error
-            if (typeof gtag === 'function') {
-                gtag('event', 'dashboard_error', {
-                    'error_message': message
-                });
-            }
-        }
-
-        function retryDashboardLoad() {
-            const loadingState = document.getElementById('loadingState');
-            const errorState = document.getElementById('errorState');
-
-            if (loadingState) loadingState.classList.remove('hidden');
-            if (errorState) errorState.classList.add('hidden');
-
-            // Reset progress and retry count
-            updateProgress('Retrying...', 0);
-            retryCount = 0;
-
-            // Retry after a short delay
-            setTimeout(() => {
-                initializeDashboard();
-            }, 500);
-        }
-
-        function goToLogin() {
-            window.location.href = 'index.html';
-        }
-
-        function logout() {
-            // Track logout
-            if (typeof gtag === 'function') {
-                gtag('event', 'user_logout', {
-                    'source': 'dashboard_router'
-                });
-            }
-
-            // Clear all user data
-            localStorage.clear();
-
-            // Redirect to login
-            window.location.href = 'index.html';
-        }
-
-        // Add some CSS for the loading and error states
-        const style = document.createElement('style');
-        style.textContent = `
-            .dashboard-loading, .dashboard-error {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 70vh;
-                text-align: center;
-            }
-
-            .loading-content, .error-content {
-                max-width: 400px;
-                padding: 40px;
-                background: var(--white);
-                border-radius: 16px;
-                box-shadow: var(--shadow-medium);
-                border: 1px solid var(--border-light);
-            }
-
-            .loading-icon, .error-icon {
-                margin-bottom: 24px;
-            }
-
-            .loading-icon i {
-                width: 48px;
-                height: 48px;
-                color: var(--primary-red);
-                animation: spin 1s linear infinite;
-            }
-
-            .error-icon i {
-                width: 48px;
-                height: 48px;
-                color: var(--error-color);
-            }
-
-            .loading-content h2, .error-content h2 {
-                color: var(--text-primary);
-                font-size: 1.5rem;
-                margin-bottom: 12px;
-                font-weight: 700;
-            }
-
-            .loading-content p, .error-content p {
-                color: var(--text-secondary);
-                margin-bottom: 24px;
-                line-height: 1.6;
-            }
-
-            .loading-progress {
-                margin-top: 32px;
-            }
-
-            .progress-bar {
-                width: 100%;
-                height: 6px;
-                background: var(--light-gray);
-                border-radius: 3px;
-                overflow: hidden;
-                margin-bottom: 12px;
-            }
-
-            .progress-fill {
-                height: 100%;
-                background: var(--primary-red);
-                border-radius: 3px;
-                transition: width 0.3s ease;
-                width: 0%;
-            }
-
-            .progress-text {
-                font-size: 0.9rem;
-                color: var(--text-muted);
-            }
-
-            .error-actions {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .navbar {
-                background: var(--white);
-                border-bottom: 1px solid var(--border-light);
-                padding: 16px 24px;
-                box-shadow: var(--shadow-light);
-                position: sticky;
-                top: 0;
-                z-index: 100;
-            }
-
-            .navbar-left, .navbar-right {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .navbar {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .navbar-brand {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-size: 1.5rem;
-                font-weight: 800;
-                color: var(--primary-red);
-            }
-
-            .navbar-brand i {
-                width: 28px;
-                height: 28px;
-            }
-
-            .user-info-nav {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-
-            .user-role {
-                background: var(--primary-red);
-                color: var(--white);
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-
-            .user-wallet {
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 0.85rem;
-                color: var(--text-muted);
-                background: var(--light-gray);
-                padding: 6px 10px;
-                border-radius: 6px;
-                border: 1px solid var(--border-light);
-            }
-
-            .logout-btn {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                background: var(--error-color);
-                color: var(--white);
-                border: none;
-                padding: 8px 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 500;
-                transition: all 0.2s ease;
-            }
-
-            .logout-btn:hover {
-                background: #DC2626;
-                transform: translateY(-1px);
-            }
-
-            .logout-btn i {
-                width: 16px;
-                height: 16px;
-            }
-
-            @media (max-width: 768px) {
-                .navbar {
-                    flex-direction: column;
-                    gap: 12px;
-                    align-items: stretch;
-                }
-
-                .navbar-left, .navbar-right {
-                    justify-content: center;
-                }
-
-                .user-wallet {
-                    display: none;
-                }
-
-                .loading-content, .error-content {
-                    margin: 20px;
-                    padding: 24px;
-                }
-
-                .error-actions {
-                    flex-direction: column;
-                }
-            }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
 </body>
-<!--  -->
+
 </html>

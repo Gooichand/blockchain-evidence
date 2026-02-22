@@ -2584,3 +2584,20 @@ body.modal-open {
     max-width: 18px !important;
   }
 }
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-red);
+  text-decoration: none;
+}
+
+/* Fix: Navbar Logo ID Mismatch */
+#navbar-logo {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+  display: block;
+}
