@@ -1,0 +1,61 @@
+
+
+/* Smoother card-level transition (extends existing "all 0.3s ease") */
+.faq-item {
+  transition:
+    border-color 0.25s ease,
+    transform    0.25s ease,
+    box-shadow   0.25s ease;
+}
+
+/* Lift + shadow on card hover */
+.faq-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.15);
+  /* border-color already set to --primary-red in styles.css */
+}
+
+/* Richer question-row hover (replaces flat background-only effect) */
+.faq-question {
+  transition:
+    background-color 0.25s ease,
+    padding-left     0.25s ease,
+    box-shadow       0.25s ease;
+}
+
+.faq-question:hover {
+  background-color: var(--primary-red-light);        /* subtle red highlight on hover */
+  padding-left: 30px;                                 /* subtle slide-right nudge   */
+  box-shadow: inset 4px 0 0 var(--primary-red);       /* left accent bar            */
+}
+
+/* Title color shift on hover */
+.faq-question:hover h3 {
+  color: var(--primary-red);
+  transition: color 0.25s ease;
+}
+
+/* Arrow: hint rotation on hover, full flip when open */
+.faq-question i {
+  /* keeps existing cubic-bezier from styles.css, just adds color transition */
+  transition:
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    color     0.25s ease;
+}
+
+.faq-question:hover i {
+  transform: rotate(-45deg);          /* hover hint                      */
+  color: var(--primary-red);          /* matches brand on hover          */
+}
+
+/* Active/open state arrow stays at 180deg (already in styles.css) */
+.faq-item.active .faq-question:hover i {
+  transform: rotate(180deg);         /* maintain full flip when open + hovered */
+}
+
+/* Keyboard focus ring for accessibility */
+.faq-question:focus-visible {
+  outline: 2px solid var(--primary-red);
+  outline-offset: -2px;
+  border-radius: 12px;
+}
