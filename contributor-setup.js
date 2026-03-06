@@ -73,8 +73,8 @@ if (isContributor) {
   console.log('• Contributing Guide: CONTRIBUTING.md');
   console.log('• Code of Conduct: CODE_OF_CONDUCT.md');
   console.log('• Security Policy: SECURITY.md');
-  console.log('• Project Issues: https://github.com/Gooichand/blockchain-evidence/issues');
-  console.log('• Discussions: https://github.com/Gooichand/blockchain-evidence/discussions');
+  console.log('• Project Issues: https://github.com/deekshi275/blockchain-evidence/issues');
+  console.log('• Discussions: https://github.com/deekshi275/blockchain-evidence/discussions');
 
   console.log('\n💬 Need Help?');
   console.log('=============');
