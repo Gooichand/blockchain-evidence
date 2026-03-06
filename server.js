@@ -12,6 +12,17 @@ const { limiter } = require('./middleware/rateLimiters');
 const { setIO: setNotificationIO } = require('./services/notificationService');
 const { setIO: setNotificationControllerIO } = require('./controllers/notificationController');
 
+// WebSocket security tracking
+const activeConnections = new Map();
+const connectionTimestamps = new Map();
+const ipConnectionCounts = new Map();
+const eventRateLimits = new Map(); // socket.id -> {event: deque of timestamps}
+
+// Rate limiting constants
+const MAX_CONNECTIONS_TOTAL = 1000;
+const MAX_CONNECTIONS_PER_IP = 10;
+const RATE_LIMIT_PER_MINUTE = 20; // messages per connection per minute
+
 // ── Shared CORS origins (single source of truth) ───────────────────────────
 const allowedOrigins =
   process.env.NODE_ENV === 'production'
@@ -19,6 +30,62 @@ const allowedOrigins =
         (url) => url.trim(),
       )
     : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+// ── WebSocket security helpers ──────────────────────────────────────────────
+function getClientIP(socket) {
+  return socket.handshake.address || socket.request.connection.remoteAddress;
+}
+
+function checkConnectionLimits(socket) {
+  const clientIP = getClientIP(socket);
+  
+  if (activeConnections.size >= MAX_CONNECTIONS_TOTAL) {
+    socket.emit('error', { message: 'Server connection limit reached' });
+    socket.disconnect(true);
+    return false;
+  }
+  
+  const ipCount = ipConnectionCounts.get(clientIP) || 0;
+  if (ipCount >= MAX_CONNECTIONS_PER_IP) {
+    socket.emit('error', { message: 'Too many connections from your IP' });
+    socket.disconnect(true);
+    return false;
+  }
+  
+  return true;
+}
+
+function checkRateLimit(socket, event) {
+  const socketId = socket.id;
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  
+  if (!eventRateLimits.has(socketId)) {
+    eventRateLimits.set(socketId, new Map());
+  }
+  
+  const socketLimits = eventRateLimits.get(socketId);
+  if (!socketLimits.has(event)) {
+    socketLimits.set(event, []);
+  }
+  
+  const timestamps = socketLimits.get(event);
+  
+  // Remove old timestamps
+  while (timestamps.length > 0 && now - timestamps[0] > windowMs) {
+    timestamps.shift();
+  }
+  
+  if (timestamps.length >= RATE_LIMIT_PER_MINUTE) {
+    socket.emit('error', { 
+      message: `Rate limit exceeded for ${event}. Maximum ${RATE_LIMIT_PER_MINUTE} events per minute.` 
+    });
+    return false;
+  }
+  
+  timestamps.push(now);
+  return true;
+}
 
 // ── Express + HTTP + Socket.IO ──────────────────────────────────────────────
 const app = express();
@@ -38,21 +105,59 @@ setNotificationControllerIO(io);
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Check connection limits
+  if (!checkConnectionLimits(socket)) {
+    return;
+  }
+
+  const clientIP = getClientIP(socket);
+  activeConnections.set(socket.id, { ip: clientIP, connectedAt: Date.now() });
+  ipConnectionCounts.set(clientIP, (ipConnectionCounts.get(clientIP) || 0) + 1);
+
   socket.on('join', (walletAddress) => {
+    // Rate limit the join event
+    if (!checkRateLimit(socket, 'join')) {
+      return;
+    }
+
     if (validateWalletAddress(walletAddress)) {
       connectedUsers.set(walletAddress, socket.id);
       socket.join(walletAddress);
       console.log(`User ${walletAddress} joined notifications`);
+    } else {
+      socket.emit('error', { message: 'Invalid wallet address' });
     }
   });
 
+  // Add rate limiting to other potential events if needed
+  // For example, if there were AI processing events, add them here
+
   socket.on('disconnect', () => {
+    // Cleanup connection tracking
+    if (activeConnections.has(socket.id)) {
+      const { ip } = activeConnections.get(socket.id);
+      activeConnections.delete(socket.id);
+      const currentCount = ipConnectionCounts.get(ip) || 0;
+      if (currentCount > 1) {
+        ipConnectionCounts.set(ip, currentCount - 1);
+      } else {
+        ipConnectionCounts.delete(ip);
+      }
+    }
+
+    // Cleanup from connectedUsers
     for (const [wallet, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
         connectedUsers.delete(wallet);
         break;
       }
     }
+
+    // Cleanup rate limits
+    if (eventRateLimits.has(socket.id)) {
+      eventRateLimits.delete(socket.id);
+    }
+
     console.log('User disconnected:', socket.id);
   });
 });
