@@ -1,0 +1,82 @@
+cff-version: 1.2.0
+title: "EVID-DGC: Blockchain Evidence Management System"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - family-names: "D"
+    given-names: "Gopichand"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+    affiliation: "EVID-DGC Project"
+    email: "contact@evid-dgc.com"
+version: "2.0.0"
+date-released: "2026-01-15"
+license: "Apache-2.0"
+url: "https://github.com/Gooichand/blockchain-evidence"
+repository-code: "https://github.com/Gooichand/blockchain-evidence"
+repository-artifact: "https://github.com/Gooichand/blockchain-evidence/releases"
+documentation: "https://github.com/Gooichand/blockchain-evidence/tree/main/docs"
+keywords:
+  - "blockchain"
+  - "digital-evidence"
+  - "forensics"
+  - "chain-of-custody"
+  - "polygon"
+  - "smart-contracts"
+  - "ipfs"
+  - "role-based-access-control"
+  - "evidence-management"
+  - "court-ready"
+  - "supabase"
+  - "node.js"
+  - "solidity"
+  - "web3"
+  - "immutable-audit-logs"
+abstract: |
+  EVID-DGC is a forensic-grade, court-ready blockchain-based digital evidence management system 
+  designed for law enforcement, forensic analysts, legal professionals, and judicial bodies. 
+  The system leverages Polygon blockchain for immutable evidence anchoring, IPFS for decentralized 
+  storage, and Supabase for secure database management. It implements an 8-role role-based access 
+  control (RBAC) system, dual authentication (MetaMask wallet + Email/Password), real-time 
+  notifications via Socket.IO, and comprehensive audit logging. EVID-DGC ensures the highest 
+  standards of digital forensic integrity through cryptographic verification, zero-trust 
+  architecture, and tamper-proof chain of custody tracking. The system is production-ready with 
+  Phase 1 (Core System) and Phase 2 (Blockchain & IPFS Integration) complete, and Phase 3 
+  (Advanced Forensics with AI-powered detection) in active development.
+contact:
+  - family-names: "D"
+    given-names: "Gopichand"
+    email: "contact@evid-dgc.com"
+    website: "https://github.com/Gooichand"
+references:
+  - type: software
+    title: "Polygon Blockchain Network"
+    url: "https://polygon.technology/"
+  - type: software
+    title: "IPFS - InterPlanetary File System"
+    url: "https://ipfs.io/"
+  - type: software
+    title: "Supabase - Open Source Firebase Alternative"
+    url: "https://supabase.com/"
+  - type: software
+    title: "Node.js Runtime"
+    url: "https://nodejs.org/"
+  - type: software
+    title: "Solidity Smart Contract Language"
+    url: "https://soliditylang.org/"
+  - type: software
+    title: "Express.js Web Framework"
+    url: "https://expressjs.com/"
+  - type: software
+    title: "Socket.IO Real-time Communication"
+    url: "https://socket.io/"
+preferred-citation:
+  type: software
+  authors:
+    - family-names: "D"
+      given-names: "Gopichand"
+  title: "EVID-DGC: Blockchain Evidence Management System"
+  version: "2.0.0"
+  url: "https://github.com/Gooichand/blockchain-evidence"
+  repository-code: "https://github.com/Gooichand/blockchain-evidence"
+  license: "Apache-2.0"
+  date-released: "2026-01-15"
