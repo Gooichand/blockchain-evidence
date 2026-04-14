@@ -92,6 +92,10 @@ Digital evidence management often faces challenges like data tampering, lack of 
 
 ## 🛠️ Technical Info
 
+<img width="4799" height="8336" alt="NotebookLM Mind Map" src="https://github.com/user-attachments/assets/9c579802-18bb-40c0-854c-88a21a36e555" />
+
+---
+
 ### Tech Stack (Currently Implemented)
 
 | Category            | Technologies                                      | Status     |
