@@ -1,5 +1,4 @@
 # 🤝 Contributing to EVID-DGC
-![OSCG26 Label jpg](https://github.com/user-attachments/assets/bbd29245-4fae-465b-aca7-73627e1c9b35)
 
 **To understand how EVID-DGC works see this YouTube video**
 
