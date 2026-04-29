@@ -1,5 +1,4 @@
 const { supabase } = require('../config');
-const { validateWalletAddress } = require('../middleware/verifyAdmin');
 const {
   generateWatermarkText,
   logDownloadAction,
@@ -10,29 +9,35 @@ const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const archiver = require('archiver');
 
+/**
+ * SECURITY FIX: All identity verification now uses req.authenticatedWallet 
+ * which is cryptographically verified by the verifySignature middleware.
+ * Trusting req.body.userWallet is discontinued.
+ */
+
 // Download single evidence file with watermark
 const downloadEvidence = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userWallet } = req.body;
+    const verifiedWallet = req.authenticatedWallet;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('wallet_address', userWallet)
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+      return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });
     }
 
     if (user.role === 'public_viewer') {
-      return res.status(403).json({ error: 'Public viewers cannot download evidence' });
+      return res.status(403).json({ success: false, error: 'Public viewers cannot download evidence' });
     }
 
     const { data: evidence, error: evidenceError } = await supabase
@@ -42,10 +47,10 @@ const downloadEvidence = async (req, res) => {
       .single();
 
     if (evidenceError || !evidence) {
-      return res.status(404).json({ error: 'Evidence not found' });
+      return res.status(404).json({ success: false, error: 'Evidence not found' });
     }
 
-    const watermarkText = generateWatermarkText(userWallet, evidence.case_number, new Date());
+    const watermarkText = generateWatermarkText(verifiedWallet, evidence.case_number, new Date());
 
     let fileBuffer = await ipfsStorageService.getFile(evidence.ipfs_hash || evidence.storage_ref);
     let contentType = evidence.file_type || 'application/octet-stream';
@@ -57,7 +62,8 @@ const downloadEvidence = async (req, res) => {
       fileBuffer = await watermarkPDF(fileBuffer, watermarkText);
     }
 
-    await logDownloadAction(userWallet, id, 'evidence_download', {
+    // SECURITY FIX: Log using verified identity
+    await logDownloadAction(verifiedWallet, id, 'evidence_download', {
       evidence_id: id,
       evidence_name: evidence.name,
       file_type: evidence.file_type,
@@ -68,45 +74,47 @@ const downloadEvidence = async (req, res) => {
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('X-Watermark-Applied', 'true');
-    res.setHeader('X-Downloaded-By', userWallet.slice(0, 8) + '...');
+    res.setHeader('X-Downloaded-By', verifiedWallet.slice(0, 8) + '...');
 
     res.send(fileBuffer);
   } catch (error) {
     console.error('Evidence download error:', error);
-    res.status(500).json({ error: 'Failed to download evidence' });
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to download evidence' : error.message;
+    res.status(500).json({ success: false, error: msg });
   }
 };
 
 // Bulk export multiple evidence files as ZIP
 const bulkExport = async (req, res) => {
   try {
-    const { evidenceIds, userWallet } = req.body;
+    const verifiedWallet = req.authenticatedWallet;
+    const { evidenceIds } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     if (!evidenceIds || !Array.isArray(evidenceIds) || evidenceIds.length === 0) {
-      return res.status(400).json({ error: 'Evidence IDs array is required' });
+      return res.status(400).json({ success: false, error: 'Evidence IDs array is required' });
     }
 
     if (evidenceIds.length > 50) {
-      return res.status(400).json({ error: 'Maximum 50 files per bulk export' });
+      return res.status(400).json({ success: false, error: 'Maximum 50 files per bulk export' });
     }
 
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('wallet_address', userWallet)
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
-      return res.status(403).json({ error: 'Public viewers cannot export evidence' });
+      return res.status(403).json({ success: false, error: 'Public viewers cannot export evidence' });
     }
 
     const { data: evidenceItems, error: evidenceError } = await supabase
@@ -115,7 +123,7 @@ const bulkExport = async (req, res) => {
       .in('id', evidenceIds);
 
     if (evidenceError || !evidenceItems || evidenceItems.length === 0) {
-      return res.status(404).json({ error: 'No evidence found with provided IDs' });
+      return res.status(404).json({ success: false, error: 'No evidence found with provided IDs' });
     }
 
     const archive = archiver('zip', { zlib: { level: 9 } });
@@ -134,13 +142,13 @@ const bulkExport = async (req, res) => {
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
     res.setHeader('X-Export-Count', evidenceItems.length.toString());
-    res.setHeader('X-Exported-By', userWallet.slice(0, 8) + '...');
+    res.setHeader('X-Exported-By', verifiedWallet.slice(0, 8) + '...');
 
     archive.pipe(res);
 
     const metadata = {
       export_info: {
-        exported_by: userWallet,
+        exported_by: verifiedWallet,
         export_timestamp: new Date().toISOString(),
         total_files: evidenceItems.length,
         watermark_applied: true,
@@ -160,7 +168,7 @@ const bulkExport = async (req, res) => {
     archive.append(JSON.stringify(metadata, null, 2), { name: 'export_metadata.json' });
 
     for (const evidence of evidenceItems) {
-      const watermarkText = generateWatermarkText(userWallet, evidence.case_number, new Date());
+      const watermarkText = generateWatermarkText(verifiedWallet, evidence.case_number, new Date());
       let fileBuffer = await ipfsStorageService.getFile(evidence.ipfs_hash || evidence.storage_ref);
       let filename = `${evidence.id}_watermarked_${evidence.name || 'evidence'}`;
 
@@ -174,7 +182,7 @@ const bulkExport = async (req, res) => {
     }
 
     try {
-      await logDownloadAction(userWallet, null, 'evidence_bulk_export', {
+      await logDownloadAction(verifiedWallet, null, 'evidence_bulk_export', {
         evidence_ids: evidenceIds,
         total_files: evidenceItems.length,
         export_format: 'zip',
@@ -191,7 +199,8 @@ const bulkExport = async (req, res) => {
       console.error('Bulk export error while streaming:', error);
     } else {
       console.error('Bulk export error:', error);
-      res.status(500).json({ error: 'Failed to export evidence' });
+      const msg = process.env.NODE_ENV === 'production' ? 'Failed to export evidence' : error.message;
+      res.status(500).json({ success: false, error: msg });
     }
   }
 };
@@ -200,39 +209,37 @@ const bulkExport = async (req, res) => {
 const getDownloadHistory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userWallet } = req.query;
+    const verifiedWallet = req.authenticatedWallet;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('role')
-      .eq('wallet_address', userWallet)
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user || !['admin', 'auditor'].includes(user.role)) {
-      return res.status(403).json({ error: 'Unauthorized: Admin or Auditor role required' });
+      return res.status(403).json({ success: false, error: 'Unauthorized: Admin or Auditor role required' });
     }
 
-    // Validate id to prevent ilike pattern injection
+    // BUG FIX: Validate id to prevent injection and ensuring integer
     const safeId = parseInt(id, 10);
     if (isNaN(safeId)) {
-      return res.status(400).json({ error: 'Invalid evidence ID format' });
+      return res.status(400).json({ success: false, error: 'Invalid evidence ID format' });
     }
 
     const { data: downloadHistory, error } = await supabase
       .from('activity_logs')
       .select('*')
-      .or(`action.eq.evidence_download,action.eq.evidence_bulk_export`)
+      .or('action.eq.evidence_download,action.eq.evidence_bulk_export')
       .ilike('details', `%"evidence_id":${safeId}%`)
       .order('timestamp', { ascending: false });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const formattedHistory = downloadHistory.map((log) => {
       let details = {};
@@ -243,7 +250,7 @@ const getDownloadHistory = async (req, res) => {
       }
       return {
         timestamp: log.timestamp,
-        user_id: log.user_id,
+        user_wallet: log.user_wallet || log.user_id,
         action: log.action,
         details,
       };
@@ -251,41 +258,46 @@ const getDownloadHistory = async (req, res) => {
 
     res.json({
       success: true,
-      evidence_id: id,
-      download_history: formattedHistory,
+      data: {
+        evidence_id: safeId,
+        download_history: formattedHistory,
+      }
     });
   } catch (error) {
     console.error('Download history error:', error);
-    res.status(500).json({ error: 'Failed to retrieve download history' });
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to retrieve download history' : error.message;
+    res.status(500).json({ success: false, error: msg });
   }
 };
 
-// Get all evidence
+// Get all evidence with filtering
 const getAllEvidence = async (req, res) => {
   try {
-    const { limit = 50, offset = 0, case_id, status, submitted_by, userWallet } = req.query;
-
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const verifiedWallet = req.authenticatedWallet;
+    
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+
+    const { limit = 50, offset = 0, case_id, status, submitted_by } = req.query;
 
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('wallet_address', userWallet)
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
-      return res.status(403).json({ error: 'Public viewers cannot list evidence' });
+      return res.status(403).json({ success: false, error: 'Public viewers cannot list evidence' });
     }
 
-    const limitNum = parseInt(limit, 10) || 50;
-    const offsetNum = parseInt(offset, 10) || 0;
+    const limitNum = Math.min(parseInt(limit, 10) || 50, 100);
+    const offsetNum = Math.max(parseInt(offset, 10) || 0, 0);
 
     let query = supabase
       .from('evidence')
@@ -311,12 +323,17 @@ const getAllEvidence = async (req, res) => {
 
     res.json({
       success: true,
-      evidence: enrichedEvidence,
-      total: count || 0,
+      data: enrichedEvidence,
+      pagination: {
+        total: count || 0,
+        limit: limitNum,
+        offset: offsetNum
+      }
     });
   } catch (error) {
     console.error('Get evidence error:', error);
-    res.status(500).json({ error: 'Failed to get evidence' });
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to get evidence' : error.message;
+    res.status(500).json({ success: false, error: msg });
   }
 };
 
@@ -324,25 +341,25 @@ const getAllEvidence = async (req, res) => {
 const getEvidenceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userWallet } = req.query;
+    const verifiedWallet = req.authenticatedWallet;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('*')
-      .eq('wallet_address', userWallet)
+      .select('role')
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
-      return res.status(403).json({ error: 'Public viewers cannot view evidence details' });
+      return res.status(403).json({ success: false, error: 'Public viewers cannot view evidence details' });
     }
 
     const { data: evidence, error } = await supabase
@@ -352,13 +369,14 @@ const getEvidenceById = async (req, res) => {
       .single();
 
     if (error || !evidence) {
-      return res.status(404).json({ error: 'Evidence not found' });
+      return res.status(404).json({ success: false, error: 'Evidence not found' });
     }
 
-    res.json(evidence);
+    res.json({ success: true, data: evidence });
   } catch (error) {
-    console.error('Get evidence error:', error);
-    res.status(500).json({ error: 'Failed to get evidence' });
+    console.error('Get evidence by ID error:', error);
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to get evidence details' : error.message;
+    res.status(500).json({ success: false, error: msg });
   }
 };
 
@@ -366,25 +384,25 @@ const getEvidenceById = async (req, res) => {
 const getEvidenceByCase = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const { userWallet } = req.query;
+    const verifiedWallet = req.authenticatedWallet;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('*')
-      .eq('wallet_address', userWallet)
+      .select('role')
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (userError || !user) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
-      return res.status(403).json({ error: 'Public viewers cannot view case evidence' });
+      return res.status(403).json({ success: false, error: 'Public viewers cannot view case evidence' });
     }
 
     const { data: evidence, error } = await supabase
@@ -395,10 +413,11 @@ const getEvidenceByCase = async (req, res) => {
 
     if (error) throw error;
 
-    res.json({ success: true, evidence });
+    res.json({ success: true, data: evidence });
   } catch (error) {
     console.error('Get evidence by case error:', error);
-    res.status(500).json({ error: 'Failed to get evidence for case' });
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to get evidence for case' : error.message;
+    res.status(500).json({ success: false, error: msg });
   }
 };
 

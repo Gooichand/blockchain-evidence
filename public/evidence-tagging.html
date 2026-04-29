@@ -9,6 +9,9 @@
     <title>Evidence Tagging System - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="api-client.js"></script>
+    <script src="session-manager.js"></script>
     <style>
         .tagging-container {
             max-width: 1200px;
@@ -462,37 +465,14 @@
             await this.filterByTags(selectedTagIds, logic);
         };
 
-        // Load sample evidence data on page load
+        // Load real evidence data on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            // Load sample evidence for demonstration
-            const sampleEvidence = [
-                {
-                    id: 1,
-                    name: "Security Camera Footage",
-                    case_number: "CASE-2024-001",
-                    file_type: "video/mp4",
-                    hash: "0x1234567890abcdef",
-                    timestamp: new Date().toISOString(),
-                    evidence_tags: [
-                        { tags: { name: "surveillance-footage", color: "#06B6D4" } },
-                        { tags: { name: "urgent", color: "#EF4444" } }
-                    ]
-                },
-                {
-                    id: 2,
-                    name: "Witness Statement",
-                    case_number: "CASE-2024-002",
-                    file_type: "application/pdf",
-                    hash: "0xabcdef1234567890",
-                    timestamp: new Date().toISOString(),
-                    evidence_tags: [
-                        { tags: { name: "witness-statement", color: "#8B5CF6" } },
-                        { tags: { name: "confidential", color: "#DC2626" } }
-                    ]
-                }
-            ];
-
-            window.evidenceTagging.renderFilteredEvidence(sampleEvidence);
+            try {
+                const evidence = await window.storage.getAllEvidence();
+                window.evidenceTagging.renderFilteredEvidence(evidence);
+            } catch (error) {
+                console.error('Failed to load real evidence:', error);
+            }
         });
     </script>
     <script src="footer.js"></script>

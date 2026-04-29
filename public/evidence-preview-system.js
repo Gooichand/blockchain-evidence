@@ -399,11 +399,11 @@ class EvidencePreviewSystem {
     }
 
     async fetchEvidenceData(evidenceId) {
-        const response = await fetch(`/api/evidence/${evidenceId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch evidence data');
+        const result = await window.apiClient.get(`/evidence/${evidenceId}`);
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to fetch evidence data');
         }
-        return await response.json();
+        return result.evidence;
     }
 
     showModal() {
@@ -464,31 +464,31 @@ class EvidencePreviewSystem {
         this.populateChainOfCustody();
     }
 
-    populateChainOfCustody() {
+    async populateChainOfCustody() {
         const timeline = document.getElementById('custodyTimeline');
-        const events = [
-            {
-                action: 'Evidence Uploaded',
-                user: this.currentEvidence.submitted_by,
-                timestamp: this.currentEvidence.timestamp,
-                details: 'Initial evidence submission'
-            },
-            {
-                action: 'Preview Accessed',
-                user: this.getCurrentUser(),
-                timestamp: new Date().toISOString(),
-                details: 'Evidence preview opened'
-            }
-        ];
+        try {
+            const result = await window.apiClient.get(`/evidence/${this.currentEvidence.id}/custody`);
+            const events = result.success ? result.custody : [
+                {
+                    action: 'Evidence Uploaded',
+                    user: this.currentEvidence.submitted_by,
+                    timestamp: this.currentEvidence.timestamp,
+                    details: 'Initial evidence submission'
+                }
+            ];
 
-        timeline.innerHTML = events.map(event => `
-            <div class="custody-event">
-                <div class="custody-timestamp">${new Date(event.timestamp).toLocaleString()}</div>
-                <div class="custody-action">${event.action}</div>
-                <div class="custody-user">by ${event.user}</div>
-                <div class="custody-details">${event.details}</div>
-            </div>
-        `).join('');
+            timeline.innerHTML = events.map(event => `
+                <div class="custody-event">
+                    <div class="custody-timestamp">${new Date(event.timestamp).toLocaleString()}</div>
+                    <div class="custody-action">${event.action}</div>
+                    <div class="custody-user">by ${event.user}</div>
+                    <div class="custody-details">${event.details || ''}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading custody:', error);
+            timeline.innerHTML = '<p>Error loading chain of custody.</p>';
+        }
     }
 
     setupWatermark() {
@@ -586,14 +586,25 @@ class EvidencePreviewSystem {
         }
 
         try {
+            // Use apiClient.post for signature and authentication
+            const result = await window.apiClient.post(`/evidence/${this.currentEvidence.id}/download-request`, {
+                reason: 'Evidence preview download'
+            });
+
+            if (!result.success) {
+                throw new Error(result.error || 'Download request failed');
+            }
+
+            // If the request was approved (signed), proceed to actual download
             const response = await fetch(`/api/evidence/${this.currentEvidence.id}/download`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({
-                    userWallet: currentUser,
-                    reason: 'Evidence preview download'
+                    signature: result.signature,
+                    message: result.message
                 })
             });
 
@@ -623,32 +634,18 @@ class EvidencePreviewSystem {
 
     logPreviewAccess() {
         // Log preview access for audit trail
-        fetch('/api/evidence/log-access', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                evidenceId: this.currentEvidence.id,
-                action: 'preview_accessed',
-                user: this.getCurrentUser(),
-                timestamp: new Date().toISOString()
-            })
+        window.apiClient.post('/evidence/log-access', {
+            evidenceId: this.currentEvidence.id,
+            action: 'preview_accessed',
+            timestamp: new Date().toISOString()
         }).catch(console.error);
     }
 
     logDownloadAction() {
-        fetch('/api/evidence/log-access', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                evidenceId: this.currentEvidence.id,
-                action: 'evidence_downloaded',
-                user: this.getCurrentUser(),
-                timestamp: new Date().toISOString()
-            })
+        window.apiClient.post('/evidence/log-access', {
+            evidenceId: this.currentEvidence.id,
+            action: 'evidence_downloaded',
+            timestamp: new Date().toISOString()
         }).catch(console.error);
     }
 

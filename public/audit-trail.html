@@ -120,6 +120,7 @@
     <script src="config.js"></script>
     <script src="storage.js"></script>
     <script src="analytics.js"></script>
+    <script src="api-client.js"></script>
     <script>
         let currentUser = null;
         let auditLog = [];
@@ -131,13 +132,9 @@
 
         async function initializeAuditTrail() {
             try {
-                const wallet = localStorage.getItem('currentUser');
-                if (!wallet) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                currentUser = await loadUserData(wallet);
+                // Use unified apiClient to get current user
+                currentUser = await window.apiClient.getCurrentUser();
+                
                 if (!currentUser) {
                     window.location.href = 'index.html';
                     return;
@@ -152,7 +149,6 @@
 
                 updateUserUI(currentUser);
                 await loadAuditLog();
-                await populateUserFilter();
 
                 // Set default date range (last 30 days)
                 const today = new Date();
@@ -162,22 +158,7 @@
 
             } catch (error) {
                 console.error('Initialization error:', error);
-                showAlert('Failed to initialize audit trail', 'error');
-            }
-        }
-
-        async function loadUserData(wallet) {
-            try {
-                if (typeof storage !== 'undefined') {
-                    const user = await storage.getUser(wallet);
-                    if (user) return user;
-                }
-
-                const savedUser = localStorage.getItem('evidUser_' + wallet);
-                return savedUser ? JSON.parse(savedUser) : null;
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                return null;
+                showAlert('Failed to initialize audit trail: ' + error.message, 'error');
             }
         }
 
@@ -188,93 +169,68 @@
 
         function updateUserUI(user) {
             const roleName = getRoleName(user.role);
-            document.getElementById('userRole').textContent = roleName;
-            document.getElementById('userRole').className = `badge badge-${getRoleClass(user.role)}`;
-            document.getElementById('userWallet').textContent = user.wallet_address.substring(0, 8) + '...';
+            const userRoleEl = document.getElementById('userRole');
+            const userWalletEl = document.getElementById('userWallet');
+            
+            if (userRoleEl) {
+                userRoleEl.textContent = roleName;
+                userRoleEl.className = `badge badge-${getRoleClass(user.role)}`;
+            }
+            if (userWalletEl) {
+                userWalletEl.textContent = user.wallet_address.substring(0, 8) + '...';
+            }
         }
 
-        async function loadAuditLog() {
+        async function loadAuditLog(filters = {}) {
             try {
-                // Generate mock audit log data
-                auditLog = generateMockAuditLog();
-                filteredLog = [...auditLog];
-                renderAuditLog(filteredLog);
-                document.getElementById('logCount').textContent = `${filteredLog.length} entries`;
+                const container = document.getElementById('auditLogContainer');
+                container.innerHTML = '<div class="text-center p-4"><div class="loading mb-4"></div><p>Syncing with blockchain audit logs...</p></div>';
+
+                const result = await window.apiClient.get('/admin/activity-logs', filters);
+                
+                if (result.success) {
+                    auditLog = result.logs || [];
+                    filteredLog = [...auditLog];
+                    renderAuditLog(filteredLog);
+                    document.getElementById('logCount').textContent = `${filteredLog.length} entries`;
+                    
+                    if (Object.keys(filters).length === 0) {
+                        await populateUserFilter();
+                    }
+                } else {
+                    throw new Error(result.error || 'Failed to fetch logs');
+                }
             } catch (error) {
                 console.error('Error loading audit log:', error);
-                document.getElementById('auditLogContainer').innerHTML = '<p class="text-center text-muted">Error loading audit log</p>';
+                document.getElementById('auditLogContainer').innerHTML = `<p class="text-center text-danger">Error loading audit log: ${error.message}</p>`;
             }
-        }
-
-        function generateMockAuditLog() {
-            const actions = [
-                'evidence_upload', 'evidence_view', 'evidence_seal', 'user_login',
-                'user_create', 'hash_verify', 'case_create', 'report_generate'
-            ];
-            const users = [
-                '0x1234...5678', '0xabcd...efgh', '0x9876...5432', '0xfedc...ba98'
-            ];
-            const log = [];
-
-            for (let i = 0; i < 50; i++) {
-                const timestamp = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
-                const action = actions[Math.floor(Math.random() * actions.length)];
-                const user = users[Math.floor(Math.random() * users.length)];
-
-                log.push({
-                    id: 'LOG-' + (1000 + i),
-                    timestamp: timestamp.toISOString(),
-                    action: action,
-                    user: user,
-                    details: generateActionDetails(action),
-                    ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-                    blockchainTx: action.includes('evidence') ? '0x' + Math.random().toString(16).substr(2, 64) : null,
-                    success: Math.random() > 0.1 // 90% success rate
-                });
-            }
-
-            return log.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        }
-
-        function generateActionDetails(action) {
-            const details = {
-                'evidence_upload': 'Uploaded evidence file: document_001.pdf',
-                'evidence_view': 'Viewed evidence ID: EVD-2024-001',
-                'evidence_seal': 'Sealed evidence for court proceedings',
-                'user_login': 'User authenticated successfully',
-                'user_create': 'Created new user account',
-                'hash_verify': 'Verified evidence hash integrity',
-                'case_create': 'Created new case: CASE-2024-001',
-                'report_generate': 'Generated forensic analysis report'
-            };
-            return details[action] || 'System action performed';
         }
 
         function renderAuditLog(logs) {
             const container = document.getElementById('auditLogContainer');
 
             if (logs.length === 0) {
-                container.innerHTML = '<p class="text-center text-muted">No audit entries found</p>';
+                container.innerHTML = '<p class="text-center text-muted">No audit entries found in database</p>';
                 return;
             }
 
             const logHtml = logs.map(entry => `
-                <div class="audit-entry ${entry.success ? 'success' : 'failed'}">
+                <div class="audit-entry ${entry.is_success !== false ? 'success' : 'failed'}">
                     <div class="audit-header">
                         <div class="audit-action">
-                            <span class="action-icon">${getActionIcon(entry.action)}</span>
-                            <span class="action-name">${formatActionName(entry.action)}</span>
-                            <span class="audit-status ${entry.success ? 'success' : 'failed'}">
-                                ${entry.success ? '✅' : '❌'}
+                            <span class="action-icon">${getActionIcon(entry.action_type)}</span>
+                            <span class="action-name">${formatActionName(entry.action_type)}</span>
+                            <span class="audit-status ${entry.is_success !== false ? 'success' : 'failed'}">
+                                ${entry.is_success !== false ? '✅' : '❌'}
                             </span>
                         </div>
-                        <div class="audit-time">${formatTimestamp(entry.timestamp)}</div>
+                        <div class="audit-time">${formatTimestamp(entry.created_at)}</div>
                     </div>
                     <div class="audit-details">
-                        <p><strong>User:</strong> ${entry.user}</p>
-                        <p><strong>Details:</strong> ${entry.details}</p>
-                        <p><strong>IP Address:</strong> ${entry.ipAddress}</p>
-                        ${entry.blockchainTx ? `<p><strong>Blockchain TX:</strong> <code>${entry.blockchainTx.substring(0, 20)}...</code></p>` : ''}
+                        <p><strong>User:</strong> ${entry.user_wallet.substring(0, 10)}... (${entry.users?.full_name || 'System'})</p>
+                        <p><strong>Action:</strong> ${entry.details || 'N/A'}</p>
+                        <p><strong>Resource:</strong> ${entry.resource_type} (${entry.resource_id || 'Global'})</p>
+                        ${entry.blockchain_tx ? `<p><strong>Blockchain TX:</strong> <a href="https://amoy.polygonscan.com/tx/${entry.blockchain_tx}" target="_blank"><code>${entry.blockchain_tx.substring(0, 20)}...</code></a></p>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -284,22 +240,20 @@
 
         function getActionIcon(action) {
             const icons = {
-                'evidence_upload': '📤',
-                'evidence_view': '👁️',
-                'evidence_seal': '🔒',
-                'user_login': '🔑',
-                'user_create': '👤',
-                'hash_verify': '🔍',
-                'case_create': '📁',
-                'report_generate': '📊'
+                'CREATE': '➕',
+                'UPDATE': '📝',
+                'DELETE': '🗑️',
+                'VIEW': '👁️',
+                'LOGIN': '🔑',
+                'VERIFY': '🔍',
+                'SEAL': '🔒',
+                'UPLOAD': '📤'
             };
             return icons[action] || '⚡';
         }
 
         function formatActionName(action) {
-            return action.split('_').map(word =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
+            return action.charAt(0) + action.slice(1).toLowerCase();
         }
 
         function formatTimestamp(timestamp) {
@@ -308,91 +262,66 @@
 
         async function populateUserFilter() {
             const userSelect = document.getElementById('filterUser');
-            const uniqueUsers = [...new Set(auditLog.map(entry => entry.user))];
+            if (!userSelect) return;
+            
+            const uniqueUsers = [...new Set(auditLog.map(entry => entry.user_wallet))];
+            
+            // Keep "All Users"
+            userSelect.innerHTML = '<option value="">All Users</option>';
 
             uniqueUsers.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user;
-                option.textContent = user;
+                option.textContent = user.substring(0, 12) + '...';
                 userSelect.appendChild(option);
             });
         }
 
-        function applyFilters() {
-            const userFilter = document.getElementById('filterUser').value;
-            const actionFilter = document.getElementById('filterAction').value;
-            const dateFromFilter = document.getElementById('filterDateFrom').value;
-            const dateToFilter = document.getElementById('filterDateTo').value;
+        async function applyFilters() {
+            const filters = {
+                userWallet: document.getElementById('filterUser').value,
+                actionType: document.getElementById('filterAction').value,
+                dateFrom: document.getElementById('filterDateFrom').value,
+                dateTo: document.getElementById('filterDateTo').value
+            };
 
-            filteredLog = auditLog.filter(entry => {
-                let matches = true;
-
-                if (userFilter && entry.user !== userFilter) matches = false;
-                if (actionFilter && entry.action !== actionFilter) matches = false;
-
-                if (dateFromFilter) {
-                    const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
-                    if (entryDate < dateFromFilter) matches = false;
-                }
-
-                if (dateToFilter) {
-                    const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
-                    if (entryDate > dateToFilter) matches = false;
-                }
-
-                return matches;
-            });
-
-            renderAuditLog(filteredLog);
-            document.getElementById('logCount').textContent = `${filteredLog.length} entries`;
-
-            // Track analytics
-            if (typeof trackUserAction === 'function') {
-                trackUserAction('audit_filter_applied', 'audit_trail');
-            }
+            await loadAuditLog(filters);
         }
 
         function refreshAuditLog() {
-            loadAuditLog();
+            applyFilters();
         }
 
-        function exportAuditLog() {
-            const csvContent = generateCSV(filteredLog);
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `audit_log_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-
-            showAlert('Audit log exported successfully', 'success');
-
-            // Track analytics
-            if (typeof trackUserAction === 'function') {
-                trackUserAction('audit_log_exported', 'audit_trail');
+        async function exportAuditLog() {
+            try {
+                const filters = {
+                    userWallet: document.getElementById('filterUser').value,
+                    actionType: document.getElementById('filterAction').value,
+                    dateFrom: document.getElementById('filterDateFrom').value,
+                    dateTo: document.getElementById('filterDateTo').value,
+                    export: 'true'
+                };
+                
+                const signedHeaders = await window.apiClient.getAuthHeaders();
+                const params = new URLSearchParams(filters);
+                const response = await fetch(`${window.config.API_BASE_URL}/admin/activity-logs/export?${params}`, {
+                    headers: signedHeaders
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `audit_log_${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    showAlert('Audit log exported successfully', 'success');
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'error');
             }
-        }
-
-        function generateCSV(data) {
-            const headers = ['ID', 'Timestamp', 'Action', 'User', 'Details', 'IP Address', 'Blockchain TX', 'Success'];
-            const csvRows = [headers.join(',')];
-
-            data.forEach(entry => {
-                const row = [
-                    entry.id,
-                    entry.timestamp,
-                    entry.action,
-                    entry.user,
-                    `"${entry.details}"`,
-                    entry.ipAddress,
-                    entry.blockchainTx || '',
-                    entry.success
-                ];
-                csvRows.push(row.join(','));
-            });
-
-            return csvRows.join('\n');
         }
 
         async function verifyEvidenceHash() {
@@ -404,40 +333,32 @@
                 return;
             }
 
-            if (hash.length !== 64) {
-                showAlert('Invalid hash format. SHA-256 hashes are 64 characters long.', 'error');
-                return;
-            }
-
             try {
-                // Mock verification - in real implementation, check blockchain
-                const isValid = Math.random() > 0.3; // 70% chance of being valid
-                const evidenceId = isValid ? 'EVD-' + Math.floor(Math.random() * 1000) : null;
+                resultDiv.innerHTML = '<div class="text-center p-3">Checking blockchain records...</div>';
+                
+                const result = await window.apiClient.post('/evidence/verify-integrity', {
+                    calculatedHash: hash
+                });
 
-                if (isValid) {
+                if (result.success && result.verified) {
                     resultDiv.innerHTML = `
                         <div class="verification-success">
-                            <h4>✅ Hash Verified</h4>
-                            <p><strong>Evidence ID:</strong> ${evidenceId}</p>
-                            <p><strong>Status:</strong> Valid and stored on blockchain</p>
+                            <h4>✅ Hash Verified on Blockchain</h4>
+                            <p><strong>Evidence ID:</strong> ${result.evidence?.id || 'N/A'}</p>
+                            <p><strong>Status:</strong> Immutable record found</p>
+                            <p><strong>Blockchain TX:</strong> ${result.blockchainTx?.substring(0, 20)}...</p>
                             <p><strong>Verification Time:</strong> ${new Date().toLocaleString()}</p>
                         </div>
                     `;
                 } else {
                     resultDiv.innerHTML = `
                         <div class="verification-failed">
-                            <h4>❌ Hash Not Found</h4>
-                            <p>This hash does not exist in the evidence database.</p>
-                            <p><strong>Verification Time:</strong> ${new Date().toLocaleString()}</p>
+                            <h4>❌ Verification Failed</h4>
+                            <p>This hash does not match any immutable blockchain records.</p>
+                            <p><strong>Reason:</strong> ${result.error || 'Record not found'}</p>
                         </div>
                     `;
                 }
-
-                // Track analytics
-                if (typeof trackUserAction === 'function') {
-                    trackUserAction('hash_verification', 'audit_trail');
-                }
-
             } catch (error) {
                 console.error('Verification error:', error);
                 showAlert('Verification failed: ' + error.message, 'error');

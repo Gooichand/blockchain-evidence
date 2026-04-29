@@ -6,9 +6,12 @@ const {
   emailRegister,
   walletLogin,
   walletRegister,
+  walletNonce,
   verifyEmail,
 } = require('../controllers/authController');
 
+// SECURITY FIX: Nonce endpoint for wallet ECDSA challenge (must be before registration)
+router.get('/auth/wallet/nonce', authLimiter, walletNonce);
 router.post('/auth/email/login', authLimiter, emailLogin);
 router.post('/auth/email/register', authLimiter, emailRegister);
 router.post('/auth/wallet/login', authLimiter, walletLogin);

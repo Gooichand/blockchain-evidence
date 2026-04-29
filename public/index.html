@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="loading-screen.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
-    <link rel="stylesheet" href="faq-hover-effetcs.css">
+    <link rel="stylesheet" href="faq-hover-effects.css">
     <link rel="stylesheet" href="password-security.css">
 
     <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
@@ -21,8 +21,10 @@
     <script src="password-strength.js"></script>
 
 
-    <script src="https://unpkg.com/lenis@1.3.17/dist/lenis.min.js" integrity="sha384-..."
-        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="app.js"></script>
     <script src="header.js"></script>
     <script src="forgot-password.js"></script>
@@ -212,14 +214,14 @@
             </div>
             <div class="card-body">
                 <div class="login-plan-grid">
-                    <div class="plan-option" onclick="scrollToSection('walletSection')">
+                    <div class="plan-option" id="planMetaMask">
                         <div class="plan-icon">
                             <i data-lucide="wallet"></i>
                         </div>
                         <h3>MetaMask Wallet</h3>
                         <p>Blockchain authentication</p>
                     </div>
-                    <div class="plan-option" onclick="showEmailLogin()">
+                    <div class="plan-option" id="planEmail">
                         <div class="plan-icon">
                             <i data-lucide="mail"></i>
                         </div>

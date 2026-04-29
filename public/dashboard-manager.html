@@ -9,7 +9,11 @@
     <title>Manager | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="fixed-navbar.js"></script>
     <style>
         .manager-hero {
@@ -122,7 +126,9 @@
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
             lucide.createIcons();
             const userAccount = localStorage.getItem('currentUser');
             if (!userAccount) {
@@ -130,21 +136,39 @@
                 return;
             }
 
-            let userData = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
-            if (userData.role !== 'evidence_manager' && userData.role !== 6) {
-                // Access check disabled
-            }
-
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
-            const userName = userData.fullName || 'Evidence Manager';
-            document.getElementById('userRole').textContent = isTestUser ?
-                `📋 ${userName} (Test)` : `📋 Evidence Manager`;
-
-            if (userData.walletAddress) {
-                document.getElementById('userWallet').textContent =
-                    userData.walletAddress.slice(0, 6) + '...' + userData.walletAddress.slice(-4);
-            }
+            currentUser = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
+            updateUserInterface();
+            await loadDashboardData();
         });
+
+        function updateUserInterface() {
+            const isTestUser = localStorage.getItem('testUserMode') === 'true';
+            const userName = currentUser.fullName || 'Evidence Manager';
+            if (document.getElementById('userRole')) {
+                document.getElementById('userRole').textContent = isTestUser ?
+                    `📋 ${userName} (Test)` : `📋 Evidence Manager`;
+            }
+
+            if (currentUser.walletAddress && document.getElementById('userWallet')) {
+                document.getElementById('userWallet').textContent =
+                    currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Statistics loading
+                const stats = await window.apiClient.get('/evidence/manager-stats');
+                if (stats.success) {
+                    // Update stats counters if elements exist (manual update since they are hardcoded in HTML)
+                }
+                
+                // Refresh inventory via dashboard-manager-evidence.js if needed
+                if (window.managerEvidence) await window.managerEvidence.init();
+            } catch (error) {
+                console.warn('Backend stats load failed');
+            }
+        }
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {

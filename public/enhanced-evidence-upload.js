@@ -185,41 +185,8 @@ class EvidenceUploader {
     }
 
     async uploadWithProgress(file, formData, onProgress) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    onProgress(percentComplete, e.loaded, e.total);
-                }
-            });
-
-            xhr.addEventListener('load', () => {
-                if (xhr.status === 200 || xhr.status === 201) {
-                    try {
-                        resolve(JSON.parse(xhr.responseText));
-                    } catch (e) {
-                        reject(new Error('Invalid server response'));
-                    }
-                } else {
-                    try {
-                        const error = JSON.parse(xhr.responseText);
-                        reject(new Error(error.error || xhr.statusText));
-                    } catch (e) {
-                        reject(new Error(`Upload failed: ${xhr.statusText}`));
-                    }
-                }
-            });
-
-            xhr.addEventListener('error', () => {
-                reject(new Error('Upload failed: Network error'));
-            });
-
-            const apiUrl = window.config?.API_BASE_URL || '/api';
-            xhr.open('POST', `${apiUrl}/evidence/upload`);
-            xhr.send(formData);
-        });
+        // apiClient.upload handles the XHR and progress events
+        return await window.apiClient.upload('/evidence/upload', formData, onProgress);
     }
 
     showProgress(show = true) {

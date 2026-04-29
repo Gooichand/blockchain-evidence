@@ -9,9 +9,12 @@
     <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="fixed-navbar.js"></script>
-    <script src="sample-data.js"></script>
     <style>
         .investigator-hero {
             background: linear-gradient(135deg, #1e3a8a, #3b82f6);
@@ -438,7 +441,7 @@
 
                 currentUser = userData;
                 updateUserInterface();
-                loadDashboardData();
+                await loadDashboardData();
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
@@ -450,45 +453,57 @@
             const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Investigator';
 
-            document.getElementById('userRole').textContent = isTestUser ?
-                `🕵️ ${userName} (Test)` : `🕵️ Investigator`;
+            if (document.getElementById('userRole')) {
+                document.getElementById('userRole').textContent = isTestUser ?
+                    `🕵️ ${userName} (Test)` : `🕵️ Investigator`;
+            }
 
-            if (currentUser.walletAddress) {
+            if (currentUser.walletAddress && document.getElementById('userWallet')) {
                 document.getElementById('userWallet').textContent =
                     currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
             }
         }
 
-        function loadDashboardData() {
-            // Load real data from localStorage
-            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-            const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
-
-            const activeCases = cases.filter(c => c.status === 'OPEN').length;
-            const pendingReviews = evidence.filter(e => e.status === 'Pending').length;
-
-            document.getElementById('activeCases').textContent = activeCases;
-            document.getElementById('evidenceItems').textContent = evidence.length;
-            document.getElementById('pendingReviews').textContent = pendingReviews;
-
-            // Update cases grid with real data
-            const casesGrid = document.getElementById('casesGrid');
-            if (cases.length > 0) {
-                casesGrid.innerHTML = cases.slice(0, 3).map(c => `
-                    <div class="case-card">
-                        <div class="case-header">
-                            <h3>${c.title}</h3>
-                            <span class="status-badge status-${c.status.toLowerCase()}">${c.status}</span>
-                        </div>
-                        <p><strong>Case ID:</strong> ${c.id}</p>
-                        <p><strong>Location:</strong> ${c.location}</p>
-                        <p><strong>Date:</strong> ${c.date}</p>
-                        <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('${c.id}')">View Details</button>
-                            <button class="btn btn-sm btn-outline" onclick="uploadEvidence()">Add Evidence</button>
-                        </div>
-                    </div>
-                `).join('');
+        async function loadDashboardData() {
+            try {
+                // Try to load real data from backend via secure apiClient
+                const result = await window.apiClient.get('/cases');
+                
+                if (result.success) {
+                    const cases = result.data || [];
+                    const activeCases = cases.filter(c => c.status === 'OPEN' || c.status === 'active').length;
+                    
+                    document.getElementById('activeCases').textContent = activeCases;
+                    document.getElementById('evidenceItems').textContent = '...'; // Will load per case or via separate endpoint
+                    
+                    const casesGrid = document.getElementById('casesGrid');
+                    if (cases.length > 0) {
+                        casesGrid.innerHTML = cases.slice(0, 6).map(c => `
+                            <div class="case-card">
+                                <div class="case-header">
+                                    <h3>${c.title}</h3>
+                                    <span class="status-badge status-${(c.status || 'open').toLowerCase()}">${c.status || 'OPEN'}</span>
+                                </div>
+                                <p><strong>Case ID:</strong> ${c.id}</p>
+                                <p><strong>Location:</strong> ${c.location || 'N/A'}</p>
+                                <p><strong>Date:</strong> ${new Date(c.created_at || Date.now()).toLocaleDateString()}</p>
+                                <div class="case-actions" style="margin-top: 15px;">
+                                    <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('${c.id}')">View Details</button>
+                                    <button class="btn btn-sm btn-outline" onclick="addEvidence('${c.id}')">Add Evidence</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        casesGrid.innerHTML = '<div class="no-data">No cases found in database.</div>';
+                    }
+                }
+            } catch (error) {
+                console.warn('Backend data load failed, using localStorage fallback');
+                // Fallback to localStorage for demo/offline
+                const cases = JSON.parse(localStorage.getItem('cases') || '[]');
+                const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
+                document.getElementById('activeCases').textContent = cases.filter(c => c.status === 'OPEN').length;
+                document.getElementById('evidenceItems').textContent = evidence.length;
             }
         }
 
@@ -619,43 +634,48 @@
             lucide.createIcons();
         }
 
-        function submitEvidence(caseId) {
+        async function submitEvidence(caseId) {
             const title = document.getElementById('evidenceTitle').value;
             const description = document.getElementById('evidenceDescription').value;
             const type = document.getElementById('evidenceType').value;
             const file = document.getElementById('evidenceFile').files[0];
 
-            if (!title || !type) {
-                alert('Please fill in required fields (Title and Type)');
+            if (!title || !type || !file) {
+                alert('Please fill in required fields (Title, Type, and File)');
                 return;
             }
 
-            const evidenceId = 'EVD-' + Date.now();
-            const evidence = {
-                id: evidenceId,
-                caseId: caseId,
-                title: title,
-                description: description,
-                type: type,
-                fileName: file ? file.name : 'No file',
-                fileSize: file ? file.size : 0,
-                uploadedBy: currentUser.fullName || 'Investigator',
-                uploadedAt: new Date().toISOString(),
-                status: 'Verified',
-                hash: 'sha256:' + Math.random().toString(36).substring(2, 15)
-            };
+            const btn = event.target;
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="loading-spinner"></i> Uploading...';
 
-            // Save to localStorage
-            const evidenceList = JSON.parse(localStorage.getItem('evidence') || '[]');
-            evidenceList.unshift(evidence);
-            localStorage.setItem('evidence', JSON.stringify(evidenceList));
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('type', type);
+                formData.append('caseId', caseId);
+                formData.append('file', file);
 
-            // Close modal
-            document.querySelector('.modal').remove();
+                // Use secure apiClient for multipart upload
+                const result = await window.apiClient.post('/evidence/upload', formData);
 
-            // Show success message
-            showToast('✅ Evidence uploaded successfully!', 'success');
-            loadDashboardData();
+                if (result.success) {
+                    // Close modal
+                    document.querySelector('.modal').remove();
+                    showToast('✅ Evidence uploaded and secured on blockchain!', 'success');
+                    await loadDashboardData();
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Evidence upload error:', error);
+                alert('Error uploading evidence: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
         }
 
         function requestAnalysis(caseId) {
@@ -708,28 +728,30 @@
             }, 5000);
         }
 
-        function createNewCase() {
-            // Create a simple case creation interface
+        async function createNewCase() {
             const caseTitle = prompt('Enter case title:');
-            if (caseTitle) {
-                const caseId = 'INV-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-6);
-                const newCase = {
-                    id: caseId,
+            if (!caseTitle) return;
+
+            const location = prompt('Enter case location:') || 'Not specified';
+            const description = prompt('Enter case description:') || '';
+
+            try {
+                const result = await window.apiClient.post('/cases', {
                     title: caseTitle,
-                    status: 'OPEN',
-                    location: prompt('Enter case location:') || 'Not specified',
-                    date: new Date().toLocaleDateString(),
-                    createdBy: currentUser.fullName || 'Investigator',
-                    createdAt: new Date().toISOString()
-                };
+                    description: description,
+                    location: location,
+                    status: 'OPEN'
+                });
 
-                // Save to localStorage
-                const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-                cases.unshift(newCase);
-                localStorage.setItem('cases', JSON.stringify(cases));
-
-                alert(`✅ Case created successfully!\n\nCase ID: ${caseId}\nTitle: ${caseTitle}\nStatus: OPEN`);
-                loadDashboardData();
+                if (result.success) {
+                    alert(`✅ Case created successfully in database!\n\nCase ID: ${result.data?.id || 'New'}\nTitle: ${caseTitle}`);
+                    await loadDashboardData();
+                } else {
+                    throw new Error(result.error || 'Failed to create case');
+                }
+            } catch (error) {
+                console.error('Case creation error:', error);
+                alert('Error creating case: ' + error.message);
             }
         }
 

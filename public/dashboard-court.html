@@ -9,7 +9,11 @@
     <title>Court | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="fixed-navbar.js"></script>
     <style>
         .court-hero {
@@ -83,8 +87,46 @@
         </div>
     </div>
 
+    <!-- Court Case Section -->
+    <div class="container" style="margin-top: 20px;">
+        <div class="card">
+            <div class="card-header">
+                <h2>📁 Judicial Case Inventory</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadDashboardData()">
+                    <i data-lucide="refresh-cw"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="courtCaseList">
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 16px;">Loading judicial queue...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #ea580c;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
             lucide.createIcons();
             const userAccount = localStorage.getItem('currentUser');
             if (!userAccount) {
@@ -92,21 +134,86 @@
                 return;
             }
 
-            let userData = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
-            if (userData.role !== 'court_official' && userData.role !== 5) {
-                // Access check disabled
-            }
-
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
-            const userName = userData.fullName || 'Court Official';
-            document.getElementById('userRole').textContent = isTestUser ?
-                `🏛️ ${userName} (Test)` : `🏛️ Court Official`;
-
-            if (userData.walletAddress) {
-                document.getElementById('userWallet').textContent =
-                    userData.walletAddress.slice(0, 6) + '...' + userData.walletAddress.slice(-4);
-            }
+            currentUser = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
+            updateUserInterface();
+            await loadDashboardData();
         });
+
+        function updateUserInterface() {
+            const isTestUser = localStorage.getItem('testUserMode') === 'true';
+            const userName = currentUser.fullName || 'Court Official';
+            if (document.getElementById('userRole')) {
+                document.getElementById('userRole').textContent = isTestUser ?
+                    `🏛️ ${userName} (Test)` : `🏛️ Court Official`;
+            }
+
+            if (currentUser.walletAddress && document.getElementById('userWallet')) {
+                document.getElementById('userWallet').textContent =
+                    currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const cases = await window.storage.getAllCases();
+                renderCases(cases);
+            } catch (error) {
+                console.error('Error loading court data:', error);
+                document.getElementById('courtCaseList').innerHTML = '<p style="color:red">Failed to load cases from server.</p>';
+            }
+        }
+
+        function renderCases(cases) {
+            const container = document.getElementById('courtCaseList');
+            if (!cases || cases.length === 0) {
+                container.innerHTML = '<p>No active judicial cases found.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                            <th style="padding: 12px; text-align: left;">Case ID</th>
+                            <th style="padding: 12px; text-align: left;">Title</th>
+                            <th style="padding: 12px; text-align: left;">Status</th>
+                            <th style="padding: 12px; text-align: left;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${cases.map(item => `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 12px;">${item.id}</td>
+                                <td style="padding: 12px;">${item.title}</td>
+                                <td style="padding: 12px;">
+                                    <span style="background: #ffedd5; color: #9a3412; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                                        ${item.status || 'ACTIVE'}
+                                    </span>
+                                </td>
+                                <td style="padding: 12px;">
+                                    <button class="btn btn-sm btn-primary" onclick="issueCourtOrder('${item.id}')">Issue Order</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function issueCourtOrder(caseId) {
+            const order = prompt('Enter judicial order / hearing summary:');
+            if (!order) return;
+
+            try {
+                const result = await window.apiClient.post('/court/order', { caseId, order });
+                if (result.success) {
+                    alert('⚖️ Judicial order recorded and timestamped on blockchain.');
+                    await loadDashboardData();
+                }
+            } catch (error) {
+                alert('Failed to issue order: ' + error.message);
+            }
+        }
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {

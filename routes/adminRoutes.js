@@ -17,13 +17,15 @@ const {
 router.post('/admin/create-user', adminLimiter, verifyAdmin, createUser);
 router.post('/admin/create-admin', adminLimiter, verifyAdmin, createAdmin);
 router.post('/admin/delete-user', adminLimiter, verifyAdmin, deleteUser);
-router.get('/admin/users', adminLimiter, getAllUsers);
+// SECURITY FIX: Added verifyAdmin middleware to getAllUsers (was missing)
+router.get('/admin/users', adminLimiter, verifyAdmin, getAllUsers);
 router.post('/admin/role-change-request', adminLimiter, verifyAdmin, roleChangeRequest);
-router.get('/admin/role-change-requests', adminLimiter, getRoleChangeRequests);
+// SECURITY FIX: Added verifyAdmin middleware to getRoleChangeRequests (was missing)
+router.get('/admin/role-change-requests', adminLimiter, verifyAdmin, getRoleChangeRequests);
 router.post('/admin/role-change-approve', adminLimiter, verifyAdmin, approveRoleChange);
 router.post('/admin/role-change-reject', adminLimiter, verifyAdmin, rejectRoleChange);
 
-// Catch-all for unauthorized admin operations — MUST be last
+// Catch-all for unauthorized admin operations - MUST be last
 router.post('/admin/*', blockUnauthorizedAdmin);
 
 module.exports = router;

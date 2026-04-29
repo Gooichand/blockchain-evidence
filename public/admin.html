@@ -10,15 +10,15 @@
     <link rel="apple-touch-icon" href="favicon.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script src="storage.js"></script>
-    <script src="simple-notifications.js"></script>
-    <script src="indian-apis.js"></script>
-    <script src="fixed-navbar.js"></script>
+    <script src="session-manager.js"></script>
     <script src="role-change-approval.js"></script>
+    <script src="fixed-navbar.js"></script>
 </head>
 
 <body>
@@ -494,20 +494,13 @@
                     userData = JSON.parse(localStorage.getItem('evidUser_' + currentUser) || '{}');
                 }
 
-                // Allow any user to be admin for development - remove this check completely
-                // const isAdmin = userData.role === 8 || userData.role === 'admin' || userData.accountType === 'admin';
+                // SECURITY FIX: Enforce real admin role check
+                const isAdmin = userData.role === 'admin' || userData.role === 8;
 
-                // if (!isAdmin) {
-                //     alert('Access denied. Administrator privileges required.');
-                //     window.location.href = 'index.html';
-                //     return;
-                // }
-
-                // Force admin role for any logged in user
-                if (!userData.role) {
-                    userData.role = 'admin';
-                    userData.accountType = 'admin';
-                    localStorage.setItem('evidUser_' + currentUser, JSON.stringify(userData));
+                if (!isAdmin) {
+                    alert('Access denied. Administrator privileges required.');
+                    window.location.href = 'index.html';
+                    return;
                 }
 
                 currentAdmin = currentUser;
@@ -567,28 +560,20 @@
                     createdBy: currentAdmin
                 };
 
-                // Try to create user via backend API first
+                // Use secure apiClient
                 try {
-                    const response = await fetch('/api/admin/create-user', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            adminWallet: currentAdmin,
-                            userData: {
-                                walletAddress,
-                                fullName: userData.fullName,
-                                role,
-                                department: userData.department,
-                                jurisdiction: 'General',
-                                badgeNumber: ''
-                            }
-                        })
+                    const result = await window.apiClient.post('/admin/create-user', {
+                        userData: {
+                            walletAddress,
+                            fullName: userData.fullName,
+                            role,
+                            department: userData.department,
+                            jurisdiction: 'General',
+                            badgeNumber: ''
+                        }
                     });
 
-                    if (response.ok) {
-                        const result = await response.json();
+                    if (result.success) {
                         showAlert('User account created successfully in database!', 'success');
                     } else {
                         console.warn('Backend creation failed, using localStorage fallback');
@@ -610,20 +595,9 @@
 
         async function loadAllUsers() {
             try {
-                // Try to load from backend first
-                const response = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        adminWallet: currentAdmin
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    displayUsers(data.users || []);
+                const result = await window.apiClient.get('/admin/users');
+                if (result.success) {
+                    displayUsers(result.users || result.data || []);
                     return;
                 }
             } catch (error) {

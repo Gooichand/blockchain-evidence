@@ -11,14 +11,10 @@
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="enhanced-upload-styles.css">
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KEYDE0ZH4Z"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-KEYDE0ZH4Z');
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="session-manager.js"></script>
 </head>
 
 <body>
@@ -145,10 +141,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
-    <script src="config.js"></script>
     <script src="storage.js"></script>
-    <script src="analytics.js"></script>
     <script src="enhanced-evidence-upload.js"></script>
     <script>
         let currentUser = null;
@@ -173,6 +166,7 @@
         ];
 
         document.addEventListener('DOMContentLoaded', async function () {
+            lucide.createIcons();
             await initializeEvidenceManager();
         });
 
@@ -184,15 +178,8 @@
                     return;
                 }
 
-                // Load user data
-                currentUser = await loadUserData(wallet);
-                if (!currentUser) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                updateUserUI(currentUser);
-                await initializeWeb3();
+                // Session management handled by session-manager.js
+                // Just load the dashboard data
                 await loadEvidence();
                 await updateBlockchainStatus();
 
@@ -201,6 +188,7 @@
                 document.getElementById('searchEvidence').addEventListener('input', filterEvidence);
 
             } catch (error) {
+                console.error('Initialization error:', error);
                 showAlert('Failed to initialize evidence manager', 'error');
             }
         }
@@ -291,15 +279,8 @@
 
         async function loadEvidence() {
             try {
-                const apiUrl = window.config?.API_BASE_URL || '/api';
-                const response = await fetch(`${apiUrl}/evidence`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load evidence');
-                }
-                
-                const data = await response.json();
-                evidenceList = data.evidence || [];
+                const evidence = await window.storage.getAllEvidence();
+                evidenceList = evidence || [];
                 renderEvidence(evidenceList);
             } catch (error) {
                 document.getElementById('evidenceList').innerHTML = '<p class="text-center text-muted">Error loading evidence</p>';

@@ -9,9 +9,12 @@
     <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="fixed-navbar.js"></script>
-    <script src="sample-data.js"></script>
     <style>
         .public-hero {
             background: linear-gradient(135deg, #059669, #10b981);
@@ -295,9 +298,17 @@
     <script>
         let currentUser = null;
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             lucide.createIcons();
-            initializeDashboard();
+            const userAccount = localStorage.getItem('currentUser');
+            if (!userAccount) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
+            updateUserInterface();
+            await loadDashboardData();
         });
 
         async function initializeDashboard() {
@@ -503,18 +514,50 @@
             }
         }
 
-        function loadDashboardData() {
-            // Load public cases from localStorage
-            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-            const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
+        async function loadDashboardData() {
+            try {
+                // Fetch public cases and evidence from backend
+                const [cases, evidence] = await Promise.all([
+                    window.storage.getAllCases(),
+                    window.storage.getAllEvidence()
+                ]);
 
-            // Filter for public/closed cases only
-            const publicCases = cases.filter(c => c.status === 'CLOSED' || c.isPublic);
-            const publicEvidence = evidence.filter(e => e.isPublic || e.status === 'Verified');
+                // Filter for public/closed cases only (safety filter)
+                const publicCases = cases.filter(c => c.status === 'CLOSED' || c.is_public);
+                const publicEvidence = evidence.filter(e => e.is_public || e.status === 'VERIFIED');
 
-            document.getElementById('publicCases').textContent = publicCases.length;
-            document.getElementById('closedCases').textContent = cases.filter(c => c.status === 'CLOSED').length;
-            document.getElementById('publicEvidence').textContent = publicEvidence.length;
+                document.getElementById('publicCases').textContent = publicCases.length;
+                document.getElementById('closedCases').textContent = cases.filter(c => c.status === 'CLOSED').length;
+                document.getElementById('publicEvidence').textContent = publicEvidence.length;
+
+                renderPublicCases(publicCases);
+            } catch (error) {
+                console.error('Error loading public data:', error);
+            }
+        }
+
+        function renderPublicCases(cases) {
+            const container = document.getElementById('publicCasesGrid');
+            if (!cases || cases.length === 0) {
+                container.innerHTML = '<p>No public cases available.</p>';
+                return;
+            }
+
+            container.innerHTML = cases.map(c => `
+                <div class="public-case-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3>${c.title}</h3>
+                        <span class="case-status">${c.status}</span>
+                    </div>
+                    <p><strong>Case ID:</strong> ${c.id}</p>
+                    <p><strong>Location:</strong> ${c.location || 'N/A'}</p>
+                    <p><strong>Date:</strong> ${new Date(c.created_at).toLocaleDateString()}</p>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('${c.id}')">View Summary</button>
+                        <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('${c.id}')">Evidence List</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function searchCases() {

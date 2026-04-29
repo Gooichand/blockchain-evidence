@@ -1,18 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
-// ── Shared config ───────────────────────────────────────────────────────────
+// -- Shared config --
 const { PORT, connectedUsers } = require('./config');
 const { validateWalletAddress } = require('./middleware/verifyAdmin');
 const { limiter } = require('./middleware/rateLimiters');
 const { setIO: setNotificationIO } = require('./services/notificationService');
 const { setIO: setNotificationControllerIO } = require('./controllers/notificationController');
 
-// ── Shared CORS origins (single source of truth) ───────────────────────────
+// -- Shared CORS origins (single source of truth) --
 const allowedOrigins =
   process.env.NODE_ENV === 'production'
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ['https://blockchain-evidence.onrender.com']).map(
@@ -20,7 +21,7 @@ const allowedOrigins =
       )
     : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
-// ── Express + HTTP + Socket.IO ──────────────────────────────────────────────
+// -- Express + HTTP + Socket.IO --
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -34,7 +35,40 @@ const io = new Server(server, {
 setNotificationIO(io);
 setNotificationControllerIO(io);
 
-// ── WebSocket connection handling ───────────────────────────────────────────
+// -- Security middlewares --
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+          "https://unpkg.com",
+          "https://cdn.socket.io",
+          "https://cdn.jsdelivr.net",
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://vkqswulxmuuganmjqumb.supabase.co"],
+        connectSrc: [
+          "'self'",
+          "https://vkqswulxmuuganmjqumb.supabase.co",
+          "https://polygon-amoy.g.alchemy.com",
+          "https://polygon-rpc.com",
+          "wss://*.socket.io",
+          "ws://localhost:10000",
+        ],
+        upgradeInsecureRequests: [],
+      },
+    },
+  }),
+); // Sets various security headers
+app.use(cors({ origin: allowedOrigins, credentials: true })); // CORS
+
+// -- WebSocket connection handling --
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -57,48 +91,52 @@ io.on('connection', (socket) => {
   });
 });
 
-// ── Middleware (ORDER IS CRITICAL!) ─────────────────────────────────────────
+// -- Middleware (ORDER IS CRITICAL!) --
 
-// 1. CORS MUST BE FIRST
-app.use(cors({ origin: allowedOrigins, credentials: true }));
-
-// 2. JSON / BODY PARSER
+// 1. JSON / BODY PARSER
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 3. STATIC FILES — BEFORE API ROUTES
+// 2. STATIC FILES - BEFORE API ROUTES
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. General rate limiter
+// 3. General rate limiter - applied to all API routes
 app.use('/api/', limiter);
 
-// 5. Cryptographic signature verification for wallet authentication
+// 4. Cryptographic signature verification for wallet authentication
+// SECURITY FIX: Applied BEFORE route registration so all API routes are covered.
+// Auth routes are exempt because verifySignature skips requests with no recognized wallet field.
 const { verifySignature } = require('./middleware/verifySignature');
 app.use('/api/', verifySignature);
 
-// ── Routes ──────────────────────────────────────────────────────────────────
+// 5. All routes
+// SECURITY FIX: Removed duplicate app.use('/api/auth', authRoutes) that created wrong
+// paths like /api/auth/auth/email/login and allowed bypassing verifySignature.
 const registerRoutes = require('./routes');
 registerRoutes(app);
 
-// ── Error handling (ORDER: 404 handler BEFORE generic error handler) ───────
+// -- Error handling (ORDER: 404 handler BEFORE generic error handler) --
 
-// 404 handler (must come BEFORE error handler — this is a regular middleware)
+// 404 handler (must come BEFORE error handler - this is a regular middleware)
 app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+  res.status(404).json({ success: false, error: 'Endpoint not found' });
 });
 
-// Generic error handler (must be LAST — Express requires 4-arg signature)
+// Generic error handler (must be LAST - Express requires 4-arg signature)
 app.use((error, req, res, _next) => {
   console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
+  const status = error.status || 500;
+  // SECURITY FIX: Never expose stack traces or internal error details in production
+  const message = process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message;
+  res.status(status).json({ success: false, error: message });
 });
 
-// ── Start server (only when run directly, not when imported for testing) ───
+// -- Start server (only when run directly, not when imported for testing) --
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`🔐 EVID-DGC API Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🔔 WebSocket notifications enabled`);
+    console.log(`EVID-DGC API Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log(`WebSocket notifications enabled`);
   });
 }
 

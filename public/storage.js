@@ -1,47 +1,35 @@
 /**
  * Real Storage System - LocalStorage + API Integration
+ * SECURITY FIX: Refactored to use centralized APIClient for secure, signed communication.
  */
 
-const API_BASE = window.config?.API_BASE_URL || 'https://blockchain-evidence.onrender.com/api';
-
-// Storage system with localStorage and backend API
+// Storage system with localStorage (for non-sensitive UI state) and backend API
 window.storage = {
-    // User management functions (existing)
+    // User management functions
     async getUser(walletAddress) {
-        const userData = localStorage.getItem('evidUser_' + walletAddress);
-        return userData ? JSON.parse(userData) : null;
+        try {
+            const result = await window.apiClient.get(`/users/wallet/${walletAddress}`);
+            return result.user || result.data || null;
+        } catch (error) {
+            console.warn('Error fetching user from API, falling back to local storage:', error);
+            const userData = localStorage.getItem('evidUser_' + walletAddress);
+            return userData ? JSON.parse(userData) : null;
+        }
     },
     
     async saveUser(userData) {
-        localStorage.setItem('evidUser_' + userData.walletAddress, JSON.stringify(userData));
+        // Only save non-sensitive profile info locally for UI responsiveness
+        const safeData = { ...userData };
+        delete safeData.password;
+        localStorage.setItem('evidUser_' + (userData.walletAddress || userData.wallet_address), JSON.stringify(safeData));
         return true;
     },
     
-    async getAllUsers() {
-        const users = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('evidUser_')) {
-                try {
-                    const userData = JSON.parse(localStorage.getItem(key));
-                    users.push(userData);
-                } catch (e) {}
-            }
-        }
-        return users;
-    },
-    
-    // Evidence API functions (new)
+    // Evidence API functions
     async getAllEvidence() {
         try {
-            const response = await fetch(`${API_BASE}/evidence`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.evidence || [];
+            const result = await window.apiClient.get('/evidence');
+            return result.data || result.evidence || [];
         } catch (error) {
             console.error('Error fetching evidence:', error);
             return [];
@@ -50,14 +38,8 @@ window.storage = {
     
     async getEvidenceById(id) {
         try {
-            const response = await fetch(`${API_BASE}/evidence/${id}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.evidence || null;
+            const result = await window.apiClient.get(`/evidence/${id}`);
+            return result.data || result.evidence || null;
         } catch (error) {
             console.error('Error fetching evidence by ID:', error);
             return null;
@@ -66,14 +48,8 @@ window.storage = {
     
     async getEvidenceByCase(caseId) {
         try {
-            const response = await fetch(`${API_BASE}/evidence/case/${caseId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.evidence || [];
+            const result = await window.apiClient.get(`/evidence/case/${caseId}`);
+            return result.data || result.evidence || [];
         } catch (error) {
             console.error('Error fetching evidence by case:', error);
             return [];
@@ -82,14 +58,8 @@ window.storage = {
     
     async getAllCases() {
         try {
-            const response = await fetch(`${API_BASE}/cases`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.cases || [];
+            const result = await window.apiClient.get('/cases');
+            return result.data || result.cases || [];
         } catch (error) {
             console.error('Error fetching cases:', error);
             return [];
@@ -98,14 +68,8 @@ window.storage = {
     
     async getCaseById(id) {
         try {
-            const response = await fetch(`${API_BASE}/cases/${id}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.case || null;
+            const result = await window.apiClient.get(`/cases/${id}/details`);
+            return result.data || result.case || null;
         } catch (error) {
             console.error('Error fetching case by ID:', error);
             return null;
@@ -117,5 +81,9 @@ window.storage = {
 window.simpleNotifications = {
     addNotification(title, message, type) {
         console.log(`${type}: ${title} - ${message}`);
+        // If there's a UI notification system, trigger it here
+        if (window.showNotification) {
+            window.showNotification(title, message, type);
+        }
     }
 };

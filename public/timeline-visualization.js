@@ -14,13 +14,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load available cases
 async function loadCases() {
     try {
-        const response = await fetch('/api/cases');
-        const data = await response.json();
+        const result = await window.apiClient.get('/cases');
         
-        if (data.success) {
+        if (result.success) {
             const caseSelect = document.getElementById('caseSelect');
             caseSelect.innerHTML = '<option value="">Select a case...</option>' +
-                data.cases.map(case_ => 
+                result.cases.map(case_ => 
                     `<option value="${case_.id}">${case_.title} (${case_.id})</option>`
                 ).join('');
         }
@@ -43,4 +42,506 @@ function initializeTimeline() {
         showCurrentTime: true,
         showMajorLabels: true,
         showMinorLabels: true,
-        format: {\n            minorLabels: {\n                millisecond: 'SSS',\n                second: 's',\n                minute: 'HH:mm',\n                hour: 'HH:mm',\n                weekday: 'ddd D',\n                day: 'D',\n                week: 'w',\n                month: 'MMM',\n                year: 'YYYY'\n            },\n            majorLabels: {\n                millisecond: 'HH:mm:ss',\n                second: 'D MMMM HH:mm',\n                minute: 'ddd D MMMM',\n                hour: 'ddd D MMMM',\n                weekday: 'MMMM YYYY',\n                day: 'MMMM YYYY',\n                week: 'MMMM YYYY',\n                month: 'YYYY',\n                year: ''\n            }\n        },\n        tooltip: {\n            followMouse: true,\n            overflowMethod: 'cap'\n        },\n        onInitialDrawComplete: function() {\n            console.log('Timeline initialized');\n        }\n    };\n    \n    timeline = new vis.Timeline(container, new vis.DataSet([]), options);\n    \n    // Add click event listener\n    timeline.on('select', function(event) {\n        if (event.items.length > 0) {\n            const itemId = event.items[0];\n            showEvidenceDetails(itemId);\n        }\n    });\n    \n    // Add double-click event for fullscreen\n    timeline.on('doubleClick', function(event) {\n        toggleFullscreen();\n    });\n}\n\n// Load evidence for selected case\nasync function loadCaseEvidence() {\n    const caseId = document.getElementById('caseSelect').value;\n    if (!caseId) {\n        clearTimeline();\n        return;\n    }\n    \n    currentCase = caseId;\n    \n    try {\n        const response = await fetch(`/api/evidence/by-case/${caseId}`);\n        const data = await response.json();\n        \n        if (data.success) {\n            allEvidence = data.evidence;\n            populateFilters();\n            updateTimeline();\n            updateStatistics();\n            analyzeTimelineGaps();\n        }\n    } catch (error) {\n        console.error('Error loading case evidence:', error);\n    }\n}\n\n// Populate filter dropdowns\nfunction populateFilters() {\n    // Populate uploader filter\n    const uploaders = [...new Set(allEvidence.map(e => e.submitted_by))];\n    const uploaderSelect = document.getElementById('uploaderFilter');\n    uploaderSelect.innerHTML = '<option value=\"all\">All Uploaders</option>' +\n        uploaders.map(uploader => \n            `<option value=\"${uploader}\">${uploader.substring(0, 8)}...</option>`\n        ).join('');\n}\n\n// Update timeline with filtered data\nfunction updateTimeline() {\n    const filteredEvidence = getFilteredEvidence();\n    const timelineItems = createTimelineItems(filteredEvidence);\n    \n    if (timeline) {\n        timeline.setData(new vis.DataSet(timelineItems));\n        \n        // Fit timeline to show all items\n        if (timelineItems.length > 0) {\n            setTimeout(() => {\n                timeline.fit();\n            }, 100);\n        }\n    }\n    \n    // Update mobile timeline\n    updateMobileTimeline(filteredEvidence);\n}\n\n// Get filtered evidence based on current filters\nfunction getFilteredEvidence() {\n    let filtered = [...allEvidence];\n    \n    // Filter by type\n    const typeFilter = document.getElementById('typeFilter').value;\n    if (typeFilter !== 'all') {\n        filtered = filtered.filter(e => e.type.toLowerCase().includes(typeFilter));\n    }\n    \n    // Filter by date range\n    const startDate = document.getElementById('startDate').value;\n    const endDate = document.getElementById('endDate').value;\n    \n    if (startDate) {\n        filtered = filtered.filter(e => new Date(e.timestamp) >= new Date(startDate));\n    }\n    \n    if (endDate) {\n        const endDateTime = new Date(endDate);\n        endDateTime.setHours(23, 59, 59, 999);\n        filtered = filtered.filter(e => new Date(e.timestamp) <= endDateTime);\n    }\n    \n    // Filter by uploader\n    const uploaderFilter = document.getElementById('uploaderFilter').value;\n    if (uploaderFilter !== 'all') {\n        filtered = filtered.filter(e => e.submitted_by === uploaderFilter);\n    }\n    \n    return filtered;\n}\n\n// Create timeline items from evidence data\nfunction createTimelineItems(evidence) {\n    return evidence.map(item => {\n        const evidenceType = getEvidenceType(item.type);\n        const color = getTypeColor(evidenceType);\n        \n        return {\n            id: item.id,\n            content: `<div style=\"padding: 5px;\">\n                        <strong>${item.title}</strong><br>\n                        <small>${evidenceType} • ${item.submitted_by.substring(0, 8)}...</small>\n                      </div>`,\n            start: new Date(item.timestamp),\n            type: 'point',\n            className: `evidence-type-${evidenceType}`,\n            style: `background-color: ${color}; border-color: ${color};`,\n            title: `${item.title}\\nType: ${evidenceType}\\nSubmitted: ${new Date(item.timestamp).toLocaleString()}\\nBy: ${item.submitted_by.substring(0, 8)}...`\n        };\n    });\n}\n\n// Get evidence type from file type\nfunction getEvidenceType(type) {\n    if (type.includes('image') || type.includes('photo')) return 'photo';\n    if (type.includes('video')) return 'video';\n    if (type.includes('audio')) return 'audio';\n    if (type.includes('document') || type.includes('pdf') || type.includes('text')) return 'document';\n    return 'physical';\n}\n\n// Get color for evidence type\nfunction getTypeColor(type) {\n    const colors = {\n        photo: '#3b82f6',\n        document: '#10b981',\n        video: '#8b5cf6',\n        audio: '#f59e0b',\n        physical: '#ef4444'\n    };\n    return colors[type] || '#6b7280';\n}\n\n// Update mobile timeline\nfunction updateMobileTimeline(evidence) {\n    const container = document.getElementById('mobileTimelineList');\n    \n    if (evidence.length === 0) {\n        container.innerHTML = '<p>No evidence found for selected filters.</p>';\n        return;\n    }\n    \n    // Sort by timestamp\n    const sortedEvidence = evidence.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n    \n    container.innerHTML = sortedEvidence.map(item => {\n        const evidenceType = getEvidenceType(item.type);\n        const color = getTypeColor(evidenceType);\n        \n        return `\n            <div class=\"mobile-timeline-item\" style=\"border-left: 4px solid ${color}; padding: 15px; margin: 10px 0; background: white; border-radius: 4px;\" onclick=\"showEvidenceDetails(${item.id})\">\n                <h4>${item.title}</h4>\n                <p><strong>Type:</strong> ${evidenceType}</p>\n                <p><strong>Date:</strong> ${new Date(item.timestamp).toLocaleString()}</p>\n                <p><strong>Submitted by:</strong> ${item.submitted_by.substring(0, 8)}...</p>\n            </div>\n        `;\n    }).join('');\n}\n\n// Show evidence details in modal\nfunction showEvidenceDetails(evidenceId) {\n    const evidence = allEvidence.find(e => e.id == evidenceId);\n    if (!evidence) return;\n    \n    const modal = document.getElementById('evidenceModal');\n    const details = document.getElementById('evidenceDetails');\n    \n    details.innerHTML = `\n        <div class=\"evidence-popup\">\n            <h3>${evidence.title}</h3>\n            <p><strong>Case ID:</strong> ${evidence.case_id}</p>\n            <p><strong>Type:</strong> ${getEvidenceType(evidence.type)}</p>\n            <p><strong>Description:</strong> ${evidence.description || 'No description'}</p>\n            <p><strong>File Name:</strong> ${evidence.file_name}</p>\n            <p><strong>File Size:</strong> ${formatFileSize(evidence.file_size)}</p>\n            <p><strong>Hash:</strong> <code>${evidence.hash}</code></p>\n            <p><strong>Submitted:</strong> ${new Date(evidence.timestamp).toLocaleString()}</p>\n            <p><strong>Submitted By:</strong> ${evidence.submitted_by}</p>\n            <p><strong>Status:</strong> ${evidence.status}</p>\n            \n            <div style=\"margin-top: 15px;\">\n                <button onclick=\"downloadEvidence(${evidence.id})\" class=\"btn btn-primary\">Download</button>\n                <button onclick=\"verifyEvidence(${evidence.id})\" class=\"btn btn-secondary\">Verify</button>\n            </div>\n        </div>\n    `;\n    \n    modal.style.display = 'block';\n}\n\n// Close evidence modal\nfunction closeEvidenceModal() {\n    document.getElementById('evidenceModal').style.display = 'none';\n}\n\n// Timeline control functions\nfunction zoomIn() {\n    if (timeline) {\n        timeline.zoomIn(0.2);\n    }\n}\n\nfunction zoomOut() {\n    if (timeline) {\n        timeline.zoomOut(0.2);\n    }\n}\n\nfunction resetZoom() {\n    if (timeline && allEvidence.length > 0) {\n        timeline.fit();\n    }\n}\n\nfunction fitTimeline() {\n    if (timeline) {\n        timeline.fit();\n    }\n}\n\n// Filter functions\nfunction filterTimeline() {\n    updateTimeline();\n    updateStatistics();\n    analyzeTimelineGaps();\n}\n\nfunction resetFilters() {\n    document.getElementById('typeFilter').value = 'all';\n    document.getElementById('startDate').value = '';\n    document.getElementById('endDate').value = '';\n    document.getElementById('uploaderFilter').value = 'all';\n    filterTimeline();\n}\n\n// Toggle fullscreen mode\nfunction toggleFullscreen() {\n    const container = document.querySelector('.timeline-container');\n    \n    if (!isFullscreen) {\n        container.classList.add('timeline-fullscreen');\n        document.body.style.overflow = 'hidden';\n        isFullscreen = true;\n        \n        // Resize timeline\n        setTimeout(() => {\n            if (timeline) {\n                timeline.redraw();\n                timeline.fit();\n            }\n        }, 100);\n    } else {\n        container.classList.remove('timeline-fullscreen');\n        document.body.style.overflow = 'auto';\n        isFullscreen = false;\n        \n        // Resize timeline\n        setTimeout(() => {\n            if (timeline) {\n                timeline.redraw();\n                timeline.fit();\n            }\n        }, 100);\n    }\n}\n\n// Update statistics\nfunction updateStatistics() {\n    const filteredEvidence = getFilteredEvidence();\n    const statsDiv = document.getElementById('timelineStats');\n    \n    if (filteredEvidence.length === 0) {\n        statsDiv.style.display = 'none';\n        return;\n    }\n    \n    const typeStats = {};\n    const uploaderStats = {};\n    \n    filteredEvidence.forEach(item => {\n        const type = getEvidenceType(item.type);\n        typeStats[type] = (typeStats[type] || 0) + 1;\n        \n        const uploader = item.submitted_by.substring(0, 8) + '...';\n        uploaderStats[uploader] = (uploaderStats[uploader] || 0) + 1;\n    });\n    \n    const dates = filteredEvidence.map(e => new Date(e.timestamp)).sort((a, b) => a - b);\n    const dateRange = dates.length > 0 ? \n        `${dates[0].toLocaleDateString()} - ${dates[dates.length - 1].toLocaleDateString()}` : 'N/A';\n    \n    statsDiv.innerHTML = `\n        <h3>Timeline Statistics</h3>\n        <p><strong>Total Evidence:</strong> ${filteredEvidence.length}</p>\n        <p><strong>Date Range:</strong> ${dateRange}</p>\n        <p><strong>By Type:</strong> ${Object.entries(typeStats).map(([type, count]) => `${type}: ${count}`).join(', ')}</p>\n        <p><strong>By Uploader:</strong> ${Object.entries(uploaderStats).map(([uploader, count]) => `${uploader}: ${count}`).join(', ')}</p>\n    `;\n    \n    statsDiv.style.display = 'block';\n}\n\n// Analyze timeline gaps\nfunction analyzeTimelineGaps() {\n    const filteredEvidence = getFilteredEvidence();\n    const gapsDiv = document.getElementById('timelineGaps');\n    \n    if (filteredEvidence.length < 2) {\n        gapsDiv.style.display = 'none';\n        return;\n    }\n    \n    const sortedEvidence = filteredEvidence.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));\n    const gaps = [];\n    \n    for (let i = 1; i < sortedEvidence.length; i++) {\n        const prevDate = new Date(sortedEvidence[i - 1].timestamp);\n        const currDate = new Date(sortedEvidence[i].timestamp);\n        const gapHours = (currDate - prevDate) / (1000 * 60 * 60);\n        \n        // Consider gaps longer than 24 hours as significant\n        if (gapHours > 24) {\n            gaps.push({\n                start: prevDate,\n                end: currDate,\n                duration: gapHours\n            });\n        }\n    }\n    \n    if (gaps.length === 0) {\n        gapsDiv.style.display = 'none';\n        return;\n    }\n    \n    gapsDiv.innerHTML = `\n        <h3>⚠️ Timeline Gaps Analysis</h3>\n        <p>Found ${gaps.length} significant gap(s) in evidence collection:</p>\n        ${gaps.map(gap => `\n            <div class=\"timeline-gap\">\n                <strong>Gap:</strong> ${gap.start.toLocaleString()} - ${gap.end.toLocaleString()}<br>\n                <strong>Duration:</strong> ${Math.round(gap.duration)} hours (${Math.round(gap.duration / 24)} days)\n            </div>\n        `).join('')}\n    `;\n    \n    gapsDiv.style.display = 'block';\n}\n\n// Export functions\nasync function exportTimelineImage() {\n    try {\n        const timelineElement = document.getElementById('timeline');\n        const canvas = await html2canvas(timelineElement);\n        \n        const link = document.createElement('a');\n        link.download = `timeline_${currentCase}_${new Date().toISOString().split('T')[0]}.png`;\n        link.href = canvas.toDataURL();\n        link.click();\n    } catch (error) {\n        console.error('Export image error:', error);\n        alert('Failed to export timeline as image');\n    }\n}\n\nasync function exportTimelinePDF() {\n    try {\n        const response = await fetch('/api/timeline/export-pdf', {\n            method: 'POST',\n            headers: { 'Content-Type': 'application/json' },\n            body: JSON.stringify({\n                caseId: currentCase,\n                evidence: getFilteredEvidence()\n            })\n        });\n        \n        if (response.ok) {\n            const blob = await response.blob();\n            const url = window.URL.createObjectURL(blob);\n            const a = document.createElement('a');\n            a.href = url;\n            a.download = `timeline_${currentCase}_${new Date().toISOString().split('T')[0]}.pdf`;\n            a.click();\n        }\n    } catch (error) {\n        console.error('Export PDF error:', error);\n        alert('Failed to export timeline as PDF');\n    }\n}\n\nfunction exportTimelineData() {\n    const filteredEvidence = getFilteredEvidence();\n    const exportData = {\n        caseId: currentCase,\n        exportDate: new Date().toISOString(),\n        totalEvidence: filteredEvidence.length,\n        evidence: filteredEvidence.map(item => ({\n            id: item.id,\n            title: item.title,\n            type: getEvidenceType(item.type),\n            timestamp: item.timestamp,\n            submittedBy: item.submitted_by,\n            hash: item.hash\n        }))\n    };\n    \n    const dataStr = JSON.stringify(exportData, null, 2);\n    const dataBlob = new Blob([dataStr], { type: 'application/json' });\n    \n    const link = document.createElement('a');\n    link.href = URL.createObjectURL(dataBlob);\n    link.download = `timeline_data_${currentCase}_${new Date().toISOString().split('T')[0]}.json`;\n    link.click();\n}\n\n// Utility functions\nfunction clearTimeline() {\n    if (timeline) {\n        timeline.setData(new vis.DataSet([]));\n    }\n    document.getElementById('timelineStats').style.display = 'none';\n    document.getElementById('timelineGaps').style.display = 'none';\n    document.getElementById('mobileTimelineList').innerHTML = '';\n}\n\nfunction formatFileSize(bytes) {\n    if (bytes === 0) return '0 Bytes';\n    const k = 1024;\n    const sizes = ['Bytes', 'KB', 'MB', 'GB'];\n    const i = Math.floor(Math.log(bytes) / Math.log(k));\n    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];\n}\n\nfunction downloadEvidence(evidenceId) {\n    // Implementation would depend on your download API\n    console.log('Download evidence:', evidenceId);\n}\n\nfunction verifyEvidence(evidenceId) {\n    // Implementation would depend on your verification system\n    console.log('Verify evidence:', evidenceId);\n}\n\n// Close modal when clicking outside\nwindow.onclick = function(event) {\n    const modal = document.getElementById('evidenceModal');\n    if (event.target === modal) {\n        closeEvidenceModal();\n    }\n};
+        format: {
+            minorLabels: {
+                millisecond: 'SSS',
+                second: 's',
+                minute: 'HH:mm',
+                hour: 'HH:mm',
+                weekday: 'ddd D',
+                day: 'D',
+                week: 'w',
+                month: 'MMM',
+                year: 'YYYY'
+            },
+            majorLabels: {
+                millisecond: 'HH:mm:ss',
+                second: 'D MMMM HH:mm',
+                minute: 'ddd D MMMM',
+                hour: 'ddd D MMMM',
+                weekday: 'MMMM YYYY',
+                day: 'MMMM YYYY',
+                week: 'MMMM YYYY',
+                month: 'YYYY',
+                year: ''
+            }
+        },
+        tooltip: {
+            followMouse: true,
+            overflowMethod: 'cap'
+        },
+        onInitialDrawComplete: function() {
+            console.log('Timeline initialized');
+        }
+    };
+    
+    timeline = new vis.Timeline(container, new vis.DataSet([]), options);
+    
+    // Add click event listener
+    timeline.on('select', function(event) {
+        if (event.items.length > 0) {
+            const itemId = event.items[0];
+            showEvidenceDetails(itemId);
+        }
+    });
+    
+    // Add double-click event for fullscreen
+    timeline.on('doubleClick', function(event) {
+        toggleFullscreen();
+    });
+}
+
+// Load evidence for selected case
+async function loadCaseEvidence() {
+    const caseId = document.getElementById('caseSelect').value;
+    if (!caseId) {
+        clearTimeline();
+        return;
+    }
+    
+    currentCase = caseId;
+    
+    try {
+        const result = await window.apiClient.get(`/evidence/by-case/${caseId}`);
+        
+        if (result.success) {
+            allEvidence = result.evidence;
+            populateFilters();
+            updateTimeline();
+            updateStatistics();
+            analyzeTimelineGaps();
+        }
+    } catch (error) {
+        console.error('Error loading case evidence:', error);
+    }
+}
+
+// Populate filter dropdowns
+function populateFilters() {
+    // Populate uploader filter
+    const uploaders = [...new Set(allEvidence.map(e => e.submitted_by))];
+    const uploaderSelect = document.getElementById('uploaderFilter');
+    uploaderSelect.innerHTML = '<option value="all">All Uploaders</option>' +
+        uploaders.map(uploader => 
+            `<option value="${uploader}">${uploader.substring(0, 8)}...</option>`
+        ).join('');
+}
+
+// Update timeline with filtered data
+function updateTimeline() {
+    const filteredEvidence = getFilteredEvidence();
+    const timelineItems = createTimelineItems(filteredEvidence);
+    
+    if (timeline) {
+        timeline.setData(new vis.DataSet(timelineItems));
+        
+        // Fit timeline to show all items
+        if (timelineItems.length > 0) {
+            setTimeout(() => {
+                timeline.fit();
+            }, 100);
+        }
+    }
+    
+    // Update mobile timeline
+    updateMobileTimeline(filteredEvidence);
+}
+
+// Get filtered evidence based on current filters
+function getFilteredEvidence() {
+    let filtered = [...allEvidence];
+    
+    // Filter by type
+    const typeFilter = document.getElementById('typeFilter').value;
+    if (typeFilter !== 'all') {
+        filtered = filtered.filter(e => e.type.toLowerCase().includes(typeFilter));
+    }
+    
+    // Filter by date range
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (startDate) {
+        filtered = filtered.filter(e => new Date(e.timestamp) >= new Date(startDate));
+    }
+    
+    if (endDate) {
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        filtered = filtered.filter(e => new Date(e.timestamp) <= endDateTime);
+    }
+    
+    // Filter by uploader
+    const uploaderFilter = document.getElementById('uploaderFilter').value;
+    if (uploaderFilter !== 'all') {
+        filtered = filtered.filter(e => e.submitted_by === uploaderFilter);
+    }
+    
+    return filtered;
+}
+
+// Create timeline items from evidence data
+function createTimelineItems(evidence) {
+    return evidence.map(item => {
+        const evidenceType = getEvidenceType(item.type);
+        const color = getTypeColor(evidenceType);
+        
+        return {
+            id: item.id,
+            content: `<div style="padding: 5px;">
+                        <strong>${item.title}</strong><br>
+                        <small>${evidenceType} • ${item.submitted_by.substring(0, 8)}...</small>
+                      </div>`,
+            start: new Date(item.timestamp),
+            type: 'point',
+            className: `evidence-type-${evidenceType}`,
+            style: `background-color: ${color}; border-color: ${color};`,
+            title: `${item.title}\nType: ${evidenceType}\nSubmitted: ${new Date(item.timestamp).toLocaleString()}\nBy: ${item.submitted_by.substring(0, 8)}...`
+        };
+    });
+}
+
+// Get evidence type from file type
+function getEvidenceType(type) {
+    if (type.includes('image') || type.includes('photo')) return 'photo';
+    if (type.includes('video')) return 'video';
+    if (type.includes('audio')) return 'audio';
+    if (type.includes('document') || type.includes('pdf') || type.includes('text')) return 'document';
+    return 'physical';
+}
+
+// Get color for evidence type
+function getTypeColor(type) {
+    const colors = {
+        photo: '#3b82f6',
+        document: '#10b981',
+        video: '#8b5cf6',
+        audio: '#f59e0b',
+        physical: '#ef4444'
+    };
+    return colors[type] || '#6b7280';
+}
+
+// Update mobile timeline
+function updateMobileTimeline(evidence) {
+    const container = document.getElementById('mobileTimelineList');
+    
+    if (evidence.length === 0) {
+        container.innerHTML = '<p>No evidence found for selected filters.</p>';
+        return;
+    }
+    
+    // Sort by timestamp
+    const sortedEvidence = evidence.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    container.innerHTML = sortedEvidence.map(item => {
+        const evidenceType = getEvidenceType(item.type);
+        const color = getTypeColor(evidenceType);
+        
+        return `
+            <div class="mobile-timeline-item" style="border-left: 4px solid ${color}; padding: 15px; margin: 10px 0; background: white; border-radius: 4px;" onclick="showEvidenceDetails(${item.id})">
+                <h4>${item.title}</h4>
+                <p><strong>Type:</strong> ${evidenceType}</p>
+                <p><strong>Date:</strong> ${new Date(item.timestamp).toLocaleString()}</p>
+                <p><strong>Submitted by:</strong> ${item.submitted_by.substring(0, 8)}...</p>
+            </div>
+        `;
+    }).join('');
+}
+
+// Show evidence details in modal
+function showEvidenceDetails(evidenceId) {
+    const evidence = allEvidence.find(e => e.id == evidenceId);
+    if (!evidence) return;
+    
+    const modal = document.getElementById('evidenceModal');
+    const details = document.getElementById('evidenceDetails');
+    
+    details.innerHTML = `
+        <div class="evidence-popup">
+            <h3>${evidence.title}</h3>
+            <p><strong>Case ID:</strong> ${evidence.case_id}</p>
+            <p><strong>Type:</strong> ${getEvidenceType(evidence.type)}</p>
+            <p><strong>Description:</strong> ${evidence.description || 'No description'}</p>
+            <p><strong>File Name:</strong> ${evidence.file_name}</p>
+            <p><strong>File Size:</strong> ${formatFileSize(evidence.file_size)}</p>
+            <p><strong>Hash:</strong> <code>${evidence.hash}</code></p>
+            <p><strong>Submitted:</strong> ${new Date(evidence.timestamp).toLocaleString()}</p>
+            <p><strong>Submitted By:</strong> ${evidence.submitted_by}</p>
+            <p><strong>Status:</strong> ${evidence.status}</p>
+            
+            <div style="margin-top: 15px;">
+                <button onclick="downloadEvidence(${evidence.id})" class="btn btn-primary">Download</button>
+                <button onclick="verifyEvidence(${evidence.id})" class="btn btn-secondary">Verify</button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// Close evidence modal
+function closeEvidenceModal() {
+    document.getElementById('evidenceModal').style.display = 'none';
+}
+
+// Timeline control functions
+function zoomIn() {
+    if (timeline) {
+        timeline.zoomIn(0.2);
+    }
+}
+
+function zoomOut() {
+    if (timeline) {
+        timeline.zoomOut(0.2);
+    }
+}
+
+function resetZoom() {
+    if (timeline && allEvidence.length > 0) {
+        timeline.fit();
+    }
+}
+
+function fitTimeline() {
+    if (timeline) {
+        timeline.fit();
+    }
+}
+
+// Filter functions
+function filterTimeline() {
+    updateTimeline();
+    updateStatistics();
+    analyzeTimelineGaps();
+}
+
+function resetFilters() {
+    document.getElementById('typeFilter').value = 'all';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('uploaderFilter').value = 'all';
+    filterTimeline();
+}
+
+// Toggle fullscreen mode
+function toggleFullscreen() {
+    const container = document.querySelector('.timeline-container');
+    
+    if (!isFullscreen) {
+        container.classList.add('timeline-fullscreen');
+        document.body.style.overflow = 'hidden';
+        isFullscreen = true;
+        
+        // Resize timeline
+        setTimeout(() => {
+            if (timeline) {
+                timeline.redraw();
+                timeline.fit();
+            }
+        }, 100);
+    } else {
+        container.classList.remove('timeline-fullscreen');
+        document.body.style.overflow = 'auto';
+        isFullscreen = false;
+        
+        // Resize timeline
+        setTimeout(() => {
+            if (timeline) {
+                timeline.redraw();
+                timeline.fit();
+            }
+        }, 100);
+    }
+}
+
+// Update statistics
+function updateStatistics() {
+    const filteredEvidence = getFilteredEvidence();
+    const statsDiv = document.getElementById('timelineStats');
+    
+    if (filteredEvidence.length === 0) {
+        statsDiv.style.display = 'none';
+        return;
+    }
+    
+    const typeStats = {};
+    const uploaderStats = {};
+    
+    filteredEvidence.forEach(item => {
+        const type = getEvidenceType(item.type);
+        typeStats[type] = (typeStats[type] || 0) + 1;
+        
+        const uploader = item.submitted_by.substring(0, 8) + '...';
+        uploaderStats[uploader] = (uploaderStats[uploader] || 0) + 1;
+    });
+    
+    const dates = filteredEvidence.map(e => new Date(e.timestamp)).sort((a, b) => a - b);
+    const dateRange = dates.length > 0 ? 
+        `${dates[0].toLocaleDateString()} - ${dates[dates.length - 1].toLocaleDateString()}` : 'N/A';
+    
+    statsDiv.innerHTML = `
+        <h3>Timeline Statistics</h3>
+        <p><strong>Total Evidence:</strong> ${filteredEvidence.length}</p>\n        <p><strong>Date Range:</strong> ${dateRange}</p>
+        <p><strong>By Type:</strong> ${Object.entries(typeStats).map(([type, count]) => `${type}: ${count}`).join(', ')}</p>
+        <p><strong>By Uploader:</strong> ${Object.entries(uploaderStats).map(([uploader, count]) => `${uploader}: ${count}`).join(', ')}</p>
+    `;
+    
+    statsDiv.style.display = 'block';
+}
+
+// Analyze timeline gaps
+function analyzeTimelineGaps() {
+    const filteredEvidence = getFilteredEvidence();
+    const gapsDiv = document.getElementById('timelineGaps');
+    
+    if (filteredEvidence.length < 2) {
+        gapsDiv.style.display = 'none';
+        return;
+    }
+    
+    const sortedEvidence = filteredEvidence.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const gaps = [];
+    
+    for (let i = 1; i < sortedEvidence.length; i++) {
+        const prevDate = new Date(sortedEvidence[i - 1].timestamp);
+        const currDate = new Date(sortedEvidence[i].timestamp);
+        const gapHours = (currDate - prevDate) / (1000 * 60 * 60);
+        
+        // Consider gaps longer than 24 hours as significant
+        if (gapHours > 24) {
+            gaps.push({
+                start: prevDate,
+                end: currDate,
+                duration: gapHours
+            });
+        }
+    }
+    
+    if (gaps.length === 0) {
+        gapsDiv.style.display = 'none';
+        return;
+    }
+    
+    gapsDiv.innerHTML = `
+        <h3>⚠️ Timeline Gaps Analysis</h3>
+        <p>Found ${gaps.length} significant gap(s) in evidence collection:</p>
+        ${gaps.map(gap => `
+            <div class="timeline-gap">
+                <strong>Gap:</strong> ${gap.start.toLocaleString()} - ${gap.end.toLocaleString()}<br>
+                <strong>Duration:</strong> ${Math.round(gap.duration)} hours (${Math.round(gap.duration / 24)} days)
+            </div>
+        `).join('')}
+    `;
+    
+    gapsDiv.style.display = 'block';
+}
+
+// Export functions
+async function exportTimelineImage() {
+    try {
+        const timelineElement = document.getElementById('timeline');
+        const canvas = await html2canvas(timelineElement);
+        
+        const link = document.createElement('a');
+        link.download = `timeline_${currentCase}_${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch (error) {
+        console.error('Export image error:', error);
+        alert('Failed to export timeline as image');
+    }
+}
+
+async function exportTimelinePDF() {
+    try {
+        const signedHeaders = await window.apiClient.getAuthHeaders();
+        const response = await fetch(`${window.config.API_BASE_URL}/timeline/export-pdf`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...signedHeaders
+            },
+            body: JSON.stringify({
+                caseId: currentCase,
+                evidence: getFilteredEvidence()
+            })
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `timeline_${currentCase}_${new Date().toISOString().split('T')[0]}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } else {
+            throw new Error('Failed to generate PDF');
+        }
+    } catch (error) {
+        console.error('Export PDF error:', error);
+        alert('Failed to export timeline as PDF: ' + error.message);
+    }
+}
+
+function exportTimelineData() {
+    const filteredEvidence = getFilteredEvidence();
+    const exportData = {
+        caseId: currentCase,
+        exportDate: new Date().toISOString(),
+        totalEvidence: filteredEvidence.length,
+        evidence: filteredEvidence.map(item => ({\n            id: item.id,
+            title: item.title,
+            type: getEvidenceType(item.type),
+            timestamp: item.timestamp,
+            submittedBy: item.submitted_by,
+            hash: item.hash
+        }))
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `timeline_data_${currentCase}_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+}
+
+// Utility functions
+function clearTimeline() {
+    if (timeline) {
+        timeline.setData(new vis.DataSet([]));
+    }
+    document.getElementById('timelineStats').style.display = 'none';
+    document.getElementById('timelineGaps').style.display = 'none';
+    document.getElementById('mobileTimelineList').innerHTML = '';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function downloadEvidence(evidenceId) {
+    // Implementation would depend on your download API
+    console.log('Download evidence:', evidenceId);
+}
+
+function verifyEvidence(evidenceId) {
+    // Implementation would depend on your verification system
+    console.log('Verify evidence:', evidenceId);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('evidenceModal');
+    if (event.target === modal) {
+        closeEvidenceModal();
+    }
+};

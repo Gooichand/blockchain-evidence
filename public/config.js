@@ -7,8 +7,9 @@ const config = {
     DEMO_MODE: false,
     
     // Blockchain configuration
-    TARGET_CHAIN_ID: '0x89', // Polygon Mainnet
-    NETWORK_NAME: 'Polygon Mainnet',
+    TARGET_CHAIN_ID: '0x13882', // Polygon Amoy Testnet
+    NETWORK_NAME: 'Polygon Amoy Testnet',
+    CONTRACT_ADDRESS: '0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3',
     
     // File upload limits
     MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
@@ -46,7 +47,7 @@ const config = {
     API_BASE_URL: (() => {
         const host = window.location.hostname;
         if (host === 'localhost' || host === '127.0.0.1') {
-            return 'http://localhost:3000/api';
+            return 'http://localhost:10000/api';
         }
         if (host.includes('onrender.com')) {
             return 'https://blockchain-evidence.onrender.com/api';

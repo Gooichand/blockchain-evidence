@@ -1,6 +1,44 @@
 const { supabase, allowedRoles } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
 const crypto = require('crypto');
+const { ethers } = require('ethers');
+
+// SECURITY FIX: In-memory nonce store for wallet ownership proof
+// Key: lowercased wallet address, Value: { nonce, message, expiresAt }
+const walletNonces = new Map();
+
+// Clean up expired nonces every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [addr, data] of walletNonces.entries()) {
+    if (now > data.expiresAt) walletNonces.delete(addr);
+  }
+}, 5 * 60 * 1000).unref();
+
+// SECURITY FIX: Generate nonce for wallet ownership proof (ECDSA challenge)
+const walletNonce = async (req, res) => {
+  try {
+    const { address } = req.query;
+
+    if (!address || !validateWalletAddress(address)) {
+      return res.status(400).json({ success: false, error: 'Valid wallet address is required' });
+    }
+
+    const nonce = crypto.randomBytes(32).toString('hex');
+    const message = `EVID-DGC Wallet Verification\nAddress: ${address.toLowerCase()}\nNonce: ${nonce}\nTimestamp: ${new Date().toISOString()}`;
+
+    walletNonces.set(address.toLowerCase(), {
+      nonce,
+      message,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5-minute expiry
+    });
+
+    res.json({ success: true, message, nonce });
+  } catch (error) {
+    console.error('Nonce generation error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate nonce' });
+  }
+};
 
 // Wallet login
 const walletLogin = async (req, res) => {
@@ -255,7 +293,7 @@ const emailRegister = async (req, res) => {
 // Wallet registration
 const walletRegister = async (req, res) => {
   try {
-    const { walletAddress, fullName, role, department, jurisdiction, badgeNumber } = req.body;
+    const { walletAddress, fullName, role, department, jurisdiction, badgeNumber, signature } = req.body;
 
     console.log('Wallet registration request:', {
       role,
@@ -271,6 +309,39 @@ const walletRegister = async (req, res) => {
     if (!validateWalletAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
+
+    // SECURITY FIX: Verify wallet ownership via ECDSA signature
+    if (!signature) {
+      return res.status(400).json({
+        error: 'Wallet signature is required. Request a nonce first via GET /api/auth/wallet/nonce',
+      });
+    }
+
+    const storedNonce = walletNonces.get(walletAddress.toLowerCase());
+    if (!storedNonce) {
+      return res.status(400).json({
+        error: 'No nonce found. Request a nonce first via GET /api/auth/wallet/nonce',
+      });
+    }
+
+    if (Date.now() > storedNonce.expiresAt) {
+      walletNonces.delete(walletAddress.toLowerCase());
+      return res.status(400).json({ error: 'Nonce expired. Please request a new one.' });
+    }
+
+    let recoveredAddress;
+    try {
+      recoveredAddress = ethers.verifyMessage(storedNonce.message, signature);
+    } catch (_sigErr) {
+      return res.status(403).json({ error: 'Invalid wallet signature format.' });
+    }
+
+    if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      return res.status(403).json({ error: 'Wallet signature verification failed.' });
+    }
+
+    // Consume the nonce to prevent replay
+    walletNonces.delete(walletAddress.toLowerCase());
 
     if (!fullName || !role) {
       return res.status(400).json({ error: 'Full name and role are required' });
@@ -425,5 +496,6 @@ module.exports = {
   emailRegister,
   walletLogin,
   walletRegister,
+  walletNonce,
   verifyEmail,
 };

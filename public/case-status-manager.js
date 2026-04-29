@@ -15,10 +15,9 @@ class CaseStatusManager {
 
     async loadCaseStatuses() {
         try {
-            const response = await fetch('/api/case-statuses');
-            const data = await response.json();
-            if (data.success) {
-                this.caseStatuses = data.statuses;
+            const result = await window.apiClient.get('/case-statuses');
+            if (result.success) {
+                this.caseStatuses = result.statuses;
             }
         } catch (error) {
             console.error('Failed to load case statuses:', error);
@@ -121,17 +120,11 @@ class CaseStatusManager {
 
     async loadCases(filters = {}) {
         try {
-            const params = new URLSearchParams();
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value) params.append(key, value);
-            });
-
-            const response = await fetch(`/api/cases/enhanced?${params}`);
-            const data = await response.json();
+            const result = await window.apiClient.get('/cases/enhanced', filters);
             
-            if (data.success) {
-                this.renderCaseList(data.cases);
-                this.renderPagination(data.pagination);
+            if (result.success) {
+                this.renderCaseList(result.cases);
+                this.renderPagination(result.pagination);
             }
         } catch (error) {
             console.error('Failed to load cases:', error);
@@ -246,12 +239,10 @@ class CaseStatusManager {
         }
 
         try {
-            // Get available transitions
-            const response = await fetch(`/api/cases/${caseId}/available-transitions?userWallet=${currentUser.wallet_address}`);
-            const data = await response.json();
+            const result = await window.apiClient.get(`/cases/${caseId}/available-transitions`);
             
-            if (data.success && data.transitions.length > 0) {
-                this.showStatusChangeModal(caseId, data.transitions);
+            if (result.success && result.transitions.length > 0) {
+                this.showStatusChangeModal(caseId, result.transitions);
             } else {
                 this.showError('No status transitions available for your role');
             }
@@ -320,7 +311,6 @@ class CaseStatusManager {
     }
 
     async updateCaseStatus(caseId, modal) {
-        const currentUser = this.getCurrentUser();
         const newStatus = modal.querySelector('#newStatus').value;
         const reason = modal.querySelector('#statusReason').value;
 
@@ -330,26 +320,17 @@ class CaseStatusManager {
         }
 
         try {
-            const response = await fetch(`/api/cases/${caseId}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    newStatusCode: newStatus,
-                    userWallet: currentUser.wallet_address,
-                    reason: reason
-                })
+            const result = await window.apiClient.post(`/cases/${caseId}/status`, {
+                newStatusCode: newStatus,
+                reason: reason
             });
-
-            const data = await response.json();
             
-            if (data.success) {
+            if (result.success) {
                 this.showSuccess('Case status updated successfully');
                 modal.remove();
-                await this.applyFilters(); // Refresh the case list
+                await this.applyFilters();
             } else {
-                this.showError(data.error || 'Failed to update case status');
+                this.showError(result.error || 'Failed to update case status');
             }
         } catch (error) {
             console.error('Failed to update case status:', error);
@@ -425,34 +406,22 @@ class CaseStatusManager {
     }
 
     async assignCase(caseId, modal) {
-        const currentUser = this.getCurrentUser();
-        const formData = new FormData(modal.querySelector('#assignmentForm'));
-        
         const assignmentData = {
             assignToWallet: modal.querySelector('#assignToWallet').value,
             roleType: modal.querySelector('#roleType').value,
             assignmentType: modal.querySelector('#assignmentType').value,
-            assignedByWallet: currentUser.wallet_address,
             notes: modal.querySelector('#assignmentNotes').value
         };
 
         try {
-            const response = await fetch(`/api/cases/${caseId}/assign`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(assignmentData)
-            });
-
-            const data = await response.json();
+            const result = await window.apiClient.post(`/cases/${caseId}/assign`, assignmentData);
             
-            if (data.success) {
+            if (result.success) {
                 this.showSuccess('Case assigned successfully');
                 modal.remove();
                 await this.applyFilters();
             } else {
-                this.showError(data.error || 'Failed to assign case');
+                this.showError(result.error || 'Failed to assign case');
             }
         } catch (error) {
             console.error('Failed to assign case:', error);
@@ -462,11 +431,10 @@ class CaseStatusManager {
 
     async showCaseDetails(caseId) {
         try {
-            const response = await fetch(`/api/cases/${caseId}/details`);
-            const data = await response.json();
+            const result = await window.apiClient.get(`/cases/${caseId}/details`);
             
-            if (data.success) {
-                this.renderCaseDetailsModal(data.case);
+            if (result.success) {
+                this.renderCaseDetailsModal(result.case);
             } else {
                 this.showError('Failed to load case details');
             }
@@ -634,7 +602,7 @@ class CaseStatusManager {
     }
 
     getCurrentUser() {
-        // Get current user from your existing authentication system
+        // Use unified auth cache from apiClient
         const currentUserKey = localStorage.getItem('currentUser');
         if (currentUserKey) {
             return JSON.parse(localStorage.getItem(`evidUser_${currentUserKey}`));

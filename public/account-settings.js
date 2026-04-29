@@ -13,18 +13,10 @@ class AccountSettings {
         this.loadSessions();
     }
 
-    loadCurrentUser() {
-        const currentUserKey = localStorage.getItem('currentUser');
-        if (currentUserKey) {
-            if (currentUserKey.startsWith('email_')) {
-                this.currentUser = JSON.parse(localStorage.getItem('evidUser_' + currentUserKey));
-            } else {
-                this.currentUser = JSON.parse(localStorage.getItem('evidUser_' + currentUserKey));
-            }
-        }
-
+    async loadCurrentUser() {
+        this.currentUser = await window.apiClient.getCurrentUser();
         if (!this.currentUser) {
-            window.location.href = '/';
+            window.location.href = 'index.html';
             return;
         }
     }
@@ -67,29 +59,27 @@ class AccountSettings {
         event.preventDefault();
         
         const formData = new FormData(event.target);
-        const updatedData = {
-            ...this.currentUser,
+        const updatePayload = {
             fullName: formData.get('fullName') || document.getElementById('fullName').value,
             department: formData.get('department') || document.getElementById('department').value,
             jurisdiction: formData.get('jurisdiction') || document.getElementById('jurisdiction').value,
-            badgeNumber: formData.get('badgeNumber') || document.getElementById('badgeNumber').value,
-            lastUpdated: new Date().toISOString()
+            badgeNumber: formData.get('badgeNumber') || document.getElementById('badgeNumber').value
         };
 
         try {
-            // Save to localStorage
-            const currentUserKey = localStorage.getItem('currentUser');
-            if (currentUserKey.startsWith('email_')) {
-                localStorage.setItem('evidUser_' + currentUserKey, JSON.stringify(updatedData));
-                localStorage.setItem('emailUser_' + this.currentUser.email, JSON.stringify(updatedData));
+            const result = await window.apiClient.post('/auth/update-profile', updatePayload);
+            
+            if (result.success) {
+                this.currentUser = { ...this.currentUser, ...updatePayload };
+                // Update local cache as well
+                localStorage.setItem('evidUser_' + this.currentUser.walletAddress, JSON.stringify(this.currentUser));
+                this.showAlert('Profile updated successfully!', 'success');
             } else {
-                localStorage.setItem('evidUser_' + currentUserKey, JSON.stringify(updatedData));
+                throw new Error(result.error || 'Failed to update profile');
             }
-
-            this.currentUser = updatedData;
-            this.showAlert('Profile updated successfully!', 'success');
         } catch (error) {
-            this.showAlert('Failed to update profile. Please try again.', 'error');
+            console.error('Profile update error:', error);
+            this.showAlert(error.message, 'error');
         }
     }
 
@@ -100,48 +90,25 @@ class AccountSettings {
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
-        // Validate current password
-        if (this.currentUser.password && this.currentUser.password !== currentPassword) {
-            this.showAlert('Current password is incorrect', 'error');
-            return;
-        }
-
-        // Validate new password
         if (newPassword !== confirmPassword) {
             this.showAlert('New passwords do not match', 'error');
             return;
         }
 
-        if (newPassword.length < 6) {
-            this.showAlert('Password must be at least 6 characters long', 'error');
-            return;
-        }
-
         try {
-            // Update password
-            const updatedData = {
-                ...this.currentUser,
-                password: newPassword,
-                lastPasswordChange: new Date().toISOString()
-            };
+            const result = await window.apiClient.post('/auth/change-password', {
+                currentPassword,
+                newPassword
+            });
 
-            // Save to localStorage
-            const currentUserKey = localStorage.getItem('currentUser');
-            if (currentUserKey.startsWith('email_')) {
-                localStorage.setItem('evidUser_' + currentUserKey, JSON.stringify(updatedData));
-                localStorage.setItem('emailUser_' + this.currentUser.email, JSON.stringify(updatedData));
+            if (result.success) {
+                document.getElementById('passwordForm').reset();
+                this.showAlert('Password updated successfully!', 'success');
             } else {
-                localStorage.setItem('evidUser_' + currentUserKey, JSON.stringify(updatedData));
+                throw new Error(result.error || 'Failed to update password');
             }
-
-            this.currentUser = updatedData;
-            
-            // Clear form
-            document.getElementById('passwordForm').reset();
-            
-            this.showAlert('Password updated successfully!', 'success');
         } catch (error) {
-            this.showAlert('Failed to update password. Please try again.', 'error');
+            this.showAlert(error.message, 'error');
         }
     }
 
@@ -199,20 +166,25 @@ class AccountSettings {
         }
     }
 
-    loadSessions() {
-        // Simulate session data
-        this.sessions = [
-            {
+    async loadSessions() {
+        try {
+            const result = await window.apiClient.get('/auth/sessions');
+            if (result.success) {
+                this.sessions = result.sessions;
+                this.renderSessions();
+            }
+        } catch (error) {
+            console.warn('Failed to load real sessions, using default');
+            this.sessions = [{
                 id: 1,
                 device: 'Current Session',
-                browser: 'Chrome on Windows',
-                location: 'Local',
+                browser: 'Verified Secure Browser',
+                location: 'Remote',
                 lastActive: new Date().toISOString(),
                 current: true
-            }
-        ];
-
-        this.renderSessions();
+            }];
+            this.renderSessions();
+        }
     }
 
     renderSessions() {

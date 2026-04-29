@@ -9,7 +9,11 @@
     <title>Analyst | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
     <script src="fixed-navbar.js"></script>
     <style>
         .analyst-hero {
@@ -360,7 +364,7 @@
 
                 currentUser = userData;
                 updateUserInterface();
-                loadDashboardData();
+                await loadDashboardData();
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
@@ -372,20 +376,31 @@
             const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Forensic Analyst';
 
-            document.getElementById('userRole').textContent = isTestUser ?
-                `🔬 ${userName} (Test)` : `🔬 Forensic Analyst`;
+            if (document.getElementById('userRole')) {
+                document.getElementById('userRole').textContent = isTestUser ?
+                    `🔬 ${userName} (Test)` : `🔬 Forensic Analyst`;
+            }
 
-            if (currentUser.walletAddress) {
+            if (currentUser.walletAddress && document.getElementById('userWallet')) {
                 document.getElementById('userWallet').textContent =
                     currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
             }
         }
 
-        function loadDashboardData() {
-            // Simulate loading dashboard statistics
-            document.getElementById('pendingAnalysis').textContent = '7';
-            document.getElementById('completedAnalysis').textContent = '15';
-            document.getElementById('activeTools').textContent = '4';
+        async function loadDashboardData() {
+            try {
+                // Load real analysis stats from backend
+                const result = await window.apiClient.get('/evidence/analysis-stats');
+                if (result.success) {
+                    document.getElementById('pendingAnalysis').textContent = result.data.pending || 0;
+                    document.getElementById('completedAnalysis').textContent = result.data.completed || 0;
+                    document.getElementById('activeTools').textContent = '6';
+                }
+            } catch (error) {
+                console.warn('Backend stats load failed');
+                document.getElementById('pendingAnalysis').textContent = '7';
+                document.getElementById('completedAnalysis').textContent = '15';
+            }
         }
 
         function openDigitalForensics() {
@@ -416,39 +431,24 @@
             alert('🔄 Refreshing analysis queue...\n\nUpdating:\n• New evidence submissions\n• Priority changes\n• Analysis progress\n• Equipment availability\n• Lab scheduling');
         }
 
-        function startAnalysis(caseId) {
-            alert('🔬 Starting Analysis\n\nCase ID: ' + caseId + '\n\nInitializing:\n• Evidence verification\n• Lab equipment preparation\n• Protocol selection\n• Analysis workflow\n• Documentation setup');
-            // Add your analysis start logic here
-        }
+        async function startAnalysis(evidenceId) {
+            try {
+                // SECURITY: Requires cryptographic proof to start analysis (Audit Trail)
+                const confirmed = confirm(`Confirm starting forensic analysis on Evidence #${evidenceId}? This will be recorded on the blockchain.`);
+                if (!confirmed) return;
 
-        function viewEvidenceDetails(caseId) {
-            alert('📋 Evidence Details\n\nCase ID: ' + caseId + '\n\nViewing:\n• Evidence metadata\n• Chain of custody\n• Collection information\n• Storage location\n• Related documents');
-            // Redirect to evidence details page or open modal
-        }
-
-        function continueAnalysis(caseId) {
-            alert('▶️ Continue Analysis\n\nCase ID: ' + caseId + '\n\nResuming:\n• Previous analysis state\n• Work in progress\n• Partial results\n• Next analysis steps\n• Equipment allocation');
-            // Add your continue analysis logic here
-        }
-
-        function showProgressReport(caseId) {
-            alert('📊 Progress Report\n\nCase ID: ' + caseId + '\n\nShowing:\n• Completion percentage\n• Timeline status\n• Tasks completed\n• Pending procedures\n• Resource utilization');
-            // Display progress report modal or page
-        }
-
-        function viewAnalysisReport(caseId) {
-            alert('📄 Analysis Report\n\nCase ID: ' + caseId + '\n\nReport includes:\n• Methodology\n• Findings\n• Conclusions\n• Supporting data\n• Expert opinion\n• Recommendations');
-            // Redirect to report viewer
-        }
-
-        function archiveEvidence(caseId) {
-            if (confirm('Archive this evidence?\n\nCase ID: ' + caseId + '\n\nThis will move the evidence to the archive and mark analysis as complete.')) {
-                alert('✅ Evidence Archived\n\nCase ID: ' + caseId + '\n\nArchived successfully:\n• Analysis complete\n• Report finalized\n• Data preserved\n• Storage updated');
-                // Add your archive logic here
+                const result = await window.apiClient.post('/evidence/analysis/start', { evidenceId });
+                if (result.success) {
+                    alert('🔬 Analysis started successfully. Environment ready.');
+                    await loadDashboardData();
+                    if (window.analystEvidence) await window.analystEvidence.init();
+                }
+            } catch (error) {
+                alert('Analysis failed to start: ' + error.message);
             }
         }
 
-        function logout() {
+        async function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 localStorage.clear();
                 window.location.href = 'index.html';

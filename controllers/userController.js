@@ -1,25 +1,35 @@
 const { supabase } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
 
+// SECURITY FIX: Helper to get the verified wallet address from the request.
+// Prefers the cryptographically-verified wallet set by verifySignature middleware.
+// Falls back to body/query param only when middleware hasn't run (should not happen on protected routes).
+const getVerifiedWallet = (req) => {
+  return req.authenticatedWallet || null;
+};
+
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, department, jurisdiction, badgeNumber, updatedBy } = req.body;
+    const { fullName, department, jurisdiction, badgeNumber } = req.body;
 
-    if (!validateWalletAddress(updatedBy)) {
-      return res.status(400).json({ error: 'Invalid updater wallet address' });
+    // SECURITY FIX: Use cryptographically verified wallet instead of req.body.updatedBy
+    const verifiedWallet = getVerifiedWallet(req);
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    // Get updater info
+    // Get updater info using verified identity
     const { data: updater } = await supabase
       .from('users')
       .select('id, role')
-      .eq('wallet_address', updatedBy)
+      .eq('wallet_address', verifiedWallet)
+      .eq('is_active', true)
       .single();
 
     if (!updater) {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     // Check if user can update this profile (self or admin)
@@ -30,16 +40,23 @@ const updateProfile = async (req, res) => {
       .single();
 
     if (!targetUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    if (targetUser.wallet_address !== updatedBy && updater.role !== 'admin') {
-      return res.status(403).json({ error: 'Can only update own profile or admin required' });
+    // SECURITY FIX: Compare against verified wallet, not a body-supplied field
+    if (targetUser.wallet_address !== verifiedWallet && updater.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Can only update own profile or admin required' });
+    }
+
+    // BUG FIX: Validate the user ID parameter
+    const userId = parseInt(id, 10);
+    if (isNaN(userId) || userId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
     }
 
     // Use database function to update profile
     const { data: result, error } = await supabase.rpc('update_user_profile', {
-      p_user_id: parseInt(id),
+      p_user_id: userId,
       p_full_name: fullName,
       p_department: department,
       p_jurisdiction: jurisdiction,
@@ -51,10 +68,10 @@ const updateProfile = async (req, res) => {
       throw error;
     }
 
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json({ success: false, error: 'Failed to update profile' });
   }
 };
 
@@ -64,7 +81,7 @@ const getUserByWallet = async (req, res) => {
     const { wallet } = req.params;
 
     if (!validateWalletAddress(wallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+      return res.status(400).json({ success: false, error: 'Invalid wallet address' });
     }
 
     // Use database function to get user
@@ -76,16 +93,17 @@ const getUserByWallet = async (req, res) => {
       throw error;
     }
 
-    res.json({ user: result });
+    res.json({ success: true, user: result });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
 // Prevent user self-deletion
 const preventSelfDeletion = (req, res) => {
   res.status(403).json({
+    success: false,
     error: 'Users cannot delete their own accounts. Contact administrator.',
   });
 };

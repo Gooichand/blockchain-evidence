@@ -102,20 +102,14 @@ async function verifyFile() {
         // Get evidence ID if provided
         const evidenceId = document.getElementById('evidenceId').value;
         
-        // Call verification API
-        const apiUrl = window.config?.API_BASE_URL || '/api';
-        const response = await fetch(`${apiUrl}/evidence/verify-integrity`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fileName: selectedFile.name,
-                fileSize: selectedFile.size,
-                calculatedHash,
-                evidenceId: evidenceId || null
-            })
+        // Call verification API using secure apiClient
+        const result = await window.apiClient.post('/evidence/verify-integrity', {
+            fileName: selectedFile.name,
+            fileSize: selectedFile.size,
+            calculatedHash,
+            evidenceId: evidenceId || null
         });
         
-        const result = await response.json();
         displayVerificationResult(result, calculatedHash);
         
         // Add to history
@@ -134,7 +128,7 @@ async function verifyFile() {
         
     } catch (error) {
         console.error('Verification error:', error);
-        showError('Verification failed. Please try again.');
+        showError('Verification failed: ' + (error.message || 'Please try again.'));
     } finally {
         verifyBtn.disabled = false;
         verifyBtn.textContent = '🔍 Verify File Integrity';
@@ -160,19 +154,11 @@ async function verifyBulkFiles() {
         
         try {
             const calculatedHash = await calculateFileHash(file);
-            
-            const apiUrl = window.config?.API_BASE_URL || '/api';
-            const response = await fetch(`${apiUrl}/evidence/verify-integrity`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fileName: file.name,
-                    fileSize: file.size,
-                    calculatedHash
-                })
+            const result = await window.apiClient.post('/evidence/verify-integrity', {
+                fileName: file.name,
+                fileSize: file.size,
+                calculatedHash
             });
-            
-            const result = await response.json();
             
             const resultClass = result.verified ? 'result-verified' : 'result-tampered';
             const resultIcon = result.verified ? '✅' : '❌';
@@ -191,7 +177,7 @@ async function verifyBulkFiles() {
         } catch (error) {
             bulkResults.innerHTML += `
                 <div class="verification-result result-tampered">
-                    <strong>❌ ${file.name}</strong> - Error during verification
+                    <strong>❌ ${file.name}</strong> - Error: ${error.message}
                 </div>
             `;
             tampered++;
@@ -277,13 +263,19 @@ function generateQRCode(url) {
 // Download verification certificate
 async function downloadCertificate() {
     try {
+        // apiClient doesn't handle binary blobs yet, so we use a custom signed fetch wrapper
+        const signedHeaders = await window.apiClient.getAuthHeaders();
         const apiUrl = window.config?.API_BASE_URL || '/api';
+        
         const response = await fetch(`${apiUrl}/evidence/verification-certificate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...signedHeaders
+            },
             body: JSON.stringify({
                 fileName: selectedFile.name,
-                verificationResult: 'verified', // This would come from the actual result
+                verificationResult: 'verified',
                 timestamp: new Date().toISOString()
             })
         });
@@ -295,10 +287,13 @@ async function downloadCertificate() {
             a.href = url;
             a.download = `verification_certificate_${selectedFile.name}_${Date.now()}.pdf`;
             a.click();
+            window.URL.revokeObjectURL(url);
+        } else {
+            throw new Error('Failed to generate certificate');
         }
     } catch (error) {
         console.error('Certificate download error:', error);
-        showError('Failed to download certificate');
+        showError('Failed to download certificate: ' + error.message);
     }
 }
 

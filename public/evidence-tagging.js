@@ -13,10 +13,9 @@ class EvidenceTagging {
 
     async loadTags() {
         try {
-            const response = await fetch('/api/tags');
-            const data = await response.json();
-            if (data.success) {
-                this.tags = data.tags;
+            const result = await window.apiClient.get('/tags');
+            if (result.success) {
+                this.tags = result.tags;
                 this.renderTagList();
             }
         } catch (error) {
@@ -62,31 +61,24 @@ class EvidenceTagging {
     async handleCreateTag(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const userWallet = localStorage.getItem('userWallet');
 
         try {
-            const response = await fetch('/api/tags', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.get('tagName'),
-                    color: formData.get('tagColor'),
-                    category: formData.get('tagCategory'),
-                    userWallet
-                })
+            const result = await window.apiClient.post('/tags', {
+                name: formData.get('tagName'),
+                color: formData.get('tagColor'),
+                category: formData.get('tagCategory')
             });
 
-            const data = await response.json();
-            if (data.success) {
-                this.tags.push(data.tag);
+            if (result.success) {
+                this.tags.push(result.tag);
                 this.renderTagList();
                 e.target.reset();
                 this.showMessage('Tag created successfully', 'success');
             } else {
-                this.showMessage(data.error, 'error');
+                this.showMessage(result.error, 'error');
             }
         } catch (error) {
-            this.showMessage('Error creating tag', 'error');
+            this.showMessage('Error creating tag: ' + error.message, 'error');
         }
     }
 
@@ -145,24 +137,19 @@ class EvidenceTagging {
     }
 
     async tagEvidence(evidenceId, tagIds) {
-        const userWallet = localStorage.getItem('userWallet');
         try {
-            const response = await fetch(`/api/evidence/${evidenceId}/tags`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tagIds, userWallet })
-            });
+            // Note: apiClient.post handles the signature prompting if the route is secure
+            const result = await window.apiClient.post(`/evidence/${evidenceId}/tags`, { tagIds });
 
-            const data = await response.json();
-            if (data.success) {
-                this.showMessage('Tags added successfully', 'success');
+            if (result.success) {
+                this.showMessage('Tags added and verified on blockchain', 'success');
                 return true;
             } else {
-                this.showMessage(data.error, 'error');
+                this.showMessage(result.error, 'error');
                 return false;
             }
         } catch (error) {
-            this.showMessage('Error adding tags', 'error');
+            this.showMessage('Error adding tags: ' + error.message, 'error');
             return false;
         }
     }
@@ -181,28 +168,24 @@ class EvidenceTagging {
             return;
         }
 
-        const userWallet = localStorage.getItem('userWallet');
         try {
-            const response = await fetch('/api/evidence/batch-tag', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    evidenceIds: selectedEvidence,
-                    tagIds: selectedTagIds,
-                    userWallet
-                })
+            const result = await window.apiClient.post('/evidence/batch-tag', {
+                evidenceIds: selectedEvidence,
+                tagIds: selectedTagIds
             });
 
-            const data = await response.json();
-            if (data.success) {
-                this.showMessage(`Tagged ${data.tagged_count} items successfully`, 'success');
+            if (result.success) {
+                this.showMessage(`Tagged ${result.tagged_count} items successfully`, 'success');
                 this.selectedTags.clear();
                 this.updateSelectedTagsDisplay();
+                // Reload evidence to show new tags
+                const evidence = await window.storage.getAllEvidence();
+                this.renderFilteredEvidence(evidence);
             } else {
-                this.showMessage(data.error, 'error');
+                this.showMessage(result.error, 'error');
             }
         } catch (error) {
-            this.showMessage('Error batch tagging', 'error');
+            this.showMessage('Error batch tagging: ' + error.message, 'error');
         }
     }
 
@@ -213,11 +196,10 @@ class EvidenceTagging {
 
     async filterByTags(tagIds, logic = 'AND') {
         try {
-            const response = await fetch(`/api/evidence/by-tags?tagIds=${tagIds.join(',')}&logic=${logic}`);
-            const data = await response.json();
-            if (data.success) {
-                this.renderFilteredEvidence(data.evidence);
-                return data.evidence;
+            const result = await window.apiClient.get(`/evidence/by-tags?tagIds=${tagIds.join(',')}&logic=${logic}`);
+            if (result.success) {
+                this.renderFilteredEvidence(result.evidence);
+                return result.evidence;
             }
         } catch (error) {
             console.error('Filter by tags error:', error);

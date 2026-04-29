@@ -20,8 +20,10 @@ class EvidenceComparisonTool {
 
     checkUserRole() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (!currentUser.wallet_address) {
-            alert('Please login to access the Evidence Comparison Tool');
+        // Role check handled by session-manager or backend, 
+        // but we ensure wallet is present for comparison logic
+        if (!currentUser.walletAddress && !currentUser.wallet_address) {
+            alert('Please login with your wallet to access the Evidence Comparison Tool');
             window.location.href = 'index.html';
         }
     }

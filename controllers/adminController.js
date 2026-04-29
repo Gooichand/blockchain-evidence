@@ -2,23 +2,39 @@ const { supabase, allowedRoles } = require('../config');
 const { validateWalletAddress, logAdminAction } = require('../middleware/verifyAdmin');
 const { createNotification } = require('../services/notificationService');
 
+// SECURITY FIX: Helper to get the verified admin wallet from verifyAdmin middleware.
+// All admin routes MUST go through verifyAdmin middleware which sets req.admin.
+const getAdminWallet = (req) => {
+  return req.admin?.wallet_address || null;
+};
+
 // Create regular user (Admin only)
 const createUser = async (req, res) => {
   try {
-    const { adminWallet, userData } = req.body;
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware, not req.body.adminWallet
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { userData } = req.body;
+    if (!userData) {
+      return res.status(400).json({ success: false, error: 'userData is required' });
+    }
+
     const { walletAddress, fullName, role, department, jurisdiction, badgeNumber } = userData;
 
     // Validate input
     if (!validateWalletAddress(walletAddress)) {
-      return res.status(400).json({ error: 'Invalid wallet address format' });
+      return res.status(400).json({ success: false, error: 'Invalid wallet address format' });
     }
 
     if (!fullName || !role) {
-      return res.status(400).json({ error: 'Full name and role are required' });
+      return res.status(400).json({ success: false, error: 'Full name and role are required' });
     }
 
     if (!allowedRoles.includes(role) || role === 'admin') {
-      return res.status(400).json({ error: 'Invalid role for regular user' });
+      return res.status(400).json({ success: false, error: 'Invalid role for regular user' });
     }
 
     // Check if wallet already exists
@@ -29,7 +45,7 @@ const createUser = async (req, res) => {
       .single();
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Wallet address already registered' });
+      return res.status(409).json({ success: false, error: 'Wallet address already registered' });
     }
 
     // Create user
@@ -43,7 +59,7 @@ const createUser = async (req, res) => {
         jurisdiction: jurisdiction || 'General',
         badge_number: badgeNumber || '',
         account_type: 'real',
-        created_by: adminWallet,
+        created_by: adminWallet, // SECURITY FIX: Use verified admin wallet
         is_active: true,
       })
       .select()
@@ -81,23 +97,33 @@ const createUser = async (req, res) => {
     res.json({ success: true, user: newUser });
   } catch (error) {
     console.error('Create user error:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    res.status(500).json({ success: false, error: 'Failed to create user' });
   }
 };
 
 // Create admin user (Admin only)
 const createAdmin = async (req, res) => {
   try {
-    const { adminWallet, adminData } = req.body;
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { adminData } = req.body;
+    if (!adminData) {
+      return res.status(400).json({ success: false, error: 'adminData is required' });
+    }
+
     const { walletAddress, fullName } = adminData;
 
     // Validate input
     if (!validateWalletAddress(walletAddress)) {
-      return res.status(400).json({ error: 'Invalid wallet address format' });
+      return res.status(400).json({ success: false, error: 'Invalid wallet address format' });
     }
 
     if (!fullName) {
-      return res.status(400).json({ error: 'Full name is required' });
+      return res.status(400).json({ success: false, error: 'Full name is required' });
     }
 
     // Check admin limit
@@ -108,7 +134,7 @@ const createAdmin = async (req, res) => {
       .eq('is_active', true);
 
     if (count >= 10) {
-      return res.status(400).json({ error: 'Maximum admin limit (10) reached' });
+      return res.status(400).json({ success: false, error: 'Maximum admin limit (10) reached' });
     }
 
     // Check if wallet already exists
@@ -119,7 +145,7 @@ const createAdmin = async (req, res) => {
       .single();
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Wallet address already registered' });
+      return res.status(409).json({ success: false, error: 'Wallet address already registered' });
     }
 
     // Create admin
@@ -132,7 +158,7 @@ const createAdmin = async (req, res) => {
         department: 'Administration',
         jurisdiction: 'System',
         account_type: 'real',
-        created_by: adminWallet,
+        created_by: adminWallet, // SECURITY FIX: Use verified admin wallet
         is_active: true,
       })
       .select()
@@ -168,22 +194,28 @@ const createAdmin = async (req, res) => {
     res.json({ success: true, admin: newAdmin });
   } catch (error) {
     console.error('Create admin error:', error);
-    res.status(500).json({ error: 'Failed to create admin' });
+    res.status(500).json({ success: false, error: 'Failed to create admin' });
   }
 };
 
 // Delete user (Admin only)
 const deleteUser = async (req, res) => {
   try {
-    const { adminWallet, targetWallet } = req.body;
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { targetWallet } = req.body;
 
     if (!validateWalletAddress(targetWallet)) {
-      return res.status(400).json({ error: 'Invalid target wallet address' });
+      return res.status(400).json({ success: false, error: 'Invalid target wallet address' });
     }
 
     // Prevent self-deletion
-    if (adminWallet === targetWallet) {
-      return res.status(400).json({ error: 'Administrators cannot delete their own account' });
+    if (adminWallet.toLowerCase() === targetWallet.toLowerCase()) {
+      return res.status(400).json({ success: false, error: 'Administrators cannot delete their own account' });
     }
 
     // Get target user info for logging
@@ -194,7 +226,7 @@ const deleteUser = async (req, res) => {
       .single();
 
     if (!targetUser) {
-      return res.status(404).json({ error: 'Target user not found' });
+      return res.status(404).json({ success: false, error: 'Target user not found' });
     }
 
     // Soft delete user
@@ -220,30 +252,31 @@ const deleteUser = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
   }
 };
 
 // Get all users with enhanced filtering and pagination
 const getAllUsers = async (req, res) => {
   try {
-    const { adminWallet } = req.query;
-    const { limit = 50, offset = 0, role, active_only = 'true' } = req.query;
-
-    if (!validateWalletAddress(adminWallet)) {
-      return res.status(400).json({ error: 'Invalid admin wallet address' });
+    // SECURITY FIX: Use authenticated wallet instead of query param for admin verification
+    const verifiedWallet = req.authenticatedWallet;
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    // Verify admin permissions
+    const { limit = 50, offset = 0, role, active_only = 'true' } = req.query;
+
+    // Verify admin permissions using verified wallet
     const { data: admin } = await supabase
       .from('users')
       .select('role')
-      .eq('wallet_address', adminWallet)
+      .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
       .single();
 
     if (!admin || admin.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin privileges required' });
+      return res.status(403).json({ success: false, error: 'Admin privileges required' });
     }
 
     // Use database function for efficient user retrieval
@@ -264,21 +297,27 @@ const getAllUsers = async (req, res) => {
     });
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ error: 'Failed to get users' });
+    res.status(500).json({ success: false, error: 'Failed to get users' });
   }
 };
 
 // Request role change (Admin only)
 const roleChangeRequest = async (req, res) => {
   try {
-    const { adminWallet, targetWallet, newRole, reason } = req.body;
-
-    if (!validateWalletAddress(targetWallet) || !allowedRoles.includes(newRole)) {
-      return res.status(400).json({ error: 'Invalid target wallet or role' });
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
     }
 
-    if (adminWallet === targetWallet) {
-      return res.status(400).json({ error: 'Cannot change own role' });
+    const { targetWallet, newRole, reason } = req.body;
+
+    if (!validateWalletAddress(targetWallet) || !allowedRoles.includes(newRole)) {
+      return res.status(400).json({ success: false, error: 'Invalid target wallet or role' });
+    }
+
+    if (adminWallet.toLowerCase() === targetWallet.toLowerCase()) {
+      return res.status(400).json({ success: false, error: 'Cannot change own role' });
     }
 
     const { data: targetUser } = await supabase
@@ -288,7 +327,7 @@ const roleChangeRequest = async (req, res) => {
       .single();
 
     if (!targetUser) {
-      return res.status(404).json({ error: 'Target user not found' });
+      return res.status(404).json({ success: false, error: 'Target user not found' });
     }
 
     const { data: request, error } = await supabase
@@ -309,24 +348,36 @@ const roleChangeRequest = async (req, res) => {
     res.json({ success: true, request });
   } catch (error) {
     console.error('Role change request error:', error);
-    res.status(500).json({ error: 'Failed to create role change request' });
+    res.status(500).json({ success: false, error: 'Failed to create role change request' });
   }
 };
 
 // Get pending role change requests
 const getRoleChangeRequests = async (req, res) => {
   try {
-    const { adminWallet } = req.query;
+    // SECURITY FIX: Use authenticated wallet instead of query param
+    const verifiedWallet = req.authenticatedWallet;
+    if (!verifiedWallet) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
 
-    if (!validateWalletAddress(adminWallet)) {
-      return res.status(400).json({ error: 'Invalid admin wallet' });
+    // Verify admin role
+    const { data: admin } = await supabase
+      .from('users')
+      .select('role')
+      .eq('wallet_address', verifiedWallet)
+      .eq('is_active', true)
+      .single();
+
+    if (!admin || admin.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Admin privileges required' });
     }
 
     const { data: requests, error } = await supabase
       .from('role_change_requests')
       .select('*')
       .eq('status', 'pending')
-      .neq('requesting_admin', adminWallet)
+      .neq('requesting_admin', verifiedWallet)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -334,14 +385,24 @@ const getRoleChangeRequests = async (req, res) => {
     res.json({ success: true, requests });
   } catch (error) {
     console.error('Get role change requests error:', error);
-    res.status(500).json({ error: 'Failed to get role change requests' });
+    res.status(500).json({ success: false, error: 'Failed to get role change requests' });
   }
 };
 
 // Approve role change request
 const approveRoleChange = async (req, res) => {
   try {
-    const { adminWallet, requestId } = req.body;
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { requestId } = req.body;
+
+    if (!requestId) {
+      return res.status(400).json({ success: false, error: 'requestId is required' });
+    }
 
     const { data: request } = await supabase
       .from('role_change_requests')
@@ -351,11 +412,11 @@ const approveRoleChange = async (req, res) => {
       .single();
 
     if (!request) {
-      return res.status(404).json({ error: 'Request not found or already processed' });
+      return res.status(404).json({ success: false, error: 'Request not found or already processed' });
     }
 
-    if (request.requesting_admin === adminWallet) {
-      return res.status(400).json({ error: 'Cannot approve own request' });
+    if (request.requesting_admin.toLowerCase() === adminWallet.toLowerCase()) {
+      return res.status(400).json({ success: false, error: 'Cannot approve own request' });
     }
 
     // Update user role
@@ -387,14 +448,24 @@ const approveRoleChange = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Approve role change error:', error);
-    res.status(500).json({ error: 'Failed to approve role change' });
+    res.status(500).json({ success: false, error: 'Failed to approve role change' });
   }
 };
 
 // Reject role change request
 const rejectRoleChange = async (req, res) => {
   try {
-    const { adminWallet, requestId, reason } = req.body;
+    // SECURITY FIX: Use req.admin set by verifyAdmin middleware
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { requestId, reason } = req.body;
+
+    if (!requestId) {
+      return res.status(400).json({ success: false, error: 'requestId is required' });
+    }
 
     const { data: request } = await supabase
       .from('role_change_requests')
@@ -404,7 +475,7 @@ const rejectRoleChange = async (req, res) => {
       .single();
 
     if (!request) {
-      return res.status(404).json({ error: 'Request not found or already processed' });
+      return res.status(404).json({ success: false, error: 'Request not found or already processed' });
     }
 
     const { error } = await supabase
@@ -429,13 +500,14 @@ const rejectRoleChange = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Reject role change error:', error);
-    res.status(500).json({ error: 'Failed to reject role change' });
+    res.status(500).json({ success: false, error: 'Failed to reject role change' });
   }
 };
 
 // Block unauthorized admin operations (catch-all)
 const blockUnauthorizedAdmin = (req, res) => {
   res.status(403).json({
+    success: false,
     error: 'Forbidden: Administrator privileges required',
   });
 };
