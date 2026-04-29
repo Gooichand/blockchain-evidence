@@ -67,11 +67,13 @@
     "jspdf": "^4.2.0",
     "lodash": "^4.17.21",
     "multer": "^2.0.2",
+    "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "numeral": "^2.0.6",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.3",
     "react-chrono": "^2.6.1",
+    "redis": "^5.12.1",
     "sharp": "^0.33.2",
     "socket.io": "^4.7.5",
     "vis-timeline": "^7.7.3"

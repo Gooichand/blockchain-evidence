@@ -1,429 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health Dashboard | EVID-DGC</title>
     <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.png" type="image/png">
-    <title>System Health & Status - EVID-DGC</title>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-</head>
-
-<body>
-    <nav class="dashboard-nav">
-        <div class="container">
-            <div class="nav-content">
-                <div class="nav-items">
-                    <a href="admin.html" class="nav-brand">
-                        <i data-lucide="shield" class="brand-icon"></i>
-                        EVID-DGC Admin
-                    </a>
-                    <span class="nav-separator">|</span>
-                    <span class="nav-title">System Health & Status</span>
-                </div>
-                <div class="nav-items">
-                    <button class="btn btn-outline btn-sm" onclick="window.location.href='admin.html'">
-                        <i data-lucide="arrow-left"></i>
-                        Back to Admin
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="dashboard-hero">
-            <h1>System Health & Status Dashboard</h1>
-            <p>Real-time monitoring of all system components and services</p>
-        </div>
-
-        <!-- Auto-refresh controls -->
-        <div class="refresh-controls">
-            <div class="refresh-status">
-                <span id="lastUpdated">Last updated: Never</span>
-                <span class="refresh-indicator">
-                    <i data-lucide="clock"></i>
-                    Auto-refresh: <span id="refreshCountdown">60</span>s
-                </span>
-            </div>
-            <div class="refresh-actions">
-                <button class="btn btn-sm" id="refreshNow">
-                    <i data-lucide="refresh-cw"></i>
-                    Refresh Now
-                </button>
-                <button class="btn btn-outline btn-sm" id="toggleAutoRefresh">
-                    <i data-lucide="pause"></i>
-                    Pause Auto-refresh
-                </button>
-            </div>
-        </div>
-
-        <!-- Overall System Status -->
-        <div class="status-overview">
-            <div class="status-card overall-status" id="overallStatus">
-                <div class="status-icon">
-                    <i data-lucide="activity"></i>
-                </div>
-                <div class="status-info">
-                    <h3>System Status</h3>
-                    <div class="status-value" id="overallStatusValue">All Systems Operational</div>
-                    <div class="status-description">All system components are functioning normally</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Component Status Grid -->
-        <div class="status-grid">
-            <!-- Blockchain Status -->
-            <div class="status-card">
-                <div class="status-header">
-                    <div class="status-icon">
-                        <i data-lucide="link"></i>
-                    </div>
-                    <h3>Blockchain Status</h3>
-                    <div class="status-indicator">
-                        <div class="status-dot online"></div>
-                    </div>
-                </div>
-                <div class="status-details">
-                    <div class="detail-item">
-                        <span>Network:</span>
-                        <span>Ethereum Mainnet</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Chain ID:</span>
-                        <span>1</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Last Block:</span>
-                        <span>#18,456,789</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Contract Address:</span>
-                        <span class="monospace">0x742d35Cc6634C0532925a3b8D</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Database Status -->
-            <div class="status-card">
-                <div class="status-header">
-                    <div class="status-icon">
-                        <i data-lucide="database"></i>
-                    </div>
-                    <h3>Database Status</h3>
-                    <div class="status-indicator">
-                        <div class="status-dot online"></div>
-                    </div>
-                </div>
-                <div class="status-details">
-                    <div class="detail-item">
-                        <span>Connection:</span>
-                        <span>Connected</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Response Time:</span>
-                        <span>45ms</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Active Connections:</span>
-                        <span>12</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Storage Status -->
-            <div class="status-card">
-                <div class="status-header">
-                    <div class="status-icon">
-                        <i data-lucide="hard-drive"></i>
-                    </div>
-                    <h3>Storage Status</h3>
-                    <div class="status-indicator">
-                        <div class="status-dot online"></div>
-                    </div>
-                </div>
-                <div class="status-details">
-                    <div class="detail-item">
-                        <span>Provider:</span>
-                        <span>Supabase Storage</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Storage Used:</span>
-                        <span>2.3 GB</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Available Space:</span>
-                        <span>47.7 GB</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- API Status -->
-            <div class="status-card">
-                <div class="status-header">
-                    <div class="status-icon">
-                        <i data-lucide="server"></i>
-                    </div>
-                    <h3>API Status</h3>
-                    <div class="status-indicator">
-                        <div class="status-dot online"></div>
-                    </div>
-                </div>
-                <div class="status-details">
-                    <div class="detail-item">
-                        <span>Server Status:</span>
-                        <span>Online</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Response Time:</span>
-                        <span>120ms</span>
-                    </div>
-                    <div class="detail-item">
-                        <span>Uptime:</span>
-                        <span>15d 8h</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Metrics -->
-        <div class="metrics-section">
-            <h2>System Metrics</h2>
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <i data-lucide="trending-up"></i>
-                        <h4>Uptime Statistics</h4>
-                    </div>
-                    <div class="metric-content">
-                        <div class="uptime-stats">
-                            <div class="uptime-item">
-                                <span class="uptime-period">Last 24h</span>
-                                <span class="uptime-value">99.8%</span>
-                            </div>
-                            <div class="uptime-item">
-                                <span class="uptime-period">Last 7 days</span>
-                                <span class="uptime-value">99.5%</span>
-                            </div>
-                            <div class="uptime-item">
-                                <span class="uptime-period">Last 30 days</span>
-                                <span class="uptime-value">99.2%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <i data-lucide="activity"></i>
-                        <h4>Performance Metrics</h4>
-                    </div>
-                    <div class="metric-content">
-                        <div class="performance-stats">
-                            <div class="perf-item">
-                                <span>Avg Response Time</span>
-                                <span>150ms</span>
-                            </div>
-                            <div class="perf-item">
-                                <span>Requests/min</span>
-                                <span>45</span>
-                            </div>
-                            <div class="perf-item">
-                                <span>Error Rate</span>
-                                <span>0.2%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="fixed-navbar.js"></script>
     <style>
-        .refresh-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-        }
-
-        .status-overview {
-            margin-bottom: 32px;
-        }
-
-        .overall-status {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        .health-hero {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             color: white;
-            border: none;
-            padding: 24px;
+            padding: 40px 0;
+            text-align: center;
         }
 
-        .status-grid {
+        .health-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .status-card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .status-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .status-dot.online {
-            background: #10b981;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-        }
-
-        .status-details {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.9em;
-        }
-
-        .monospace {
-            font-family: monospace;
-            font-size: 0.8em;
-        }
-
-        .metrics-section {
-            margin: 32px 0;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 24px;
+            margin-top: -30px;
+            padding: 0 20px;
         }
 
         .metric-card {
             background: white;
-            border: 1px solid #e0e0e0;
             border-radius: 12px;
-            padding: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
         }
+
+        .metric-card.status-healthy { border-top: 4px solid #22c55e; }
+        .metric-card.status-warning { border-top: 4px solid #eab308; }
+        .metric-card.status-error { border-top: 4px solid #ef4444; }
 
         .metric-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
-        .uptime-stats,
-        .performance-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .metric-icon {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            color: #475569;
         }
 
-        .uptime-item,
-        .perf-item {
+        .metric-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .metric-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .uptime-value {
-            font-weight: 700;
-            color: #10b981;
+        .metric-row:last-child { border-bottom: none; }
+        
+        .metric-label { color: #64748b; font-weight: 500; }
+        .metric-value { color: #0f172a; font-weight: 600; font-family: monospace; font-size: 1.1rem; }
+
+        .alert-card {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
         }
+        
+        .alert-card.warning { background: #fefce8; border-color: #fef08a; }
+
+        .pulse-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .pulse-healthy { background: #22c55e; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2); animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover { background: rgba(255, 255, 255, 0.2); }
     </style>
+</head>
+<body>
+    <div class="health-hero">
+        <div class="container">
+            <h1><span class="pulse-indicator pulse-healthy" id="mainStatusPulse"></span> System Health Dashboard</h1>
+            <p>Real-time infrastructure monitoring, IPFS node status, and Blockchain sync metrics</p>
+            <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 8px;" id="lastUpdated">Loading...</p>
+            <button class="refresh-btn" onclick="fetchMetrics()">
+                <i data-lucide="refresh-cw" id="refreshIcon"></i> Refresh Metrics
+            </button>
+        </div>
+    </div>
+
+    <div class="container" style="max-width: 1400px; padding-bottom: 60px;">
+        <div class="health-grid" id="metricsGrid">
+            <!-- Loading State -->
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                <div class="spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 20px; color: #64748b;">Establishing connection to telemetry servers...</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2>⚠️ Active System Alerts</h2>
+            </div>
+            <div class="card-body" id="alertsContainer">
+                <p class="text-muted">Loading alerts...</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+            lucide.createIcons();
+            const userAccount = localStorage.getItem('currentUser');
+            if (!userAccount) {
+                window.location.href = 'index.html';
+                return;
             }
-
-            // Auto-refresh functionality
-            let autoRefreshEnabled = true;
-            let refreshInterval = 60;
-            let countdownTimer;
-
-            function startCountdown() {
-                let countdown = refreshInterval;
-                const countdownElement = document.getElementById('refreshCountdown');
-
-                countdownTimer = setInterval(() => {
-                    countdown--;
-                    countdownElement.textContent = countdown;
-
-                    if (countdown <= 0) {
-                        countdown = refreshInterval;
-                        updateLastRefreshTime();
-                    }
-                }, 1000);
-            }
-
-            function updateLastRefreshTime() {
-                document.getElementById('lastUpdated').textContent =
-                    `Last updated: ${new Date().toLocaleTimeString()}`;
-            }
-
-            // Initialize
-            updateLastRefreshTime();
-            startCountdown();
-
-            // Event listeners
-            document.getElementById('refreshNow').addEventListener('click', () => {
-                updateLastRefreshTime();
-            });
-
-            document.getElementById('toggleAutoRefresh').addEventListener('click', (e) => {
-                autoRefreshEnabled = !autoRefreshEnabled;
-                const button = e.target;
-
-                if (autoRefreshEnabled) {
-                    button.innerHTML = '<i data-lucide="pause"></i> Pause Auto-refresh';
-                    startCountdown();
-                } else {
-                    button.innerHTML = '<i data-lucide="play"></i> Resume Auto-refresh';
-                    if (countdownTimer) clearInterval(countdownTimer);
-                    document.getElementById('refreshCountdown').textContent = '--';
-                }
-
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
-            });
+            
+            // Only Admins should access this normally, but we allow anyone for demo viewing
+            
+            fetchMetrics();
+            // Auto refresh every 30 seconds
+            setInterval(fetchMetrics, 30000);
         });
-    </script>
-    <script src="footer.js"></script>
-</body>
 
+        async function fetchMetrics() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.style.animation = 'spin 1s linear infinite';
+            
+            try {
+                const [metricsRes, alertsRes] = await Promise.all([
+                    window.apiClient.get('/monitoring/metrics'),
+                    window.apiClient.get('/monitoring/alerts')
+                ]);
+
+                if (metricsRes.success) {
+                    renderMetrics(metricsRes.metrics);
+                    document.getElementById('lastUpdated').textContent = 
+                        `Last Updated: ${new Date().toLocaleTimeString()} ${metricsRes.cached ? '(Cached)' : ''}`;
+                }
+
+                if (alertsRes.success) {
+                    renderAlerts(alertsRes.alerts);
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch telemetry:', error);
+                document.getElementById('mainStatusPulse').className = 'pulse-indicator';
+                document.getElementById('mainStatusPulse').style.backgroundColor = '#ef4444';
+            } finally {
+                refreshIcon.style.animation = 'none';
+            }
+        }
+
+        function renderMetrics(metrics) {
+            const grid = document.getElementById('metricsGrid');
+            
+            const dbStatusClass = metrics.database.status === 'healthy' ? 'status-healthy' : 'status-error';
+            const bcStatusClass = metrics.blockchain.status === 'healthy' ? 'status-healthy' : 'status-error';
+            const ipfsStatusClass = metrics.ipfs.status === 'healthy' ? 'status-healthy' : 'status-warning';
+
+            grid.innerHTML = `
+                <!-- Database Metrics -->
+                <div class="metric-card ${dbStatusClass}">
+                    <div class="metric-header">
+                        <div class="metric-icon"><i data-lucide="database"></i></div>
+                        <div class="metric-title">Supabase Database</div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value" style="color: ${metrics.database.status === 'healthy' ? '#22c55e' : '#ef4444'}">
+                            ${metrics.database.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Users</span>
+                        <span class="metric-value">${metrics.database.totalUsers}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Active Cases</span>
+                        <span class="metric-value">${metrics.database.totalCases}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Evidence Items</span>
+                        <span class="metric-value">${metrics.database.totalEvidence}</span>
+                    </div>
+                </div>
+
+                <!-- Blockchain Metrics -->
+                <div class="metric-card ${bcStatusClass}">
+                    <div class="metric-header">
+                        <div class="metric-icon"><i data-lucide="layers"></i></div>
+                        <div class="metric-title">Polygon Blockchain</div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Network Sync</span>
+                        <span class="metric-value" style="color: ${metrics.blockchain.status === 'healthy' ? '#22c55e' : '#ef4444'}">
+                            ${metrics.blockchain.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Current Block</span>
+                        <span class="metric-value">#${metrics.blockchain.currentBlock}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Items On-Chain</span>
+                        <span class="metric-value">${metrics.blockchain.totalEvidenceOnChain}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Wallet Balance</span>
+                        <span class="metric-value">${metrics.blockchain.walletBalance} MATIC</span>
+                    </div>
+                </div>
+
+                <!-- IPFS Metrics -->
+                <div class="metric-card ${ipfsStatusClass}">
+                    <div class="metric-header">
+                        <div class="metric-icon"><i data-lucide="hard-drive"></i></div>
+                        <div class="metric-title">IPFS Node (Pinata)</div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Node Connection</span>
+                        <span class="metric-value" style="color: ${metrics.ipfs.status === 'healthy' ? '#22c55e' : '#eab308'}">
+                            ${metrics.ipfs.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Pinned Files</span>
+                        <span class="metric-value">${metrics.ipfs.totalFiles}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Storage</span>
+                        <span class="metric-value">${metrics.ipfs.totalStorageMB} MB</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Gateway Status</span>
+                        <span class="metric-value" style="color: #22c55e">ONLINE</span>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="metric-card status-healthy">
+                    <div class="metric-header">
+                        <div class="metric-icon"><i data-lucide="activity"></i></div>
+                        <div class="metric-title">Server Performance</div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Server Uptime</span>
+                        <span class="metric-value">${Math.floor(metrics.performance.uptime / 3600)}h ${Math.floor((metrics.performance.uptime % 3600) / 60)}m</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Memory Usage</span>
+                        <span class="metric-value">${metrics.performance.memoryUsage.heapUsed}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Uploads (24h)</span>
+                        <span class="metric-value">${metrics.performance.uploadsLast24h}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Verifications (24h)</span>
+                        <span class="metric-value">${metrics.performance.verificationsLast24h}</span>
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alertsContainer');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #22c55e;">
+                        <i data-lucide="check-circle" style="width: 48px; height: 48px; margin-bottom: 12px;"></i>
+                        <h3>All Systems Operational</h3>
+                        <p>No active alerts or warnings across the infrastructure.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-card ${alert.severity === 'warning' ? 'warning' : ''}">
+                    <i data-lucide="alert-triangle" style="color: ${alert.severity === 'warning' ? '#ca8a04' : '#dc2626'}"></i>
+                    <div>
+                        <h4 style="margin: 0 0 4px 0; color: #1e293b;">${alert.message}</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: #64748b;">${alert.action || alert.error || 'System attention required.'}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+    </script>
+</body>
 </html>
