@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Run tests
+        timeout-minutes: 1
+        run: npm test
+        env:
+          NODE_ENV: test
+          PORT: 3000
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_KEY: test_anon_key
+          JWT_SECRET: test_jwt_secret_ci
+          BLOCKCHAIN_NETWORK: polygon-amoy
+          POLYGON_RPC_URL: https://rpc-amoy.polygon.technology
+          TARGET_CHAIN_ID: 0x13882
+          CONTRACT_ADDRESS: 0x0000000000000000000000000000000000000000
+          PRIVATE_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+          PINATA_API_KEY: test_pinata_key
+          PINATA_SECRET_KEY: test_pinata_secret
+          PINATA_JWT: test_pinata_jwt
+          IPFS_GATEWAY: https://gateway.pinata.cloud/ipfs/
+          ALLOWED_ORIGINS: http://localhost:3000
+          RATE_LIMIT_WINDOW_MS: "900000"
+          RATE_LIMIT_MAX_REQUESTS: "100"
+          MAX_FILE_SIZE: "104857600"
+          LOG_LEVEL: silent
+
+      - name: Add status badge to job summary
+        if: success()
+        run: |
+          echo "### ✅ CI passed for commit \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[![CI](https://github.com/${{ github.repository }}/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/${{ github.repository }}/actions/workflows/ci.yml)" >> $GITHUB_STEP_SUMMARY

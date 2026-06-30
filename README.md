@@ -9,14 +9,20 @@ For detailed information about all development phases, milestones, and feature r
 - ✅ **Phase 1** (Core System) - Complete & Production Ready
 - ✅ **Phase 2** (Blockchain & IPFS) - Complete & Production Ready
 - 🔄 **Phase 3** (Advanced Forensics) - In Active Development
-
+  - 🧠 AI-Powered Deepfake Detection
+  - 🔍 Advanced Metadata Forensics
+  - 🤖 Automated Evidence Verification Pipeline
+  - ⭐ Evidence Quality Scoring System
+  - ⚖️ Legal Compliance Automation Tools
+  - 🏛️ Court Integration & E-Discovery
 
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
-[![Supabase](https://img.shields.io/badge/Database-Supabase-green)](https://supabase.com/)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.19.0-brightgreen)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791)](https://www.postgresql.org/)
 [![Deployment](https://img.shields.io/badge/Deploy-Render-blue)](https://render.com/)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11669/badge)](https://www.bestpractices.dev/projects/11669)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://blockchain-evidence.onrender.com)
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
@@ -101,7 +107,7 @@ Digital evidence management often faces challenges like data tampering, lack of 
 | Category            | Technologies                                      | Status     |
 | ------------------- | ------------------------------------------------- | ---------- |
 | **Frontend**        | HTML5, CSS3, Vanilla JavaScript, Socket.IO Client | ✅ Working |
-| **Backend**         | Node.js v16+, Express.js, Socket.IO (Real-time)   | ✅ Working |
+| **Backend**         | Node.js v20.19+, Express.js, Socket.IO (Real-time)   | ✅ Working |
 | **Database**        | Supabase (PostgreSQL with Row Level Security)     | ✅ Working |
 | **Authentication**  | MetaMask/Web3, Email/Password                     | ✅ Working |
 | **File Processing** | Multer, Sharp, PDF-Lib                            | ✅ Working |
@@ -335,7 +341,7 @@ blockchain-evidence/
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** (v16 or higher) - [Download](https://nodejs.org/)
+- **Node.js** (v20.19 or higher) - [Download](https://nodejs.org/)
 - **npm** (comes with Node.js) or **yarn**
 - **Git** - [Download](https://git-scm.com/)
 - **MetaMask** browser extension - [Install](https://metamask.io/)
@@ -381,13 +387,7 @@ SUPABASE_KEY=your_supabase_anon_key
 
 ```sql
 -- Step 1: Core database structure
--- Copy and run: complete-database-setup.sql
-
--- Step 2: Evidence tagging system (optional)
--- Copy and run: evidence-tagging-schema.sql
-
--- Step 3: Evidence export system (optional)
--- Copy and run: evidence-export-schema.sql
+-- Copy and run: complete-database-setup-fixed.sql
 ```
 
 ### 5. Start Development Server

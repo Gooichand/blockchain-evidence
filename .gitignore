@@ -25,9 +25,13 @@ pids
 coverage/
 
 # Build outputs
-build/
+/build/
 dist/
 out/
+
+# Hardhat generated files
+/cache/
+/artifacts/
 
 # IDE files
 .vscode/

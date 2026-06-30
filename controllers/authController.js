@@ -1,5 +1,6 @@
 const { supabase, allowedRoles } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { ethers } = require('ethers');
 
@@ -116,13 +117,10 @@ const emailLogin = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Verify password using database function
-    const { data: passwordValid, error: verifyError } = await supabase.rpc('verify_password', {
-      password,
-      hash: user.password_hash,
-    });
+    // Verify password using bcrypt
+    const isValid = await bcrypt.compare(password, user.password_hash);
 
-    if (verifyError || !passwordValid) {
+    if (!isValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -210,15 +208,8 @@ const emailRegister = async (req, res) => {
       return res.status(409).json({ error: 'Email address already registered' });
     }
 
-    // Hash password using database function
-    const { data: hashedPassword, error: hashError } = await supabase.rpc('hash_password', {
-      password,
-    });
-
-    if (hashError) {
-      console.error('Password hashing error:', hashError);
-      throw hashError;
-    }
+    // Hash password using bcrypt (12 salt rounds)
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');

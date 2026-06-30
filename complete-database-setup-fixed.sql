@@ -394,21 +394,7 @@ CREATE INDEX idx_case_assignments_assigned_to ON case_assignments(assigned_to);
 -- FUNCTIONS AND TRIGGERS
 -- ============================================================================
 
--- Function to hash passwords
-CREATE OR REPLACE FUNCTION hash_password(password TEXT)
-RETURNS TEXT AS $$
-BEGIN
-    RETURN encode(digest(password || 'evid_dgc_salt', 'sha256'), 'hex');
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to verify password
-CREATE OR REPLACE FUNCTION verify_password(password TEXT, hash TEXT)
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN hash_password(password) = hash;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Password hashing handled in Node.js using bcrypt
 
 -- Update trigger for last_updated
 CREATE OR REPLACE FUNCTION update_last_updated()
@@ -727,7 +713,8 @@ INSERT INTO users (
     is_active
 ) VALUES (
     'gc67766@gmail.com',
-    hash_password('@Gopichand1@'),
+    -- Insert admin via the app registration flow
+    'PLACEHOLDER_HASH_REPLACE_VIA_APP',
     'System Administrator',
     'admin',
     'Administration',

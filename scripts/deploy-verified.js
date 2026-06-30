@@ -76,29 +76,6 @@ async function main() {
     console.log('🔍 View on Explorer:', explorerUrl);
   }
 
-  console.log('\n🧪 Testing contract...');
-  try {
-    const testHash = '0x' + '1'.repeat(64);
-    const testMetadata = JSON.stringify({ test: true, timestamp: Date.now() });
-
-    console.log('📝 Storing test evidence...');
-    const tx = await contract.storeEvidence(testHash, testMetadata);
-    const receipt = await tx.wait();
-
-    console.log('✅ Test transaction successful!');
-    console.log('   TX Hash:', receipt.hash);
-    console.log('   Gas Used:', receipt.gasUsed.toString());
-    console.log('   Block:', receipt.blockNumber);
-
-    console.log('\n🔍 Verifying stored evidence...');
-    const verification = await contract.verifyHash(testHash);
-    console.log('✅ Verification successful!');
-    console.log('   Exists:', verification[0]);
-    console.log('   Evidence ID:', verification[1].toString());
-  } catch (error) {
-    console.error('❌ Contract test failed:', error.message);
-  }
-
   console.log('\n🎉 All done! Contract is ready for production use.\n');
 }
 

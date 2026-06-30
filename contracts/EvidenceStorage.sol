@@ -20,6 +20,8 @@ contract EvidenceStorage {
     
     event EvidenceStored(uint256 indexed evidenceId, string fileHash, address indexed uploadedBy);
     event EvidenceSealed(uint256 indexed evidenceId, address indexed sealedBy);
+    event UserAuthorized(address indexed user, address indexed authorizedBy);
+    event UserDeauthorized(address indexed user, address indexed deauthorizedBy);
     
     modifier onlyAuthorized() {
         require(authorizedUsers[msg.sender], "Not authorized");
@@ -70,5 +72,23 @@ contract EvidenceStorage {
         require(keccak256(abi.encodePacked(userRoles[msg.sender])) == keccak256(abi.encodePacked("admin")), "Only admin can authorize");
         authorizedUsers[_user] = true;
         userRoles[_user] = _role;
+        emit UserAuthorized(_user, msg.sender);
+    }
+    
+    function deauthorizeUser(address _user) public {
+        require(authorizedUsers[msg.sender], "Not authorized");
+        require(keccak256(abi.encodePacked(userRoles[msg.sender])) == keccak256(abi.encodePacked("admin")), "Only admin can deauthorize");
+        require(authorizedUsers[_user], "User not authorized");
+        require(_user != msg.sender, "Cannot deauthorize yourself");
+        authorizedUsers[_user] = false;
+        delete userRoles[_user];
+        emit UserDeauthorized(_user, msg.sender);
+    }
+    
+    function sealEvidence(uint256 _evidenceId) public onlyAuthorized {
+        require(_evidenceId > 0 && _evidenceId <= evidenceCounter, "Evidence does not exist");
+        require(!evidences[_evidenceId].isSealed, "Evidence already sealed");
+        evidences[_evidenceId].isSealed = true;
+        emit EvidenceSealed(_evidenceId, msg.sender);
     }
 }
