@@ -15,6 +15,8 @@
 
     <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
     <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
     <script src="loading-screen.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="config.js"></script>

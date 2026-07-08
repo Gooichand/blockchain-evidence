@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop Only | EVID-DGC</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .desktop-only-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .desktop-only-card {
+            max-width: 520px;
+            width: 100%;
+            background: linear-gradient(145deg, #12121a 0%, #1a1a25 100%);
+            border: 1px solid #2a2a3a;
+            border-radius: 16px;
+            padding: 48px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .desktop-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .desktop-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+        .desktop-only-card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: #fff;
+        }
+        .desktop-only-card p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #9e9eb0;
+            margin: 0 0 32px;
+        }
+        .requirements {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .requirements h3 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b6b80;
+            margin: 0 0 12px;
+        }
+        .requirements ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .requirements li {
+            font-size: 13px;
+            color: #b0b0c0;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .requirements li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #d32f2f;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .force-link {
+            color: #6b6b80;
+            font-size: 13px;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .force-link:hover {
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+        .brand {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .brand span {
+            color: #d32f2f;
+        }
+        @media (min-width: 1024px) {
+            body:not(.desktop-locked) .desktop-only-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop-only-container">
+        <div class="desktop-only-card">
+            <div class="desktop-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <div class="brand">EVID<span>-DGC</span></div>
+            <h1>Desktop Access Required</h1>
+            <p>EVID-DGC is designed for desktop use only. Mobile and tablet devices are not supported for security and functionality reasons.</p>
+            <div class="requirements">
+                <h3>Requirements</h3>
+                <ul>
+                    <li>Desktop or laptop computer</li>
+                    <li>Minimum 1024px screen width</li>
+                    <li>MetaMask browser extension (for blockchain features)</li>
+                    <li>Modern browser (Chrome, Firefox, Edge, Brave)</li>
+                </ul>
+            </div>
+            <p style="font-size: 12px; color: #555; margin: 0;">
+                If you believe this is an error,
+                <a href="?forceDesktop=true" class="force-link">try force desktop mode</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -24,6 +24,9 @@
             margin-bottom: 30px;
         }
     </style>
+
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
 </head>
 
 <body>

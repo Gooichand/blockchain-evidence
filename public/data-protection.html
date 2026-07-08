@@ -10,7 +10,10 @@
       <link rel="stylesheet" href="responsive-improvements.css">
       <link rel="icon" href="/favicon.ico" type="image/x-icon">
       <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-   </head>
+   
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
+</head>
    <body>
       <header class="header-nav">
          <div class="navbar-container">

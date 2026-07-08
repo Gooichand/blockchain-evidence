@@ -14,6 +14,9 @@
     <script src="api-client.js"></script>
     <script src="session-manager.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
 </head>
 
 <body>

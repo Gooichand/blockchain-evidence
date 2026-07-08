@@ -13,6 +13,9 @@
     <script src="config.js"></script>
     <script src="storage.js"></script>
     <script src="app.js"></script>
+
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
 </head>
 
 <body>

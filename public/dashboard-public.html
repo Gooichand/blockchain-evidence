@@ -126,6 +126,9 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
+
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
 </head>
 
 <body>
