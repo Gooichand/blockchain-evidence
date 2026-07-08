@@ -116,7 +116,7 @@ class BlockchainFeedback {
             <p style="margin: 8px 0; color: #666;">${message}</p>
             <div style="margin: 12px 0;">
                 <small style="color: #888;">TX Hash:</small><br>
-                <a href="https://etherscan.io/tx/${txHash}" target="_blank" style="color: #d32f2f; text-decoration: none; font-family: monospace; font-size: 0.9em;">
+                <a href="${getExplorerUrl(walletManager.chainId, txHash)}" target="_blank" style="color: #d32f2f; text-decoration: none; font-family: monospace; font-size: 0.9em;">
                     ${txHash.substring(0, 20)}...
                 </a>
             </div>
@@ -143,7 +143,7 @@ class BlockchainFeedback {
                 </div>
                 <p style="margin: 8px 0; color: #666;">Blockchain may be congested. Please wait or check explorer.</p>
                 <div style="margin: 12px 0;">
-                    <a href="https://etherscan.io/tx/${txHash}" target="_blank" style="background: #f59e0b; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px;">
+                    <a href="${getExplorerUrl(walletManager.chainId, txHash)}" target="_blank" style="background: #f59e0b; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px;">
                         View in Explorer
                     </a>
                 </div>
@@ -158,7 +158,7 @@ class BlockchainFeedback {
         this.showToast('success', `
             <div>
                 <div>${sanitizedMessage}</div>
-                <small><a href="https://etherscan.io/tx/${sanitizedTxHash}" target="_blank" style="color: rgba(255,255,255,0.8);">View Transaction</a></small>
+                <small><a href="${getExplorerUrl(walletManager.chainId, sanitizedTxHash)}" target="_blank" style="color: rgba(255,255,255,0.8);">View Transaction</a></small>
             </div>
         `);
     }

@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "setup": "node contributor-setup.js",
     "contributor-setup": "node contributor-setup.js --contributor",
-    "health": "curl http://localhost:3000/api/health || echo 'Server not running'",
+    "health": "curl http://localhost:10000/api/health || echo 'Server not running'",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -20,8 +20,8 @@
     "deploy:amoy": "npx hardhat run scripts/deploy-verified.js --network polygonAmoy",
     "deploy:polygon": "npx hardhat run scripts/deploy-verified.js --network polygon",
     "verify:contract": "npx hardhat verify --network polygonAmoy",
-    "blockchain:status": "curl http://localhost:3000/api/blockchain/status",
-    "blockchain:health": "curl http://localhost:3000/api/blockchain/health",
+    "blockchain:status": "curl http://localhost:10000/api/blockchain/status",
+    "blockchain:health": "curl http://localhost:10000/api/blockchain/health",
     "migrate:blockchain": "node scripts/migrate-to-blockchain.js"
   },
   "keywords": [

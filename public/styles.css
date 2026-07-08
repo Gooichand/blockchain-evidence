@@ -2488,6 +2488,131 @@ body.modal-open {
   object-fit: contain;
 }
 
+.network-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  transition: transform 0.3s ease;
+}
+
+.network-banner.warning {
+  background: #fff3cd;
+  color: #856404;
+  border-bottom: 1px solid #ffc107;
+}
+
+.network-banner.error {
+  background: #f8d7da;
+  color: #721c24;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+.network-banner.success {
+  background: #d4edda;
+  color: #155724;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.network-banner .banner-btn {
+  padding: 4px 12px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.network-banner .banner-btn:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+.wallet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.wallet-badge.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.wallet-badge.connected::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #28a745;
+  display: inline-block;
+}
+
+.wallet-badge.wrong-network {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.wallet-badge.no-contract {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.network-name-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.network-name-tag.amoy {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.network-name-tag.mainnet {
+  background: #d4edda;
+  color: #155724;
+}
+
+.network-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.network-info-bar .label {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
 @media (max-width: 768px) {
 
   .brand-logo,

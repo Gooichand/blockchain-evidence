@@ -18,6 +18,8 @@
     <script src="loading-screen.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="config.js"></script>
+    <script src="networks.js"></script>
+    <script src="wallet-manager.js"></script>
     <script src="password-strength.js"></script>
 
 
@@ -25,6 +27,7 @@
     <script src="api-client.js"></script>
     <script src="storage.js"></script>
     <script src="session-manager.js"></script>
+    <script src="blockchain-service.js"></script>
     <script src="app.js"></script>
     <script src="header.js"></script>
     <script src="forgot-password.js"></script>
@@ -242,6 +245,7 @@
                 <p>Connect your MetaMask wallet to access the system</p>
             </div>
             <div class="card-body text-center">
+                <div id="networkBadge" style="margin-bottom:12px;min-height:32px;"></div>
                 <button id="connectWallet" class="btn btn-primary pulse">
                     <i data-lucide="link"></i>
                     Connect MetaMask
@@ -261,6 +265,7 @@
                     <label>Wallet Address:</label>
                     <div id="walletAddress" class="wallet-address"></div>
                 </div>
+                <div id="walletNetworkInfo" class="network-info-bar" style="margin-top:12px;"></div>
                 <div class="form-actions">
                     <button onclick="checkRegistrationStatus()" class="btn btn-primary">
                         <i data-lucide="user-check"></i>
@@ -883,9 +888,11 @@
                     console.warn('Config not loaded! Creating default config.');
                     window.config = {
                         DEMO_MODE: true,
-                        TARGET_CHAIN_ID: '0x1',
-                        NETWORK_NAME: 'Ethereum Mainnet'
+                        APP_NAME: 'EVID-DGC'
                     };
+                }
+                if (typeof NETWORKS === 'undefined') {
+                    console.error('Networks configuration not loaded!');
                 }
 
                 if (typeof initializeApp === 'function') {

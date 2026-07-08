@@ -46,9 +46,6 @@ const config = {
     // API endpoints
     API_BASE_URL: (() => {
         const host = window.location.hostname;
-        if (host === 'localhost' || host === '127.0.0.1') {
-            return 'http://localhost:10000/api';
-        }
         if (host.includes('onrender.com')) {
             return 'https://blockchain-evidence.onrender.com/api';
         }

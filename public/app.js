@@ -122,10 +122,18 @@ function toggleScroll(enable) {
 function showEmailLogin() {
   console.log("Showing email login modal...");
   const modal = document.getElementById("emailLoginModal");
-  if (modal) {
-    modal.classList.add("active");
-    toggleScroll(false);
+  if (!modal) {
+    console.error("emailLoginModal element not found in DOM");
+    showAlert("Email login modal not found. Please refresh the page.", "error");
+    return;
   }
+  modal.classList.add("active");
+  toggleScroll(false);
+  // Focus email input
+  setTimeout(() => {
+    const emailInput = document.getElementById("loginEmail");
+    if (emailInput) emailInput.focus();
+  }, 100);
 }
 
 function closeEmailLogin() {
@@ -157,8 +165,17 @@ async function handleEmailLogin(event) {
   event.preventDefault();
   console.log("Handling email login...");
 
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+  const emailInput = document.getElementById("loginEmail");
+  const passwordInput = document.getElementById("loginPassword");
+  
+  if (!emailInput || !passwordInput) {
+    console.error("Email or password input elements not found");
+    showAlert("Login form not loaded correctly. Please refresh the page.", "error");
+    return;
+  }
+
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
   if (!email || !password) {
     showAlert("Please enter both email and password", "error");
@@ -167,6 +184,14 @@ async function handleEmailLogin(event) {
 
   try {
     showLoading(true, "Logging in...");
+
+    // Ensure apiClient is available
+    if (!window.apiClient) {
+      console.error("apiClient not available");
+      showAlert("Authentication service not loaded. Please refresh the page.", "error");
+      showLoading(false);
+      return;
+    }
 
     const data = await window.apiClient.post("/auth/email/login", { email, password });
 
@@ -337,11 +362,19 @@ async function connectWallet() {
     return;
   }
 
+  const connectBtn = document.getElementById("connectWallet");
+  if (connectBtn) {
+    connectBtn.disabled = true;
+    connectBtn.innerHTML = '<i data-lucide="loader"></i> Connecting...';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
   try {
     showLoading(true, "Connecting to MetaMask...");
 
     if (!window.ethereum) {
       showLoading(false);
+      resetConnectButton();
       showErrorModal(
         "MetaMask Not Found",
         "MetaMask is not installed. Please install it to use this application.",
@@ -351,68 +384,102 @@ async function connectWallet() {
       return;
     }
 
-    // Request account access
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
+    userAccount = await walletManager.connect();
+    console.log("Wallet connected:", userAccount);
 
-    if (accounts.length === 0) {
+    if (!walletManager.isSupportedNetwork()) {
       showLoading(false);
-      showErrorModal(
-        "Account Access Required",
-        "Please unlock your MetaMask wallet and select an account."
-      );
+      resetConnectButton();
+      showWrongNetworkUI();
       return;
     }
 
-    userAccount = accounts[0];
-    console.log("Wallet connected:", userAccount);
-
-    // Check if we're on the correct network
-    const chainId = await window.ethereum.request({ method: "eth_chainId" });
-    if (chainId !== config.TARGET_CHAIN_ID) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: config.TARGET_CHAIN_ID }],
-        });
-      } catch (switchError) {
-        if (switchError.code === 4902) {
-          // Network not added to MetaMask
-          showErrorModal(
-            "Network Not Found",
-            `Please add ${config.NETWORK_NAME} to your MetaMask wallet.`
-          );
-        } else {
-          console.error("Network switch error:", switchError);
-        }
-        showLoading(false);
-        return;
-      }
+    if (!walletManager.isContractDeployed()) {
+      localStorage.setItem("wasConnected", "true");
+      showLoading(false);
+      updateWalletUI();
+      showNoContractBanner();
+      return;
     }
 
     localStorage.setItem("wasConnected", "true");
 
     updateWalletUI();
+    removeNetworkBanner();
     await checkRegistrationStatus();
     showLoading(false);
   } catch (error) {
     showLoading(false);
     console.error("Wallet connection error:", error);
 
+    // Handle MetaMask "already pending" error
+    if (error.code === -32002 || error.message?.includes('already pending')) {
+      showAlert('MetaMask connection already pending. Please check MetaMask popup.', 'warning');
+      // Wait and retry once
+      setTimeout(async () => {
+        try {
+          showLoading(true, "Retrying connection...");
+          userAccount = await walletManager.connect();
+          if (!walletManager.isSupportedNetwork()) {
+            showLoading(false);
+            resetConnectButton();
+            showWrongNetworkUI();
+            return;
+          }
+          if (!walletManager.isContractDeployed()) {
+            localStorage.setItem("wasConnected", "true");
+            showLoading(false);
+            updateWalletUI();
+            showNoContractBanner();
+            return;
+          }
+          localStorage.setItem("wasConnected", "true");
+          updateWalletUI();
+          removeNetworkBanner();
+          await checkRegistrationStatus();
+          showLoading(false);
+        } catch (retryError) {
+          showLoading(false);
+          resetConnectButton();
+          console.error("Retry failed:", retryError);
+          showErrorModal("Connection Failed", retryError.message || "Retry failed");
+        }
+      }, 1500);
+      return;
+    }
+
     if (error.code === 4001) {
+      resetConnectButton();
       showErrorModal(
         "Connection Rejected",
         "You rejected the connection request. This app requires a wallet connection to function.",
         "Try Again",
         connectWallet
       );
+    } else if (error.message === "MetaMask not installed") {
+      resetConnectButton();
+      showErrorModal(
+        "MetaMask Not Found",
+        "MetaMask is not installed. Please install it to use this application.",
+        "Install MetaMask",
+        () => window.open("https://metamask.io/download/", "_blank")
+      );
     } else {
+      resetConnectButton();
       showErrorModal(
         "Connection Failed",
         error.message || "An unexpected error occurred."
       );
     }
+  }
+}
+
+function resetConnectButton() {
+  const connectBtn = document.getElementById("connectWallet");
+  if (connectBtn) {
+    connectBtn.disabled = false;
+    connectBtn.innerHTML = '<i data-lucide="link"></i> Connect MetaMask';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
 
@@ -435,6 +502,158 @@ function updateWalletUI() {
     connectBtn.classList.add("btn-success");
     lucide.createIcons();
   }
+
+  updateNetworkBadge();
+  updateWalletNetworkInfo();
+}
+
+function updateWalletNetworkInfo() {
+  const el = document.getElementById('walletNetworkInfo');
+  if (!el) return;
+
+  const network = walletManager.getNetwork();
+  if (!network) {
+    el.innerHTML = '<span class="label">Network:</span> <span style="color:#dc3545;">Unknown</span>';
+    return;
+  }
+
+  const deployed = walletManager.isContractDeployed();
+  el.innerHTML = `
+    <span class="label">Network:</span>
+    <span class="network-name-tag ${network.isTestnet ? 'amoy' : 'mainnet'}">${network.shortName}</span>
+    <span class="label">Chain ID:</span>
+    <code>${network.chainId}</code>
+    <span class="label">Contract:</span>
+    <span style="color:${deployed ? '#28a745' : '#dc3545'};">${deployed ? 'Deployed' : 'Not Available'}</span>
+    ${!deployed ? '<span style="color:#856404;font-size:0.8rem;margin-left:8px;">Switch to Polygon Amoy to use blockchain features</span>' : ''}
+  `;
+}
+
+function updateNetworkBadge() {
+  const badgeArea = document.getElementById("networkBadge");
+  if (!badgeArea) return;
+
+  const network = walletManager.getNetwork();
+  if (!network) {
+    badgeArea.innerHTML = '<span class="wallet-badge wrong-network">Unsupported Network</span>';
+    return;
+  }
+
+  const contractDeployed = walletManager.isContractDeployed();
+  const tagClass = network.isTestnet ? 'amoy' : 'mainnet';
+
+  badgeArea.innerHTML = `
+    <span class="wallet-badge connected">
+      <span>${userAccount ? userAccount.slice(0, 6) + '...' + userAccount.slice(-4) : ''}</span>
+      <span class="network-name-tag ${tagClass}">${network.shortName}</span>
+      ${contractDeployed ? '<span style="color:#28a745;font-size:0.75rem;">✓ Contract Active</span>' : '<span style="color:#dc3545;font-size:0.75rem;">✗ No Contract</span>'}
+    </span>
+  `;
+}
+
+function showWrongNetworkUI() {
+  const chainId = walletManager.chainId;
+  const network = getNetworkByChainId(chainId);
+  const networkName = network ? network.name : 'Unknown Network (Chain ID: ' + chainId + ')';
+
+  showErrorModal(
+    "Unsupported Network",
+    `Connected to ${networkName}.<br><br>This application supports:
+    <ul style="text-align:left;margin-top:8px;">
+      <li><strong>Polygon Amoy Testnet</strong> (Contract Deployed)</li>
+      <li><strong>Polygon Mainnet</strong> (Supported, No Contract Yet)</li>
+    </ul>`,
+    "Switch to Polygon Amoy",
+    () => switchNetwork(80002)
+  );
+}
+
+function showNoContractBanner() {
+  showNetworkBanner('error', [
+    'Connected to ' + (walletManager.getNetwork()?.name || 'Unknown') + '. ',
+    'This network is supported by the wallet connection, but the Evidence contract is not deployed here yet.',
+  ], [
+    { text: 'Switch to Polygon Amoy Testnet', chainId: 80002 },
+  ]);
+}
+
+function showNetworkBanner(type, messages, switchButtons) {
+  removeNetworkBanner();
+  const banner = document.createElement('div');
+  banner.id = 'networkBanner';
+  banner.className = 'network-banner ' + type;
+
+  const content = document.createElement('span');
+  content.textContent = messages.join(' ');
+  banner.appendChild(content);
+
+  if (switchButtons) {
+    switchButtons.forEach(btn => {
+      const btnEl = document.createElement('button');
+      btnEl.className = 'banner-btn';
+      btnEl.textContent = btn.text;
+      btnEl.onclick = async () => {
+        try {
+          const switched = await switchToNetwork(btn.chainId);
+          if (switched) {
+            await refreshWalletState();
+          }
+        } catch (e) {
+          showAlert('Failed to switch network: ' + e.message, 'error');
+        }
+      };
+      banner.appendChild(btnEl);
+    });
+  }
+
+  document.body.insertBefore(banner, document.body.firstChild);
+  if (document.querySelector('.container')) {
+    document.querySelector('.container').style.marginTop = '50px';
+  }
+}
+
+function removeNetworkBanner() {
+  const existing = document.getElementById('networkBanner');
+  if (existing) existing.remove();
+  if (document.querySelector('.container')) {
+    document.querySelector('.container').style.marginTop = '';
+  }
+}
+
+async function switchNetwork(chainId) {
+  showLoading(true, 'Switching network...');
+  try {
+    const switched = await switchToNetwork(chainId);
+    if (switched) {
+      await refreshWalletState();
+    }
+  } catch (error) {
+    console.error('Network switch failed:', error);
+    showAlert('Failed to switch network: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function refreshWalletState() {
+  userAccount = walletManager.account;
+  const chainId = await getCurrentChain();
+  walletManager.chainId = chainId;
+
+  removeNetworkBanner();
+
+  if (!walletManager.isSupportedNetwork()) {
+    showWrongNetworkUI();
+    return;
+  }
+
+  if (!walletManager.isContractDeployed()) {
+    updateWalletUI();
+    showNoContractBanner();
+    return;
+  }
+
+  updateWalletUI();
 }
 
 // Check registration status
@@ -449,7 +668,8 @@ async function checkRegistrationStatus() {
   try {
     showLoading(true, "Checking registration...");
 
-    const data = await window.apiClient.get(`/users/wallet/${userAccount}`);
+    // Use skipAuth since this is a read-only lookup — no MetaMask signature needed
+    const data = await window.apiClient.get(`/users/wallet/${userAccount}`, { skipAuth: true });
 
     if (data.user) {
       console.log("Found existing user:", data.user);
@@ -585,6 +805,9 @@ async function handleRegistration(event) {
 
     showLoading(true, "Registering user...");
 
+    // Notify user about MetaMask signature request
+    showAlert("Please sign the message in MetaMask to complete registration", "info");
+
     const data = await window.apiClient.post("/auth/wallet/register", {
       walletAddress: userAccount.toLowerCase(),
       fullName: fullName.trim(),
@@ -648,7 +871,12 @@ function logout() {
 
 function disconnectWallet() {
   userAccount = null;
+  walletManager.disconnect();
   localStorage.removeItem("wasConnected");
+  removeNetworkBanner();
+
+  const badgeArea = document.getElementById("networkBadge");
+  if (badgeArea) badgeArea.innerHTML = '';
 
   const walletStatus = document.getElementById("walletStatus");
   const connectBtn = document.getElementById("connectWallet");
@@ -897,16 +1125,17 @@ function closeErrorModal() {
 
 // Ethereum event listeners
 if (window.ethereum) {
-  window.ethereum.on("accountsChanged", (accounts) => {
-    if (accounts.length === 0) {
+  walletManager.onAccountChange((account) => {
+    if (!account) {
       disconnectWallet();
     } else {
-      location.reload();
+      userAccount = account;
+      refreshWalletState();
     }
   });
 
-  window.ethereum.on("chainChanged", () => {
-    location.reload();
+  walletManager.onChainChange(() => {
+    refreshWalletState();
   });
 }
 

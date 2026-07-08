@@ -49,23 +49,30 @@ class APIClient {
     }
 
     /**
-     * Generic request wrapper with auth headers
+     * Generic request wrapper with auth headers.
+     * @param {string} path - API path
+     * @param {object} options - fetch options
+     * @param {boolean} options.skipAuth - If true, skip MetaMask signing (for read-only public endpoints)
      */
     async request(path, options = {}) {
         const method = options.method || 'GET';
+        const skipAuth = options.skipAuth || false;
         const url = `${this.baseUrl}${path.startsWith('/') ? path : '/' + path}`;
         
-        // Add auth headers
-        const authHeaders = await this.getAuthHeaders(method, path);
+        // Add auth headers only when needed
+        const authHeaders = skipAuth ? {} : await this.getAuthHeaders(method, path);
         
+        // Remove non-fetch options before passing to fetch
+        const { skipAuth: _, ...fetchOptions } = options;
+
         const headers = {
             'Content-Type': 'application/json',
             ...authHeaders,
-            ...options.headers
+            ...fetchOptions.headers
         };
 
         const response = await fetch(url, {
-            ...options,
+            ...fetchOptions,
             headers,
             credentials: 'include'
         });

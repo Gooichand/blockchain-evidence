@@ -14,12 +14,15 @@ const { setIO: setNotificationIO } = require('./services/notificationService');
 const { setIO: setNotificationControllerIO } = require('./controllers/notificationController');
 
 // -- Shared CORS origins (single source of truth) --
-const allowedOrigins =
-  process.env.NODE_ENV === 'production'
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || ['https://blockchain-evidence.onrender.com']).map(
-        (url) => url.trim(),
-      )
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const allowedOrigins = [
+  'http://localhost:10000',
+  'http://127.0.0.1:10000',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  ...(process.env.ALLOWED_ORIGINS?.split(',') || ['https://blockchain-evidence.onrender.com']).map(
+    (url) => url.trim()
+  )
+].filter((url, index, self) => self.indexOf(url) === index); // Unique list
 
 // -- Express + HTTP + Socket.IO --
 const app = express();

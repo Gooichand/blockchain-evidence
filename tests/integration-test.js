@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const crypto = require('crypto');
 
-const BASE_URL = process.env.API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.API_URL || 'http://localhost:10000';
 const TEST_WALLET = process.env.TEST_WALLET || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
 
 async function testBlockchainIntegration() {
