@@ -110,22 +110,17 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <!-- Navigation Header -->
-    <div id="header-placeholder"
-        style="height: 64px; background: #f5f5f5; display: flex; align-items: center; padding: 0 24px;">
-        <div style="width: 32px; height: 32px; background: #e0e0e0; border-radius: 4px; margin-right: 12px;"></div>
-        <div style="width: 120px; height: 24px; background: #e0e0e0; border-radius: 4px;"></div>
-    </div>
+    <div id="header-placeholder" style="height: 68px;"></div>
     <noscript>
-        <nav class="header-nav" style="display: block !important;">
-            <div class="navbar-container">
-                <a href="index.html" class="nav-brand">EVID-DGC</a>
-                <div class="nav-menu">
-                    <a href="#home">Home</a>
-                    <a href="#how-it-works">How It Works</a>
-                    <a href="#documentation">Docs</a>
-                    <a href="#login-options">Login</a>
-                </div>
-            </div>
+        <nav class="dock-nav" style="display: block !important; position: static; transform: none; padding: 1rem; text-align: center;">
+            <a href="index.html" style="font-weight:800;color:#d32f2f;text-decoration:none;margin-right:2rem;">EVID-DGC</a>
+            <a href="#home" style="color:#333;text-decoration:none;margin:0 0.75rem;">Home</a>
+            <a href="#how-it-works" style="color:#333;text-decoration:none;margin:0 0.75rem;">How It Works</a>
+            <a href="#documentation" style="color:#333;text-decoration:none;margin:0 0.75rem;">Documentation</a>
+            <a href="#faq" style="color:#333;text-decoration:none;margin:0 0.75rem;">Q&A</a>
+            <a href="#career" style="color:#333;text-decoration:none;margin:0 0.75rem;">Career</a>
+            <a href="#contact" style="color:#333;text-decoration:none;margin:0 0.75rem;">Contacts</a>
+            <a href="#login-options" style="color:#fff;background:#d32f2f;padding:0.5rem 1.5rem;border-radius:50px;text-decoration:none;margin-left:1rem;">Login</a>
         </nav>
     </noscript>
 
@@ -134,7 +129,7 @@
 
     <div class="container" id="main-content">
         <!-- Hero Section -->
-        <div class="hero-section">
+        <div class="hero-section" id="home">
             <div class="hero-content">
                 <div class="hero-icon">
                     <img src="logo-32x32.png" alt="Logo" class="hero-logo">
@@ -639,6 +634,28 @@
                                 ensuring appropriate access levels and automatic conflict resolution.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Career Section -->
+        <div class="contact-section" id="career">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i data-lucide="briefcase"></i>
+                    </div>
+                    <h2>Career Opportunities</h2>
+                    <p>Join our team and help shape the future of blockchain evidence management</p>
+                </div>
+                <div class="card-body" style="padding: 2rem; text-align: center;">
+                    <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 1.5rem;">
+                        We are always looking for talented individuals passionate about blockchain technology,
+                        cybersecurity, and digital forensics.
+                    </p>
+                    <p style="color: #9ca3af;">
+                        Career listings will be available soon. Stay tuned for updates.
+                    </p>
                 </div>
             </div>
         </div>

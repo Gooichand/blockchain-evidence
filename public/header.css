@@ -1,127 +1,207 @@
-/* Global Header Styles */
+/* Floating Center Glassmorphism Dock Navbar */
+
 :root {
-    --primary-red: #d32f2f;
-    --primary-red-dark: #b71c1c;
-    --primary-red-light: rgba(211, 47, 47, 0.08);
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a4a4a;
-    --white: #ffffff;
-    --border-light: rgba(220, 38, 38, 0.2);
+  --dock-primary: #d32f2f;
+  --dock-primary-dark: #b71c1c;
+  --dock-primary-light: rgba(211, 47, 47, 0.08);
+  --dock-text: #4b5563;
+  --dock-text-hover: #d32f2f;
+  --dock-bg: rgba(255, 255, 255, 0.6);
+  --dock-border: rgba(255, 255, 255, 0.25);
+  --dock-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
-.header-nav {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-light);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.1);
-    width: 100%;
+.dock-nav {
+  position: fixed;
+  bottom: 24px;
+  top: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: auto;
+  min-width: 320px;
+  max-width: calc(100vw - 32px);
 }
 
-.navbar-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 24px;
-    max-width: 1200px;
-    margin: 0 auto;
+.dock-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 6px;
+  background: var(--dock-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--dock-border);
+  border-radius: 100px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
+.dock-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px 4px 12px;
+  text-decoration: none;
+  color: var(--dock-primary);
+  flex-shrink: 0;
 }
 
-.brand-logo {
-    height: 32px;
-    width: 32px;
+.dock-brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
 }
 
-.nav-menu {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+.dock-brand-text {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--dock-primary);
+  letter-spacing: -0.5px;
 }
 
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+.dock-nav-items {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.nav-link:hover {
-    color: var(--primary-red);
-    background: var(--primary-red-light);
+.dock-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 50px;
+  color: var(--dock-text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
 }
 
-.nav-link i {
-    width: 18px;
-    height: 18px;
+.dock-link:hover {
+  background: var(--dock-primary-light);
+  color: var(--dock-text-hover);
 }
 
-.nav-login-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--primary-red);
-    color: var(--white);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
+.dock-link i {
+  width: 16px;
+  height: 16px;
 }
 
-.nav-login-btn:hover {
-    background: var(--primary-red-dark);
+.dock-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 20px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  color: #fff;
+  border: none;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.25);
+  white-space: nowrap;
+  font-family: inherit;
 }
 
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    color: var(--primary-red);
+.dock-login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(211, 47, 47, 0.35);
 }
 
-/* Mobile Responsive */
+.dock-login-btn i {
+  width: 16px;
+  height: 16px;
+}
+
+.dock-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--dock-text);
+  transition: color 0.2s ease;
+}
+
+.dock-menu-toggle:hover {
+  color: var(--dock-primary);
+}
+
+body {
+  padding-bottom: 88px;
+}
+
 @media (max-width: 768px) {
-    .menu-toggle {
-        display: block;
-    }
+  .dock-nav {
+    bottom: 0;
+    max-width: 100vw;
+    width: 100%;
+    transform: translateX(-50%);
+  }
 
-    .nav-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        flex-direction: column;
-        background: white;
-        padding: 20px;
-        gap: 10px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
+  .dock-container {
+    border-radius: 0;
+    padding: 8px 12px;
+    border-left: none;
+    border-right: none;
+  }
 
-    .nav-menu.active {
-        display: flex;
-    }
+  .dock-nav-items {
+    display: none;
+    position: absolute;
+    top: auto;
+    bottom: calc(100% + 8px);
+    left: 8px;
+    right: 8px;
+    flex-direction: column;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    gap: 4px;
+  }
 
-    .nav-link {
-        width: 100%;
-    }
+  .dock-nav-items.mobile-open {
+    display: flex;
+  }
+
+  .dock-link {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+
+  .dock-login-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 20px;
+  }
+
+  .dock-menu-toggle {
+    display: block;
+  }
+
+  .dock-brand {
+    padding: 4px 8px;
+  }
+
+  .dock-brand-text {
+    font-size: 1rem;
+  }
+
+  body {
+    padding-bottom: 64px;
+  }
 }

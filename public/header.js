@@ -1,21 +1,11 @@
-/**
- * Global Header Manager
- * Injects a consistent navbar across all pages
- */
-
 class HeaderManager {
     constructor() {
         this.init();
     }
 
     init() {
-        // Load CSS
         this.loadStyles();
-
-        // Render Navbar
         this.render();
-
-        // Attach events
         this.attachEventListeners();
     }
 
@@ -29,47 +19,46 @@ class HeaderManager {
     }
 
     render() {
-        // Prevent duplicate headers
-        if (document.querySelector('.header-nav')) return;
+        if (document.querySelector('.dock-nav')) return;
 
         const headerHTML = `
-        <header class="header-nav">
-            <div class="navbar-container">
-                <a href="index.html" class="nav-brand">
-                    <img src="logo-32x32.png" alt="EVID-DGC Logo" class="brand-logo">
-                    <span style="font-weight: 800; color: #d32f2f; font-size: 1.5rem;">EVID-DGC</span>
+        <header class="dock-nav">
+            <div class="dock-container">
+                <a href="index.html" class="dock-brand">
+                    <img src="logo-32x32.png" alt="EVID-DGC" class="dock-brand-logo">
+                    <span class="dock-brand-text">EVID-DGC</span>
                 </a>
-                
-                <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation menu">
+
+                <button class="dock-menu-toggle" id="dockMenuToggle" aria-label="Toggle navigation">
                     <i data-lucide="menu"></i>
                 </button>
 
-                <nav class="nav-menu" id="navMenu">
-                    <a href="index.html#home" class="nav-link">
+                <nav class="dock-nav-items" id="dockNavItems">
+                    <a href="index.html" class="dock-link">
                         <i data-lucide="home"></i>
                         <span>Home</span>
                     </a>
-                    <a href="index.html#how-it-works" class="nav-link">
+                    <a href="index.html#how-it-works" class="dock-link">
                         <i data-lucide="workflow"></i>
                         <span>How It Works</span>
                     </a>
-                    <a href="index.html#documentation" class="nav-link">
+                    <a href="index.html#documentation" class="dock-link">
                         <i data-lucide="book-open"></i>
                         <span>Documentation</span>
                     </a>
-                    <a href="index.html#faq" class="nav-link">
+                    <a href="index.html#faq" class="dock-link">
                         <i data-lucide="help-circle"></i>
                         <span>Q&A</span>
                     </a>
-                    <a href="index.html#contact" class="nav-link">
+                    <a href="index.html#career" class="dock-link">
+                        <i data-lucide="briefcase"></i>
+                        <span>Career</span>
+                    </a>
+                    <a href="index.html#contact" class="dock-link">
                         <i data-lucide="phone"></i>
-                        <span>Contact</span>
+                        <span>Contacts</span>
                     </a>
-                    <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="nav-link external-link" rel="noopener noreferrer">
-                        <i data-lucide="github"></i>
-                        <span>GitHub</span>
-                    </a>
-                    <a href="index.html#login-options" class="nav-login-btn">
+                    <a href="index.html#login-options" class="dock-login-btn">
                         <i data-lucide="log-in"></i>
                         <span>Login</span>
                     </a>
@@ -83,7 +72,6 @@ class HeaderManager {
         </noscript>
         `;
 
-        // Insert or replace placeholder
         const placeholder = document.getElementById('header-placeholder');
         if (placeholder) {
             placeholder.outerHTML = headerHTML;
@@ -91,7 +79,6 @@ class HeaderManager {
             document.body.insertAdjacentHTML('afterbegin', headerHTML);
         }
 
-        // Initialize Lucide icons if available
         this.updateIcons();
     }
 
@@ -108,33 +95,26 @@ class HeaderManager {
     }
 
     attachEventListeners() {
-        const toggleBtn = document.getElementById('menuToggle');
-        const navMenu = document.getElementById('navMenu');
+        const toggleBtn = document.getElementById('dockMenuToggle');
+        const navMenu = document.getElementById('dockNavItems');
 
         if (toggleBtn && navMenu) {
-            // ✅ Idempotency guard to prevent duplicate listeners
-            if (toggleBtn.dataset.menuListenersAttached === 'true') {
-                return;
-            }
+            if (toggleBtn.dataset.menuListenersAttached === 'true') return;
             toggleBtn.dataset.menuListenersAttached = 'true';
 
             toggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                navMenu.classList.toggle('active');
-
-                // Update icon
+                navMenu.classList.toggle('mobile-open');
                 const icon = toggleBtn.querySelector('i');
                 if (icon) {
-                    const isOpening = navMenu.classList.contains('active');
-                    icon.setAttribute('data-lucide', isOpening ? 'x' : 'menu');
+                    icon.setAttribute('data-lucide', navMenu.classList.contains('mobile-open') ? 'x' : 'menu');
                     this.updateIcons();
                 }
             });
 
-            // Close menu when clicking outside
             document.addEventListener('click', (e) => {
-                if (navMenu.classList.contains('active') && !navMenu.contains(e.target)) {
-                    navMenu.classList.remove('active');
+                if (navMenu.classList.contains('mobile-open') && !navMenu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    navMenu.classList.remove('mobile-open');
                     const icon = toggleBtn.querySelector('i');
                     if (icon) {
                         icon.setAttribute('data-lucide', 'menu');
@@ -143,10 +123,9 @@ class HeaderManager {
                 }
             });
 
-            // Close menu when clicking a link
-            navMenu.querySelectorAll('.nav-link, .nav-login-btn').forEach(link => {
+            navMenu.querySelectorAll('.dock-link, .dock-login-btn').forEach(link => {
                 link.addEventListener('click', () => {
-                    navMenu.classList.remove('active');
+                    navMenu.classList.remove('mobile-open');
                     const icon = toggleBtn.querySelector('i');
                     if (icon) {
                         icon.setAttribute('data-lucide', 'menu');
@@ -158,7 +137,6 @@ class HeaderManager {
     }
 }
 
-// Initialize header
 document.addEventListener('DOMContentLoaded', () => {
     window.headerManager = new HeaderManager();
 });
