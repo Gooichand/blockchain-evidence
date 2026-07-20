@@ -7,7 +7,6 @@
     <title>Home | Blockchain Evidence</title>
     <meta name="description"
         content="Professional blockchain evidence management for law enforcement, forensic analysts, and legal professionals.">
-    <link rel="stylesheet" href="loading-screen.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="faq-hover-effects.css">
@@ -17,7 +16,6 @@
     <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
-    <script src="loading-screen.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="config.js"></script>
     <script src="networks.js"></script>
@@ -36,75 +34,6 @@
 </head>
 
 <body>
-    <!-- Loading Screen  -->
-    <div id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Application loading">
-        <div class="loading-container">
-            <div class="blockchain-visualization">
-                <div class="chain-line"></div>
-                <div class="block" data-block="1">
-                    <div class="block-content">E</div>
-                    <div class="block-hash" aria-hidden="true">0x8a3f...</div>
-                </div>
-                <div class="block" data-block="2">
-                    <div class="block-content">V</div>
-                    <div class="block-hash">0x4c92...</div>
-                </div>
-                <div class="block" data-block="3">
-                    <div class="block-content">I</div>
-                    <div class="block-hash">0x7b1d...</div>
-                </div>
-                <div class="block" data-block="4">
-                    <div class="block-content">D</div>
-                    <div class="block-hash">0xf3a8...</div>
-                </div>
-            </div>
-
-            <!-- Main Loading Content -->
-            <div class="loading-content">
-                <div class="logo-container">
-                    <div class="main-logo">
-                        <span class="logo-text">EVID</span>
-                        <span class="logo-highlight">-DGC</span>
-                    </div>
-                    <div class="logo-subtitle">Digital Evidence Chain</div>
-                </div>
-
-                <!-- Progress Bar with Digital Evidence Theme -->
-                <div class="progress-container">
-                    <div class="progress-info">
-                        <span class="progress-text">Initializing Secure Chain</span>
-                        <span class="progress-percentage">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                        <div class="progress-grid"></div>
-                    </div>
-                    <div class="progress-status">
-                        <span class="status-icon">🔒</span>
-                        <span class="status-text">Verifying Integrity...</span>
-                    </div>
-                </div>
-
-                <!-- Loading Message Cycle -->
-                <div class="loading-messages">
-                    <div class="message active">Establishing Secure Connection...</div>
-                    <div class="message">Validating Chain of Custody...</div>
-                    <div class="message">Loading Digital Artifacts...</div>
-                    <div class="message">Applying Access Controls...</div>
-                    <div class="message">Generating Audit Logs...</div>
-                </div>
-
-                <!-- Digital Signature -->
-                <div class="signature">
-                    <div class="signature-line"></div>
-                    <div class="signature-text">Immutable • Verifiable • Secure</div>
-                </div>
-            </div>
-
-            <!-- Glitch Effect Overlay -->
-            <div class="glitch-overlay"></div>
-        </div>
-    </div>
 
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -924,19 +853,8 @@
                     }
                 }
 
-                // This tells loading-screen.js to finish the progress bar and fade out
-                if (typeof window.completeLoading === 'function') {
-                    window.completeLoading();
-                }
-
             } catch (error) {
                 console.error('Initialization error:', error);
-
-                // Ensure the loading screen disappears even if the app crashes, 
-                // so the user isn't stuck looking at a loading bar forever.
-                if (typeof window.completeLoading === 'function') {
-                    window.completeLoading();
-                }
             }
         });
     </script>
