@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="faq-hover-effects.css">
     <link rel="stylesheet" href="password-security.css">
+    <link rel="stylesheet" href="homepage.css">
 
     <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
     <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
@@ -59,75 +60,448 @@
     <div class="container" id="main-content">
         <!-- Hero Section -->
         <div class="hero-section" id="home">
-            <div class="hero-content">
-                <div class="hero-icon">
-                    <img src="logo-32x32.png" alt="Logo" class="hero-logo">
+            <div class="bg-environment">
+                <div class="bg-gradient-sphere bg-sphere-1"></div>
+                <div class="bg-gradient-sphere bg-sphere-2"></div>
+                <div class="bg-gradient-sphere bg-sphere-3"></div>
+                <div class="bg-grid"></div>
+                <div class="bg-circuit"></div>
+                <div class="bg-nodes">
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
                 </div>
-                <h1>Blockchain Evidence Management System</h1>
-                <p class="hero-subtitle">Blockchain Evidence Management System</p>
-                <p class="hero-description">Secure, transparent, and immutable evidence management for law enforcement
-                    and legal professionals.</p>
+                <div class="bg-wave"></div>
+            </div>
+
+            <div class="hero-inner">
+                <div class="hero-left">
+                    <div class="hero-badge">Digital Evidence Management</div>
+                    <h1>Blockchain <span class="text-highlight">Evidence</span><br>Management System</h1>
+                    <p class="hero-sub">
+                        Tamper-proof digital evidence management powered by blockchain, SHA-256 hashing, IPFS,
+                        immutable audit trails, and secure chain of custody&mdash;built for law enforcement,
+                        forensic laboratories, and courts.
+                    </p>
+                    <div class="hero-cta">
+                        <button class="btn-hero-primary" onclick="scrollToSection('login-options')">
+                            <i data-lucide="shield"></i>
+                            Access Dashboard
+                        </button>
+                        <button class="btn-hero-secondary" onclick="scrollToSection('how-it-works')">
+                            <i data-lucide="play-circle"></i>
+                            See How It Works
+                        </button>
+                    </div>
+                    <div class="hero-trust">
+                        <div class="hero-trust-avatars">
+                            <span>LE</span>
+                            <span>FA</span>
+                            <span>CO</span>
+                            <span>AM</span>
+                        </div>
+                        <div class="hero-trust-text">
+                            Trusted by <strong>Law Enforcement</strong> &amp; <strong>Forensic Experts</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-center">
+                    <div class="evidence-vault">
+                        <div class="vault-glow"></div>
+                        <div class="vault-glow-ring"></div>
+                        <div class="vault-glow-ring"></div>
+                        <div class="vault-hash-tag">0x8a3f...SHA-256</div>
+                        <div class="vault-hash-tag">0x4c92...IPFS</div>
+                        <div class="vault-hash-tag">0x7b1d...BLOCK</div>
+                        <div class="vault-hash-tag">0xf3a8...CHAIN</div>
+                        <div class="vault-cube-container">
+                            <div class="vault-cube">
+                                <div class="cube-face front"><i data-lucide="shield"></i></div>
+                                <div class="cube-face back"><i data-lucide="lock"></i></div>
+                                <div class="cube-face right"><i data-lucide="file-text"></i></div>
+                                <div class="cube-face left"><i data-lucide="hash"></i></div>
+                                <div class="cube-face top"><i data-lucide="link"></i></div>
+                                <div class="cube-face bottom"><i data-lucide="check-circle"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-right">
+                    <div class="journey-timeline">
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">01</span>
+                                <h4>Collect Evidence</h4>
+                            </div>
+                            <p>Crime scene evidence is securely captured</p>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">02</span>
+                                <h4>Generate SHA-256 Hash</h4>
+                            </div>
+                            <p>Unique digital fingerprint created</p>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">03</span>
+                                <h4>Store on IPFS</h4>
+                            </div>
+                            <p>Decentralized secure storage</p>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">04</span>
+                                <h4>Record on Blockchain</h4>
+                            </div>
+                            <p>Immutable verification record</p>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">05</span>
+                                <h4>Maintain Chain of Custody</h4>
+                            </div>
+                            <p>Every action permanently logged</p>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-header">
+                                <span class="step-num">06</span>
+                                <h4>Court Verification</h4>
+                            </div>
+                            <p>Integrity verified instantly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Strip -->
+        <div class="feature-strip">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i data-lucide="shield-check"></i>
+                    <h4>Tamper Proof</h4>
+                    <p>Immutable blockchain verification</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="fingerprint"></i>
+                    <h4>SHA-256 Integrity</h4>
+                    <p>Cryptographic hash verification</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="link"></i>
+                    <h4>Blockchain Verification</h4>
+                    <p>Polygon network validation</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="database"></i>
+                    <h4>IPFS Storage</h4>
+                    <p>Decentralized file storage</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="git-branch"></i>
+                    <h4>Chain of Custody</h4>
+                    <p>Complete audit trail</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="file-check"></i>
+                    <h4>Court Ready Reports</h4>
+                    <p>Admissible evidence docs</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="metrics-section">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-number" id="metricEvidence">12,847</div>
+                    <div class="metric-label">Evidence Uploaded</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricCases">3,421</div>
+                    <div class="metric-label">Cases Registered</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricVerified">99.97%</div>
+                    <div class="metric-label">Integrity Verified</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricRecords">48,256</div>
+                    <div class="metric-label">Blockchain Records</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricUsers">847</div>
+                    <div class="metric-label">Authorized Users</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricRequests">6,193</div>
+                    <div class="metric-label">Verification Requests</div>
+                </div>
             </div>
         </div>
 
         <!-- How It Works Section -->
         <div class="how-it-works-section" id="how-it-works">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="workflow"></i>
-                    </div>
-                    <h2>How It Works</h2>
-                    <p>Simple 4-step process to secure your evidence</p>
+
+            <!-- Section Hero -->
+            <div class="hiw-hero">
+                <div class="hiw-badge">Evidence Lifecycle</div>
+                <h2>How Digital Evidence Moves<br>Through <span>EVID-DGC</span></h2>
+                <p>Follow the complete lifecycle of digital evidence&mdash;from collection to courtroom&mdash;secured with blockchain, SHA-256 hashing, IPFS storage, immutable chain of custody, and role-based access control.</p>
+                <div class="hiw-visual">
+                    <div class="hiw-visual-item"><i data-lucide="search"></i> Collect</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="fingerprint"></i> Hash</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="database"></i> Store</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="link"></i> Verify</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="file-check"></i> Report</div>
                 </div>
-                <div class="steps-container">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <div class="step-icon">
-                            <i data-lucide="wallet"></i>
-                        </div>
-                        <h3>Connect MetaMask</h3>
-                        <p>Securely connect your MetaMask wallet for blockchain authentication</p>
+            </div>
+
+            <!-- Interactive Workflow Timeline -->
+            <div class="workflow-section">
+                <div class="workflow-timeline" id="workflowTimeline">
+                    <div class="workflow-node active" data-role="investigator">
+                        <div class="workflow-node-circle"><i data-lucide="search"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Investigator</div>
                     </div>
-                    <div class="step-arrow">
-                        <i data-lucide="arrow-right"></i>
+                    <div class="workflow-node" data-role="custodian">
+                        <div class="workflow-node-circle"><i data-lucide="cloud"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Cloud Custodian</div>
                     </div>
-                    <div class="step-item">
-                        <div class="step-number">2</div>
-                        <div class="step-icon">
-                            <i data-lucide="user-check"></i>
-                        </div>
-                        <h3>Select Your Role</h3>
-                        <p>Choose from 7 specialized roles: Investigator, Analyst, Legal, etc.</p>
+                    <div class="workflow-node" data-role="analyst">
+                        <div class="workflow-node-circle"><i data-lucide="microscope"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Forensic Analyst</div>
                     </div>
-                    <div class="step-arrow">
-                        <i data-lucide="arrow-right"></i>
+                    <div class="workflow-node" data-role="legal">
+                        <div class="workflow-node-circle"><i data-lucide="scale"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Legal Professional</div>
                     </div>
-                    <div class="step-item">
-                        <div class="step-number">3</div>
-                        <div class="step-icon">
-                            <i data-lucide="upload"></i>
-                        </div>
-                        <h3>Add Evidence</h3>
-                        <p>Upload and verify digital evidence with blockchain security</p>
+                    <div class="workflow-node" data-role="court">
+                        <div class="workflow-node-circle"><i data-lucide="gavel"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Court Official</div>
                     </div>
-                    <div class="step-arrow">
-                        <i data-lucide="arrow-right"></i>
+                    <div class="workflow-node" data-role="manager">
+                        <div class="workflow-node-circle"><i data-lucide="archive"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Evidence Manager</div>
                     </div>
-                    <div class="step-item">
-                        <div class="step-number">4</div>
-                        <div class="step-icon">
-                            <i data-lucide="file-text"></i>
-                        </div>
-                        <h3>Generate Report</h3>
-                        <p>Create court-ready chain of custody reports instantly</p>
+                    <div class="workflow-node" data-role="auditor">
+                        <div class="workflow-node-circle"><i data-lucide="clipboard-check"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Auditor</div>
+                    </div>
+                    <div class="workflow-node" data-role="admin">
+                        <div class="workflow-node-circle"><i data-lucide="shield"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Administrator</div>
                     </div>
                 </div>
-                <div class="cta-container">
-                    <button onclick="scrollToSection('login-options')" class="btn btn-primary btn-lg">
-                        <i data-lucide="play"></i>
-                        Start Using EVID-DGC
-                    </button>
+
+                <!-- Role Details Card -->
+                <div class="role-details-card" id="roleDetailsCard">
+                    <div class="role-details-header">
+                        <div class="role-details-icon"><i data-lucide="search" id="roleIcon"></i></div>
+                        <div class="role-details-title">
+                            <h3 id="roleTitle">Investigator</h3>
+                            <p class="role-mission" id="roleMission">Collect and preserve digital evidence from crime scenes and secure it for blockchain verification</p>
+                        </div>
+                    </div>
+                    <div class="role-details-grid">
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="check-circle"></i> Responsibilities</h4>
+                            <ul id="roleResponsibilities">
+                                <li>Secure crime scene digital evidence collection</li>
+                                <li>Create and manage investigation cases</li>
+                                <li>Upload evidence with metadata and timestamps</li>
+                                <li>Initiate chain of custody records</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="unlock"></i> Allowed Actions</h4>
+                            <ul id="roleAllowed">
+                                <li>Create new case files</li>
+                                <li>Upload evidence files</li>
+                                <li>Add case notes and annotations</li>
+                                <li>View assigned case evidence</li>
+                                <li>Request forensic analysis</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block restricted">
+                            <h4><i data-lucide="lock"></i> Restricted Actions</h4>
+                            <ul id="roleRestricted">
+                                <li>Modify blockchain records</li>
+                                <li>Delete uploaded evidence</li>
+                                <li>Access other investigator cases</li>
+                                <li>Approve court submissions</li>
+                                <li>Modify system configurations</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="link"></i> Blockchain Records</h4>
+                            <div class="role-detail-tags" id="roleRecords">
+                                <span class="role-detail-tag">Case Created</span>
+                                <span class="role-detail-tag">Evidence Uploaded</span>
+                                <span class="role-detail-tag">Chain of Custody Initiated</span>
+                                <span class="role-detail-tag">Hash Generated</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="role-example">
+                        <i data-lucide="activity"></i>
+                        <span id="roleExample">"An investigator arrives at a crime scene, photographs evidence using a secure device, uploads the images to the system, and a SHA-256 hash is immediately generated and recorded on the blockchain."</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evidence Journey -->
+            <div class="journey-section">
+                <h3>Evidence Journey</h3>
+                <p>The complete technical flow from crime scene to courtroom</p>
+                <div class="journey-flow">
+                    <div class="journey-step"><span class="step-index">01</span><i data-lucide="map-pin"></i><span>Crime Scene</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">02</span><i data-lucide="folder-plus"></i><span>Case Created</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">03</span><i data-lucide="upload"></i><span>Evidence Uploaded</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">04</span><i data-lucide="fingerprint"></i><span>SHA-256 Generated</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">05</span><i data-lucide="database"></i><span>Stored in IPFS</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">06</span><i data-lucide="link"></i><span>Blockchain Transaction</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">07</span><i data-lucide="git-branch"></i><span>Chain of Custody</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">08</span><i data-lucide="microscope"></i><span>Forensic Analysis</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">09</span><i data-lucide="scale"></i><span>Legal Review</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">10</span><i data-lucide="gavel"></i><span>Court Verification</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">11</span><i data-lucide="file-check"></i><span>Court Ready Report</span></div>
+                </div>
+            </div>
+
+            <!-- Security Layer -->
+            <div class="security-section">
+                <h3>Security &amp; Integrity Layer</h3>
+                <p>Every action is protected by multiple security layers</p>
+                <div class="security-grid">
+                    <div class="security-card">
+                        <i data-lucide="fingerprint"></i>
+                        <h4>SHA-256</h4>
+                        <p>Cryptographic hashing creates a unique digital fingerprint for every piece of evidence</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="database"></i>
+                        <h4>IPFS</h4>
+                        <p>Decentralized storage ensures evidence is distributed and cannot be lost or altered</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="link"></i>
+                        <h4>Polygon Blockchain</h4>
+                        <p>Immutable ledger records every transaction with timestamp and validator confirmation</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="activity"></i>
+                        <h4>Audit Trail</h4>
+                        <p>Every action is logged with user identity, timestamp, and cryptographic signature</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="git-branch"></i>
+                        <h4>Chain of Custody</h4>
+                        <p>Complete traceability of evidence movement with handover verification at each step</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="shield"></i>
+                        <h4>Role Based Access</h4>
+                        <p>Granular permissions ensure users can only access what their role authorizes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transparency Module -->
+            <div class="transparency-section">
+                <div class="transparency-card">
+                    <div class="transparency-left">
+                        <div class="t-icon"><i data-lucide="eye"></i></div>
+                        <h3>Public Transparency</h3>
+                        <p>The Public Viewer role allows journalists, oversight committees, and the public to verify evidence integrity without accessing sensitive case details.</p>
+                    </div>
+                    <div class="transparency-right">
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>Verify Evidence Exists</strong>
+                                <p>Confirm that evidence has been registered on the blockchain with a valid hash</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>View Redacted Case Info</strong>
+                                <p>Access case metadata without sensitive content or personal identifiers</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>Audit Chain of Custody</strong>
+                                <p>Review the complete evidence movement log to ensure proper handling</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="x-circle"></i>
+                            <div>
+                                <strong>Cannot Modify Evidence</strong>
+                                <p>Read-only access ensures the public cannot alter or interfere with evidence</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Summary -->
+            <div class="final-summary">
+                <blockquote>&ldquo;No single user can create, modify, approve, and hide <span>evidence</span>.&rdquo;</blockquote>
+                <div class="pillars-grid">
+                    <div class="pillar-card">
+                        <i data-lucide="shield-check"></i>
+                        <h4>Integrity</h4>
+                        <p>Evidence cannot be tampered with once recorded on the blockchain</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="users"></i>
+                        <h4>Accountability</h4>
+                        <p>Every action is cryptographically signed and permanently logged</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="eye"></i>
+                        <h4>Transparency</h4>
+                        <p>Public verifiability without compromising sensitive case data</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="file-check"></i>
+                        <h4>Court Readiness</h4>
+                        <p>All evidence is formatted and verified for admissibility in court</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -396,47 +770,259 @@
 
         <!-- Documentation Section -->
         <div class="documentation-section" id="documentation">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="book-open"></i>
-                    </div>
-                    <h2>Documentation</h2>
-                    <p>Complete guides and resources</p>
+
+            <!-- Hero -->
+            <div class="doc-hero">
+                <div class="doc-hero-left">
+                    <div class="doc-badge">Knowledge Center</div>
+                    <h2>Documentation <span>Center</span></h2>
+                    <p>Everything you need to understand, deploy, operate, and verify EVID-DGC&mdash;from architecture to courtroom workflows.</p>
                 </div>
-                <div class="doc-grid">
-                    <div class="doc-item">
-                        <div class="doc-icon">
-                            <i data-lucide="rocket"></i>
+                <div class="doc-hero-right">
+                    <div class="doc-hero-visual">
+                        <div class="doc-hero-visual-item">
+                            <i data-lucide="file-text"></i>
+                            <span>Documents</span>
                         </div>
-                        <h3>Quick Start</h3>
-                        <p>Get up and running in minutes</p>
-                        <a href="quickstart.html" class="btn btn-sm btn-outline">Read Guide</a>
+                        <div class="doc-hero-visual-connector"><i data-lucide="chevron-right"></i></div>
+                        <div class="doc-hero-visual-item">
+                            <i data-lucide="link"></i>
+                            <span>Blockchain</span>
+                        </div>
+                        <div class="doc-hero-visual-connector"><i data-lucide="chevron-right"></i></div>
+                        <div class="doc-hero-visual-item">
+                            <i data-lucide="shield"></i>
+                            <span>Security</span>
+                        </div>
+                        <div class="doc-hero-visual-connector"><i data-lucide="chevron-right"></i></div>
+                        <div class="doc-hero-visual-item">
+                            <i data-lucide="folder"></i>
+                            <span>Evidence</span>
+                        </div>
                     </div>
-                    <div class="doc-item">
-                        <div class="doc-icon">
-                            <i data-lucide="users"></i>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="doc-search">
+                <div class="doc-search-inner">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search guides, APIs, architecture, workflows..." aria-label="Search documentation">
+                    <span class="doc-search-hint"><i data-lucide="command"></i>K</span>
+                </div>
+            </div>
+
+            <!-- Quick Access Grid -->
+            <div class="doc-quick-grid">
+                <a href="quickstart.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="rocket"></i></div>
+                        <h3>Getting Started</h3>
+                    </div>
+                    <ul>
+                        <li>Overview</li>
+                        <li>Project Introduction</li>
+                        <li>Quick Setup</li>
+                        <li>Installation</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 4 guides</div>
+                </a>
+                <a href="troubleshooting.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="server"></i></div>
+                        <h3>System Architecture</h3>
+                    </div>
+                    <ul>
+                        <li>Frontend</li>
+                        <li>Backend</li>
+                        <li>Blockchain</li>
+                        <li>Database</li>
+                        <li>IPFS</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 5 guides</div>
+                </a>
+                <a href="user-roles.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="users"></i></div>
                         <h3>User Roles</h3>
-                        <p>Understanding permissions and access</p>
-                        <a href="user-roles.html" class="btn btn-sm btn-outline">Learn More</a>
                     </div>
-                    <div class="doc-item">
-                        <div class="doc-icon">
-                            <i data-lucide="server"></i>
-                        </div>
+                    <ul>
+                        <li>All Roles</li>
+                        <li>Permissions</li>
+                        <li>Responsibilities</li>
+                        <li>Evidence Workflow</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 4 guides</div>
+                </a>
+                <a href="api-reference.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="code"></i></div>
                         <h3>API Reference</h3>
-                        <p>Complete API documentation</p>
-                        <a href="api-reference.html" class="btn btn-sm btn-outline">View API</a>
                     </div>
-                    <div class="doc-item">
-                        <div class="doc-icon">
-                            <i data-lucide="wrench"></i>
-                        </div>
+                    <ul>
+                        <li>Authentication</li>
+                        <li>Endpoints</li>
+                        <li>Responses</li>
+                        <li>Examples</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 4 guides</div>
+                </a>
+                <a href="api-reference.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="shield"></i></div>
+                        <h3>Security &amp; Blockchain</h3>
+                    </div>
+                    <ul>
+                        <li>SHA-256</li>
+                        <li>Polygon</li>
+                        <li>IPFS</li>
+                        <li>Audit Logs</li>
+                        <li>Chain of Custody</li>
+                        <li>Verification</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 6 guides</div>
+                </a>
+                <a href="troubleshooting.html" class="doc-card">
+                    <div class="doc-card-header">
+                        <div class="dc-icon"><i data-lucide="wrench"></i></div>
                         <h3>Troubleshooting</h3>
-                        <p>Common issues and solutions</p>
-                        <a href="troubleshooting.html" class="btn btn-sm btn-outline">Get Help</a>
                     </div>
+                    <ul>
+                        <li>Common Issues</li>
+                        <li>FAQs</li>
+                        <li>Support</li>
+                        <li>Known Problems</li>
+                    </ul>
+                    <div class="doc-card-count"><i data-lucide="file-text"></i> 4 guides</div>
+                </a>
+            </div>
+
+            <!-- Featured + Sidebar -->
+            <div class="doc-featured-row">
+                <div class="doc-featured-card">
+                    <div class="fc-badge">Featured Guide</div>
+                    <h3>Understanding the Evidence Lifecycle</h3>
+                    <div class="doc-featured-flow">
+                        <span class="ff-step"><i data-lucide="folder-plus"></i> Case Creation</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="upload"></i> Evidence Upload</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="fingerprint"></i> SHA-256</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="database"></i> IPFS</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="link"></i> Blockchain</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="activity"></i> Audit Trail</span>
+                        <span class="ff-arrow"><i data-lucide="chevron-right"></i></span>
+                        <span class="ff-step"><i data-lucide="gavel"></i> Court Verification</span>
+                    </div>
+                    <a href="quickstart.html" class="btn-guide">
+                        <i data-lucide="book-open"></i>
+                        Read Guide
+                    </a>
+                </div>
+                <div class="doc-sidebar">
+                    <div class="doc-widget">
+                        <div class="doc-widget-header">
+                            <i data-lucide="info"></i>
+                            <h4>Latest Update</h4>
+                        </div>
+                        <div class="doc-widget-content">
+                            <div class="stat-row">
+                                <span class="label">Version</span>
+                                <span class="value">v2.0.0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Released</span>
+                                <span class="value">Mar 2026</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Status</span>
+                                <span class="value"><span class="status-dot"></span>Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-widget">
+                        <div class="doc-widget-header">
+                            <i data-lucide="book-open"></i>
+                            <h4>Documentation</h4>
+                        </div>
+                        <div class="doc-widget-content">
+                            <div class="stat-row">
+                                <span class="label">Guides</span>
+                                <span class="value">27</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">APIs</span>
+                                <span class="value">12</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Progress</span>
+                                <span class="value">94%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-widget">
+                        <div class="doc-widget-header">
+                            <i data-lucide="link"></i>
+                            <h4>Blockchain</h4>
+                        </div>
+                        <div class="doc-widget-content">
+                            <div class="stat-row">
+                                <span class="label">Network</span>
+                                <span class="value">Polygon</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Contract</span>
+                                <span class="value">Verified</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="label">Chain ID</span>
+                                <span class="value">137</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Resources -->
+            <div class="doc-resources">
+                <div class="doc-resource-panel">
+                    <div class="rp-header">
+                        <i data-lucide="terminal"></i>
+                        <h4>Developer Resources</h4>
+                    </div>
+                    <ul>
+                        <li>Smart Contract Documentation</li>
+                        <li>REST APIs</li>
+                        <li>SDK</li>
+                        <li>Database Schema</li>
+                    </ul>
+                </div>
+                <div class="doc-resource-panel">
+                    <div class="rp-header">
+                        <i data-lucide="scale"></i>
+                        <h4>Legal Resources</h4>
+                    </div>
+                    <ul>
+                        <li>Court Reports</li>
+                        <li>Chain of Custody</li>
+                        <li>Evidence Standards</li>
+                        <li>Compliance</li>
+                    </ul>
+                </div>
+                <div class="doc-resource-panel">
+                    <div class="rp-header">
+                        <i data-lucide="graduation-cap"></i>
+                        <h4>Learning Resources</h4>
+                    </div>
+                    <ul>
+                        <li>Video Tutorials</li>
+                        <li>Interactive Guides</li>
+                        <li>Examples</li>
+                        <li>Sample Cases</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -827,6 +1413,118 @@
 
 
     <script src="footer.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var roleData = {
+            investigator: {
+                icon: 'search', title: 'Investigator',
+                mission: 'Collect and preserve digital evidence from crime scenes and secure it for blockchain verification',
+                responsibilities: ['Secure crime scene digital evidence collection', 'Create and manage investigation cases', 'Upload evidence with metadata and timestamps', 'Initiate chain of custody records'],
+                allowed: ['Create new case files', 'Upload evidence files', 'Add case notes and annotations', 'View assigned case evidence', 'Request forensic analysis'],
+                restricted: ['Modify blockchain records', 'Delete uploaded evidence', 'Access other investigator cases', 'Approve court submissions', 'Modify system configurations'],
+                records: ['Case Created', 'Evidence Uploaded', 'Chain of Custody Initiated', 'Hash Generated'],
+                example: '"An investigator arrives at a crime scene, photographs evidence using a secure device, uploads the images to the system, and a SHA-256 hash is immediately generated and recorded on the blockchain."'
+            },
+            custodian: {
+                icon: 'cloud', title: 'Cloud Custodian',
+                mission: 'Manage secure encrypted transfer and storage of digital evidence between authorized roles',
+                responsibilities: ['Securely transfer evidence between custody holders', 'Verify encryption integrity during handover', 'Maintain evidence availability and redundancy', 'Log all transfer events on blockchain'],
+                allowed: ['Transfer evidence to authorized roles', 'Verify file integrity during transfer', 'Generate transfer receipts', 'Monitor storage health', 'Flag anomalies in access patterns'],
+                restricted: ['Open or view evidence content', 'Modify evidence metadata', 'Delete evidence from storage', 'Grant access to unauthorized users', 'Bypass encryption protocols'],
+                records: ['Evidence Transferred', 'Custody Handover Logged', 'Integrity Check Passed', 'Storage Location Updated'],
+                example: '"After an investigator uploads evidence, the Cloud Custodian ensures the encrypted file is securely transmitted to IPFS storage with a verifiable integrity check recorded on the blockchain."'
+            },
+            analyst: {
+                icon: 'microscope', title: 'Forensic Analyst',
+                mission: 'Perform technical examination of digital evidence and generate forensic reports with blockchain verification',
+                responsibilities: ['Examine digital evidence using forensic tools', 'Generate cryptographic hash verification reports', 'Document analysis methodology and findings', 'Create court-ready forensic reports'],
+                allowed: ['Access assigned evidence for analysis', 'Run forensic analysis tools', 'Generate analysis reports', 'Add technical findings to case record', 'Request additional evidence items'],
+                restricted: ['Modify original evidence files', 'Delete case records', 'Access evidence outside assigned cases', 'Share findings without authorization', 'Skip chain of custody procedures'],
+                records: ['Analysis Started', 'Tool Execution Logged', 'Hash Verified', 'Forensic Report Generated'],
+                example: '"A forensic analyst examines a hard drive image using validated tools, documenting each step. The analysis log and hash verification are recorded on the blockchain for court admissibility."'
+            },
+            legal: {
+                icon: 'scale', title: 'Legal Professional',
+                mission: 'Review evidence and case files to ensure legal compliance and prepare court submissions',
+                responsibilities: ['Review evidence for legal compliance', 'Prepare legal documents and motions', 'Ensure chain of custody meets evidentiary standards', 'Coordinate with court officials for submissions'],
+                allowed: ['Review case evidence and analysis', 'Prepare legal submissions', 'Request additional forensic analysis', 'Communicate with court officials', 'Mark evidence for court presentation'],
+                restricted: ['Modify or delete evidence', 'Access raw forensic data', 'Override chain of custody', 'Make changes to blockchain records', 'Exceed authorized case access'],
+                records: ['Legal Review Initiated', 'Compliance Check Passed', 'Court Submission Prepared', 'Evidence Marked for Trial'],
+                example: '"A legal professional reviews the chain of custody documentation and forensic reports, verifies that all evidence handling meets legal standards, and prepares the submission package for court."'
+            },
+            court: {
+                icon: 'gavel', title: 'Court Official',
+                mission: 'Verify evidence integrity for court proceedings and certify evidence admissibility',
+                responsibilities: ['Authenticate evidence blockchain records', 'Verify chain of custody completeness', 'Certify evidence for court proceedings', 'Maintain court evidence docket'],
+                allowed: ['Verify evidence blockchain records', 'View complete chain of custody', 'Certify evidence admissibility', 'Request additional verification', 'Docket evidence for proceedings'],
+                restricted: ['Modify evidence or case records', 'Access investigative notes', 'Delete court records', 'Share sealed evidence publicly', 'Alter blockchain timestamps'],
+                records: ['Evidence Authenticated', 'Chain of Custody Verified', 'Admissibility Certified', 'Court Docket Updated'],
+                example: '"A judge or court clerk accesses the system to verify the blockchain timestamp and hash of a piece of evidence, confirming it has not been tampered with since the moment of collection."'
+            },
+            manager: {
+                icon: 'archive', title: 'Evidence Manager',
+                mission: 'Oversee the complete evidence lifecycle, storage, retention, and chain of custody across all cases',
+                responsibilities: ['Manage evidence storage and retention policies', 'Monitor chain of custody records', 'Coordinate evidence access requests', 'Ensure compliance with evidence handling standards'],
+                allowed: ['View all case evidence records', 'Manage retention schedules', 'Generate system-wide audit reports', 'Coordinate evidence transfers', 'Monitor storage capacity'],
+                restricted: ['Modify or delete evidence', 'Access evidence content without authorization', 'Override role permissions', 'Skip chain of custody steps', 'Delete blockchain records'],
+                records: ['Retention Policy Applied', 'Storage Audit Completed', 'Evidence Lifecycle Updated', 'Compliance Report Generated'],
+                example: '"The Evidence Manager runs a quarterly audit of all stored evidence, verifying that retention policies are followed and that no evidence has been accessed without proper authorization."'
+            },
+            auditor: {
+                icon: 'clipboard-check', title: 'Auditor',
+                mission: 'Conduct independent audits of the system to ensure compliance with forensic standards and regulations',
+                responsibilities: ['Audit blockchain transaction logs', 'Verify compliance with ISO/NIST standards', 'Inspect chain of custody records', 'Generate compliance reports'],
+                allowed: ['View all system logs and records', 'Verify blockchain transaction integrity', 'Generate compliance reports', 'Flag suspicious activities', 'Review access logs'],
+                restricted: ['Modify system configuration', 'Access evidence content', 'Change user permissions', 'Delete audit records', 'Interfere with active cases'],
+                records: ['Audit Initiated', 'Transaction Log Verified', 'Compliance Checked', 'Audit Report Filed'],
+                example: '"An external auditor reviews the blockchain ledger to verify that every evidence transaction matches the chain of custody records, ensuring full compliance with digital forensics standards."'
+            },
+            admin: {
+                icon: 'shield', title: 'Administrator',
+                mission: 'Manage system configuration, user roles, permissions, and ensure platform security and availability',
+                responsibilities: ['Configure system settings and policies', 'Manage user accounts and role assignments', 'Monitor system security and performance', 'Coordinate emergency response procedures'],
+                allowed: ['Configure system settings', 'Manage user roles and permissions', 'View all system logs', 'Generate platform-wide reports', 'Perform system maintenance'],
+                restricted: ['Cannot modify blockchain records', 'Cannot alter evidence after upload', 'Cannot override chain of custody', 'Cannot access evidence content without role', 'Cannot delete audit trail entries'],
+                records: ['User Role Assigned', 'System Configuration Updated', 'Security Policy Applied', 'Maintenance Logged'],
+                example: '"An administrator configures a new investigator role, sets their permissions, and assigns them to a case. Every configuration change is recorded immutably on the blockchain."'
+            }
+        };
+
+        function updateRoleCard(roleId) {
+            var data = roleData[roleId];
+            if (!data) return;
+            var card = document.getElementById('roleDetailsCard');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(10px)';
+            setTimeout(function () {
+                document.getElementById('roleIcon').setAttribute('data-lucide', data.icon);
+                document.getElementById('roleTitle').textContent = data.title;
+                document.getElementById('roleMission').textContent = data.mission;
+                var respEl = document.getElementById('roleResponsibilities');
+                respEl.innerHTML = data.responsibilities.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var allowEl = document.getElementById('roleAllowed');
+                allowEl.innerHTML = data.allowed.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var restrictEl = document.getElementById('roleRestricted');
+                restrictEl.innerHTML = data.restricted.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var recEl = document.getElementById('roleRecords');
+                recEl.innerHTML = data.records.map(function (r) { return '<span class="role-detail-tag">' + r + '</span>'; }).join('');
+                document.getElementById('roleExample').textContent = data.example;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 200);
+        }
+
+        var nodes = document.querySelectorAll('.workflow-node');
+        nodes.forEach(function (node) {
+            node.addEventListener('click', function () {
+                nodes.forEach(function (n) { n.classList.remove('active'); });
+                this.classList.add('active');
+                updateRoleCard(this.getAttribute('data-role'));
+            });
+        });
+    });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM loaded, initializing application...');
