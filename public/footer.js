@@ -47,7 +47,7 @@ class FooterManager {
                     <ul>
                         <li><a href="index.html#how-it-works">How It Works</a></li>
                         <li><a href="index.html#documentation">Documentation</a></li>
-                        <li><a href="index.html#faq">FAQ</a></li>
+                        <li><a href="index.html#faq">Q&A</a></li>
                         <li><a href="index.html#contact">Contact</a></li>
                     </ul>
                 </div>
