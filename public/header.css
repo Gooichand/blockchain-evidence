@@ -66,6 +66,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  position: relative;
 }
 
 .dock-link {
@@ -78,9 +79,11 @@
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: color 0.25s ease, background 0.25s ease, transform 0.25s ease;
   white-space: nowrap;
   position: relative;
+  z-index: 2;
+  cursor: pointer;
 }
 
 .dock-link:hover {
@@ -88,9 +91,62 @@
   color: var(--dock-text-hover);
 }
 
+.dock-link.active {
+  color: var(--dock-text-hover);
+  font-weight: 600;
+}
+
+.dock-link.active i {
+  color: var(--dock-primary);
+  opacity: 1;
+}
+
 .dock-link i {
   width: 16px;
   height: 16px;
+  transition: color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.dock-link:hover i {
+  transform: scale(1.1);
+}
+
+.dock-link.active i {
+  transform: scale(1.1);
+}
+
+/* Sliding Active Indicator */
+.dock-indicator {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(211, 47, 47, 0.06), rgba(211, 47, 47, 0.02));
+  border: 1px solid rgba(211, 47, 47, 0.08);
+  box-shadow:
+    0 0 12px rgba(211, 47, 47, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.25s ease;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.dock-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dock-primary), transparent);
+  border-radius: 2px;
+  opacity: 0.3;
 }
 
 .dock-login-btn {
@@ -110,6 +166,8 @@
   box-shadow: 0 2px 8px rgba(211, 47, 47, 0.25);
   white-space: nowrap;
   font-family: inherit;
+  position: relative;
+  z-index: 2;
 }
 
 .dock-login-btn:hover {
@@ -177,10 +235,19 @@ body {
     display: flex;
   }
 
+  .dock-indicator {
+    display: none;
+  }
+
   .dock-link {
     width: 100%;
     padding: 10px 16px;
     font-size: 0.95rem;
+  }
+
+  .dock-link.active {
+    background: rgba(211, 47, 47, 0.06);
+    border: 1px solid rgba(211, 47, 47, 0.08);
   }
 
   .dock-login-btn {

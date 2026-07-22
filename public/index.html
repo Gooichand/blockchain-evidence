@@ -781,25 +781,247 @@
         </div>
 
         <!-- Career Section -->
-        <div class="contact-section" id="career">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="briefcase"></i>
+        <div class="career-section" id="career">
+            <div class="career-hero">
+                <div class="career-hero-left">
+                    <div class="career-badge">Build the Future of Digital Justice</div>
+                    <h2>Careers at <span class="text-highlight">EVID-DGC</span></h2>
+                    <p class="career-hero-sub">Join us in building the next generation of blockchain-powered digital evidence management for law enforcement, forensic laboratories, and the global justice system.</p>
+                    <div class="career-hero-buttons">
+                        <button class="career-btn-primary" onclick="document.getElementById('career-positions')?.scrollIntoView({behavior:'smooth'})">
+                            <i data-lucide="search"></i> View Open Positions
+                        </button>
+
                     </div>
-                    <h2>Career Opportunities</h2>
-                    <p>Join our team and help shape the future of blockchain evidence management</p>
+                    <div class="career-trust">
+                        <div class="career-trust-item"><i data-lucide="building-2"></i><span>Enterprise Security</span></div>
+                        <div class="career-trust-divider"></div>
+                        <div class="career-trust-item"><i data-lucide="globe"></i><span>4+ Countries</span></div>
+                        <div class="career-trust-divider"></div>
+                        <div class="career-trust-item"><i data-lucide="users"></i><span>20+ Team Members</span></div>
+                    </div>
                 </div>
-                <div class="card-body" style="padding: 2rem; text-align: center;">
-                    <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 1.5rem;">
-                        We are always looking for talented individuals passionate about blockchain technology,
-                        cybersecurity, and digital forensics.
-                    </p>
-                    <p style="color: #9ca3af;">
-                        Career listings will be available soon. Stay tuned for updates.
-                    </p>
+                <div class="career-hero-right">
+                    <div class="career-hero-center">
+                        <div class="career-illustration">
+                            <div class="ci-cube"><i data-lucide="box"></i></div>
+                            <div class="ci-ring ci-ring-1"></div>
+                            <div class="ci-ring ci-ring-2"></div>
+                            <div class="ci-ring ci-ring-3"></div>
+                            <div class="ci-node ci-node-1"><i data-lucide="fingerprint"></i></div>
+                            <div class="ci-node ci-node-2"><i data-lucide="scale"></i></div>
+                            <div class="ci-node ci-node-3"><i data-lucide="shield"></i></div>
+                            <div class="ci-node ci-node-4"><i data-lucide="folder"></i></div>
+                            <div class="ci-node ci-node-5"><i data-lucide="link"></i></div>
+                            <div class="ci-particle ci-p-1"></div>
+                            <div class="ci-particle ci-p-2"></div>
+                            <div class="ci-particle ci-p-3"></div>
+                            <div class="ci-particle ci-p-4"></div>
+                            <div class="ci-particle ci-p-5"></div>
+                            <div class="ci-particle ci-p-6"></div>
+                            <div class="ci-particle ci-p-7"></div>
+                            <div class="ci-particle ci-p-8"></div>
+                        </div>
+                    </div>
+                    <div class="career-stats">
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="briefcase"></i></div>
+                            <div class="csc-info"><span class="csc-value">10+</span><span class="csc-label">Open Positions</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="layers"></i></div>
+                            <div class="csc-info"><span class="csc-value">6</span><span class="csc-label">Departments</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="users"></i></div>
+                            <div class="csc-info"><span class="csc-value">20+</span><span class="csc-label">Team Members</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="globe"></i></div>
+                            <div class="csc-info"><span class="csc-value">4</span><span class="csc-label">Countries</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="target"></i></div>
+                            <div class="csc-info"><span class="csc-value">100%</span><span class="csc-label">Mission Driven</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="shield"></i></div>
+                            <div class="csc-info"><span class="csc-value">99.9%</span><span class="csc-label">Uptime</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <div class="career-search-row">
+                <div class="career-search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" class="career-search-input" id="careerSearch" placeholder="Search jobs, roles or skills..." oninput="filterCareerJobs()">
+                </div>
+                <div class="career-filter-chips" id="careerFilterChips">
+                    <button class="career-chip active" data-filter="all">All Departments</button>
+                    <button class="career-chip" data-filter="blockchain">Blockchain</button>
+                    <button class="career-chip" data-filter="security">Cybersecurity</button>
+                    <button class="career-chip" data-filter="forensics">Digital Forensics</button>
+                    <button class="career-chip" data-filter="frontend">Frontend</button>
+                    <button class="career-chip" data-filter="backend">Backend</button>
+                    <button class="career-chip" data-filter="ai">AI/ML</button>
+                    <button class="career-chip" data-filter="internship">Internship</button>
+                    <button class="career-chip" data-filter="remote">Remote</button>
+                    <button class="career-chip" data-filter="hybrid">Hybrid</button>
+                </div>
+            </div>
+
+            <div class="career-positions" id="career-positions">
+                <div class="career-section-header">
+                    <i data-lucide="briefcase"></i>
+                    <h3>Open Positions</h3>
+                    <span class="career-count" id="careerCount">8 roles</span>
+                </div>
+                <div class="career-jobs-grid" id="careerJobsGrid">
+                    <div class="career-job-card" data-dept="blockchain" data-type="remote">
+                        <div class="cjc-icon"><i data-lucide="code-2"></i></div>
+                        <h4>Smart Contract Engineer</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Remote</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Solidity</span><span class="cjc-tag">EVM</span><span class="cjc-tag">Web3.js</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Smart Contract Engineer')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="backend" data-type="remote">
+                        <div class="cjc-icon"><i data-lucide="server"></i></div>
+                        <h4>Backend Developer</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Remote</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Node.js</span><span class="cjc-tag">Rust</span><span class="cjc-tag">PostgreSQL</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Backend Developer')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="security" data-type="hybrid">
+                        <div class="cjc-icon"><i data-lucide="shield"></i></div>
+                        <h4>Cybersecurity Engineer</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Hybrid</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Pen Testing</span><span class="cjc-tag">SIEM</span><span class="cjc-tag">Cryptography</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Cybersecurity Engineer')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="forensics" data-type="on-site">
+                        <div class="cjc-icon"><i data-lucide="search"></i></div>
+                        <h4>Digital Forensics Analyst</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> On-Site</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Forensics</span><span class="cjc-tag">Chain of Custody</span><span class="cjc-tag">Reporting</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Digital Forensics Analyst')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="frontend" data-type="remote">
+                        <div class="cjc-icon"><i data-lucide="code"></i></div>
+                        <h4>Frontend Developer</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Remote</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">React</span><span class="cjc-tag">TypeScript</span><span class="cjc-tag">WebGL</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Frontend Developer')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="ai" data-type="remote">
+                        <div class="cjc-icon"><i data-lucide="brain"></i></div>
+                        <h4>AI Engineer</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Remote</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">TensorFlow</span><span class="cjc-tag">PyTorch</span><span class="cjc-tag">NLP</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for AI Engineer')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="blockchain" data-type="hybrid">
+                        <div class="cjc-icon"><i data-lucide="link"></i></div>
+                        <h4>Blockchain Security Auditor</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Hybrid</span><span><i data-lucide="clock"></i> Full-Time</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Auditing</span><span class="cjc-tag">Smart Contracts</span><span class="cjc-tag">ZKP</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Blockchain Security Auditor')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                    <div class="career-job-card" data-dept="backend" data-type="internship">
+                        <div class="cjc-icon"><i data-lucide="graduation-cap"></i></div>
+                        <h4>Software Engineering Intern</h4>
+                        <div class="cjc-meta"><span><i data-lucide="map-pin"></i> Remote</span><span><i data-lucide="clock"></i> Internship</span></div>
+                        <div class="cjc-tags"><span class="cjc-tag">Python</span><span class="cjc-tag">Blockchain</span><span class="cjc-tag">Learning</span></div>
+                        <button class="cjc-apply" onclick="alert('Application submitted for Software Engineering Intern')">Apply Now <i data-lucide="arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="career-process">
+                <h3>Your Journey to <span class="text-highlight">EVID-DGC</span></h3>
+                <div class="career-process-steps">
+                    <div class="career-process-step">
+                        <div class="cps-number">01</div>
+                        <div class="cps-content"><strong>Apply</strong><span>Submit your application online</span></div>
+                        <div class="cps-arrow"><i data-lucide="chevron-right"></i></div>
+                    </div>
+                    <div class="career-process-step">
+                        <div class="cps-number">02</div>
+                        <div class="cps-content"><strong>Resume Review</strong><span>We review your profile</span></div>
+                        <div class="cps-arrow"><i data-lucide="chevron-right"></i></div>
+                    </div>
+                    <div class="career-process-step">
+                        <div class="cps-number">03</div>
+                        <div class="cps-content"><strong>Technical Assessment</strong><span>Skills evaluation</span></div>
+                        <div class="cps-arrow"><i data-lucide="chevron-right"></i></div>
+                    </div>
+                    <div class="career-process-step">
+                        <div class="cps-number">04</div>
+                        <div class="cps-content"><strong>Interview</strong><span>Meet the team</span></div>
+                        <div class="cps-arrow"><i data-lucide="chevron-right"></i></div>
+                    </div>
+                    <div class="career-process-step">
+                        <div class="cps-number">05</div>
+                        <div class="cps-content"><strong>Offer</strong><span>Receive your offer</span></div>
+                        <div class="cps-arrow"><i data-lucide="chevron-right"></i></div>
+                    </div>
+                    <div class="career-process-step">
+                        <div class="cps-number">06</div>
+                        <div class="cps-content"><strong>Join EVID-DGC</strong><span>Start your journey</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="career-why">
+                <div class="career-why-header">
+                    <i data-lucide="sparkles"></i>
+                    <h3>Why You'll Love Working Here</h3>
+                </div>
+                <div class="career-why-grid">
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="globe"></i></div>
+                        <h4>Impact at Scale</h4>
+                        <p>Your work will power digital justice across borders, securing evidence for millions of cases worldwide.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="cpu"></i></div>
+                        <h4>Cutting-edge Technology</h4>
+                        <p>Work with blockchain, zero-knowledge proofs, IPFS, and advanced cryptographic systems daily.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="book-open"></i></div>
+                        <h4>Continuous Learning</h4>
+                        <p>Annual learning budget, conference sponsorships, and dedicated time for research and certification.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="trending-up"></i></div>
+                        <h4>Career Growth</h4>
+                        <p>Clear career progression paths, mentorship programs, and leadership development opportunities.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="calendar"></i></div>
+                        <h4>Flexible Work Culture</h4>
+                        <p>Remote-first culture with async communication, flexible hours, and results-driven performance.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="users"></i></div>
+                        <h4>Mentorship</h4>
+                        <p>Learn from industry veterans in blockchain security, digital forensics, and distributed systems.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="flask"></i></div>
+                        <h4>Research Opportunities</h4>
+                        <p>Dedicated R&D time to explore emerging technologies and publish findings in leading journals.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="github"></i></div>
+                        <h4>Open Source Contributions</h4>
+                        <p>We encourage and sponsor contributions to open source projects that align with our mission.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="height: 60px;"></div>
         </div>
 
         <!-- Contact Section -->
@@ -1182,6 +1404,46 @@
                 console.error('Initialization error:', error);
             }
         });
+    </script>
+
+    <script>
+    function filterCareerJobs() {
+      const input = document.getElementById('careerSearch');
+      const query = input ? input.value.toLowerCase().trim() : '';
+      const activeChip = document.querySelector('.career-chip.active');
+      const filter = activeChip ? activeChip.dataset.filter : 'all';
+      const cards = document.querySelectorAll('.career-job-card');
+      let visible = 0;
+      cards.forEach(card => {
+        const dept = card.dataset.dept || '';
+        const type = card.dataset.type || '';
+        const title = card.querySelector('h4')?.textContent?.toLowerCase() || '';
+        const tags = Array.from(card.querySelectorAll('.cjc-tag')).map(t => t.textContent.toLowerCase());
+        const matchesFilter = filter === 'all' || dept === filter || type === filter;
+        const matchesSearch = !query || title.includes(query) || tags.some(t => t.includes(query));
+        const show = matchesFilter && matchesSearch;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      const count = document.getElementById('careerCount');
+      if (count) count.textContent = visible + ' role' + (visible !== 1 ? 's' : '');
+    }
+
+    document.addEventListener('click', function(e) {
+      const chip = e.target.closest('.career-chip');
+      if (chip) {
+        document.querySelectorAll('.career-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        filterCareerJobs();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('careerSearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', filterCareerJobs);
+      }
+    });
     </script>
 </body>
 
