@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="faq-hover-effects.css">
     <link rel="stylesheet" href="password-security.css">
     <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="contact-section.css">
 
     <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
     <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
@@ -34,6 +35,8 @@
     <script src="forgot-password.js"></script>
     <script src="documentation-manager.js"></script>
     <script src="qa-manager.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="contact-form.js" defer></script>
 </head>
 
 <body>
@@ -1032,44 +1035,136 @@
         </div>
 
         <!-- Contact Section -->
-        <div class="contact-section" id="contact">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i data-lucide="phone"></i>
-                    </div>
-                    <h2>Contact & Support</h2>
-                    <p>Get in touch with our team</p>
-                </div>
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i data-lucide="mail"></i>
+        <section class="contact-section" id="contact" aria-labelledby="contact-heading">
+            <div class="contact-ambient" aria-hidden="true">
+                <div class="contact-orb contact-orb-1"></div>
+                <div class="contact-orb contact-orb-2"></div>
+                <div class="contact-orb contact-orb-3"></div>
+                <span class="contact-float contact-float-1"></span>
+                <span class="contact-float contact-float-2"></span>
+                <span class="contact-float contact-float-3"></span>
+            </div>
+
+            <div class="contact-shell">
+                <div class="contact-hero">
+                    <div class="contact-hero-inner">
+                        <div class="contact-badge">
+                            <span class="contact-badge-dot"></span>
+                            Support &amp; Partnerships
                         </div>
-                        <h3>Email Support</h3>
-                        <p>Get help via email</p>
-                        <a href="mailto:DGC2MHNE@proton.me">DGC2MHNE@proton.me</a>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i data-lucide="github"></i>
+
+                        <h2 class="contact-title" id="contact-heading">Let's <span>Connect</span></h2>
+
+                        <p class="contact-subtitle">
+                            We're here to help answer your questions, discuss collaborations, and support your
+                            journey with EVID-DGC.
+                        </p>
+
+                        <div class="contact-cards" role="list">
+                            <a class="contact-info-card" href="mailto:DGC2MHNE@proton.me" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="mail"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Email Us</h3>
+                                    <p>DGC2MHNE@proton.me</p>
+                                </div>
+                                <span class="contact-info-arrow" aria-hidden="true">
+                                    <i data-lucide="arrow-up-right"></i>
+                                </span>
+                            </a>
+
+                            <div class="contact-info-card" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="clock"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Response Time</h3>
+                                    <p>Within 24 Hours</p>
+                                </div>
+                            </div>
+
+                            <div class="contact-info-card" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="calendar-days"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Working Hours</h3>
+                                    <p>Monday – Saturday</p>
+                                    <p class="contact-info-time">9:00 AM – 6:00 PM (IST)</p>
+                                </div>
+                            </div>
                         </div>
-                        <h3>GitHub</h3>
-                        <p>Source code and issues</p>
-                        <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank"
-                            rel="noopener noreferrer">View Repository</a>
                     </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i data-lucide="book"></i>
-                        </div>
-                        <h3>Documentation</h3>
-                        <p>Comprehensive guides</p>
-                        <a href="quickstart.html">View Docs</a>
+
+                    <div class="contact-form-wrap">
+                        <div class="contact-form-glow" aria-hidden="true"></div>
+                        <form class="contact-form" id="contactForm" novalidate>
+                            <div class="contact-form-header">
+                                <h3>Send a Message</h3>
+                                <p>We usually respond within 24 hours.</p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactName">Name</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="user" aria-hidden="true"></i>
+                                    <input type="text" id="contactName" name="name" maxlength="60"
+                                        placeholder="Your full name" autocomplete="name" required>
+                                </div>
+                                <p class="contact-field-error" id="contactNameError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactEmail">Email</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="at-sign" aria-hidden="true"></i>
+                                    <input type="email" id="contactEmail" name="email" maxlength="120"
+                                        placeholder="you@example.com" autocomplete="email" required>
+                                </div>
+                                <p class="contact-field-error" id="contactEmailError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactSubject">Subject</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="tag" aria-hidden="true"></i>
+                                    <input type="text" id="contactSubject" name="subject" maxlength="100"
+                                        placeholder="How can we help?" required>
+                                </div>
+                                <p class="contact-field-error" id="contactSubjectError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactMessage">Message</label>
+                                <div class="contact-input-shell contact-input-shell-area">
+                                    <i data-lucide="message-square" aria-hidden="true"></i>
+                                    <textarea id="contactMessage" name="message" maxlength="2000" rows="4"
+                                        placeholder="Tell us a little about your inquiry..." required></textarea>
+                                </div>
+                                <div class="contact-field-meta">
+                                    <p class="contact-field-error" id="contactMessageError" role="alert"></p>
+                                    <span class="contact-char-count" id="contactCharCount" aria-live="polite">0 / 2000</span>
+                                </div>
+                            </div>
+
+                            <input type="text" class="contact-honeypot" name="website" tabindex="-1"
+                                autocomplete="off" aria-hidden="true">
+
+                            <button type="submit" class="contact-submit" id="contactSubmitBtn">
+                                <span class="contact-submit-label">
+                                    Send Message
+                                    <i data-lucide="arrow-right" class="contact-submit-arrow" aria-hidden="true"></i>
+                                </span>
+                                <span class="contact-spinner" aria-hidden="true"></span>
+                            </button>
+                        </form>
+
+                        <div class="contact-status" id="contactStatus" role="status" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- Email Login Modal -->

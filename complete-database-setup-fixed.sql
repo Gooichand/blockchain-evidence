@@ -693,7 +693,7 @@ INSERT INTO users (
     wallet_address, email, full_name, role, department, jurisdiction,
     badge_number, account_type, auth_type, created_by, is_active, email_verified
 ) VALUES (
-    '0x29bb7718d5c6da6e787deae8fd6bb3459e8539f2', 'admin@evid-dgc.com',
+    '0xC7E77FdccEad5d15a71444f7fBEaa9586267602c', 'admin@evid-dgc.com',
     'System Administrator', 'admin', 'Administration', 'System',
     'ADMIN-001', 'real', 'both', 'system_setup', true, true
 ) ON CONFLICT (wallet_address) DO NOTHING;
