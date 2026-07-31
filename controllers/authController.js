@@ -2,7 +2,16 @@ const { supabase, allowedRoles } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const { ethers } = require('ethers');
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = '24h';
+
+// Guard: fail loudly if JWT is misconfigured instead of crashing mid-request
+if (!JWT_SECRET) {
+  console.error('CRITICAL: JWT_SECRET environment variable is not set. Authentication will fail.');
+}
 
 // SECURITY FIX: In-memory nonce store for wallet ownership proof
 // Key: lowercased wallet address, Value: { nonce, message, expiresAt }
@@ -77,8 +86,16 @@ const walletLogin = async (req, res) => {
       console.error('Failed to log wallet login activity:', logError);
     }
 
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, walletAddress: user.wallet_address, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
     res.json({
       success: true,
+      token,
       user: {
         id: user.id,
         wallet_address: user.wallet_address,
@@ -141,8 +158,16 @@ const emailLogin = async (req, res) => {
       console.error('Failed to log email login activity:', logError);
     }
 
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
     res.json({
       success: true,
+      token,
       user: {
         id: user.id,
         email: user.email,

@@ -63,6 +63,25 @@ function initializeApp() {
       lucide.createIcons();
     }
 
+    // ── Session Restoration ──
+    // If user already has an auth token, redirect to their dashboard
+    const savedUser = localStorage.getItem("currentUser");
+    const authToken = localStorage.getItem("authToken");
+    if (savedUser && authToken) {
+      const userData = JSON.parse(localStorage.getItem("evidUser_" + savedUser) || "{}");
+      const role = userData.role;
+      if (role) {
+        const dashboardUrl = getDashboardUrl(role);
+        // Only redirect if not already on a dashboard page
+        const path = window.location.pathname;
+        if (!path.includes('dashboard') && !path.includes('admin') && !path.includes('login')) {
+          console.log("Existing session found. Redirecting to:", dashboardUrl);
+          window.location.href = dashboardUrl;
+          return;
+        }
+      }
+    }
+
     // Initialize components
     initializeNavigation();
     initializeScrollUp();
@@ -73,7 +92,101 @@ function initializeApp() {
     initializeEmailLogin();
     updateNavbarAuth();
 
-    // Add click handler for wallet connection
+    // ── Login Modal Bindings ──
+    // Hero button opens modal
+    const heroLoginBtn = document.querySelector('.btn-hero-primary[onclick*="openLoginModal"]');
+    if (heroLoginBtn) {
+      heroLoginBtn.removeAttribute('onclick');
+      heroLoginBtn.addEventListener('click', (e) => { e.preventDefault(); openLoginModal(); });
+    }
+
+    // Close button
+    const loginCloseBtn = document.getElementById('loginCloseBtn');
+    if (loginCloseBtn) {
+      loginCloseBtn.addEventListener('click', closeLoginModal);
+    }
+
+    // Overlay backdrop click
+    const loginOverlay = document.getElementById('loginOverlay');
+    if (loginOverlay) {
+      loginOverlay.addEventListener('click', (e) => {
+        if (e.target === loginOverlay) closeLoginModal();
+      });
+    }
+
+    // "Login with Email" expand button
+    const showEmailFormBtn = document.getElementById('loginShowEmailForm');
+    const emailFormWrap = document.getElementById('loginEmailFormWrap');
+    if (showEmailFormBtn && emailFormWrap) {
+      showEmailFormBtn.addEventListener('click', () => {
+        emailFormWrap.classList.toggle('expanded');
+        if (emailFormWrap.classList.contains('expanded')) {
+          setTimeout(() => {
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput) emailInput.focus();
+          }, 350);
+        }
+      });
+    }
+
+    // MetaMask connect
+    const loginConnectBtn = document.getElementById('loginConnectWallet');
+    if (loginConnectBtn) {
+      loginConnectBtn.addEventListener('click', async () => {
+        loginConnectBtn.classList.add('loading');
+        try {
+          await connectWallet();
+          refreshLoginWalletUI();
+        } finally {
+          loginConnectBtn.classList.remove('loading');
+        }
+      });
+    }
+
+    // Wallet disconnect
+    const loginDisconnectBtn = document.getElementById('loginDisconnectWallet');
+    if (loginDisconnectBtn) {
+      loginDisconnectBtn.addEventListener('click', () => {
+        disconnectWallet();
+        refreshLoginWalletUI();
+      });
+    }
+
+    // Email form submit
+    const emailLoginForm = document.getElementById('emailLoginForm');
+    if (emailLoginForm) {
+      emailLoginForm.addEventListener('submit', handleEmailLogin);
+    }
+
+    // Registration form submit
+    const regForm = document.getElementById('emailRegistrationForm');
+    if (regForm) {
+      regForm.addEventListener('submit', handleEmailRegistration);
+    }
+
+    // Forgot password form
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    if (forgotForm) {
+      forgotForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgotEmail')?.value;
+        if (!email) return;
+        try {
+          await window.apiClient.post('/auth/forgot-password', { email });
+          showAlert('Password reset link sent!', 'success');
+          closeForgotPasswordModal();
+        } catch (err) {
+          showAlert(err.message || 'Failed to send reset link', 'error');
+        }
+      });
+    }
+
+    // Sub-modal backdrop clicks
+    setupSubModalBackdrop('forgotPasswordOverlay', closeForgotPasswordModal);
+    setupSubModalBackdrop('registrationOverlay', closeRegistrationModal);
+    setupSubModalBackdrop('errorOverlay', closeErrorModal);
+
+    // Add click handler for wallet connection (legacy page button)
     const connectBtn = document.getElementById("connectWallet");
     if (connectBtn) {
       connectBtn.onclick = connectWallet;
@@ -141,47 +254,171 @@ function toggleScroll(enable) {
   }
 }
 
-// Email login functions
-function showEmailLogin() {
-  console.log("Showing email login modal...");
-  const modal = document.getElementById("emailLoginModal");
-  if (!modal) {
-    console.error("emailLoginModal element not found in DOM");
-    showAlert("Email login modal not found. Please refresh the page.", "error");
-    return;
+// ═══════════════════════════════════════════════════════════════
+// Premium Login Modal
+// ═══════════════════════════════════════════════════════════════
+
+let _loginModalFocusTrap = null;
+
+function openLoginModal() {
+  const overlay = document.getElementById('loginOverlay');
+  if (!overlay) return;
+
+  overlay.classList.add('active');
+  overlay.classList.remove('closing');
+  document.body.classList.add('login-modal-open');
+  if (typeof lenis !== 'undefined' && lenis) lenis.stop();
+
+  // Detect MetaMask
+  const mmMissing = document.getElementById('loginMetaMaskMissing');
+  const mmBtn = document.getElementById('loginConnectWallet');
+  if (!window.ethereum) {
+    if (mmMissing) mmMissing.style.display = 'block';
+    if (mmBtn) mmBtn.style.display = 'none';
+  } else {
+    if (mmMissing) mmMissing.style.display = 'none';
+    if (mmBtn) mmBtn.style.display = '';
   }
-  modal.classList.add("active");
-  toggleScroll(false);
-  // Focus email input
+
+  // Check if already connected
+  refreshLoginWalletUI();
+
+  // Focus first focusable
   setTimeout(() => {
-    const emailInput = document.getElementById("loginEmail");
-    if (emailInput) emailInput.focus();
+    const first = overlay.querySelector('.login-close, .login-card-btn, input, button:not(.login-close)');
+    if (first) first.focus();
   }, 100);
+
+  // Re-init icons
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // Setup focus trap
+  _loginModalFocusTrap = overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') trapFocus(e, overlay);
+  });
 }
 
-function closeEmailLogin() {
-  const modal = document.getElementById("emailLoginModal");
-  if (modal) {
-    modal.classList.remove("active");
-    toggleScroll(true);
+function closeLoginModal() {
+  const overlay = document.getElementById('loginOverlay');
+  if (!overlay) return;
+
+  overlay.classList.add('closing');
+  setTimeout(() => {
+    overlay.classList.remove('active', 'closing');
+    document.body.classList.remove('login-modal-open');
+    if (typeof lenis !== 'undefined' && lenis) lenis.start();
+    // Close any open sub-modals
+    closeForgotPasswordModal();
+    closeRegistrationModal();
+    closeErrorModal();
+    // Reset email form
+    const formWrap = document.getElementById('loginEmailFormWrap');
+    if (formWrap) formWrap.classList.remove('expanded');
+  }, 250);
+
+  if (_loginModalFocusTrap) {
+    overlay.removeEventListener('keydown', _loginModalFocusTrap);
+    _loginModalFocusTrap = null;
   }
 }
 
-function showEmailRegistration() {
-  const modal = document.getElementById("emailRegistrationModal");
-  if (modal) {
-    modal.classList.add("active");
-    toggleScroll(false);
+function refreshLoginWalletUI() {
+  const connected = document.getElementById('loginWalletConnected');
+  const addr = document.getElementById('loginWalletAddress');
+  const btn = document.getElementById('loginConnectWallet');
+  if (userAccount && connected && addr) {
+    connected.classList.add('show');
+    addr.textContent = userAccount;
+    if (btn) btn.style.display = 'none';
+  } else {
+    if (connected) connected.classList.remove('show');
+    if (btn && window.ethereum) btn.style.display = '';
   }
 }
 
-function closeEmailRegistration() {
-  const modal = document.getElementById("emailRegistrationModal");
-  if (modal) {
-    modal.classList.remove("active");
-    toggleScroll(true);
+function trapFocus(e, container) {
+  const focusable = container.querySelectorAll(
+    'button:not([disabled]):not([tabindex="-1"]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  );
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey) {
+    if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+  } else {
+    if (document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 }
+
+// Esc key handler
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const errorOv = document.getElementById('errorOverlay');
+    const regOv = document.getElementById('registrationOverlay');
+    const forgotOv = document.getElementById('forgotPasswordOverlay');
+    const loginOv = document.getElementById('loginOverlay');
+
+    if (errorOv && errorOv.classList.contains('active')) { closeErrorModal(); return; }
+    if (regOv && regOv.classList.contains('active')) { closeRegistrationModal(); return; }
+    if (forgotOv && forgotOv.classList.contains('active')) { closeForgotPasswordModal(); return; }
+    if (loginOv && loginOv.classList.contains('active')) { closeLoginModal(); return; }
+  }
+});
+
+// Sub-modal helpers
+function openForgotPasswordModal() {
+  const ov = document.getElementById('forgotPasswordOverlay');
+  if (ov) { ov.classList.add('active'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+}
+
+function closeForgotPasswordModal() {
+  const ov = document.getElementById('forgotPasswordOverlay');
+  if (ov) ov.classList.remove('active');
+}
+
+function openRegistrationModal() {
+  const ov = document.getElementById('registrationOverlay');
+  if (ov) { ov.classList.add('active'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+}
+
+function closeRegistrationModal() {
+  const ov = document.getElementById('registrationOverlay');
+  if (ov) ov.classList.remove('active');
+}
+
+function showErrorModal(title, description, actionText, actionCallback) {
+  const ov = document.getElementById('errorOverlay');
+  const titleEl = document.getElementById('errorModalTitle');
+  const descEl = document.getElementById('errorModalDescription');
+  const actionBtn = document.getElementById('errorModalActionBtn');
+
+  if (ov && titleEl && descEl) {
+    titleEl.textContent = title;
+    descEl.innerHTML = description;
+    if (actionText && actionCallback) {
+      actionBtn.textContent = actionText;
+      actionBtn.onclick = () => { actionCallback(); closeErrorModal(); };
+      actionBtn.style.display = '';
+    } else {
+      actionBtn.style.display = 'none';
+    }
+    ov.classList.add('active');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } else {
+    showAlert(`${title}: ${description}`, 'error');
+  }
+}
+
+function closeErrorModal() {
+  const ov = document.getElementById('errorOverlay');
+  if (ov) ov.classList.remove('active');
+}
+
+// Legacy aliases (kept for backward compat)
+function showEmailLogin() { openLoginModal(); }
+function closeEmailLogin() { closeLoginModal(); }
+function showEmailRegistration() { openRegistrationModal(); }
+function closeEmailRegistration() { closeRegistrationModal(); }
 
 // Email login handler
 async function handleEmailLogin(event) {
@@ -216,33 +453,38 @@ async function handleEmailLogin(event) {
       return;
     }
 
-    const data = await window.apiClient.post("/auth/email/login", { email, password });
+    const data = await window.apiClient.post("/auth/email/login", { email, password }, { skipAuth: true });
 
     if (data.success) {
       const walletAddress = (data.user.walletAddress || data.user.wallet_address || email).toLowerCase();
       
-      // SECURITY FIX: Store in format expected by dashboards
+      // Store session data
+      const userToStore = {
+        ...data.user,
+        walletAddress: walletAddress,
+        wallet_address: walletAddress,
+      };
       localStorage.setItem("currentUser", walletAddress);
-      localStorage.setItem("evidUser_" + walletAddress, JSON.stringify(data.user));
-
-      showAlert("Login successful!", "success");
-      closeEmailLogin();
-
-      // Check if admin
-      const isAdmin = data.user.role === "admin" || data.user.role === 8 || data.user.role === "8";
-      if (isAdmin) {
-        displayAdminOptions(data.user);
-        toggleSections("adminOptions");
-      } else {
-        displayUserInfo(data.user);
-        toggleSections("alreadyRegistered");
+      localStorage.setItem("evidUser_" + walletAddress, JSON.stringify(userToStore));
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
       }
-      updateNavbarAuth();
-      
-      // Auto-redirect if on a login-only flow
+
+      // Create client-side session
+      if (typeof sessionManager !== 'undefined') {
+        sessionManager.createSession(walletAddress, { loginType: 'email' });
+      }
+
+      showAlert("Login successful! Redirecting...", "success");
+
+      // Close login modal
+      closeLoginModal();
+
+      // Redirect to role-based dashboard
+      const dashboardUrl = getDashboardUrl(data.user.role);
       setTimeout(() => {
-          window.location.href = getDashboardUrl(data.user.role);
-      }, 1000);
+        window.location.href = dashboardUrl;
+      }, 800);
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -288,22 +530,17 @@ async function handleEmailRegistration(event) {
       role,
       department: "General",
       jurisdiction: "General",
-    });
+    }, { skipAuth: true });
 
     if (data.success) {
-      const walletAddress = (data.user.walletAddress || data.user.wallet_address || email).toLowerCase();
-      localStorage.setItem("currentUser", walletAddress);
-      localStorage.setItem("evidUser_" + walletAddress, JSON.stringify(data.user));
-
       showAlert(
-        "Registration successful! Redirecting to dashboard...",
+        "Registration successful! Please verify your email, then login.",
         "success"
       );
-      closeEmailRegistration();
-
-      setTimeout(() => {
-        window.location.href = getDashboardUrl(data.user.role);
-      }, 1500);
+      closeRegistrationModal();
+      // Switch back to the main login view
+      const formWrap = document.getElementById('loginEmailFormWrap');
+      if (formWrap) formWrap.classList.remove('expanded');
     }
   } catch (error) {
     console.error("Registration error:", error);
@@ -324,23 +561,14 @@ function initializeEmailLogin() {
   if (emailRegForm) {
     emailRegForm.addEventListener("submit", handleEmailRegistration);
   }
-
-  // Add click outside to close for all modals
-  setupModalClickOutside('emailLoginModal', closeEmailLogin);
-  setupModalClickOutside('emailRegistrationModal', closeEmailRegistration);
-  setupModalClickOutside('forgotPasswordModal', closeForgotPasswordModal);
-  setupModalClickOutside('errorModal', closeErrorModal);
 }
 
-// Helper function to setup click outside to close modal
-function setupModalClickOutside(modalId, closeFunction) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.addEventListener('click', function (event) {
-      // Only close if clicking directly on the modal backdrop, not the content
-      if (event.target === modal) {
-        closeFunction();
-      }
+// Helper: sub-modal backdrop click to close
+function setupSubModalBackdrop(overlayId, closeFn) {
+  const ov = document.getElementById(overlayId);
+  if (ov) {
+    ov.addEventListener('click', (e) => {
+      if (e.target === ov) closeFn();
     });
   }
 }
@@ -528,6 +756,7 @@ function updateWalletUI() {
 
   updateNetworkBadge();
   updateWalletNetworkInfo();
+  refreshLoginWalletUI();
 }
 
 function updateWalletNetworkInfo() {
@@ -679,57 +908,95 @@ async function refreshWalletState() {
   updateWalletUI();
 }
 
-// Check registration status
+// Check registration status — authenticates wallet, stores session, redirects
 async function checkRegistrationStatus() {
-  console.log("Checking registration status for:", userAccount);
-
+  console.log("[Auth] Wallet Connected.");
   if (!userAccount) {
+    console.warn("[Auth] No wallet address.");
     showAlert("Please connect your wallet first", "error");
     return;
   }
 
+  const walletAddr = userAccount.toLowerCase();
+  console.log("[Auth] Wallet Address:", walletAddr);
+
   try {
-    showLoading(true, "Checking registration...");
+    showLoading(true, "Authenticating...");
 
-    // Use skipAuth since this is a read-only lookup — no MetaMask signature needed
-    const data = await window.apiClient.get(`/users/wallet/${userAccount}`, { skipAuth: true });
+    // Step 1: Look up user by wallet address
+    console.log("[Auth] Searching Database...");
+    const userData = await window.apiClient.get(`/users/wallet/${walletAddr}`, { skipAuth: true });
 
-    if (data.user) {
-      console.log("Found existing user:", data.user);
-
-      const walletAddr = userAccount.toLowerCase();
-      // Store in dashboard-compatible format - ensure role is preserved
-      const userToStore = {
-        ...data.user,
-        walletAddress: walletAddr,
-        wallet_address: walletAddr,
-        role: data.user.role,
-      };
-      localStorage.setItem("currentUser", walletAddr);
-      localStorage.setItem("evidUser_" + walletAddr, JSON.stringify(userToStore));
-
-      displayUserInfo(data.user);
-
-      const isAdmin = data.user.role === "admin" || data.user.role === 8 || data.user.role === "8";
-      if (isAdmin) {
-        displayAdminOptions(data.user);
-        toggleSections("adminOptions");
-      } else {
-        toggleSections("alreadyRegistered");
-      }
-      updateNavbarAuth();
-    } else {
-      console.log("No existing user found, showing registration");
-      toggleSections("registration");
+    if (!userData.user) {
+      console.warn("[Auth] Wallet Not Found.");
+      showLoading(false);
+      showAlert("Wallet not registered. Please register or use Email Login.", "warning");
+      return;
     }
+
+    const role = userData.user.role;
+    console.log("[Auth] User Found:", userData.user.full_name, "| Role:", role);
+
+    if (!role) {
+      console.error("[Auth] Role Missing.");
+      showLoading(false);
+      showAlert("Authentication failed: user role is missing. Contact administrator.", "error");
+      return;
+    }
+
+    // Step 2: Authenticate via wallet login endpoint to get JWT
+    console.log("[Auth] Authenticating with backend...");
+    const authData = await window.apiClient.post("/auth/wallet/login", {
+      walletAddress: walletAddr,
+    }, { skipAuth: true });
+
+    if (!authData.success || !authData.token) {
+      console.error("[Auth] JWT Creation Failed.");
+      showLoading(false);
+      showAlert("Authentication failed. Please try again.", "error");
+      return;
+    }
+
+    console.log("[Auth] Creating Session...");
+
+    // Step 3: Store session
+    const userToStore = {
+      ...authData.user,
+      walletAddress: walletAddr,
+      wallet_address: walletAddr,
+    };
+    localStorage.setItem("currentUser", walletAddr);
+    localStorage.setItem("evidUser_" + walletAddr, JSON.stringify(userToStore));
+    localStorage.setItem("authToken", authData.token);
+
+    // Create client-side session
+    if (typeof sessionManager !== 'undefined') {
+      sessionManager.createSession(walletAddr, { loginType: 'wallet' });
+    }
+
+    // Step 4: Close login modal
+    closeLoginModal();
+
+    // Step 5: Redirect to role-based dashboard
+    const dashboardUrl = getDashboardUrl(authData.user.role);
+    console.log("[Auth] Authentication Complete. Redirecting to:", dashboardUrl);
+
+    showAlert("Login successful! Redirecting...", "success");
+    setTimeout(() => {
+      console.log("[Auth] Navigating to:", dashboardUrl);
+      window.location.href = dashboardUrl;
+    }, 800);
   } catch (error) {
-    console.error("Error checking registration:", error);
-    // If user not found (404), show registration
-    if (error.status === 404) {
-        toggleSections("registration");
+    console.error("[Auth] Database Query Failed:", error);
+    showLoading(false);
+
+    if (error.status === 401 || error.status === 404) {
+      console.warn("[Auth] Wallet Not Found.");
+      showAlert("Wallet not registered. Please register or use Email Login.", "warning");
+    } else if (error.status >= 500) {
+      showAlert("Server unavailable. Please try again later.", "error");
     } else {
-        showAlert("Error checking registration status: " + error.message, "error");
-        toggleSections("registration");
+      showAlert("Authentication failed: " + (error.message || "Server error"), "error");
     }
   } finally {
     showLoading(false);
@@ -879,8 +1146,15 @@ function goToAdminDashboard() {
 }
 
 function logout() {
+  const walletAddr = localStorage.getItem("currentUser");
   localStorage.clear();
   userAccount = null;
+
+  // Terminate client session
+  if (walletAddr && typeof sessionManager !== 'undefined') {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) sessionManager.terminateSession(sessionId);
+  }
 
   const walletStatus = document.getElementById("walletStatus");
   const connectBtn = document.getElementById("connectWallet");
@@ -895,13 +1169,21 @@ function logout() {
 
   initializeSections();
   updateNavbarAuth();
+  refreshLoginWalletUI();
   showAlert("Logged out successfully", "info");
+
+  // If on a dashboard page, redirect to home
+  if (window.location.pathname.includes('dashboard') || window.location.pathname.includes('admin')) {
+    setTimeout(() => { window.location.href = '/'; }, 500);
+  }
 }
 
 function disconnectWallet() {
   userAccount = null;
   walletManager.disconnect();
   localStorage.removeItem("wasConnected");
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("currentUser");
   removeNetworkBanner();
 
   const badgeArea = document.getElementById("networkBadge");
@@ -920,6 +1202,7 @@ function disconnectWallet() {
 
   initializeSections();
   updateNavbarAuth();
+  refreshLoginWalletUI();
   showAlert("Wallet disconnected successfully", "info");
 }
 
@@ -1057,6 +1340,17 @@ function showLoading(show, message = "Loading...") {
       loader.classList.add("hidden");
     }
   }
+
+  // Also toggle loading state on login modal buttons
+  const connectBtn = document.getElementById('loginConnectWallet');
+  const emailSubmit = document.getElementById('loginEmailSubmit');
+  if (show) {
+    if (connectBtn) connectBtn.classList.add('loading');
+    if (emailSubmit) emailSubmit.classList.add('loading');
+  } else {
+    if (connectBtn) connectBtn.classList.remove('loading');
+    if (emailSubmit) emailSubmit.classList.remove('loading');
+  }
 }
 
 // Alert system
@@ -1112,46 +1406,6 @@ function getAlertIcon(type) {
   return icons[type] || "info";
 }
 
-// Error modal functions
-function showErrorModal(
-  title,
-  description,
-  actionText = null,
-  actionCallback = null
-) {
-  const modal = document.getElementById("errorModal");
-  const titleEl = document.getElementById("errorTitle");
-  const descEl = document.getElementById("errorDescription");
-  const actionBtn = document.getElementById("errorActionBtn");
-
-  if (modal && titleEl && descEl) {
-    titleEl.textContent = title;
-    descEl.innerHTML = description;
-
-    if (actionText && actionCallback) {
-      actionBtn.textContent = actionText;
-      actionBtn.onclick = actionCallback;
-      actionBtn.classList.remove("hidden");
-    } else {
-      actionBtn.classList.add("hidden");
-    }
-    modal.classList.add("active");
-    if (typeof toggleScroll === 'function') toggleScroll(false);
-    else document.body.classList.add("modal-open");
-  } else {
-    showAlert(`${title}: ${description}`, "error");
-  }
-}
-
-function closeErrorModal() {
-  const modal = document.getElementById("errorModal");
-  if (modal) {
-    modal.classList.remove("active");
-    if (typeof toggleScroll === 'function') toggleScroll(true);
-    else document.body.classList.remove("modal-open");
-  }
-}
-
 // Ethereum event listeners
 if (window.ethereum) {
   walletManager.onAccountChange((account) => {
@@ -1171,7 +1425,20 @@ if (window.ethereum) {
 // Helper function to get dashboard URL based on role
 function getDashboardUrl(role) {
   const dashboardMap = {
+    // Admin
     'admin': 'admin.html',
+    '8': 'admin.html',
+    // Named roles
+    'public_viewer': 'dashboard-public.html',
+    'investigator': 'dashboard-investigator.html',
+    'forensic_analyst': 'dashboard-analyst.html',
+    'analyst': 'dashboard-analyst.html',
+    'legal_professional': 'dashboard-legal.html',
+    'court_official': 'dashboard-court.html',
+    'evidence_manager': 'dashboard-manager.html',
+    'manager': 'dashboard-manager.html',
+    'auditor': 'dashboard-auditor.html',
+    // Numeric role IDs
     '1': 'dashboard-public.html',
     '2': 'dashboard-investigator.html',
     '3': 'dashboard-analyst.html',
@@ -1179,7 +1446,6 @@ function getDashboardUrl(role) {
     '5': 'dashboard-court.html',
     '6': 'dashboard-manager.html',
     '7': 'dashboard-auditor.html',
-    '8': 'admin.html'
   };
 
   // Convert numeric roles to strings for mapping
@@ -1196,6 +1462,8 @@ window.EVID_DGC = {
   scrollToSection,
   handleEmailRegistration,
   handleEmailLogin,
+  openLoginModal,
+  closeLoginModal,
 };
 
 // Global error handlers

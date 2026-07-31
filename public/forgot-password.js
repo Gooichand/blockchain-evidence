@@ -56,7 +56,8 @@ class ForgotPasswordManager {
 
             if (response.success) {
                 this.showSuccess('Password reset email sent! Check your inbox.');
-                document.getElementById('forgotPasswordModal').classList.remove('active');
+                if (typeof closeForgotPasswordModal === 'function') closeForgotPasswordModal();
+                else { var ov = document.getElementById('forgotPasswordOverlay'); if (ov) ov.classList.remove('active'); }
             } else {
                 this.showError(response.error || 'Failed to send reset email');
             }
@@ -196,16 +197,15 @@ class ForgotPasswordManager {
 
 // Global functions for modal management
 function showForgotPasswordModal() {
-    document.getElementById('forgotPasswordModal').classList.add('active');
-    if (typeof toggleScroll === 'function') toggleScroll(false);
-    else document.body.classList.add('modal-open');
-    document.getElementById('forgotEmail').focus();
+    var ov = document.getElementById('forgotPasswordOverlay');
+    if (ov) { ov.classList.add('active'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+    var emailInput = document.getElementById('forgotEmail');
+    if (emailInput) emailInput.focus();
 }
 
 function closeForgotPasswordModal() {
-    document.getElementById('forgotPasswordModal').classList.remove('active');
-    if (typeof toggleScroll === 'function') toggleScroll(true);
-    else document.body.classList.remove('modal-open');
+    var ov = document.getElementById('forgotPasswordOverlay');
+    if (ov) ov.classList.remove('active');
 }
 
 // Initialize when DOM is loaded

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="password-security.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="contact-section.css">
+    <link rel="stylesheet" href="login-modal.css">
 
     <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
     <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
@@ -55,7 +56,7 @@
             <a href="#faq" style="color:#333;text-decoration:none;margin:0 0.75rem;">Q&A</a>
             <a href="#career" style="color:#333;text-decoration:none;margin:0 0.75rem;">Career</a>
             <a href="#contact" style="color:#333;text-decoration:none;margin:0 0.75rem;">Contacts</a>
-            <a href="#login-options" style="color:#fff;background:#d32f2f;padding:0.5rem 1.5rem;border-radius:50px;text-decoration:none;margin-left:1rem;">Login</a>
+            <a href="#" onclick="openLoginModal()" style="color:#fff;background:#d32f2f;padding:0.5rem 1.5rem;border-radius:50px;text-decoration:none;margin-left:1rem;">Login</a>
         </nav>
     </noscript>
 
@@ -94,7 +95,7 @@
                         forensic laboratories, and courts.
                     </p>
                     <div class="hero-cta">
-                        <button class="btn-hero-primary" onclick="scrollToSection('login-options')">
+                        <button class="btn-hero-primary" onclick="openLoginModal()">
                             <i data-lucide="shield"></i>
                             Access Dashboard
                         </button>
@@ -511,263 +512,6 @@
             </div>
         </div>
 
-        <!-- Login Options -->
-        <div class="card" id="login-options">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="log-in"></i>
-                </div>
-                <h2>Login Options</h2>
-                <p>Choose your authentication method</p>
-            </div>
-            <div class="card-body">
-                <div class="login-plan-grid">
-                    <div class="plan-option" id="planMetaMask">
-                        <div class="plan-icon">
-                            <i data-lucide="wallet"></i>
-                        </div>
-                        <h3>MetaMask Wallet</h3>
-                        <p>Blockchain authentication</p>
-                    </div>
-                    <div class="plan-option" id="planEmail">
-                        <div class="plan-icon">
-                            <i data-lucide="mail"></i>
-                        </div>
-                        <h3>Email & Password</h3>
-                        <p>Traditional login</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Wallet Connection -->
-        <div id="walletSection" class="card">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="wallet"></i>
-                </div>
-                <h2>Connect Wallet</h2>
-                <p>Connect your MetaMask wallet to access the system</p>
-            </div>
-            <div class="card-body text-center">
-                <div id="networkBadge" style="margin-bottom:12px;min-height:32px;"></div>
-                <button id="connectWallet" class="btn btn-primary pulse">
-                    <i data-lucide="link"></i>
-                    Connect MetaMask
-                </button>
-                <div id="loader" class="loader hidden"></div>
-            </div>
-        </div>
-
-        <!-- Wallet Status -->
-        <div id="walletStatus" class="wallet-status hidden">
-            <div class="status-header">
-                <i data-lucide="check-circle" class="status-icon success"></i>
-                <h3>Wallet Connected!</h3>
-            </div>
-            <div class="wallet-info">
-                <div class="wallet-address-container">
-                    <label>Wallet Address:</label>
-                    <div id="walletAddress" class="wallet-address"></div>
-                </div>
-                <div id="walletNetworkInfo" class="network-info-bar" style="margin-top:12px;"></div>
-                <div class="form-actions">
-                    <button onclick="checkRegistrationStatus()" class="btn btn-primary">
-                        <i data-lucide="user-check"></i>
-                        Continue
-                    </button>
-                    <button onclick="disconnectWallet()" class="btn btn-outline">
-                        <i data-lucide="log-out"></i>
-                        Disconnect
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Registration Section -->
-        <div id="registrationSection" class="card hidden">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="user-plus"></i>
-                </div>
-                <h2>User Registration</h2>
-                <p>Complete your profile to access the system</p>
-            </div>
-            <div class="card-body">
-                <form id="registrationForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="fullName">
-                                <i data-lucide="user"></i>
-                                Full Name
-                            </label>
-                            <input type="text" id="fullName" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="badgeNumber">
-                                <i data-lucide="shield"></i>
-                                Badge Number
-                            </label>
-                            <input type="text" id="badgeNumber" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="department">
-                                <i data-lucide="building"></i>
-                                Department
-                            </label>
-                            <input type="text" id="department" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="jurisdiction">
-                                <i data-lucide="map-pin"></i>
-                                Jurisdiction
-                            </label>
-                            <input type="text" id="jurisdiction" class="form-control">
-                        </div>
-                    </div>
-
-                    <!-- Role Selection -->
-                    <div class="role-selection">
-                        <h3>Select Your Role</h3>
-                        <div class="role-grid">
-                            <div class="role-card" data-role="public_viewer">
-                                <div class="role-icon">
-                                    <i data-lucide="eye"></i>
-                                </div>
-                                <div class="role-title">Public Viewer</div>
-                                <div class="role-description">View public case information</div>
-                            </div>
-                            <div class="role-card" data-role="investigator">
-                                <div class="role-icon">
-                                    <i data-lucide="search"></i>
-                                </div>
-                                <div class="role-title">Investigator</div>
-                                <div class="role-description">Handle case creation and evidence uploads</div>
-                            </div>
-                            <div class="role-card" data-role="forensic_analyst">
-                                <div class="role-icon">
-                                    <i data-lucide="microscope"></i>
-                                </div>
-                                <div class="role-title">Forensic Analyst</div>
-                                <div class="role-description">Perform technical analysis and reports</div>
-                            </div>
-                            <div class="role-card" data-role="legal_professional">
-                                <div class="role-icon">
-                                    <i data-lucide="scale"></i>
-                                </div>
-                                <div class="role-title">Legal Professional</div>
-                                <div class="role-description">Conduct legal reviews of cases</div>
-                            </div>
-                            <div class="role-card" data-role="court_official">
-                                <div class="role-icon">
-                                    <i data-lucide="gavel"></i>
-                                </div>
-                                <div class="role-title">Court Official</div>
-                                <div class="role-description">Manage judicial proceedings</div>
-                            </div>
-                            <div class="role-card" data-role="evidence_manager">
-                                <div class="role-icon">
-                                    <i data-lucide="archive"></i>
-                                </div>
-                                <div class="role-title">Evidence Manager</div>
-                                <div class="role-description">Maintain chain of custody</div>
-                            </div>
-                            <div class="role-card" data-role="auditor">
-                                <div class="role-icon">
-                                    <i data-lucide="clipboard-check"></i>
-                                </div>
-                                <div class="role-title">Auditor</div>
-                                <div class="role-description">Oversee system compliance</div>
-                            </div>
-
-                        </div>
-                        <input type="hidden" id="userRole" name="userRole">
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i data-lucide="user-plus"></i>
-                            Register
-                        </button>
-                        <button type="button" onclick="logout()" class="btn btn-outline">
-                            <i data-lucide="arrow-left"></i>
-                            Back
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Already Registered Section -->
-        <div id="alreadyRegisteredSection" class="card hidden">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="user-check"></i>
-                </div>
-                <h2>Welcome Back!</h2>
-                <p>Your account is already registered</p>
-            </div>
-            <div class="card-body">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i data-lucide="user"></i>
-                    </div>
-                    <div class="user-details">
-                        <h3 id="userName">User Name</h3>
-                        <p><strong>Role:</strong> <span id="userRoleName">Role</span></p>
-                        <p><strong>Status:</strong> <span class="status-active">Active</span></p>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button onclick="goToDashboard()" class="btn btn-primary">
-                        <i data-lucide="layout-dashboard"></i>
-                        Go to Dashboard
-                    </button>
-                    <button onclick="logout()" class="btn btn-outline">
-                        <i data-lucide="log-out"></i>
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin Options Section -->
-        <div id="adminOptionsSection" class="card hidden">
-            <div class="card-header">
-                <div class="card-icon">
-                    <i data-lucide="shield-check"></i>
-                </div>
-                <h2>Administrator Access</h2>
-                <p>Welcome, Administrator</p>
-            </div>
-            <div class="card-body">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i data-lucide="shield"></i>
-                    </div>
-                    <div class="user-details">
-                        <h3 id="adminUserName">Administrator</h3>
-                        <p><strong>Role:</strong> <span id="adminUserRoleName">Administrator</span></p>
-                        <p><strong>Access Level:</strong> <span class="badge badge-admin">Full Access</span></p>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button onclick="goToAdminDashboard()" class="btn btn-primary">
-                        <i data-lucide="settings"></i>
-                        Admin Dashboard
-                    </button>
-                    <button onclick="goToDashboard()" class="btn btn-outline">
-                        <i data-lucide="layout-dashboard"></i>
-                        User Dashboard
-                    </button>
-                    <button onclick="logout()" class="btn btn-outline">
-                        <i data-lucide="log-out"></i>
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Latest Release Section -->
         <div class="latest-release-section">
             <div id="latest-release-container"></div>
@@ -1167,158 +911,231 @@
         </section>
     </div>
 
-    <!-- Email Login Modal -->
-    <div id="emailLoginModal" class="modal">
-        <div class="modal-content" data-lenis-prevent>
-            <div class="modal-header">
-                <h3>Email Login</h3>
-                <button class="modal-close" onclick="closeEmailLogin()" aria-label="Close email login modal">
+
+    <!-- ═══════════════════════════════════════════════════════
+         Premium Login Modal
+         ═══════════════════════════════════════════════════════ -->
+    <div id="loginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+        <!-- Ambient Effects -->
+        <div class="login-ambient" aria-hidden="true">
+            <div class="login-orb login-orb--1"></div>
+            <div class="login-orb login-orb--2"></div>
+            <div class="login-orb login-orb--3"></div>
+            <div class="login-particles">
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+            </div>
+            <div class="login-glass-cube login-glass-cube--tl"></div>
+            <div class="login-glass-cube login-glass-cube--tr"></div>
+            <div class="login-glass-cube login-glass-cube--bl"></div>
+            <div class="login-glass-cube login-glass-cube--br"></div>
+        </div>
+
+        <!-- Modal -->
+        <div class="login-modal" id="loginModal" tabindex="-1">
+            <div class="login-modal-inner">
+                <!-- Close -->
+                <button class="login-close" id="loginCloseBtn" aria-label="Close login modal">
                     <i data-lucide="x"></i>
                 </button>
-            </div>
-            <form id="emailLoginForm">
-                <div class="form-group">
-                    <label for="loginEmail">
-                        <i data-lucide="mail"></i>
-                        Email Address
-                    </label>
-                    <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email" required>
+
+                <!-- Header -->
+                <div class="login-header">
+                    <div class="login-header-brand">
+                        <img src="logo-32x32.png" alt="EVID-DGC" class="login-header-logo">
+                    </div>
+                    <h2 class="login-header-title" id="loginModalTitle">Login Options</h2>
+                    <p class="login-header-subtitle">
+                        Choose your preferred authentication method to securely access the Blockchain Evidence Management System.
+                    </p>
                 </div>
-                <div class="form-group">
-                    <label for="loginPassword">
-                        <i data-lucide="lock"></i>
-                        Password
-                    </label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password"
-                            required>
-                        <button type="button" class="password-toggle-btn"
-                            onclick="togglePasswordVisibility('loginPassword')" aria-label="Toggle password visibility">
-                            <i data-lucide="eye"></i>
+
+                <!-- Auth Cards -->
+                <div class="login-cards-grid">
+                    <!-- Card 1: MetaMask -->
+                    <div class="login-auth-card" id="loginCardWallet">
+                        <div class="login-card-icon login-card-icon--wallet">
+                            <i data-lucide="wallet"></i>
+                        </div>
+                        <h3 class="login-card-title">MetaMask Wallet</h3>
+                        <p class="login-card-subtitle">Blockchain Authentication</p>
+                        <ul class="login-features">
+                            <li><i data-lucide="check-circle"></i> Secure blockchain authentication</li>
+                            <li><i data-lucide="check-circle"></i> Full ownership of credentials</li>
+                            <li><i data-lucide="check-circle"></i> Fast wallet connection</li>
+                        </ul>
+                        <div id="loginNetworkBadge" class="login-network-badge"></div>
+                        <button class="login-card-btn login-card-btn--primary" id="loginConnectWallet" type="button">
+                            <span class="login-btn-text">Connect Wallet <i data-lucide="arrow-right"></i></span>
+                            <span class="login-btn-spinner"></span>
                         </button>
+                        <div class="login-metamask-missing" id="loginMetaMaskMissing" style="display:none;">
+                            <p>MetaMask not installed.</p>
+                            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="login-metamask-install">
+                                <i data-lucide="external-link"></i> Install MetaMask
+                            </a>
+                        </div>
+                        <div class="login-wallet-connected" id="loginWalletConnected">
+                            <i data-lucide="check-circle"></i>
+                            <div class="login-wallet-info">
+                                <span class="login-wallet-label">Connected</span>
+                                <span class="login-wallet-addr" id="loginWalletAddress"></span>
+                            </div>
+                            <button class="login-wallet-disconnect" id="loginDisconnectWallet" type="button">Disconnect</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Email -->
+                    <div class="login-auth-card" id="loginCardEmail">
+                        <div class="login-card-icon login-card-icon--email">
+                            <i data-lucide="mail"></i>
+                        </div>
+                        <h3 class="login-card-title">Email &amp; Password</h3>
+                        <p class="login-card-subtitle">Traditional Authentication</p>
+                        <ul class="login-features">
+                            <li><i data-lucide="check-circle"></i> Secure encrypted login</li>
+                            <li><i data-lucide="check-circle"></i> Fast authentication</li>
+                            <li><i data-lucide="check-circle"></i> Role-based access</li>
+                        </ul>
+                        <button class="login-card-btn login-card-btn--primary" id="loginShowEmailForm" type="button">
+                            <span class="login-btn-text">Login with Email <i data-lucide="arrow-right"></i></span>
+                            <span class="login-btn-spinner"></span>
+                        </button>
+                        <!-- Expandable Email Form -->
+                        <div class="login-email-form-wrap" id="loginEmailFormWrap">
+                            <form id="emailLoginForm" novalidate>
+                                <div class="login-email-field">
+                                    <label for="loginEmail">
+                                        <i data-lucide="mail"></i> Email Address
+                                    </label>
+                                    <input type="email" id="loginEmail" class="login-email-input" placeholder="you@example.com" required autocomplete="email">
+                                </div>
+                                <div class="login-email-field">
+                                    <label for="loginPassword">
+                                        <i data-lucide="lock"></i> Password
+                                    </label>
+                                    <div class="login-email-input-wrap password-input-wrapper">
+                                        <input type="password" id="loginPassword" class="login-email-input" placeholder="Enter your password" required autocomplete="current-password">
+                                        <button type="button" class="login-email-toggle password-toggle-btn" onclick="togglePasswordVisibility('loginPassword')" aria-label="Toggle password visibility">
+                                            <i data-lucide="eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="login-email-row">
+                                    <label class="login-remember">
+                                        <input type="checkbox" id="loginRemember"> Remember me
+                                    </label>
+                                    <a href="#" onclick="event.preventDefault(); openForgotPasswordModal()" class="login-forgot-link">Forgot password?</a>
+                                </div>
+                                <button type="submit" class="login-email-submit" id="loginEmailSubmit">
+                                    Sign In
+                                </button>
+                            </form>
+                            <p style="text-align:center;margin-top:14px;font-size:0.8rem;color:var(--lm-text-muted);">
+                                Don't have an account?
+                                <a href="#" onclick="event.preventDefault(); openRegistrationModal()" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <!-- Forgot Password Link -->
-                <div class="text-right mb-4" style="text-align: right; margin-bottom: 1rem;">
-                    <a href="#" onclick="event.preventDefault(); showForgotPasswordModal()"
-                        class="text-sm text-primary hover:underline"
-                        style="color: var(--primary-color); font-size: 0.875rem; text-decoration: none;">
-                        Forgot your password?
-                    </a>
+
+                <!-- Security Strip -->
+                <div class="login-security-strip">
+                    <div class="login-security-badge">
+                        <i data-lucide="lock"></i>
+                        <span>Secure Authentication</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="link"></i>
+                        <span>Blockchain Verified</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="shield"></i>
+                        <span>Role-Based Access</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="zap"></i>
+                        <span>Fast &amp; Reliable</span>
+                    </div>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i data-lucide="log-in"></i>
-                        Login
-                    </button>
-                    <button type="button" class="btn btn-outline" onclick="showEmailRegistration()">
-                        <i data-lucide="user-plus"></i>
-                        Create Account
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
-    <div id="forgotPasswordModal" class="modal">
-        <div class="modal-content" data-lenis-prevent>
-            <div class="modal-header">
-                <h3>Reset Password</h3>
-                <button class="modal-close" onclick="closeForgotPasswordModal()">
+    <!-- Forgot Password Sub-Modal -->
+    <div id="forgotPasswordOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="forgotPasswordTitle">Reset Password</h3>
+                <button class="login-submodal-close" onclick="closeForgotPasswordModal()" aria-label="Close">
                     <i data-lucide="x"></i>
                 </button>
             </div>
             <form id="forgotPasswordForm">
-                <div class="form-group">
-                    <label for="forgotEmail">
-                        <i data-lucide="mail"></i>
-                        Email Address
-                    </label>
-                    <input type="email" id="forgotEmail" class="form-control" placeholder="Enter your email" required>
-                    <p class="form-text" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">
-                        We'll send you a link to reset your password.
-                    </p>
+                <div class="login-sub-field">
+                    <label for="forgotEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="forgotEmail" class="login-sub-input" placeholder="Enter your email" required>
+                    <p class="login-sub-text">We'll send you a link to reset your password.</p>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i data-lucide="send"></i>
-                        Send Reset Link
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--primary">
+                        <i data-lucide="send"></i> Send Reset Link
                     </button>
-                    <button type="button" class="btn btn-outline" onclick="closeForgotPasswordModal()">
-                        Cancel
-                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closeForgotPasswordModal()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Email Registration Modal -->
-    <div id="emailRegistrationModal" class="modal">
-        <div class="modal-content" data-lenis-prevent>
-            <div class="modal-header">
-                <h3>Create Account</h3>
-                <button class="modal-close" onclick="closeEmailRegistration()" aria-label="Close email registration">
+    <!-- Email Registration Sub-Modal -->
+    <div id="registrationOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="registrationTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="registrationTitle">Create Account</h3>
+                <button class="login-submodal-close" onclick="closeRegistrationModal()" aria-label="Close">
                     <i data-lucide="x"></i>
                 </button>
             </div>
             <form id="emailRegistrationForm">
-                <div class="form-group">
-                    <label for="regEmail">
-                        <i data-lucide="mail"></i>
-                        Email Address
-                    </label>
-                    <input type="email" id="regEmail" class="form-control" placeholder="Enter your email" required>
+                <div class="login-sub-field">
+                    <label for="regEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="regEmail" class="login-sub-input" placeholder="Enter your email" required>
                 </div>
-                <div class="form-group">
-                    <label for="regPassword">
-                        <i data-lucide="lock"></i>
-                        Password
-                    </label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="regPassword" class="form-control" placeholder="Create a password"
-                            required>
-                        <button type="button" class="password-toggle-btn"
-                            onclick="togglePasswordVisibility('regPassword')" aria-label="Toggle password visibility">
+                <div class="login-sub-field">
+                    <label for="regPassword"><i data-lucide="lock"></i> Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="regPassword" class="login-sub-input" placeholder="Create a password" required>
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('regPassword')" aria-label="Toggle password visibility">
                             <i data-lucide="eye"></i>
                         </button>
                     </div>
-                    <div id="regPasswordStrength" class="password-strength">
-                        <div class="strength-meter">
-                            <div class="strength-fill"></div>
-                        </div>
-                        <span class="strength-text">Password strength</span>
+                    <div class="login-pw-strength" id="regPasswordStrength">
+                        <div class="login-pw-strength-meter"><div class="login-pw-strength-fill"></div></div>
+                        <span class="login-pw-strength-text">Password strength</span>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="regConfirmPassword">
-                        <i data-lucide="lock"></i>
-                        Confirm Password
-                    </label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="regConfirmPassword" class="form-control"
-                            placeholder="Confirm your password" required>
-                        <button type="button" class="password-toggle-btn"
-                            onclick="togglePasswordVisibility('regConfirmPassword')"
-                            aria-label="Toggle password visibility">
+                <div class="login-sub-field">
+                    <label for="regConfirmPassword"><i data-lucide="lock"></i> Confirm Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="regConfirmPassword" class="login-sub-input" placeholder="Confirm your password" required>
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('regConfirmPassword')" aria-label="Toggle password visibility">
                             <i data-lucide="eye"></i>
                         </button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="regFullName">
-                        <i data-lucide="user"></i>
-                        Full Name
-                    </label>
-                    <input type="text" id="regFullName" class="form-control" placeholder="Enter your full name"
-                        required>
+                <div class="login-sub-field">
+                    <label for="regFullName"><i data-lucide="user"></i> Full Name</label>
+                    <input type="text" id="regFullName" class="login-sub-input" placeholder="Enter your full name" required>
                 </div>
-                <div class="form-group">
-                    <label for="regRole">
-                        <i data-lucide="users"></i>
-                        Role
-                    </label>
-                    <select id="regRole" class="form-control" required>
+                <div class="login-sub-field">
+                    <label for="regRole"><i data-lucide="users"></i> Role</label>
+                    <select id="regRole" class="login-sub-input" required>
                         <option value="">Select your role</option>
                         <option value="public_viewer">Public Viewer</option>
                         <option value="investigator">Investigator</option>
@@ -1329,30 +1146,27 @@
                         <option value="auditor">Auditor</option>
                     </select>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">
-                        <i data-lucide="user-plus"></i>
-                        Create Account
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--success">
+                        <i data-lucide="user-plus"></i> Create Account
                     </button>
-                    <button type="button" class="btn btn-outline" onclick="closeEmailRegistration()">
-                        Cancel
-                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closeRegistrationModal()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Error Modal -->
-    <div id="errorModal" class="modal">
-        <div class="modal-content error-content">
-            <div class="error-icon-wrapper">
-                <i data-lucide="alert-circle" class="error-icon"></i>
+    <!-- Error Sub-Modal -->
+    <div id="errorOverlay" class="login-submodal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="errorModalTitle">
+        <div class="login-submodal login-error-content">
+            <div class="login-error-icon-wrap">
+                <i data-lucide="alert-circle"></i>
             </div>
-            <h2 id="errorTitle">Error</h2>
-            <div id="errorDescription" class="error-message">An error occurred</div>
-            <div class="modal-actions">
-                <button id="errorActionBtn" class="btn btn-primary hidden">Action</button>
-                <button onclick="closeErrorModal()" class="btn btn-outline">Close</button>
+            <h2 id="errorModalTitle" style="margin:0 0 8px;font-size:1.15rem;font-weight:700;color:var(--lm-text);">Error</h2>
+            <div id="errorModalDescription" class="login-error-msg">An error occurred</div>
+            <div class="login-sub-actions" style="justify-content:center;">
+                <button id="errorModalActionBtn" class="login-sub-btn login-sub-btn--primary" style="display:none;">Action</button>
+                <button onclick="closeErrorModal()" class="login-sub-btn login-sub-btn--outline">Close</button>
             </div>
         </div>
     </div>

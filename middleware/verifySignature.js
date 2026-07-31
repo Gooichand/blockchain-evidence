@@ -23,20 +23,26 @@ setInterval(
  */
 const verifySignature = (req, res, next) => {
   try {
+    // SECURITY FIX: Exempt auth routes. They perform their own authentication
+    // (bcrypt for email login, nonce+ECDSA for wallet registration, and the
+    // wallet login is a verified-address lookup). Requiring a per-request
+    // signature here would break the login flow, since the user has not yet
+    // established a session.
+    if (req.path.startsWith('/auth/')) {
+      return next();
+    }
+
     // SECURITY FIX: Standardized list of possible wallet identity fields
+    const body = req.body || {};
+    const query = req.query || {};
     let claimedWallet =
       req.headers['x-user-wallet'] ||
-      req.body.userWallet ||
-      req.query.userWallet ||
-      req.body.adminWallet ||
-      req.query.adminWallet ||
-      req.body.wallet ||
-      req.query.wallet;
-
-    // Special case for login/registration routes if they use different field names
-    if (!claimedWallet && (req.path.includes('/login') || req.path.includes('/register'))) {
-      claimedWallet = req.body.walletAddress || req.body.address;
-    }
+      body.userWallet ||
+      query.userWallet ||
+      body.adminWallet ||
+      query.adminWallet ||
+      body.wallet ||
+      query.wallet;
 
     /**
      * If no wallet is claimed, we proceed. 

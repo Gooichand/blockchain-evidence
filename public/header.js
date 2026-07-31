@@ -67,7 +67,7 @@ class HeaderManager {
                         <i data-lucide="phone"></i>
                         <span>Contacts</span>
                     </a>
-                    <a href="index.html#login-options" class="dock-login-btn">
+                    <a href="#" class="dock-login-btn" id="dockLoginBtn" role="button" aria-label="Open login modal">
                         <i data-lucide="log-in"></i>
                         <span>Login</span>
                     </a>
@@ -265,6 +265,14 @@ class HeaderManager {
                     if (icon) {
                         icon.setAttribute('data-lucide', 'menu');
                         this.updateIcons();
+                    }
+
+                    if (link.id === 'dockLoginBtn' || link.classList.contains('dock-login-btn')) {
+                        e.preventDefault();
+                        if (typeof openLoginModal === 'function') {
+                            openLoginModal();
+                        }
+                        return;
                     }
 
                     const sectionId = link.dataset.section;
