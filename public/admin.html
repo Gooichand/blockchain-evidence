@@ -495,15 +495,31 @@
             }
 
             try {
-                let userData;
-                if (currentUser.startsWith('email_')) {
-                    userData = JSON.parse(localStorage.getItem('evidUser_' + currentUser) || '{}');
-                } else {
-                    userData = JSON.parse(localStorage.getItem('evidUser_' + currentUser) || '{}');
+                // Try localStorage first
+                let userData = JSON.parse(localStorage.getItem('evidUser_' + currentUser) || 'null');
+
+                // If not in localStorage, fetch from API (wallet login stores data from DB)
+                if (!userData || !userData.role) {
+                    try {
+                        const response = await window.apiClient.get(`/users/wallet/${currentUser}`, { skipAuth: true });
+                        if (response && response.user) {
+                            userData = response.user;
+                            // Cache it in localStorage
+                            localStorage.setItem('evidUser_' + currentUser, JSON.stringify(userData));
+                        }
+                    } catch (apiError) {
+                        console.warn('API fetch failed, checking localStorage only:', apiError);
+                    }
                 }
 
-                // SECURITY FIX: Enforce real admin role check
-                const isAdmin = userData.role === 'admin' || userData.role === 8;
+                if (!userData) {
+                    alert('Access denied. User not found.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Check admin role - handle both string and numeric roles
+                const isAdmin = userData.role === 'admin' || userData.role === 8 || userData.role === '8';
 
                 if (!isAdmin) {
                     alert('Access denied. Administrator privileges required.');
@@ -522,7 +538,6 @@
 
             } catch (error) {
                 console.error('Admin auth error:', error);
-                // Don't redirect on error, just continue
                 currentAdmin = currentUser;
             }
         }

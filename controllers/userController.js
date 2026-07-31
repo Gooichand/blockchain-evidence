@@ -84,13 +84,28 @@ const getUserByWallet = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid wallet address' });
     }
 
-    // Use database function to get user
-    const { data: result, error } = await supabase.rpc('get_user_by_identifier', {
-      p_identifier: wallet,
-    });
+    // Case-insensitive lookup: MetaMask sends mixed-case (EIP-55) addresses,
+    // while the database stores lowercase. The old RPC comparison was
+    // case-sensitive and never matched, causing admins to see the
+    // registration screen instead of their dashboard.
+    const identifier = wallet.trim().toLowerCase();
+    const isWallet = /^0x[a-f0-9]{40}$/.test(identifier);
 
-    if (error) {
-      throw error;
+    const safeColumns =
+      'id, wallet_address, email, full_name, role, department, jurisdiction, badge_number, auth_type, is_active, created_at';
+
+    const query = supabase.from('users').select(safeColumns).eq('is_active', true);
+
+    if (isWallet) {
+      query.eq('wallet_address', identifier);
+    } else {
+      query.ilike('email', identifier);
+    }
+
+    const { data: result, error } = await query.single();
+
+    if (error || !result) {
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
 
     res.json({ success: true, user: result });

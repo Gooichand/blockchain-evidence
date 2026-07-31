@@ -698,9 +698,15 @@ async function checkRegistrationStatus() {
       console.log("Found existing user:", data.user);
 
       const walletAddr = userAccount.toLowerCase();
-      // Store in dashboard-compatible format
+      // Store in dashboard-compatible format - ensure role is preserved
+      const userToStore = {
+        ...data.user,
+        walletAddress: walletAddr,
+        wallet_address: walletAddr,
+        role: data.user.role,
+      };
       localStorage.setItem("currentUser", walletAddr);
-      localStorage.setItem("evidUser_" + walletAddr, JSON.stringify(data.user));
+      localStorage.setItem("evidUser_" + walletAddr, JSON.stringify(userToStore));
 
       displayUserInfo(data.user);
 
