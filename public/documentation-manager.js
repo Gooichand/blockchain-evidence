@@ -1111,9 +1111,6 @@ class DocumentationManager {
     const bookmarks = this.state.bookmarks.slice(0, 3);
     let html = '';
 
-    if (recent.length > 0) {
-      html += `<div class="doc-pinned-group"><div class="dpg-header"><i data-lucide="clock"></i><span>Recently Viewed</span></div><div class="dpg-items">${recent.map(r => `<button class="dpg-item" data-folder="${r.folder}" data-item="${r.item}"><i data-lucide="file-text"></i><span>${r.title}</span></button>`).join('')}</div></div>`;
-    }
     if (bookmarks.length > 0) {
       html += `<div class="doc-pinned-group"><div class="dpg-header"><i data-lucide="bookmark"></i><span>Bookmarks</span></div><div class="dpg-items">${bookmarks.map(b => `<button class="dpg-item" data-folder="${b.folder}" data-item="${b.item}"><i data-lucide="bookmark"></i><span>${b.title}</span></button>`).join('')}</div></div>`;
     }
