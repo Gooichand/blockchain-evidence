@@ -1698,13 +1698,11 @@ class MotionEngine {
   }
   static initInteractiveCubeAndTimeline() {
     const cube = document.getElementById('interactiveVaultCube');
-    // Target polar panels (new orbit layout) or legacy timeline steps as fallback
     const steps = document.querySelectorAll('.polar-panel[data-step], .journey-timeline .timeline-step[data-step]');
     const faces = document.querySelectorAll('.vault-cube .cube-face');
-
     if (!cube || steps.length === 0) return;
 
-    // Face rotation map for steps 1-6
+    // Face rotation map (used when hovering a step to snap the cube)
     const rotations = {
       '1': 'rotateX(0deg) rotateY(0deg)',
       '2': 'rotateX(0deg) rotateY(-90deg)',
@@ -1714,38 +1712,112 @@ class MotionEngine {
       '6': 'rotateX(90deg) rotateY(0deg)'
     };
 
-    // Step hover -> Snap cube to matching face & highlight
+    /* ─────────────────────────────────────────────
+       AUTO-SYNC: derive active step from CSS animation
+       cubeRotate3D duration = 16s → 6 faces → 2666ms/face
+       We read the LIVE animation currentTime so the sync
+       is always in lockstep with the cube, regardless of speed.
+    ───────────────────────────────────────────── */
+    const ANIM_DURATION_MS = 16000;
+    const STEP_COUNT       = 6;
+    const PHASE_MS         = ANIM_DURATION_MS / STEP_COUNT; // ≈ 2666ms
+
+    let isHovering      = false;
+    let lastActiveStep  = 0;       // 1-6, 0 = none
+    let rafHandle       = null;
+
+    // Node elements (class names node-1…node-6)
+    const orbitNodes = {};
+    for (let i = 1; i <= 6; i++) {
+      orbitNodes[i] = document.querySelector(`.orbit-node.node-${i}`);
+    }
+
+    // SVG connector lines (6 arcs in document order = steps 1→2, 2→3, …, 6→1)
+    const connectors = Array.from(document.querySelectorAll('.orbit-bezier-line'));
+
+    function setActiveStep(stepNum) {
+      if (stepNum === lastActiveStep) return;
+
+      // Remove previous active classes
+      steps.forEach(s    => s.classList.remove('active-step'));
+      Object.values(orbitNodes).forEach(n => n && n.classList.remove('node-active'));
+      connectors.forEach(c => c.classList.remove('connector-active'));
+
+      // Apply new active classes
+      const targetPanel = document.querySelector(`.polar-panel[data-step="${stepNum}"]`);
+      if (targetPanel) targetPanel.classList.add('active-step');
+
+      if (orbitNodes[stepNum]) orbitNodes[stepNum].classList.add('node-active');
+
+      // Each connector arc joins step N to step N+1 (index stepNum-1 in the SVG)
+      const connIdx = (stepNum - 1) % connectors.length;
+      if (connectors[connIdx]) connectors[connIdx].classList.add('connector-active');
+
+      lastActiveStep = stepNum;
+    }
+
+    function getCubeAnimationStep() {
+      // Prefer live CSS animation time (exact, animation-synced)
+      const anims = (typeof cube.getAnimations === 'function') ? cube.getAnimations() : [];
+      if (anims.length > 0 && anims[0].playState !== 'paused') {
+        const t = anims[0].currentTime; // ms, wraps per iteration
+        if (t != null) {
+          const phase = Math.floor((t % ANIM_DURATION_MS) / PHASE_MS);
+          return (phase % STEP_COUNT) + 1;
+        }
+      }
+      // Fallback: wall-clock derived (still animation-synced if page loaded at t=0)
+      const elapsed = performance.now() % ANIM_DURATION_MS;
+      return Math.floor(elapsed / PHASE_MS) % STEP_COUNT + 1;
+    }
+
+    function autoSyncLoop() {
+      if (!isHovering) {
+        setActiveStep(getCubeAnimationStep());
+      }
+      rafHandle = requestAnimationFrame(autoSyncLoop);
+    }
+    autoSyncLoop();
+
+    /* ─────────────────────────────────────────────
+       HOVER OVERRIDE: pause auto-sync, snap cube face
+    ───────────────────────────────────────────── */
     steps.forEach((step) => {
       step.addEventListener('mouseenter', () => {
+        isHovering = true;
         cube.style.animationPlayState = 'paused';
         const stepNum = step.getAttribute('data-step');
-        steps.forEach((s) => s.classList.remove('active-step'));
+        steps.forEach(s => s.classList.remove('active-step'));
         step.classList.add('active-step');
         if (rotations[stepNum]) {
-          cube.style.transform = `${rotations[stepNum]} scale(1.1)`;
+          cube.style.transform  = `${rotations[stepNum]} scale(1.1)`;
           cube.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
         }
+        // Clear auto-sync visual states so they don't flicker
+        Object.values(orbitNodes).forEach(n => n && n.classList.remove('node-active'));
+        connectors.forEach(c => c.classList.remove('connector-active'));
       });
 
       step.addEventListener('mouseleave', () => {
+        isHovering = false;
+        lastActiveStep = 0; // force re-evaluation on next frame
         step.classList.remove('active-step');
-        cube.style.transform = '';
+        cube.style.transform  = '';
         cube.style.transition = '';
         cube.style.animationPlayState = 'running';
       });
     });
 
-    // Face click -> highlight corresponding polar workflow panel
+    /* ─────────────────────────────────────────────
+       FACE CLICK: flash the matching panel
+    ───────────────────────────────────────────── */
     faces.forEach((face) => {
       face.style.cursor = 'pointer';
       face.addEventListener('click', () => {
         const stepNum = face.getAttribute('data-step');
-        const targetStep = document.querySelector(`.polar-panel[data-step="${stepNum}"], .timeline-step[data-step="${stepNum}"]`);
-        if (targetStep) {
-          steps.forEach((s) => s.classList.remove('active-step'));
-          targetStep.classList.add('active-step');
-          setTimeout(() => targetStep.classList.remove('active-step'), 2500);
-        }
+        setActiveStep(Number(stepNum));
+        // Brief override then resume auto-sync
+        lastActiveStep = 0; // allow auto-sync to re-activate next frame
       });
     });
   }

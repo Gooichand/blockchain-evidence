@@ -189,7 +189,7 @@
   align-items: center;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 40px 60px;
+  padding: 40px 60px 110px; /* extra bottom padding ensures bottom card never overlaps next section */
   width: 100%;
 }
 
@@ -713,9 +713,39 @@
 
 /* Gentle float animation — never bounce */
 @keyframes polarFloat {
-  0%   { transform-origin: center; translate: 0 0; }
+  0%   { translate: 0 0; }
   50%  { translate: 0 -4px; }
   100% { translate: 0 3px; }
+}
+
+/* ── Orbit node active glow — triggered by JS when cube face aligns ── */
+.orbit-node.node-active {
+  box-shadow: 0 0 22px rgba(211,47,47,1), 0 0 40px rgba(211,47,47,0.5), 0 0 60px rgba(255,255,255,0.8) !important;
+  transform: scale(2) !important;
+  animation: none !important;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+/* ── Connector data-flow animation — played on active orbit-bezier-line ── */
+.orbit-bezier-line {
+  stroke: rgba(211, 47, 47, 0.35);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  fill: none;
+  filter: drop-shadow(0 0 6px rgba(211, 47, 47, 0.3));
+  transition: stroke 0.4s ease, filter 0.4s ease;
+}
+
+.orbit-bezier-line.connector-active {
+  stroke: rgba(211, 47, 47, 0.9);
+  stroke-dasharray: 8 4;
+  filter: drop-shadow(0 0 10px rgba(211,47,47,0.8));
+  animation: connectorFlow 1.2s linear infinite;
+}
+
+@keyframes connectorFlow {
+  0%   { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -48; }
 }
 
 /* Hover / Active state — only the hovered card glows, others dim */
@@ -1112,7 +1142,7 @@
   position: relative;
   z-index: 1;
   max-width: 1400px;
-  margin: -40px auto 0;
+  margin: 40px auto 0; /* changed from -40px to +40px — prevents orbit card overlap */
   padding: 0 60px 40px;
 }
 
