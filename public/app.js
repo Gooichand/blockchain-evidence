@@ -64,12 +64,18 @@ function initializeApp() {
     }
 
     // ── Session Restoration ──
-    // If user already has an auth token, redirect to their dashboard
+    // If user already has a valid auth token, redirect to their dashboard
     const savedUser = localStorage.getItem("currentUser");
     const authToken = localStorage.getItem("authToken");
     if (savedUser && authToken) {
-      const userData = JSON.parse(localStorage.getItem("evidUser_" + savedUser) || "{}");
-      const role = userData.role;
+      // Try wallet key first, then email key
+      let userData = null;
+      try {
+        const raw = localStorage.getItem("evidUser_" + savedUser) ||
+                    localStorage.getItem("evidUser_" + savedUser.toLowerCase());
+        if (raw) userData = JSON.parse(raw);
+      } catch (_) {}
+      const role = userData && userData.role;
       if (role) {
         const dashboardUrl = getDashboardUrl(role);
         // Only redirect if not already on a dashboard page
@@ -129,26 +135,53 @@ function initializeApp() {
       });
     }
 
-    // MetaMask connect
+    // MetaMask connect button inside login modal
     const loginConnectBtn = document.getElementById('loginConnectWallet');
     if (loginConnectBtn) {
       loginConnectBtn.addEventListener('click', async () => {
+        if (loginConnectBtn.classList.contains('loading')) return; // Prevent double-click
         loginConnectBtn.classList.add('loading');
+        loginConnectBtn.disabled = true;
         try {
           await connectWallet();
-          refreshLoginWalletUI();
+          // After connection, if wallet is valid, trigger auth immediately
+          if (userAccount) {
+            refreshLoginWalletUI();
+            await checkRegistrationStatus();
+          } else {
+            refreshLoginWalletUI();
+          }
+        } catch (err) {
+          console.error('Modal connect error:', err);
         } finally {
           loginConnectBtn.classList.remove('loading');
+          loginConnectBtn.disabled = false;
         }
       });
     }
 
-    // Wallet disconnect
+    // Wallet disconnect button inside login modal
     const loginDisconnectBtn = document.getElementById('loginDisconnectWallet');
     if (loginDisconnectBtn) {
       loginDisconnectBtn.addEventListener('click', () => {
         disconnectWallet();
         refreshLoginWalletUI();
+      });
+    }
+
+    // "Login Now" button — shown when wallet already connected in modal
+    const loginWalletLoginBtn = document.getElementById('loginWalletLoginBtn');
+    if (loginWalletLoginBtn) {
+      loginWalletLoginBtn.addEventListener('click', async () => {
+        if (loginWalletLoginBtn.classList.contains('loading')) return;
+        loginWalletLoginBtn.classList.add('loading');
+        loginWalletLoginBtn.disabled = true;
+        try {
+          await checkRegistrationStatus();
+        } finally {
+          loginWalletLoginBtn.classList.remove('loading');
+          loginWalletLoginBtn.disabled = false;
+        }
       });
     }
 
@@ -325,14 +358,18 @@ function closeLoginModal() {
 function refreshLoginWalletUI() {
   const connected = document.getElementById('loginWalletConnected');
   const addr = document.getElementById('loginWalletAddress');
-  const btn = document.getElementById('loginConnectWallet');
+  const connectBtn = document.getElementById('loginConnectWallet');
+  const loginNowBtn = document.getElementById('loginWalletLoginBtn');
+
   if (userAccount && connected && addr) {
     connected.classList.add('show');
-    addr.textContent = userAccount;
-    if (btn) btn.style.display = 'none';
+    addr.textContent = userAccount.slice(0, 6) + '...' + userAccount.slice(-4);
+    if (connectBtn) connectBtn.style.display = 'none';
+    if (loginNowBtn) loginNowBtn.style.display = '';
   } else {
     if (connected) connected.classList.remove('show');
-    if (btn && window.ethereum) btn.style.display = '';
+    if (connectBtn && window.ethereum) connectBtn.style.display = '';
+    if (loginNowBtn) loginNowBtn.style.display = 'none';
   }
 }
 
@@ -427,6 +464,7 @@ async function handleEmailLogin(event) {
 
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
+  const submitBtn = document.getElementById("loginEmailSubmit");
   
   if (!emailInput || !passwordInput) {
     console.error("Email or password input elements not found");
@@ -434,47 +472,53 @@ async function handleEmailLogin(event) {
     return;
   }
 
-  const email = emailInput.value;
+  const email = emailInput.value.trim();
   const password = passwordInput.value;
 
   if (!email || !password) {
-    showAlert("Please enter both email and password", "error");
+    showAlert("Please enter both email and password.", "error");
     return;
+  }
+
+  // Prevent double submission
+  if (submitBtn) {
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
   }
 
   try {
     showLoading(true, "Logging in...");
 
-    // Ensure apiClient is available
     if (!window.apiClient) {
-      console.error("apiClient not available");
       showAlert("Authentication service not loaded. Please refresh the page.", "error");
-      showLoading(false);
       return;
     }
 
     const data = await window.apiClient.post("/auth/email/login", { email, password }, { skipAuth: true });
 
     if (data.success) {
-      const walletAddress = (data.user.walletAddress || data.user.wallet_address || email).toLowerCase();
+      // Determine the storage key: use wallet_address if present, else email
+      const storageKey = (data.user.wallet_address || data.user.walletAddress || email).toLowerCase();
       
-      // Store session data
       const userToStore = {
         ...data.user,
-        walletAddress: walletAddress,
-        wallet_address: walletAddress,
+        walletAddress: storageKey,
+        wallet_address: storageKey,
       };
-      localStorage.setItem("currentUser", walletAddress);
-      localStorage.setItem("evidUser_" + walletAddress, JSON.stringify(userToStore));
+      localStorage.setItem("currentUser", storageKey);
+      localStorage.setItem("evidUser_" + storageKey, JSON.stringify(userToStore));
+      // Also store by email as fallback key
+      localStorage.setItem("evidUser_" + email.toLowerCase(), JSON.stringify(userToStore));
       if (data.token) {
         localStorage.setItem("authToken", data.token);
       }
 
-      // Create client-side session
       if (typeof sessionManager !== 'undefined') {
-        sessionManager.createSession(walletAddress, { loginType: 'email' });
+        sessionManager.createSession(storageKey, { loginType: 'email' });
       }
 
+      // Show success toast BEFORE closing modal
       showAlert("Login successful! Redirecting...", "success");
 
       // Close login modal
@@ -484,13 +528,26 @@ async function handleEmailLogin(event) {
       const dashboardUrl = getDashboardUrl(data.user.role);
       setTimeout(() => {
         window.location.href = dashboardUrl;
-      }, 800);
+      }, 900);
     }
   } catch (error) {
     console.error("Login error:", error);
-    showAlert(error.message || "Login failed", "error");
+    let message = error.message || "Login failed. Please try again.";
+    // Surface clearer message for unverified accounts
+    if (error.status === 401) {
+      message = "Invalid email or password. If you just registered, please verify your email first.";
+    } else if (error.status === 429) {
+      message = "Too many login attempts. Please wait a moment and try again.";
+    } else if (error.status >= 500) {
+      message = "Server error. Please try again later.";
+    }
+    showAlert(message, "error");
   } finally {
     showLoading(false);
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
   }
 }
 
@@ -913,7 +970,7 @@ async function checkRegistrationStatus() {
   console.log("[Auth] Wallet Connected.");
   if (!userAccount) {
     console.warn("[Auth] No wallet address.");
-    showAlert("Please connect your wallet first", "error");
+    showAlert("Please connect your wallet first.", "error");
     return;
   }
 
@@ -925,11 +982,21 @@ async function checkRegistrationStatus() {
 
     // Step 1: Look up user by wallet address
     console.log("[Auth] Searching Database...");
-    const userData = await window.apiClient.get(`/users/wallet/${walletAddr}`, { skipAuth: true });
+    let userData;
+    try {
+      userData = await window.apiClient.get(`/users/wallet/${walletAddr}`, { skipAuth: true });
+    } catch (lookupError) {
+      console.warn("[Auth] Wallet lookup failed:", lookupError);
+      if (lookupError.status === 404 || lookupError.status === 401) {
+        showAlert("Wallet not registered. Please register or use Email Login.", "warning");
+      } else {
+        showAlert("Unable to reach server. Please check your connection and try again.", "error");
+      }
+      return;
+    }
 
-    if (!userData.user) {
+    if (!userData || !userData.user) {
       console.warn("[Auth] Wallet Not Found.");
-      showLoading(false);
       showAlert("Wallet not registered. Please register or use Email Login.", "warning");
       return;
     }
@@ -939,20 +1006,28 @@ async function checkRegistrationStatus() {
 
     if (!role) {
       console.error("[Auth] Role Missing.");
-      showLoading(false);
       showAlert("Authentication failed: user role is missing. Contact administrator.", "error");
       return;
     }
 
     // Step 2: Authenticate via wallet login endpoint to get JWT
     console.log("[Auth] Authenticating with backend...");
-    const authData = await window.apiClient.post("/auth/wallet/login", {
-      walletAddress: walletAddr,
-    }, { skipAuth: true });
+    let authData;
+    try {
+      authData = await window.apiClient.post("/auth/wallet/login", {
+        walletAddress: walletAddr,
+      }, { skipAuth: true });
+    } catch (authError) {
+      console.error("[Auth] JWT Creation Failed:", authError);
+      let msg = "Authentication failed. Please try again.";
+      if (authError.status === 401) msg = "Wallet not authorized. Please register first.";
+      else if (authError.status >= 500) msg = "Server error during authentication. Please try again later.";
+      showAlert(msg, "error");
+      return;
+    }
 
-    if (!authData.success || !authData.token) {
+    if (!authData || !authData.success || !authData.token) {
       console.error("[Auth] JWT Creation Failed.");
-      showLoading(false);
       showAlert("Authentication failed. Please try again.", "error");
       return;
     }
@@ -969,35 +1044,27 @@ async function checkRegistrationStatus() {
     localStorage.setItem("evidUser_" + walletAddr, JSON.stringify(userToStore));
     localStorage.setItem("authToken", authData.token);
 
-    // Create client-side session
     if (typeof sessionManager !== 'undefined') {
       sessionManager.createSession(walletAddr, { loginType: 'wallet' });
     }
 
-    // Step 4: Close login modal
+    // Step 4: Show success BEFORE closing modal
+    showAlert("Login successful! Redirecting...", "success");
+
+    // Step 5: Close login modal
     closeLoginModal();
 
-    // Step 5: Redirect to role-based dashboard
+    // Step 6: Redirect to role-based dashboard
     const dashboardUrl = getDashboardUrl(authData.user.role);
     console.log("[Auth] Authentication Complete. Redirecting to:", dashboardUrl);
 
-    showAlert("Login successful! Redirecting...", "success");
     setTimeout(() => {
       console.log("[Auth] Navigating to:", dashboardUrl);
       window.location.href = dashboardUrl;
-    }, 800);
+    }, 900);
   } catch (error) {
-    console.error("[Auth] Database Query Failed:", error);
-    showLoading(false);
-
-    if (error.status === 401 || error.status === 404) {
-      console.warn("[Auth] Wallet Not Found.");
-      showAlert("Wallet not registered. Please register or use Email Login.", "warning");
-    } else if (error.status >= 500) {
-      showAlert("Server unavailable. Please try again later.", "error");
-    } else {
-      showAlert("Authentication failed: " + (error.message || "Server error"), "error");
-    }
+    console.error("[Auth] Unexpected Error:", error);
+    showAlert("Authentication failed: " + (error.message || "Unexpected error"), "error");
   } finally {
     showLoading(false);
   }
@@ -1353,17 +1420,18 @@ function showLoading(show, message = "Loading...") {
   }
 }
 
-// Alert system
+// Alert system — always renders on top of modals (inline z-index as backup)
 function showAlert(message, type = "info") {
+  // Remove any existing alerts first
   const existingAlerts = document.querySelectorAll(".alert");
-  existingAlerts.forEach((alert) => alert.remove());
+  existingAlerts.forEach((a) => a.remove());
 
   const alert = document.createElement("div");
   alert.className = `alert alert-${type}`;
+  // Inline z-index as a safety net in case CSS doesn't load
+  alert.style.zIndex = '99999';
+  alert.style.position = 'fixed';
 
-  // Add accessibility attributes for screen readers
-  // Use role="alert" for urgent messages (errors/warnings) - announces immediately
-  // Use role="status" for informational messages - announces politely
   if (type === "error" || type === "warning") {
     alert.setAttribute("role", "alert");
     alert.setAttribute("aria-live", "assertive");
@@ -1372,26 +1440,25 @@ function showAlert(message, type = "info") {
     alert.setAttribute("aria-live", "polite");
   }
 
+  const iconName = getAlertIcon(type);
   alert.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="${getAlertIcon(
-    type
-  )}" style="width: 16px; height: 16px;" aria-hidden="true"></i>
+            <i data-lucide="${iconName}" style="width: 16px; height: 16px; flex-shrink:0;" aria-hidden="true"></i>
             <span>${message}</span>
         </div>
     `;
 
+  // Always append to body so it sits in the top stacking context
   document.body.appendChild(alert);
 
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  setTimeout(() => {
-    if (alert.parentNode) {
-      alert.remove();
-    }
-  }, 5000);
+  const timer = setTimeout(() => {
+    if (alert.parentNode) alert.remove();
+  }, 5500);
 
   alert.addEventListener("click", () => {
+    clearTimeout(timer);
     alert.remove();
   });
 }

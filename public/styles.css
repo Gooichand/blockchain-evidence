@@ -62,19 +62,23 @@
   margin-bottom: 30px;
 }
 
-/* Alert positioning */
+/* Alert positioning — must always appear above modals (z-index 10000) */
 .alert {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 99999;
   min-width: 300px;
   max-width: 500px;
   padding: 16px;
   border-radius: 8px;
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   cursor: pointer;
   animation: slideIn 0.3s ease-out;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 @keyframes slideIn {
@@ -1268,13 +1272,7 @@ body.modal-open {
   overflow-x: auto;
 }
 
-/* Alerts */
-.alert {
-  padding: 12px;
-  border-radius: 6px;
-  margin: 10px 0;
-}
-
+/* Alert color variants (z-index is set by the primary .alert rule above) */
 .alert-success {
   background: #d4edda;
   color: #155724;
