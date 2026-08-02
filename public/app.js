@@ -1541,3 +1541,44 @@ window.addEventListener("error", function (event) {
 window.addEventListener("unhandledrejection", function (event) {
   console.error("Unhandled promise rejection:", event.reason);
 });
+
+// Enhanced Website-Wide Interactive Parallax (Mouse Move)
+document.addEventListener("DOMContentLoaded", function () {
+  const bgGrid = document.querySelector(".bg-grid");
+  const bgSpotlight = document.querySelector(".bg-spotlight-beam");
+  const bgSpheres = document.querySelectorAll(".bg-gradient-sphere");
+
+  if (!bgGrid && !bgSpotlight && bgSpheres.length === 0) return;
+
+  let ticking = false;
+
+  window.addEventListener("mousemove", function (e) {
+    if (ticking) return;
+    ticking = true;
+
+    window.requestAnimationFrame(function () {
+      // Calculate normalized cursor coordinates across full window (-0.5 to +0.5)
+      const x = (e.clientX / window.innerWidth) - 0.5;
+      const y = (e.clientY / window.innerHeight) - 0.5;
+
+      // Micro-grid shifts clearly in opposite direction
+      if (bgGrid) {
+        bgGrid.style.transform = `translate3d(${x * -40}px, ${y * -40}px, 0)`;
+      }
+
+      // Spotlight beam moves dynamically across the top
+      if (bgSpotlight) {
+        bgSpotlight.style.transform = `translate3d(calc(-50% + ${x * -30}px), ${y * -20}px, 0)`;
+      }
+
+      // Spheres float gracefully with deep 3D separation
+      bgSpheres.forEach((sphere, idx) => {
+        const factorX = (idx + 1) * 35;
+        const factorY = (idx + 1) * 25;
+        sphere.style.transform = `translate3d(${x * factorX}px, ${y * factorY}px, 0)`;
+      });
+
+      ticking = false;
+    });
+  });
+});

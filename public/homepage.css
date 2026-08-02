@@ -3,7 +3,7 @@
    EVID-DGC Digital Evidence Platform
    =========================================== */
 
-/* --- Premium Background Environment --- */
+/* --- Premium Background Environment: The Secure Digital Vault Architecture --- */
 .hero-section {
   position: relative;
   overflow: hidden;
@@ -20,86 +20,109 @@
 }
 
 .bg-environment {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
 }
 
+.bg-grid,
+.bg-spotlight-beam,
+.bg-gradient-sphere {
+  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  will-change: transform;
+}
+
+/* Layer 1 (Deepest): Soft top-center spotlight radial beam focusing on the 3D centerpiece */
+.bg-spotlight-beam {
+  position: absolute;
+  top: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 650px;
+  background: radial-gradient(ellipse at top center, rgba(211, 47, 47, 0.18) 0%, rgba(183, 28, 28, 0.08) 45%, transparent 75%);
+  filter: blur(50px);
+  pointer-events: none;
+}
+
 .bg-gradient-sphere {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
+  filter: blur(90px);
+  opacity: 0.28;
 }
 
 .bg-sphere-1 {
-  width: 600px;
-  height: 600px;
+  width: 650px;
+  height: 650px;
   top: -150px;
   left: -100px;
-  background: radial-gradient(circle, rgba(211,47,47,0.3), transparent 70%);
-  animation: bgFloat 12s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(211,47,47,0.25), transparent 70%);
+  animation: bgFloat 14s ease-in-out infinite;
 }
 
 .bg-sphere-2 {
-  width: 400px;
-  height: 400px;
+  width: 450px;
+  height: 450px;
   bottom: -100px;
   right: -50px;
-  background: radial-gradient(circle, rgba(211,47,47,0.2), transparent 70%);
-  animation: bgFloat 15s ease-in-out infinite reverse;
+  background: radial-gradient(circle, rgba(211,47,47,0.18), transparent 70%);
+  animation: bgFloat 16s ease-in-out infinite reverse;
 }
 
 .bg-sphere-3 {
-  width: 300px;
-  height: 300px;
-  top: 50%;
+  width: 350px;
+  height: 350px;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(211,47,47,0.1), transparent 70%);
-  animation: bgFloat 18s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(211,47,47,0.12), transparent 70%);
+  animation: bgFloat 20s ease-in-out infinite;
 }
 
 @keyframes bgFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 15px) scale(0.95); }
+  33% { transform: translate(25px, -15px) scale(1.04); }
+  66% { transform: translate(-15px, 10px) scale(0.96); }
 }
 
+/* Layer 2 (Pattern): Dual-density precision micro-grid combined with node-line geometry */
 .bg-grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(211,47,47,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(211,47,47,0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    linear-gradient(rgba(211, 47, 47, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(211, 47, 47, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(211, 47, 47, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(211, 47, 47, 0.015) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+  mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 80%);
 }
 
 .bg-circuit {
   position: absolute;
   inset: 0;
-  opacity: 0.06;
+  opacity: 0.05;
   background:
     repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 40px,
-      rgba(211,47,47,0.5) 40px,
-      rgba(211,47,47,0.5) 41px
+      transparent 50px,
+      rgba(211,47,47,0.4) 50px,
+      rgba(211,47,47,0.4) 51px
     ),
     repeating-linear-gradient(
       90deg,
       transparent,
-      transparent 40px,
-      rgba(211,47,47,0.5) 40px,
-      rgba(211,47,47,0.5) 41px
+      transparent 50px,
+      rgba(211,47,47,0.4) 50px,
+      rgba(211,47,47,0.4) 51px
     );
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  mask-image: radial-gradient(ellipse at center, black 45%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 45%, transparent 75%);
 }
 
 .bg-nodes {
@@ -111,8 +134,9 @@
   position: absolute;
   width: 6px;
   height: 6px;
-  background: rgba(211,47,47,0.2);
+  background: rgba(211,47,47,0.35);
   border-radius: 50%;
+  box-shadow: 0 0 8px rgba(211,47,47,0.4);
 }
 
 .bg-node:nth-child(1) { top: 15%; left: 20%; animation: nodePulse 4s ease-in-out infinite; }
@@ -125,16 +149,16 @@
 .bg-node:nth-child(8) { top: 55%; left: 65%; animation: nodePulse 4.2s ease-in-out infinite 0.7s; }
 
 @keyframes nodePulse {
-  0%, 100% { opacity: 0.2; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.5); }
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.6); }
 }
 
 .bg-node::after {
   content: '';
   position: absolute;
-  width: 40px;
+  width: 50px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(211,47,47,0.15), transparent);
+  background: linear-gradient(90deg, rgba(211,47,47,0.25), transparent);
   top: 50%;
   left: 10px;
 }
@@ -722,21 +746,22 @@
 
 .feature-card {
   padding: 24px 18px;
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(211, 47, 47, 0.12);
   border-radius: 16px;
   text-align: center;
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   cursor: default;
 }
 
 .feature-card:hover {
-  transform: translateY(-4px);
-  background: rgba(255,255,255,0.8);
-  border-color: rgba(211,47,47,0.15);
-  box-shadow: 0 12px 36px rgba(211,47,47,0.1);
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(211, 47, 47, 0.3);
+  box-shadow: 0 14px 40px rgba(211, 47, 47, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .feature-card i {
@@ -748,7 +773,7 @@
 }
 
 .feature-card:hover i {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .feature-card h4 {
@@ -760,7 +785,7 @@
 
 .feature-card p {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #6b7280;
   line-height: 1.5;
   margin: 0;
 }
@@ -782,19 +807,21 @@
 
 .metric-card {
   padding: 20px 14px;
-  background: rgba(255,255,255,0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(211, 47, 47, 0.1);
   border-radius: 14px;
   text-align: center;
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .metric-card:hover {
-  background: rgba(255,255,255,0.65);
-  border-color: rgba(211,47,47,0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(211, 47, 47, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(211, 47, 47, 0.12);
 }
 
 .metric-number {
