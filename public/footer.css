@@ -360,56 +360,7 @@
     text-align: center;
 }
 
-.footer-bottom-social {
-    margin-bottom: 14px;
-}
 
-.footer-bottom-linkedin {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    color: var(--primary-red);
-    background: linear-gradient(145deg, #ffffff 0%, #ffebee 100%);
-    border: 2px solid rgba(255, 255, 255, 0.85);
-    box-shadow:
-        0 8px 22px -6px rgba(120, 20, 20, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    transition:
-        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.3s ease;
-}
-
-.footer-bottom-linkedin i {
-    width: 22px;
-    height: 22px;
-}
-
-/* Pulse ring */
-.footer-bottom-linkedin::before {
-    content: "";
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    animation: footerPulse 2.8s ease-out infinite;
-    pointer-events: none;
-}
-
-.footer-bottom-linkedin:hover {
-    transform: translateY(-4px) scale(1.06);
-    box-shadow:
-        0 0 0 8px rgba(255, 255, 255, 0.18),
-        0 14px 30px -8px rgba(120, 20, 20, 0.6);
-}
-
-.footer-bottom-linkedin:focus-visible {
-    outline: 3px solid rgba(255, 255, 255, 0.7);
-    outline-offset: 4px;
-}
 
 .footer-bottom p {
     color: #ffffff;

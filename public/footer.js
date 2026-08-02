@@ -55,7 +55,7 @@ class FooterManager {
                     <div class="footer-connect">
                         <a href="https://www.linkedin.com/company/evid-dgc/" class="footer-linkedin" target="_blank"
                             rel="noopener noreferrer" aria-label="Connect with EVID-DGC on LinkedIn">
-                            <i data-lucide="linkedin"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkedin-svg"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                         </a>
                         <span class="footer-connect-label">Connect on LinkedIn</span>
                     </div>
@@ -110,12 +110,6 @@ class FooterManager {
             </div>
 
             <div class="footer-bottom fade-in" style="animation-delay: 0.6s;">
-                <div class="footer-bottom-social">
-                    <a href="https://www.linkedin.com/company/evid-dgc/" class="footer-bottom-linkedin" target="_blank"
-                        rel="noopener noreferrer" aria-label="Connect with EVID-DGC on LinkedIn">
-                        <i data-lucide="linkedin"></i>
-                    </a>
-                </div>
                 <p>&copy; <span id="footerYear">${year}</span> EVID-DGC · Blockchain Evidence Management. All rights
                     reserved.</p>
             </div>
@@ -128,28 +122,10 @@ class FooterManager {
         // Initialize Lucide icons if available
         this.updateIcons();
         this.initLinkedInRipple();
-        this.initBottomLinkedInRipple();
     }
 
     initLinkedInRipple() {
         const btn = document.querySelector('.footer-linkedin');
-        if (!btn) return;
-
-        btn.addEventListener('click', (e) => {
-            const rect = btn.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height) * 1.4;
-            const ripple = document.createElement('span');
-            ripple.className = 'footer-ripple';
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
-            ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
-            btn.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
-        });
-    }
-
-    initBottomLinkedInRipple() {
-        const btn = document.querySelector('.footer-bottom-linkedin');
         if (!btn) return;
 
         btn.addEventListener('click', (e) => {
