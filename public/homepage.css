@@ -184,10 +184,10 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1fr 2fr;
+  gap: 0;
   align-items: center;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 40px 60px;
   width: 100%;
@@ -369,7 +369,7 @@
   color: #1a1a1a;
 }
 
-/* --- Hero Center - Evidence Vault --- */
+/* --- Hero Center & Orbit Stage Container --- */
 .hero-center {
   display: flex;
   justify-content: center;
@@ -377,13 +377,15 @@
   position: relative;
 }
 
+/* The evidence-vault is now the full orbit stage */
 .evidence-vault {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: 680px;
+  height: 680px;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
 }
 
 /* Premium Curved C-Shield Orbit Halos surrounding the 3D cube */
@@ -613,87 +615,466 @@
   100% { opacity: 0.15; }
 }
 
-/* --- Hero Right - Journey Timeline (C-Shape Curved Layout) --- */
+/* ============================================================
+   POLAR ORBIT WORKFLOW - Mathematically Positioned
+   Center of evidence-vault: (340, 340) | Orbital radius: 260px
+   Angles: 270°, 330°, 30°, 90°, 150°, 210° (clockwise from top)
+   x = 340 + 260*cos(deg)   y = 340 + 260*sin(deg)
+   cos/sin in CSS degrees (0°=right, 90°=down)
+   ============================================================ */
+
+.polar-orbit-workflow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Base glassmorphic polar panel */
+.polar-panel {
+  position: absolute;
+  width: 156px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 50px rgba(211, 47, 47, 0.10),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+  cursor: pointer;
+  pointer-events: auto;
+  will-change: transform, opacity;
+  transition: opacity 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  /* Shared floating animation base; delay/duration overridden per step */
+  animation: polarFloat 10s ease-in-out infinite alternate;
+}
+
+/* ── Polar positions: translate(-50%,-50%) centres card on the orbit point ── */
+/* Step 1 — 270° top-centre: x=340, y=340−260=80 */
+.step-pos-1 {
+  left: 340px;
+  top: 80px;
+  transform: translate(-50%, -50%) rotate(3deg) perspective(600px) rotateX(8deg);
+  animation-duration: 9s;
+  animation-delay: 0s;
+}
+
+/* Step 2 — 330° upper-right: x=340+225=565, y=340−130=210 */
+.step-pos-2 {
+  left: 565px;
+  top: 210px;
+  transform: translate(-50%, -50%) rotate(-12deg) perspective(600px) rotateX(4deg) rotateY(-6deg);
+  animation-duration: 11s;
+  animation-delay: -2.3s;
+}
+
+/* Step 3 — 30° lower-right: x=340+225=565, y=340+130=470 */
+.step-pos-3 {
+  left: 565px;
+  top: 470px;
+  transform: translate(-50%, -50%) rotate(-18deg) perspective(600px) rotateX(-4deg) rotateY(-8deg);
+  animation-duration: 8.5s;
+  animation-delay: -4.1s;
+}
+
+/* Step 4 — 90° bottom-centre: x=340, y=340+260=600 */
+.step-pos-4 {
+  left: 340px;
+  top: 600px;
+  transform: translate(-50%, -50%) rotate(-3deg) perspective(600px) rotateX(-8deg);
+  animation-duration: 12s;
+  animation-delay: -6s;
+}
+
+/* Step 5 — 150° lower-left: x=340−225=115, y=340+130=470 */
+.step-pos-5 {
+  left: 115px;
+  top: 470px;
+  transform: translate(-50%, -50%) rotate(18deg) perspective(600px) rotateX(-4deg) rotateY(8deg);
+  animation-duration: 10s;
+  animation-delay: -3s;
+}
+
+/* Step 6 — 210° upper-left: x=340−225=115, y=340−130=210 */
+.step-pos-6 {
+  left: 115px;
+  top: 210px;
+  transform: translate(-50%, -50%) rotate(12deg) perspective(600px) rotateX(4deg) rotateY(6deg);
+  animation-duration: 9.5s;
+  animation-delay: -5s;
+}
+
+/* Gentle float animation — never bounce */
+@keyframes polarFloat {
+  0%   { transform-origin: center; translate: 0 0; }
+  50%  { translate: 0 -4px; }
+  100% { translate: 0 3px; }
+}
+
+/* Hover / Active state — only the hovered card glows, others dim */
+.polar-orbit-workflow:has(.polar-panel:hover) .polar-panel:not(:hover),
+.polar-orbit-workflow:has(.polar-panel.active-step) .polar-panel:not(.active-step) {
+  opacity: 0.45;
+  filter: saturate(0.5);
+}
+
+.polar-panel:hover,
+.polar-panel.active-step {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(211, 47, 47, 0.55) !important;
+  box-shadow:
+    0 25px 65px rgba(211, 47, 47, 0.22),
+    0 0 24px rgba(211, 47, 47, 0.15),
+    inset 0 1px 0 rgba(255,255,255,0.98) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  z-index: 20;
+}
+
+/* Override float transforms on hover to just scale up from where the card already is */
+.step-pos-1:hover, .step-pos-1.active-step { transform: translate(-50%, -50%) rotate(3deg) perspective(600px) rotateX(8deg) scale(1.07); }
+.step-pos-2:hover, .step-pos-2.active-step { transform: translate(-50%, -50%) rotate(-12deg) perspective(600px) rotateX(4deg) rotateY(-6deg) scale(1.07); }
+.step-pos-3:hover, .step-pos-3.active-step { transform: translate(-50%, -50%) rotate(-18deg) perspective(600px) rotateX(-4deg) rotateY(-8deg) scale(1.07); }
+.step-pos-4:hover, .step-pos-4.active-step { transform: translate(-50%, -50%) rotate(-3deg) perspective(600px) rotateX(-8deg) scale(1.07); }
+.step-pos-5:hover, .step-pos-5.active-step { transform: translate(-50%, -50%) rotate(18deg) perspective(600px) rotateX(-4deg) rotateY(8deg) scale(1.07); }
+.step-pos-6:hover, .step-pos-6.active-step { transform: translate(-50%, -50%) rotate(12deg) perspective(600px) rotateX(4deg) rotateY(6deg) scale(1.07); }
+
+/* Connector node dot on each card */
+.polar-panel::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #d32f2f;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(211,47,47,0.6);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  /* Connector points toward the cube center — placed on the inward edge */
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.step-pos-1::after { bottom: -4px; top: auto; left: 50%; transform: translateX(-50%); }  /* top card → dot at bottom */
+.step-pos-2::after { left: -4px; top: 50%; bottom: auto; transform: translateY(-50%); }   /* upper-right → dot at left */
+.step-pos-3::after { left: -4px; top: 50%; bottom: auto; transform: translateY(-50%); }   /* lower-right → dot at left */
+.step-pos-4::after { top: -4px; bottom: auto; left: 50%; transform: translateX(-50%); }   /* bottom card → dot at top */
+.step-pos-5::after { right: -4px; left: auto; top: 50%; transform: translateY(-50%); }    /* lower-left → dot at right */
+.step-pos-6::after { right: -4px; left: auto; top: 50%; transform: translateY(-50%); }    /* upper-left → dot at right */
+
+.polar-panel:hover::after,
+.polar-panel.active-step::after {
+  box-shadow: 0 0 16px rgba(211,47,47,0.9), 0 0 4px #fff;
+  transform: translateX(-50%) scale(1.6);
+}
+
+/* ── Cube Bottom Actions – placed directly beneath the vault-cube-container ── */
+.cube-bottom-actions {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.cube-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(211, 47, 47, 0.22);
+  box-shadow: 0 8px 22px rgba(211, 47, 47, 0.12), inset 0 1px 0 rgba(255,255,255,0.95);
+  text-decoration: none;
+  color: #1a1a1a;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.cube-action-btn i {
+  width: 18px;
+  height: 18px;
+  color: #d32f2f;
+  transition: transform 0.25s ease;
+}
+
+.cube-action-btn span {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #4b5563;
+  line-height: 1;
+  display: none; /* hidden inside circle, shown on hover via tooltip-style approach */
+}
+
+.cube-action-btn:hover {
+  transform: translateY(-5px) scale(1.12);
+  border-color: #d32f2f;
+  box-shadow: 0 14px 32px rgba(211,47,47,0.28), 0 0 16px rgba(211,47,47,0.2);
+  background: rgba(255,255,255,0.98);
+}
+
+.cube-action-btn:hover i {
+  transform: scale(1.18);
+}
+
+/* Tooltip label below each action button */
+.cube-action-btn::before {
+  content: attr(title);
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4b5563;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.cube-action-btn:hover::before {
+  opacity: 1;
+}
+
+/* ── Orbit ring strokes refined (3 types: solid, dashed, dotted) ── */
+.outer-path  { stroke: rgba(211, 47, 47, 0.12); stroke-width: 1.5; stroke-dasharray: none; }
+.middle-path { stroke: rgba(211, 47, 47, 0.08); stroke-width: 1;   stroke-dasharray: 8 6; animation-direction: reverse; }
+.inner-path  { stroke: rgba(211, 47, 47, 0.06); stroke-width: 1;   stroke-dasharray: 2 5; animation-duration: 90s; }
+
+/* Keep hero-right empty but harmless */
+.hero-right { display: none; }
+
+/* --- Hero Center & Ambient Bloom --- */
+.vault-ambient-bloom {
+  position: absolute;
+  width: 550px;
+  height: 550px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(211, 47, 47, 0.18) 0%, rgba(211, 47, 47, 0.04) 55%, transparent 75%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: blur(40px);
+  z-index: 0;
+  animation: bloomPulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes bloomPulse {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+
+/* SVG Orbital Rings & Curved Bezier Connections */
+.vault-orbital-svg {
+  position: absolute;
+  width: 560px;
+  height: 560px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.orbit-path {
+  stroke-dasharray: 6 6;
+  animation: orbitRotateClockwise 45s linear infinite;
+  transform-origin: center;
+}
+
+.outer-path { stroke: rgba(211, 47, 47, 0.25); stroke-width: 1.5; }
+.middle-path { stroke: rgba(255, 255, 255, 0.6); stroke-width: 1; animation-duration: 65s; animation-direction: reverse; }
+.inner-path { stroke: rgba(211, 47, 47, 0.15); stroke-width: 1; animation-duration: 90s; }
+
+.orbit-bezier-line {
+  stroke: rgba(211, 47, 47, 0.35);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  fill: none;
+  filter: drop-shadow(0 0 6px rgba(211, 47, 47, 0.3));
+}
+
+@keyframes orbitRotateClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Glowing Orbital Nodes */
+.orbit-node {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 0 12px rgba(211, 47, 47, 0.8), 0 0 20px #ffffff;
+}
+
+.node-1 { width: 8px; height: 8px; background: #ffffff; border: 2px solid #d32f2f; top: 12%; left: 48%; animation: nodeFloat 4s ease-in-out infinite alternate; }
+.node-2 { width: 10px; height: 10px; background: #d32f2f; border: 2px solid #ffffff; top: 28%; right: 14%; animation: nodeFloat 6s ease-in-out infinite alternate-reverse; }
+.node-3 { width: 7px; height: 7px; background: #ffffff; border: 1.5px solid #d32f2f; bottom: 30%; right: 12%; animation: nodeFloat 5s ease-in-out infinite alternate; }
+.node-4 { width: 9px; height: 9px; background: #d32f2f; border: 2px solid #ffffff; bottom: 12%; left: 46%; animation: nodeFloat 7s ease-in-out infinite alternate-reverse; }
+.node-5 { width: 6px; height: 6px; background: #ffffff; border: 1.5px solid #d32f2f; bottom: 32%; left: 14%; animation: nodeFloat 5.5s ease-in-out infinite alternate; }
+.node-6 { width: 11px; height: 11px; background: #d32f2f; border: 2px solid #ffffff; top: 26%; left: 12%; animation: nodeFloat 4.5s ease-in-out infinite alternate-reverse; }
+
+@keyframes nodeFloat {
+  0% { transform: scale(0.85) translateY(0px); opacity: 0.6; }
+  100% { transform: scale(1.25) translateY(-6px); opacity: 1; }
+}
+
+/* Floating Circular Quick Action Shortcuts (GitHub, Academic, Social) */
+.orbit-quick-actions {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.orbit-quick-btn {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(211, 47, 47, 0.3);
+  box-shadow: 0 10px 25px rgba(211, 47, 47, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+  text-decoration: none;
+  pointer-events: auto;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.orbit-quick-btn i {
+  width: 20px;
+  height: 20px;
+  color: #d32f2f;
+  transition: transform 0.3s ease;
+}
+
+.orbit-quick-btn span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  color: #4b5563;
+}
+
+.orbit-quick-btn:hover {
+  transform: translateY(-4px) scale(1.1);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #d32f2f;
+  box-shadow: 0 14px 35px rgba(211, 47, 47, 0.3), 0 0 20px rgba(211, 47, 47, 0.2);
+}
+
+.orbit-quick-btn:hover i {
+  transform: scale(1.15);
+}
+
+.btn-github { top: -25px; left: 50%; transform: translateX(-50%); }
+.btn-academic { bottom: -20px; left: 20%; }
+.btn-social { bottom: -20px; right: 20%; }
+
+/* --- Hero Right - Premium Orbit Workflow Satellite Layout --- */
 .hero-right {
   position: relative;
   padding-left: 0;
 }
 
-.journey-timeline {
+.journey-timeline.orbital-satellite-system {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-left: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  padding: 10px;
 }
 
-/* Curved glowing connector line in deep C shape facing the center cube */
-.journey-timeline::before {
-  content: '';
-  position: absolute;
-  left: -32px;
-  top: 10px;
-  bottom: 10px;
-  width: 100px;
-  border-right: 3px dashed rgba(211, 47, 47, 0.55);
-  border-top-right-radius: 90px;
-  border-bottom-right-radius: 90px;
-  pointer-events: none;
-  filter: drop-shadow(0 0 12px rgba(211, 47, 47, 0.4));
-}
-
-.timeline-step {
+/* Base Glassmorphic Satellite Cards */
+.timeline-step.orbit-satellite {
   position: relative;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(211, 47, 47, 0.15);
-  border-radius: 14px;
-  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  cursor: default;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(211, 47, 47, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  will-change: transform, opacity;
+  animation: satelliteFloat 10s ease-in-out infinite alternate;
 }
 
-/* Individual X-offsets forming a deep, clear C-shaped arc embracing the center cube */
-.timeline-step:nth-child(1) { transform: translateX(0px);   }
-.timeline-step:nth-child(2) { transform: translateX(45px);  }
-.timeline-step:nth-child(3) { transform: translateX(90px);  }
-.timeline-step:nth-child(4) { transform: translateX(90px);  }
-.timeline-step:nth-child(5) { transform: translateX(45px);  }
-.timeline-step:nth-child(6) { transform: translateX(0px);   }
+/* Unique Floating Animation Speeds & Delays for Satellite Cards */
+.sat-330 { animation-delay: 0s;   animation-duration: 8s;  }
+.sat-20  { animation-delay: -2s;  animation-duration: 11s; }
+.sat-75  { animation-delay: -4s;  animation-duration: 9s;  }
+.sat-140 { animation-delay: -6s;  animation-duration: 12s; }
+.sat-210 { animation-delay: -3s;  animation-duration: 10s; }
+.sat-285 { animation-delay: -5s;  animation-duration: 9.5s; }
 
-.timeline-step:hover {
+@keyframes satelliteFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(0.5deg); }
+  100% { transform: translateY(4px) rotate(-0.5deg); }
+}
+
+/* Active & Hover Satellite Card State */
+.timeline-step.orbit-satellite:hover,
+.timeline-step.orbit-satellite.active-step {
   background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(211, 47, 47, 0.45);
-  box-shadow: 0 10px 30px rgba(211, 47, 47, 0.25);
+  border-color: rgba(211, 47, 47, 0.55);
+  box-shadow: 0 25px 65px rgba(211, 47, 47, 0.22), 0 0 25px rgba(211, 47, 47, 0.15);
+  transform: translateY(-8px) scale(1.04) !important;
+  z-index: 10;
 }
 
-.timeline-step:nth-child(1):hover { transform: translateX(0px) scale(1.04);   }
-.timeline-step:nth-child(2):hover { transform: translateX(45px) scale(1.04);  }
-.timeline-step:nth-child(3):hover { transform: translateX(90px) scale(1.04);  }
-.timeline-step:nth-child(4):hover { transform: translateX(90px) scale(1.04);  }
-.timeline-step:nth-child(5):hover { transform: translateX(45px) scale(1.04);  }
-.timeline-step:nth-child(6):hover { transform: translateX(0px) scale(1.04);   }
-
-.timeline-step::before {
+.timeline-step.orbit-satellite::before {
   content: '';
   position: absolute;
-  left: -28px;
-  top: 18px;
-  width: 14px;
-  height: 14px;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
   background: #d32f2f;
   border-radius: 50%;
-  border: 3px solid #ffffff;
-  box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(211, 47, 47, 0.6);
   transition: all 0.3s ease;
 }
 
-.timeline-step:hover::before {
+.timeline-step.orbit-satellite:hover::before,
+.timeline-step.orbit-satellite.active-step::before {
   background: #b71c1c;
-  transform: scale(1.4);
-  box-shadow: 0 0 16px rgba(211, 47, 47, 0.7);
+  transform: translateY(-50%) scale(1.5);
+  box-shadow: 0 0 18px rgba(211, 47, 47, 0.9);
 }
 
 .step-header {

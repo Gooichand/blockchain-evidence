@@ -1542,6 +1542,221 @@ window.addEventListener("unhandledrejection", function (event) {
   console.error("Unhandled promise rejection:", event.reason);
 });
 
+// ═══════════════════════════════════════════════════════════════
+// World-Class Spatial Motion System & Reveal Engine
+// ═══════════════════════════════════════════════════════════════
+class MotionEngine {
+  static init() {
+    this.initScrollReveals();
+    this.initStaggerParents();
+    this.init3DHoverCards();
+    this.initCounterAnimations();
+    this.initTabPanels();
+  }
+
+  static initScrollReveals() {
+    const targets = document.querySelectorAll(
+      '.feature-card, .metric-card, .timeline-step, .career-why-card, .talent-who-card, .talent-main-card, .section-header, .case-card, .evidence-card, .dashboard-card, .search-card, .analytics-card'
+    );
+
+    targets.forEach((el) => {
+      if (!el.classList.contains('reveal-on-scroll')) {
+        el.classList.add('reveal-on-scroll');
+      }
+    });
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+            }
+          });
+        },
+        { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      document.querySelectorAll('.reveal-on-scroll').forEach((el) => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal-on-scroll').forEach((el) => el.classList.add('revealed'));
+    }
+  }
+
+  static initStaggerParents() {
+    const containers = document.querySelectorAll(
+      '.features-grid, .metrics-grid, .journey-timeline, .career-why-grid, .talent-who-grid, .dashboard-grid, .evidence-grid'
+    );
+
+    containers.forEach((container) => {
+      container.classList.add('stagger-parent');
+      Array.from(container.children).forEach((child) => {
+        child.classList.add('stagger-child');
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      containers.forEach((c) => observer.observe(c));
+    } else {
+      containers.forEach((c) => c.classList.add('revealed'));
+    }
+  }
+
+  static init3DHoverCards() {
+    const cards = document.querySelectorAll('.feature-card, .metric-card, .timeline-step, .career-why-card, .talent-who-card, .dashboard-card, .tool-card, .evidence-card, .stat-card, .role-card, .card');
+    cards.forEach((card) => {
+      card.classList.add('depth-hover-card');
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const rotateX = (y / rect.height) * -8;
+        const rotateY = (x / rect.width) * 8;
+        card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+  }
+
+  static initCounterAnimations() {
+    const metricElements = document.querySelectorAll('.metric-number, .csc-value');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this.animateValue(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      metricElements.forEach((el) => observer.observe(el));
+    }
+  }
+
+  static animateValue(el) {
+    const text = el.textContent.trim();
+    const hasPercent = text.includes('%');
+    const cleanNum = parseFloat(text.replace(/[^0-9.]/g, ''));
+    if (isNaN(cleanNum)) return;
+
+    let start = 0;
+    const duration = 1600;
+    const startTime = performance.now();
+
+    const update = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(start + (cleanNum - start) * eased);
+      
+      if (hasPercent) {
+        el.textContent = (cleanNum > 10 ? current : (start + (cleanNum - start) * eased).toFixed(2)) + '%';
+      } else {
+        el.textContent = current.toLocaleString();
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        el.textContent = text;
+      }
+    };
+
+    requestAnimationFrame(update);
+  }
+
+  static initTabPanels() {
+    const tabButtons = document.querySelectorAll('[data-tab], .tab-btn, .nav-tab');
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-tab-target') || btn.getAttribute('data-tab');
+        if (!targetId) return;
+        const panel = document.getElementById(targetId);
+        if (panel) {
+          document.querySelectorAll('.tab-content-panel').forEach((p) => p.classList.remove('active-panel'));
+          panel.classList.add('tab-content-panel');
+          setTimeout(() => panel.classList.add('active-panel'), 50);
+        }
+      });
+    });
+  }
+  static initInteractiveCubeAndTimeline() {
+    const cube = document.getElementById('interactiveVaultCube');
+    // Target polar panels (new orbit layout) or legacy timeline steps as fallback
+    const steps = document.querySelectorAll('.polar-panel[data-step], .journey-timeline .timeline-step[data-step]');
+    const faces = document.querySelectorAll('.vault-cube .cube-face');
+
+    if (!cube || steps.length === 0) return;
+
+    // Face rotation map for steps 1-6
+    const rotations = {
+      '1': 'rotateX(0deg) rotateY(0deg)',
+      '2': 'rotateX(0deg) rotateY(-90deg)',
+      '3': 'rotateX(0deg) rotateY(-180deg)',
+      '4': 'rotateX(0deg) rotateY(90deg)',
+      '5': 'rotateX(-90deg) rotateY(0deg)',
+      '6': 'rotateX(90deg) rotateY(0deg)'
+    };
+
+    // Step hover -> Snap cube to matching face & highlight
+    steps.forEach((step) => {
+      step.addEventListener('mouseenter', () => {
+        cube.style.animationPlayState = 'paused';
+        const stepNum = step.getAttribute('data-step');
+        steps.forEach((s) => s.classList.remove('active-step'));
+        step.classList.add('active-step');
+        if (rotations[stepNum]) {
+          cube.style.transform = `${rotations[stepNum]} scale(1.1)`;
+          cube.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+        }
+      });
+
+      step.addEventListener('mouseleave', () => {
+        step.classList.remove('active-step');
+        cube.style.transform = '';
+        cube.style.transition = '';
+        cube.style.animationPlayState = 'running';
+      });
+    });
+
+    // Face click -> highlight corresponding polar workflow panel
+    faces.forEach((face) => {
+      face.style.cursor = 'pointer';
+      face.addEventListener('click', () => {
+        const stepNum = face.getAttribute('data-step');
+        const targetStep = document.querySelector(`.polar-panel[data-step="${stepNum}"], .timeline-step[data-step="${stepNum}"]`);
+        if (targetStep) {
+          steps.forEach((s) => s.classList.remove('active-step'));
+          targetStep.classList.add('active-step');
+          setTimeout(() => targetStep.classList.remove('active-step'), 2500);
+        }
+      });
+    });
+  }
+}
+
+// Initialize MotionEngine on DOM ready
+document.addEventListener("DOMContentLoaded", function () {
+  MotionEngine.init();
+  MotionEngine.initInteractiveCubeAndTimeline();
+});
+
 // Enhanced Website-Wide Interactive Parallax (Mouse Move)
 document.addEventListener("DOMContentLoaded", function () {
   const bgGrid = document.querySelector(".bg-grid");

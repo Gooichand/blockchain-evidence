@@ -118,8 +118,31 @@
                     </div>
                 </div>
 
-                <div class="hero-center">
+                <div class="hero-center orbit-stage-container">
                     <div class="evidence-vault">
+                        <!-- 3 Layer Orbit Rings (Solid, Dashed, Dotted) -->
+                        <div class="vault-ambient-bloom"></div>
+                        <svg class="vault-orbital-svg" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="300" cy="300" r="170" class="orbit-path outer-path" />
+                            <circle cx="300" cy="300" r="225" class="orbit-path middle-path" />
+                            <circle cx="300" cy="300" r="275" class="orbit-path inner-path" />
+                            <!-- Smooth SVG Bezier Curved Connectors directly tracking Orbit -->
+                            <path d="M 300 130 A 170 170 0 0 1 447 215" class="orbit-bezier-line" />
+                            <path d="M 447 215 A 170 170 0 0 1 470 300" class="orbit-bezier-line" />
+                            <path d="M 470 300 A 170 170 0 0 1 385 447" class="orbit-bezier-line" />
+                            <path d="M 385 447 A 170 170 0 0 1 215 447" class="orbit-bezier-line" />
+                            <path d="M 215 447 A 170 170 0 0 1 130 300" class="orbit-bezier-line" />
+                            <path d="M 130 300 A 170 170 0 0 1 215 153" class="orbit-bezier-line" />
+                        </svg>
+
+                        <!-- Subtle Floating Orbit Nodes -->
+                        <div class="orbit-node node-1"></div>
+                        <div class="orbit-node node-2"></div>
+                        <div class="orbit-node node-3"></div>
+                        <div class="orbit-node node-4"></div>
+                        <div class="orbit-node node-5"></div>
+                        <div class="orbit-node node-6"></div>
+
                         <div class="vault-glow"></div>
                         <div class="vault-glow-ring"></div>
                         <div class="vault-glow-ring"></div>
@@ -128,62 +151,103 @@
                         <div class="vault-hash-tag">0x4c92...IPFS</div>
                         <div class="vault-hash-tag">0x7b1d...BLOCK</div>
                         <div class="vault-hash-tag">0xf3a8...CHAIN</div>
-                        <div class="vault-cube-container">
-                            <div class="vault-cube">
-                                <div class="cube-face front"><i data-lucide="shield"></i><span>Security</span></div>
-                                <div class="cube-face back"><i data-lucide="lock"></i><span>Vault</span></div>
-                                <div class="cube-face right"><i data-lucide="file-text"></i><span>Evidence</span></div>
-                                <div class="cube-face left"><i data-lucide="hash"></i><span>SHA-256</span></div>
-                                <div class="cube-face top"><i data-lucide="link"></i><span>Blockchain</span></div>
-                                <div class="cube-face bottom"><i data-lucide="check-circle"></i><span>Verified</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="hero-right">
-                    <div class="journey-timeline">
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">01</span>
-                                <h4>Collect Evidence</h4>
+                        <!-- 3D CUBE (UNTOUCHED PERFECT IMPLEMENTATION) -->
+                        <div class="vault-cube-container">
+                            <div class="vault-cube" id="interactiveVaultCube">
+                                <div class="cube-face front" data-step="1">
+                                    <i data-lucide="shield"></i>
+                                    <span>01. Collect</span>
+                                </div>
+                                <div class="cube-face right" data-step="2">
+                                    <i data-lucide="hash"></i>
+                                    <span>02. SHA-256</span>
+                                </div>
+                                <div class="cube-face back" data-step="3">
+                                    <i data-lucide="database"></i>
+                                    <span>03. IPFS</span>
+                                </div>
+                                <div class="cube-face left" data-step="4">
+                                    <i data-lucide="link"></i>
+                                    <span>04. Blockchain</span>
+                                </div>
+                                <div class="cube-face top" data-step="5">
+                                    <i data-lucide="git-branch"></i>
+                                    <span>05. Custody</span>
+                                </div>
+                                <div class="cube-face bottom" data-step="6">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>06. Court</span>
+                                </div>
                             </div>
-                            <p>Crime scene evidence is securely captured</p>
                         </div>
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">02</span>
-                                <h4>Generate SHA-256 Hash</h4>
+
+                        <!-- 6 Workflow Steps Surrounding the Cube (Polar Angle Positioning) -->
+                        <div class="polar-orbit-workflow">
+                            <!-- 01 Top Center (330° / 0°) -->
+                            <div class="timeline-step polar-panel step-pos-1" data-step="1">
+                                <div class="step-header">
+                                    <span class="step-num">01</span>
+                                    <h4>Collect Evidence</h4>
+                                </div>
+                                <p>Crime scene evidence captured</p>
                             </div>
-                            <p>Unique digital fingerprint created</p>
+                            <!-- 02 Top Right (30°) -->
+                            <div class="timeline-step polar-panel step-pos-2" data-step="2">
+                                <div class="step-header">
+                                    <span class="step-num">02</span>
+                                    <h4>Generate SHA-256</h4>
+                                </div>
+                                <p>Unique digital fingerprint</p>
+                            </div>
+                            <!-- 03 Mid Right (90°) -->
+                            <div class="timeline-step polar-panel step-pos-3" data-step="3">
+                                <div class="step-header">
+                                    <span class="step-num">03</span>
+                                    <h4>Store on IPFS</h4>
+                                </div>
+                                <p>Decentralized storage</p>
+                            </div>
+                            <!-- 04 Bottom Center (150° / 180°) -->
+                            <div class="timeline-step polar-panel step-pos-4" data-step="4">
+                                <div class="step-header">
+                                    <span class="step-num">04</span>
+                                    <h4>Record Blockchain</h4>
+                                </div>
+                                <p>Immutable ledger record</p>
+                            </div>
+                            <!-- 05 Bottom Left (210°) -->
+                            <div class="timeline-step polar-panel step-pos-5" data-step="5">
+                                <div class="step-header">
+                                    <span class="step-num">05</span>
+                                    <h4>Maintain Custody</h4>
+                                </div>
+                                <p>Every action logged</p>
+                            </div>
+                            <!-- 06 Top Left (285°) -->
+                            <div class="timeline-step polar-panel step-pos-6" data-step="6">
+                                <div class="step-header">
+                                    <span class="step-num">06</span>
+                                    <h4>Court Verification</h4>
+                                </div>
+                                <p>Integrity verified instantly</p>
+                            </div>
                         </div>
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">03</span>
-                                <h4>Store on IPFS</h4>
-                            </div>
-                            <p>Decentralized secure storage</p>
-                        </div>
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">04</span>
-                                <h4>Record on Blockchain</h4>
-                            </div>
-                            <p>Immutable verification record</p>
-                        </div>
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">05</span>
-                                <h4>Maintain Chain of Custody</h4>
-                            </div>
-                            <p>Every action permanently logged</p>
-                        </div>
-                        <div class="timeline-step">
-                            <div class="step-header">
-                                <span class="step-num">06</span>
-                                <h4>Court Verification</h4>
-                            </div>
-                            <p>Integrity verified instantly</p>
+
+                        <!-- Supporting Quick Actions Directly Below Cube -->
+                        <div class="cube-bottom-actions">
+                            <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="cube-action-btn" title="GitHub Repository">
+                                <i data-lucide="github"></i>
+                                <span>GitHub</span>
+                            </a>
+                            <a href="#how-it-works" class="cube-action-btn" title="Academic Documentation">
+                                <i data-lucide="book-open"></i>
+                                <span>Academic</span>
+                            </a>
+                            <a href="#footer" class="cube-action-btn" title="Social & Legal Network">
+                                <i data-lucide="globe"></i>
+                                <span>Social</span>
+                            </a>
                         </div>
                     </div>
                 </div>

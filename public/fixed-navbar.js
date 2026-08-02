@@ -55,33 +55,36 @@ class FixedNavbarManager {
         <style data-navbar-styles>
         :root {
             --primary-red: #dc2626;
-            --primary-red-light: #fef2f2;
-            --text-secondary: #6b7280;
+            --primary-red-light: rgba(220, 38, 38, 0.08);
+            --text-secondary: #4b5563;
             --text-muted: #9ca3af;
             --white: #ffffff;
             --light-gray: #f9fafb;
-            --border-light: #e5e7eb;
-            --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --border-light: rgba(229, 231, 235, 0.8);
+            --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
 
         .fixed-navbar {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06), inset 0 -1px 0 rgba(255, 255, 255, 0.7);
             width: 100%;
+            transition: all 0.3s ease;
         }
 
         .navbar-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 24px;
+            padding: 14px 28px;
             max-width: 1400px;
             margin: 0 auto;
-            min-height: 60px;
+            min-height: 64px;
         }
 
         .navbar-left {
@@ -94,15 +97,17 @@ class FixedNavbarManager {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             font-weight: 800;
             color: #dc2626;
             text-decoration: none;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .navbar-brand:hover {
             color: #b91c1c;
             text-decoration: none;
+            transform: scale(1.02);
         }
 
         .navbar-brand i {
@@ -113,26 +118,29 @@ class FixedNavbarManager {
         .role-nav-items {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #6b7280;
+            color: #4b5563;
             text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
+            font-weight: 600;
+            font-size: 0.92rem;
             padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
+            border-radius: 10px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid transparent;
         }
 
         .nav-item:hover {
             color: #dc2626;
-            background: #fef2f2;
+            background: rgba(220, 38, 38, 0.06);
+            border-color: rgba(220, 38, 38, 0.15);
             text-decoration: none;
+            transform: translateY(-1px);
         }
 
         .nav-item i {
@@ -153,42 +161,50 @@ class FixedNavbarManager {
         }
 
         .user-role-badge {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
             color: #ffffff;
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
         }
 
         .user-identifier {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            color: #9ca3af;
-            background: #f9fafb;
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #4b5563;
+            background: rgba(243, 244, 246, 0.8);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.9);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .logout-btn {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #dc3545;
-            color: #ffffff;
-            border: none;
+            background: rgba(220, 38, 38, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             font-family: inherit;
         }
 
         .logout-btn:hover {
-            background: #c82333;
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #dc2626;
+            box-shadow: 0 6px 18px rgba(220, 38, 38, 0.3);
             transform: translateY(-1px);
         }
 
@@ -203,7 +219,7 @@ class FixedNavbarManager {
             border: none;
             cursor: pointer;
             padding: 8px;
-            color: #6b7280;
+            color: #4b5563;
         }
 
         .mobile-menu-toggle:hover {
