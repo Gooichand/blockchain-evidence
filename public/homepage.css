@@ -1231,98 +1231,163 @@
   animation: none !important;
 }
 
-/* --- Responsive --- */
-@media (max-width: 1200px) {
+/* =======================================================
+   RESPONSIVE — Orbit Workflow scales gracefully at all sizes
+   Desktop  >1200px : full 820px circle orbit
+   Tablet   768-1200px : proportionally scaled orbit (ellipse feel)
+   Mobile   <768px  : single column, compact scaled orbit
+   ======================================================= */
+
+/* --- Tablet: scale orbit stage proportionally, keep 2-col layout --- */
+@media (max-width: 1300px) {
   .hero-inner {
-    grid-template-columns: 1fr 1fr;
-    padding: 40px 32px;
-    gap: 32px;
+    grid-template-columns: 1fr 1.6fr;
+    padding: 30px 40px;
+    gap: 0;
   }
-  .hero-center {
-    display: none;
+  .evidence-vault {
+    width: 680px;
+    height: 680px;
   }
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr);
+  /* Rescale SVG + bloom to match smaller vault */
+  .vault-orbital-svg {
+    width: 680px;
+    height: 680px;
   }
-  .metrics-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .vault-ambient-bloom {
+    width: 560px;
+    height: 560px;
   }
+  /* Rescale polar panel positions (680/820 ≈ 0.829 scale factor)
+     Center: 340, 340 | Radius: 274px
+     Step 1 @270°: left=340, top=66
+     Step 2 @330°: left=577, top=203
+     Step 3 @30°:  left=577, top=477
+     Step 4 @90°:  left=340, top=614
+     Step 5 @150°: left=103, top=477
+     Step 6 @210°: left=103, top=203  */
+  .step-pos-1 { left: 340px; top: 66px; }
+  .step-pos-2 { left: 577px; top: 203px; }
+  .step-pos-3 { left: 577px; top: 477px; }
+  .step-pos-4 { left: 340px; top: 614px; }
+  .step-pos-5 { left: 103px; top: 477px; }
+  .step-pos-6 { left: 103px; top: 203px; }
+  .features-grid { grid-template-columns: repeat(3, 1fr); }
+  .metrics-grid  { grid-template-columns: repeat(3, 1fr); }
   .feature-strip { padding: 0 32px 40px; }
   .metrics-section { padding: 20px 32px 40px; }
 }
 
-@media (max-width: 768px) {
-  .hero-section {
-    min-height: auto;
-    padding: 60px 0 20px;
+/* --- Small Tablet: further compress --- */
+@media (max-width: 1024px) {
+  .hero-inner {
+    grid-template-columns: 1fr 1.4fr;
+    padding: 24px 28px;
   }
+  .evidence-vault {
+    width: 560px;
+    height: 560px;
+  }
+  .vault-orbital-svg { width: 560px; height: 560px; }
+  .vault-ambient-bloom { width: 460px; height: 460px; }
+  /* 560/820 ≈ 0.683 scale: center=280, radius=225
+     Step 1 @270°: left=280, top=55
+     Step 2 @330°: left=475, top=168
+     Step 3 @30°:  left=475, top=393
+     Step 4 @90°:  left=280, top=505
+     Step 5 @150°: left=85,  top=393
+     Step 6 @210°: left=85,  top=168  */
+  .step-pos-1 { left: 280px; top: 55px;  }
+  .step-pos-2 { left: 475px; top: 168px; }
+  .step-pos-3 { left: 475px; top: 393px; }
+  .step-pos-4 { left: 280px; top: 505px; }
+  .step-pos-5 { left: 85px;  top: 393px; }
+  .step-pos-6 { left: 85px;  top: 168px; }
+  /* Cards slightly narrower to avoid overflow */
+  .polar-panel { width: 134px; padding: 11px 13px; }
+}
+
+/* --- Mobile: single column, compact vertical orbit --- */
+@media (max-width: 768px) {
+  .hero-section { min-height: auto; padding: 60px 0 20px; }
   .hero-inner {
     grid-template-columns: 1fr;
     padding: 24px 20px;
-    gap: 24px;
+    gap: 0;
   }
-  .hero-left h1 {
-    font-size: 2.2rem;
-  }
-  .hero-cta {
-    flex-direction: column;
-  }
-  .btn-hero-primary,
-  .btn-hero-secondary {
+  .hero-left h1 { font-size: 2.2rem; }
+  .hero-cta { flex-direction: column; }
+  .btn-hero-primary, .btn-hero-secondary {
     width: 100%;
     justify-content: center;
   }
-  .hero-trust {
-    flex-direction: column;
-    align-items: flex-start;
+  .hero-trust { flex-direction: column; align-items: flex-start; }
+  /* Orbit: centered in single column, compact 520×520 */
+  .hero-center { width: 100%; justify-content: center; }
+  .evidence-vault {
+    width: 520px;
+    height: 520px;
+    margin: 0 auto;
   }
-  .hero-right {
-    padding-left: 0;
-  }
-  .journey-timeline {
-    padding-left: 24px;
-  }
-  .timeline-step {
-    padding: 12px 14px;
-    margin-bottom: 12px;
-  }
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .feature-card {
-    padding: 18px 12px;
-  }
-  .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .metric-card {
-    padding: 16px 10px;
-  }
-  .feature-strip { padding: 0 16px 24px; }
+  .vault-orbital-svg { width: 520px; height: 520px; }
+  .vault-ambient-bloom { width: 420px; height: 420px; }
+  /* 520/820 ≈ 0.634: center=260, radius=209
+     Step 1 @270°: left=260, top=51
+     Step 2 @330°: left=441, top=156
+     Step 3 @30°:  left=441, top=365
+     Step 4 @90°:  left=260, top=469
+     Step 5 @150°: left=79,  top=365
+     Step 6 @210°: left=79,  top=156  */
+  .step-pos-1 { left: 260px; top: 51px;  }
+  .step-pos-2 { left: 441px; top: 156px; }
+  .step-pos-3 { left: 441px; top: 365px; }
+  .step-pos-4 { left: 260px; top: 469px; }
+  .step-pos-5 { left: 79px;  top: 365px; }
+  .step-pos-6 { left: 79px;  top: 156px; }
+  .polar-panel { width: 118px; padding: 9px 11px; font-size: 0.78rem; }
+  .polar-panel h4 { font-size: 0.78rem; }
+  .polar-panel p  { font-size: 0.7rem;  }
+  .features-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .feature-card  { padding: 18px 12px; }
+  .metrics-grid  { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .metric-card   { padding: 16px 10px; }
+  .feature-strip  { padding: 0 16px 24px; }
   .metrics-section { padding: 12px 16px 24px; }
   .bg-sphere-1 { width: 300px; height: 300px; }
   .bg-sphere-2 { width: 200px; height: 200px; }
 }
 
+/* --- Small Mobile --- */
 @media (max-width: 480px) {
-  .features-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+  .evidence-vault {
+    width: 400px;
+    height: 400px;
   }
-  .metrics-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .feature-card i {
-    width: 22px;
-    height: 22px;
-  }
-  .hero-left h1 {
-    font-size: 1.8rem;
-  }
+  .vault-orbital-svg { width: 400px; height: 400px; }
+  .vault-ambient-bloom { width: 320px; height: 320px; }
+  /* 400/820 ≈ 0.488: center=200, radius=161
+     Step 1 @270°: left=200, top=39
+     Step 2 @330°: left=340, top=120
+     Step 3 @30°:  left=340, top=281
+     Step 4 @90°:  left=200, top=361
+     Step 5 @150°: left=61,  top=281
+     Step 6 @210°: left=61,  top=120  */
+  .step-pos-1 { left: 200px; top: 39px;  }
+  .step-pos-2 { left: 340px; top: 120px; }
+  .step-pos-3 { left: 340px; top: 281px; }
+  .step-pos-4 { left: 200px; top: 361px; }
+  .step-pos-5 { left: 61px;  top: 281px; }
+  .step-pos-6 { left: 61px;  top: 120px; }
+  .polar-panel { width: 98px; padding: 7px 9px; border-radius: 14px; }
+  .polar-panel h4 { font-size: 0.68rem; }
+  .polar-panel p  { font-size: 0.62rem; display: none; }
+  .step-num { font-size: 0.65rem; }
+  .features-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metrics-grid  { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .feature-card i { width: 22px; height: 22px; }
+  .hero-left h1   { font-size: 1.8rem; }
 }
+
 
 /* ===========================================
    HOW IT WORKS - Interactive Workflow
