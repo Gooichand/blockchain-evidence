@@ -377,11 +377,11 @@
   position: relative;
 }
 
-/* The evidence-vault is now the full orbit stage */
+/* The evidence-vault is the full orbit stage — 820px allows radius 330 with card clearance */
 .evidence-vault {
   position: relative;
-  width: 680px;
-  height: 680px;
+  width: 820px;
+  height: 820px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -617,10 +617,15 @@
 
 /* ============================================================
    POLAR ORBIT WORKFLOW - Mathematically Positioned
-   Center of evidence-vault: (340, 340) | Orbital radius: 260px
-   Angles: 270°, 330°, 30°, 90°, 150°, 210° (clockwise from top)
-   x = 340 + 260*cos(deg)   y = 340 + 260*sin(deg)
-   cos/sin in CSS degrees (0°=right, 90°=down)
+   Container: 820×820px  |  Center: (410, 410)
+   Orbital radius: 330px (cos/sin in CSS coords: 0°=right, 90°=down)
+
+   Step 1 @ 270° (top):       x=410,        y=410−330=80
+   Step 2 @ 330° (upper-R):   x=410+286=696, y=410−165=245
+   Step 3 @  30° (lower-R):   x=696,         y=410+165=575
+   Step 4 @  90° (bottom):    x=410,         y=410+330=740
+   Step 5 @ 150° (lower-L):   x=410−286=124, y=575
+   Step 6 @ 210° (upper-L):   x=124,         y=245
    ============================================================ */
 
 .polar-orbit-workflow {
@@ -652,56 +657,56 @@
 }
 
 /* ── Polar positions: translate(-50%,-50%) centres card on the orbit point ── */
-/* Step 1 — 270° top-centre: x=340, y=340−260=80 */
+/* Step 1 — 270° top-centre: x=410, y=80 */
 .step-pos-1 {
-  left: 340px;
+  left: 410px;
   top: 80px;
-  transform: translate(-50%, -50%) rotate(3deg) perspective(600px) rotateX(8deg);
+  transform: translate(-50%, -50%) rotate(2deg) perspective(700px) rotateX(10deg);
   animation-duration: 9s;
   animation-delay: 0s;
 }
 
-/* Step 2 — 330° upper-right: x=340+225=565, y=340−130=210 */
+/* Step 2 — 330° upper-right: x=696, y=245 */
 .step-pos-2 {
-  left: 565px;
-  top: 210px;
-  transform: translate(-50%, -50%) rotate(-12deg) perspective(600px) rotateX(4deg) rotateY(-6deg);
+  left: 696px;
+  top: 245px;
+  transform: translate(-50%, -50%) rotate(-11deg) perspective(700px) rotateX(5deg) rotateY(-8deg);
   animation-duration: 11s;
   animation-delay: -2.3s;
 }
 
-/* Step 3 — 30° lower-right: x=340+225=565, y=340+130=470 */
+/* Step 3 — 30° lower-right: x=696, y=575 */
 .step-pos-3 {
-  left: 565px;
-  top: 470px;
-  transform: translate(-50%, -50%) rotate(-18deg) perspective(600px) rotateX(-4deg) rotateY(-8deg);
+  left: 696px;
+  top: 575px;
+  transform: translate(-50%, -50%) rotate(-16deg) perspective(700px) rotateX(-5deg) rotateY(-8deg);
   animation-duration: 8.5s;
   animation-delay: -4.1s;
 }
 
-/* Step 4 — 90° bottom-centre: x=340, y=340+260=600 */
+/* Step 4 — 90° bottom-centre: x=410, y=740 */
 .step-pos-4 {
-  left: 340px;
-  top: 600px;
-  transform: translate(-50%, -50%) rotate(-3deg) perspective(600px) rotateX(-8deg);
+  left: 410px;
+  top: 740px;
+  transform: translate(-50%, -50%) rotate(-2deg) perspective(700px) rotateX(-10deg);
   animation-duration: 12s;
   animation-delay: -6s;
 }
 
-/* Step 5 — 150° lower-left: x=340−225=115, y=340+130=470 */
+/* Step 5 — 150° lower-left: x=124, y=575 */
 .step-pos-5 {
-  left: 115px;
-  top: 470px;
-  transform: translate(-50%, -50%) rotate(18deg) perspective(600px) rotateX(-4deg) rotateY(8deg);
+  left: 124px;
+  top: 575px;
+  transform: translate(-50%, -50%) rotate(16deg) perspective(700px) rotateX(-5deg) rotateY(8deg);
   animation-duration: 10s;
   animation-delay: -3s;
 }
 
-/* Step 6 — 210° upper-left: x=340−225=115, y=340−130=210 */
+/* Step 6 — 210° upper-left: x=124, y=245 */
 .step-pos-6 {
-  left: 115px;
-  top: 210px;
-  transform: translate(-50%, -50%) rotate(12deg) perspective(600px) rotateX(4deg) rotateY(6deg);
+  left: 124px;
+  top: 245px;
+  transform: translate(-50%, -50%) rotate(11deg) perspective(700px) rotateX(5deg) rotateY(8deg);
   animation-duration: 9.5s;
   animation-delay: -5s;
 }
@@ -733,13 +738,13 @@
   z-index: 20;
 }
 
-/* Override float transforms on hover to just scale up from where the card already is */
-.step-pos-1:hover, .step-pos-1.active-step { transform: translate(-50%, -50%) rotate(3deg) perspective(600px) rotateX(8deg) scale(1.07); }
-.step-pos-2:hover, .step-pos-2.active-step { transform: translate(-50%, -50%) rotate(-12deg) perspective(600px) rotateX(4deg) rotateY(-6deg) scale(1.07); }
-.step-pos-3:hover, .step-pos-3.active-step { transform: translate(-50%, -50%) rotate(-18deg) perspective(600px) rotateX(-4deg) rotateY(-8deg) scale(1.07); }
-.step-pos-4:hover, .step-pos-4.active-step { transform: translate(-50%, -50%) rotate(-3deg) perspective(600px) rotateX(-8deg) scale(1.07); }
-.step-pos-5:hover, .step-pos-5.active-step { transform: translate(-50%, -50%) rotate(18deg) perspective(600px) rotateX(-4deg) rotateY(8deg) scale(1.07); }
-.step-pos-6:hover, .step-pos-6.active-step { transform: translate(-50%, -50%) rotate(12deg) perspective(600px) rotateX(4deg) rotateY(6deg) scale(1.07); }
+/* Override float transforms on hover — scale up from resting position */
+.step-pos-1:hover, .step-pos-1.active-step { transform: translate(-50%, -50%) rotate(2deg) perspective(700px) rotateX(10deg) scale(1.07); }
+.step-pos-2:hover, .step-pos-2.active-step { transform: translate(-50%, -50%) rotate(-11deg) perspective(700px) rotateX(5deg) rotateY(-8deg) scale(1.07); }
+.step-pos-3:hover, .step-pos-3.active-step { transform: translate(-50%, -50%) rotate(-16deg) perspective(700px) rotateX(-5deg) rotateY(-8deg) scale(1.07); }
+.step-pos-4:hover, .step-pos-4.active-step { transform: translate(-50%, -50%) rotate(-2deg) perspective(700px) rotateX(-10deg) scale(1.07); }
+.step-pos-5:hover, .step-pos-5.active-step { transform: translate(-50%, -50%) rotate(16deg) perspective(700px) rotateX(-5deg) rotateY(8deg) scale(1.07); }
+.step-pos-6:hover, .step-pos-6.active-step { transform: translate(-50%, -50%) rotate(11deg) perspective(700px) rotateX(5deg) rotateY(8deg) scale(1.07); }
 
 /* Connector node dot on each card */
 .polar-panel::after {
@@ -770,17 +775,9 @@
   transform: translateX(-50%) scale(1.6);
 }
 
-/* ── Cube Bottom Actions – placed directly beneath the vault-cube-container ── */
+/* Cube Bottom Actions — removed per design spec (creates visual noise) */
 .cube-bottom-actions {
-  position: absolute;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  z-index: 20;
-  pointer-events: auto;
+  display: none !important;
 }
 
 .cube-action-btn {
@@ -865,29 +862,29 @@
 /* --- Hero Center & Ambient Bloom --- */
 .vault-ambient-bloom {
   position: absolute;
-  width: 550px;
-  height: 550px;
+  width: 700px;
+  height: 700px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(211, 47, 47, 0.18) 0%, rgba(211, 47, 47, 0.04) 55%, transparent 75%);
+  background: radial-gradient(circle, rgba(211, 47, 47, 0.14) 0%, rgba(211, 47, 47, 0.04) 55%, transparent 72%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  filter: blur(40px);
+  filter: blur(50px);
   z-index: 0;
   animation: bloomPulse 8s ease-in-out infinite alternate;
 }
 
 @keyframes bloomPulse {
   0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
 }
 
-/* SVG Orbital Rings & Curved Bezier Connections */
+/* SVG Orbital Rings & Curved Bezier Connections — sized to fill orbit stage */
 .vault-orbital-svg {
   position: absolute;
-  width: 560px;
-  height: 560px;
+  width: 820px;
+  height: 820px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

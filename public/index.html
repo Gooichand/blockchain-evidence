@@ -120,19 +120,21 @@
 
                 <div class="hero-center orbit-stage-container">
                     <div class="evidence-vault">
-                        <!-- 3 Layer Orbit Rings (Solid, Dashed, Dotted) -->
+                        <!-- 3 Layer Orbit Rings: solid / dashed / dotted — radius scaled to 820×820 orbit stage -->
                         <div class="vault-ambient-bloom"></div>
-                        <svg class="vault-orbital-svg" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="300" cy="300" r="170" class="orbit-path outer-path" />
-                            <circle cx="300" cy="300" r="225" class="orbit-path middle-path" />
-                            <circle cx="300" cy="300" r="275" class="orbit-path inner-path" />
-                            <!-- Smooth SVG Bezier Curved Connectors directly tracking Orbit -->
-                            <path d="M 300 130 A 170 170 0 0 1 447 215" class="orbit-bezier-line" />
-                            <path d="M 447 215 A 170 170 0 0 1 470 300" class="orbit-bezier-line" />
-                            <path d="M 470 300 A 170 170 0 0 1 385 447" class="orbit-bezier-line" />
-                            <path d="M 385 447 A 170 170 0 0 1 215 447" class="orbit-bezier-line" />
-                            <path d="M 215 447 A 170 170 0 0 1 130 300" class="orbit-bezier-line" />
-                            <path d="M 130 300 A 170 170 0 0 1 215 153" class="orbit-bezier-line" />
+                        <svg class="vault-orbital-svg" viewBox="0 0 820 820" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Three concentric orbit rings: inner hint, mid guide, outer at card radius -->
+                            <circle cx="410" cy="410" r="175" class="orbit-path inner-path" />
+                            <circle cx="410" cy="410" r="265" class="orbit-path middle-path" />
+                            <circle cx="410" cy="410" r="330" class="orbit-path outer-path" />
+                            <!-- Smooth arc bezier connectors tracing orbital path between the 6 card positions -->
+                            <!-- r=330, centre (410,410): six cardinal points at 270°,330°,30°,90°,150°,210° -->
+                            <path d="M 410 80 A 330 330 0 0 1 696 245" class="orbit-bezier-line" />
+                            <path d="M 696 245 A 330 330 0 0 1 696 575" class="orbit-bezier-line" />
+                            <path d="M 696 575 A 330 330 0 0 1 410 740" class="orbit-bezier-line" />
+                            <path d="M 410 740 A 330 330 0 0 1 124 575" class="orbit-bezier-line" />
+                            <path d="M 124 575 A 330 330 0 0 1 124 245" class="orbit-bezier-line" />
+                            <path d="M 124 245 A 330 330 0 0 1 410 80" class="orbit-bezier-line" />
                         </svg>
 
                         <!-- Subtle Floating Orbit Nodes -->
@@ -234,21 +236,8 @@
                             </div>
                         </div>
 
-                        <!-- Supporting Quick Actions Directly Below Cube -->
-                        <div class="cube-bottom-actions">
-                            <a href="https://github.com/Gooichand/blockchain-evidence" target="_blank" class="cube-action-btn" title="GitHub Repository">
-                                <i data-lucide="github"></i>
-                                <span>GitHub</span>
-                            </a>
-                            <a href="#how-it-works" class="cube-action-btn" title="Academic Documentation">
-                                <i data-lucide="book-open"></i>
-                                <span>Academic</span>
-                            </a>
-                            <a href="#footer" class="cube-action-btn" title="Social & Legal Network">
-                                <i data-lucide="globe"></i>
-                                <span>Social</span>
-                            </a>
-                        </div>
+
+
                     </div>
                 </div>
             </div>
