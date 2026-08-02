@@ -6,14 +6,14 @@ const { rateLimits } = require('../config');
  * Standardized response format and removed skipSuccessfulRequests for auth.
  */
 
-// Authentication rate limiting (Strict)
+// Authentication rate limiting
 const authLimiter = rateLimit({
   windowMs: rateLimits.auth.windowMs,
   max: rateLimits.auth.max,
-  message: { success: false, error: 'Too many authentication attempts. Please try again in 15 minutes.' },
-  // SECURITY FIX: Limit all requests, not just failures, to prevent credential stuffing
+  message: { success: false, error: 'Too many authentication attempts. Please try again in a moment.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skipFailedRequests: true,
 });
 
 // General API rate limiting

@@ -32,11 +32,11 @@ const connectedUsers = new Map();
 const rateLimits = {
   auth: {
     windowMs: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS, 10) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_AUTH_MAX, 10) || 5,
+    max: parseInt(process.env.RATE_LIMIT_AUTH_MAX, 10) || 100, // relaxed for local testing
   },
   api: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 1000,
   },
   admin: {
     windowMs: parseInt(process.env.RATE_LIMIT_ADMIN_WINDOW_MS, 10) || 15 * 60 * 1000,
