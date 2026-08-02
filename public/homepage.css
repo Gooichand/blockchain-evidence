@@ -589,7 +589,7 @@
   100% { opacity: 0.15; }
 }
 
-/* --- Hero Right - Journey Timeline --- */
+/* --- Hero Right - Journey Timeline (C-Shape Curved Layout) --- */
 .hero-right {
   position: relative;
   padding-left: 0;
@@ -597,59 +597,79 @@
 
 .journey-timeline {
   position: relative;
-  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 10px;
 }
 
+/* Curved glowing connector line in deep C shape facing the center cube */
 .journey-timeline::before {
   content: '';
   position: absolute;
-  left: 7px;
-  top: 8px;
-  bottom: 8px;
-  width: 2px;
-  background: linear-gradient(180deg,
-    rgba(211,47,47,0.3),
-    rgba(211,47,47,0.15),
-    rgba(211,47,47,0.3)
-  );
+  left: -32px;
+  top: 10px;
+  bottom: 10px;
+  width: 100px;
+  border-right: 3px dashed rgba(211, 47, 47, 0.55);
+  border-top-right-radius: 90px;
+  border-bottom-right-radius: 90px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(211, 47, 47, 0.4));
 }
 
 .timeline-step {
   position: relative;
-  margin-bottom: 18px;
-  padding: 14px 18px;
-  background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(211, 47, 47, 0.15);
   border-radius: 14px;
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   cursor: default;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
 }
 
+/* Individual X-offsets forming a deep, clear C-shaped arc embracing the center cube */
+.timeline-step:nth-child(1) { transform: translateX(0px);   }
+.timeline-step:nth-child(2) { transform: translateX(45px);  }
+.timeline-step:nth-child(3) { transform: translateX(90px);  }
+.timeline-step:nth-child(4) { transform: translateX(90px);  }
+.timeline-step:nth-child(5) { transform: translateX(45px);  }
+.timeline-step:nth-child(6) { transform: translateX(0px);   }
+
 .timeline-step:hover {
-  background: rgba(255,255,255,0.8);
-  border-color: rgba(211,47,47,0.2);
-  transform: translateX(4px);
-  box-shadow: 0 4px 20px rgba(211,47,47,0.08);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(211, 47, 47, 0.45);
+  box-shadow: 0 10px 30px rgba(211, 47, 47, 0.25);
 }
+
+.timeline-step:nth-child(1):hover { transform: translateX(0px) scale(1.04);   }
+.timeline-step:nth-child(2):hover { transform: translateX(45px) scale(1.04);  }
+.timeline-step:nth-child(3):hover { transform: translateX(90px) scale(1.04);  }
+.timeline-step:nth-child(4):hover { transform: translateX(90px) scale(1.04);  }
+.timeline-step:nth-child(5):hover { transform: translateX(45px) scale(1.04);  }
+.timeline-step:nth-child(6):hover { transform: translateX(0px) scale(1.04);   }
 
 .timeline-step::before {
   content: '';
   position: absolute;
-  left: -24px;
-  top: 20px;
-  width: 10px;
-  height: 10px;
+  left: -28px;
+  top: 18px;
+  width: 14px;
+  height: 14px;
   background: #d32f2f;
   border-radius: 50%;
-  border: 2px solid rgba(211,47,47,0.2);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
   transition: all 0.3s ease;
 }
 
 .timeline-step:hover::before {
   background: #b71c1c;
-  transform: scale(1.3);
-  box-shadow: 0 0 12px rgba(211,47,47,0.3);
+  transform: scale(1.4);
+  box-shadow: 0 0 16px rgba(211, 47, 47, 0.7);
 }
 
 .step-header {
@@ -660,24 +680,28 @@
 }
 
 .step-num {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
   color: #d32f2f;
   letter-spacing: 1px;
   font-family: 'Courier New', monospace;
+  background: rgba(211, 47, 47, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .timeline-step h4 {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #111827;
   margin: 0;
 }
 
 .timeline-step p {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  margin: 2px 0 0 0;
+  font-size: 0.82rem;
+  color: #4b5563;
+  font-weight: 500;
+  margin: 4px 0 0 0;
   line-height: 1.4;
 }
 
