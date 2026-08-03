@@ -1135,3 +1135,32 @@ body.login-modal-open {
         display: none !important;
     }
 }
+
+/* Public Login — separate popup entry (email login for public viewers) */
+.login-public-entry {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin: 26px 40px 0;
+    padding-top: 22px;
+    text-align: center;
+}
+
+.login-public-entry p {
+    margin: 0 0 14px;
+    font-size: 0.86rem;
+    color: var(--lm-text-muted);
+}
+
+.login-card-btn--public {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
+}
+
+.login-card-btn--public:hover {
+    box-shadow: 0 8px 28px rgba(13, 148, 136, 0.4);
+    transform: translateY(-2px);
+}
+
+.login-card-btn--public:active {
+    transform: translateY(0);
+}

@@ -217,6 +217,7 @@ function initializeApp() {
     // Sub-modal backdrop clicks
     setupSubModalBackdrop('forgotPasswordOverlay', closeForgotPasswordModal);
     setupSubModalBackdrop('registrationOverlay', closeRegistrationModal);
+    setupSubModalBackdrop('publicLoginOverlay', closePublicLoginModal);
     setupSubModalBackdrop('errorOverlay', closeErrorModal);
 
     // Add click handler for wallet connection (legacy page button)
@@ -343,6 +344,7 @@ function closeLoginModal() {
     // Close any open sub-modals
     closeForgotPasswordModal();
     closeRegistrationModal();
+    closePublicLoginModal();
     closeErrorModal();
     // Reset email form
     const formWrap = document.getElementById('loginEmailFormWrap');
@@ -393,11 +395,13 @@ document.addEventListener('keydown', (e) => {
     const errorOv = document.getElementById('errorOverlay');
     const regOv = document.getElementById('registrationOverlay');
     const forgotOv = document.getElementById('forgotPasswordOverlay');
+    const publicOv = document.getElementById('publicLoginOverlay');
     const loginOv = document.getElementById('loginOverlay');
 
     if (errorOv && errorOv.classList.contains('active')) { closeErrorModal(); return; }
     if (regOv && regOv.classList.contains('active')) { closeRegistrationModal(); return; }
     if (forgotOv && forgotOv.classList.contains('active')) { closeForgotPasswordModal(); return; }
+    if (publicOv && publicOv.classList.contains('active')) { closePublicLoginModal(); return; }
     if (loginOv && loginOv.classList.contains('active')) { closeLoginModal(); return; }
   }
 });
@@ -421,6 +425,96 @@ function openRegistrationModal() {
 function closeRegistrationModal() {
   const ov = document.getElementById('registrationOverlay');
   if (ov) ov.classList.remove('active');
+}
+
+// Public login — separate popup, email + password only (no MetaMask)
+function openPublicLoginModal() {
+  const ov = document.getElementById('publicLoginOverlay');
+  if (ov) {
+    ov.classList.add('active');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    const email = document.getElementById('publicEmail');
+    if (email) setTimeout(() => email.focus(), 50);
+  }
+}
+
+function closePublicLoginModal() {
+  const ov = document.getElementById('publicLoginOverlay');
+  if (ov) ov.classList.remove('active');
+}
+
+// Public login handler — email + password, redirects to the public dashboard
+async function handlePublicLogin(event) {
+  event.preventDefault();
+
+  const emailInput = document.getElementById('publicEmail');
+  const passwordInput = document.getElementById('publicPassword');
+  const submitBtn = document.getElementById('publicLoginSubmit');
+
+  if (!emailInput || !passwordInput) {
+    showAlert("Public login form not loaded correctly. Please refresh the page.", "error");
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAlert("Please enter both email and password.", "error");
+    return;
+  }
+
+  if (submitBtn) {
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+  }
+
+  try {
+    showLoading(true, "Logging in...");
+    const data = await window.apiClient.post("/auth/email/login", { email, password }, { skipAuth: true });
+
+    if (data.success) {
+      const storageKey = (data.user.wallet_address || data.user.walletAddress || email).toLowerCase();
+      const userToStore = {
+        ...data.user,
+        walletAddress: storageKey,
+        wallet_address: storageKey,
+      };
+      localStorage.setItem("currentUser", storageKey);
+      localStorage.setItem("evidUser_" + storageKey, JSON.stringify(userToStore));
+      localStorage.setItem("evidUser_" + email.toLowerCase(), JSON.stringify(userToStore));
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+
+      if (typeof sessionManager !== 'undefined') {
+        sessionManager.createSession(storageKey, { loginType: 'email' });
+      }
+
+      showAlert("Login successful! Redirecting...", "success");
+      closePublicLoginModal();
+      closeLoginModal();
+
+      const dashboardUrl = getDashboardUrl(data.user.role);
+      setTimeout(() => {
+        window.location.href = dashboardUrl;
+      }, 900);
+    }
+  } catch (error) {
+    console.error("Public login error:", error);
+    let message = error.message || "Login failed. Please try again.";
+    if (error.status === 401) {
+      message = "Invalid email or password. If you just registered, please verify your email first.";
+    } else if (error.status === 429) {
+      message = "Too many login attempts. Please wait a moment and try again.";
+    } else if (error.status >= 500) {
+      message = "Server error. Please try again later.";
+    }
+    showAlert(message, "error");
+  } finally {
+    showLoading(false);
+    if (submitBtn) submitBtn.disabled = false;
+  }
 }
 
 function showErrorModal(title, description, actionText, actionCallback) {
@@ -617,6 +711,11 @@ function initializeEmailLogin() {
   const emailRegForm = document.getElementById("emailRegistrationForm");
   if (emailRegForm) {
     emailRegForm.addEventListener("submit", handleEmailRegistration);
+  }
+
+  const publicLoginForm = document.getElementById("publicLoginForm");
+  if (publicLoginForm) {
+    publicLoginForm.addEventListener("submit", handlePublicLogin);
   }
 }
 
@@ -1529,8 +1628,11 @@ window.EVID_DGC = {
   scrollToSection,
   handleEmailRegistration,
   handleEmailLogin,
+  handlePublicLogin,
   openLoginModal,
   closeLoginModal,
+  openPublicLoginModal,
+  closePublicLoginModal,
 };
 
 // Global error handlers

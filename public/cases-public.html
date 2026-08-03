@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Cases | EVID-DGC</title>
+    <meta name="description"
+        content="Public Cases Directory — browse officially released case records with verifiable blockchain evidence.">
+    <link rel="icon" href="logo-32x32.png" type="image/png">
+    <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="public-dashboard.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
+    <script src="public-utils.js"></script>
+    <script src="public-api.js"></script>
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
+</head>
+
+<body>
+    <main class="pv-page">
+        <!-- Hero header -->
+        <header class="pv-hero">
+            <div class="pv-hero-inner">
+                <div class="pv-eyebrow"><i data-lucide="folder-open"></i> EVID-DGC Transparency Portal</div>
+                <h1>Public Cases</h1>
+                <p class="pv-tagline">Browse published case records released for public scrutiny. Every entry is
+                    privacy-redacted and its evidence remains verifiable on-chain.</p>
+            </div>
+        </header>
+
+        <div class="pv-main">
+            <!-- Filters -->
+            <section class="pv-filters" aria-label="Filter published cases">
+                <div class="pv-search-input-wrap" style="flex:2;">
+                    <i class="pv-search-icon" data-lucide="search"></i>
+                    <input type="search" id="pvFilterSearch" class="pv-input"
+                        placeholder="Search case number, title, keywords..."
+                        aria-label="Search published cases">
+                </div>
+                <select id="pvFilterType" class="pv-select" aria-label="Filter by case type">
+                    <option value="">All case types</option>
+                    <option value="criminal">Criminal</option>
+                    <option value="civil">Civil</option>
+                    <option value="administrative">Administrative</option>
+                    <option value="regulatory">Regulatory</option>
+                </select>
+                <input type="text" id="pvFilterJurisdiction" class="pv-input"
+                    style="flex:1; min-width:150px;" placeholder="Jurisdiction" aria-label="Filter by jurisdiction">
+                <input type="date" id="pvFilterFrom" class="pv-input" style="flex:1; min-width:150px;"
+                    aria-label="Published from date">
+                <input type="date" id="pvFilterTo" class="pv-input" style="flex:1; min-width:150px;"
+                    aria-label="Published to date">
+                <button type="button" id="pvApplyFilters" class="pv-btn pv-btn--primary">
+                    <i data-lucide="filter"></i> Apply
+                </button>
+                <button type="button" id="pvClearFilters" class="pv-btn pv-btn--ghost">
+                    <i data-lucide="x"></i> Clear
+                </button>
+                <button type="button" id="pvVerifyBtn" class="pv-btn pv-btn--outline">
+                    <i data-lucide="scan-search"></i> Verify Evidence
+                </button>
+            </section>
+
+            <!-- Results -->
+            <section aria-labelledby="pvResultsTitle">
+                <div class="pv-section-title" id="pvResultsTitle">
+                    <i data-lucide="folder-open"></i> Published Cases
+                    <span class="pv-page-info" id="pvResultCount" style="margin-left:auto; font-weight:600;"></span>
+                </div>
+                <p class="pv-section-sub">Records explicitly approved for public release.</p>
+                <div class="pv-cards-grid" id="pvCasesGrid">
+                    <div class="pv-skeleton"></div>
+                    <div class="pv-skeleton"></div>
+                    <div class="pv-skeleton"></div>
+                </div>
+                <nav class="pv-pagination" id="pvPagination" aria-label="Cases pagination"></nav>
+            </section>
+        </div>
+    </main>
+
+    <!-- Trust bar -->
+    <div class="pv-trust-bar" role="complementary" aria-label="Transparency trust guarantees">
+        <div class="pv-trust-inner">
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Every file has a SHA-256 hash that can be re-checked at any time">
+                <i data-lucide="hash"></i> SHA-256 Integrity
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Evidence hashes are anchored on the Polygon blockchain">
+                <i data-lucide="shield-check"></i> Polygon Verified
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Files are stored on the distributed IPFS network">
+                <i data-lucide="cloud-lock"></i> IPFS Secured
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Private details are removed before anything is published">
+                <i data-lucide="eye-off"></i> Privacy Redacted
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Anyone can audit the published record trail">
+                <i data-lucide="scale"></i> Publicly Auditable
+            </span>
+        </div>
+    </div>
+
+    <!-- Verify modal -->
+    <div class="pv-modal-backdrop" id="pvVerifyModal" role="dialog" aria-modal="true"
+        aria-labelledby="pvVerifyTitle" aria-hidden="true">
+        <div class="pv-modal" role="document">
+            <div class="pv-modal-head">
+                <h3 id="pvVerifyTitle">Verify Evidence Authenticity</h3>
+                <button type="button" class="pv-modal-close" id="pvVerifyClose" aria-label="Close verification dialog">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="pvVerifyForm" novalidate>
+                <label class="pv-field-label" for="pvVerifyInput">Evidence ID, SHA-256 hash, or blockchain
+                    transaction</label>
+                <input type="text" id="pvVerifyInput" class="pv-input" autocomplete="off"
+                    placeholder="e.g. 42, a1b2c3d4…, 0x9f2c…"
+                    aria-describedby="pvVerifyHint pvVerifyError">
+                <p class="pv-hint" id="pvVerifyHint">Paste a released evidence ID, its 64-character SHA-256 hash, or a
+                    0x… transaction hash from the Polygon explorer.</p>
+                <p class="pv-error-banner" id="pvVerifyError" style="display:none;" role="alert"></p>
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button type="submit" class="pv-btn pv-btn--primary" id="pvVerifySubmit">
+                        <i data-lucide="badge-check"></i> Verify
+                    </button>
+                    <button type="button" class="pv-btn pv-btn--outline" id="pvVerifyCancel">Cancel</button>
+                </div>
+            </form>
+            <div id="pvVerifyResult" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <!-- Public case summary modal -->
+    <div class="pv-modal-backdrop" id="pvSummaryModal" role="dialog" aria-modal="true"
+        aria-labelledby="pvSummaryTitle" aria-hidden="true">
+        <div class="pv-modal" role="document">
+            <div class="pv-modal-head">
+                <h3 id="pvSummaryTitle">Public Case Summary</h3>
+                <button type="button" class="pv-modal-close" id="pvSummaryClose" aria-label="Close case summary dialog">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div id="pvSummaryBody"><div class="pv-skeleton"></div></div>
+        </div>
+    </div>
+
+    <script src="cases-public.js"></script>
+    <script src="fixed-navbar.js"></script>
+    <script src="footer.js"></script>
+</body>
+
+</html>

@@ -4,724 +4,657 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Public View | EVID-DGC</title>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Public Viewer Dashboard | EVID-DGC</title>
+    <meta name="description"
+        content="Public Viewer Dashboard — independently verify published case records, evidence integrity and blockchain authenticity.">
+    <link rel="icon" href="logo-32x32.png" type="image/png">
+    <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="responsive-improvements.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <link rel="stylesheet" href="public-dashboard.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="config.js"></script>
     <script src="api-client.js"></script>
-    <script src="storage.js"></script>
-    <script src="session-manager.js"></script>
-    <script src="fixed-navbar.js"></script>
-    <style>
-        .public-hero {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white;
-            padding: 40px 0;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .hero-content h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .public-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            display: block;
-        }
-
-        .public-cases {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .public-case-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #10b981;
-        }
-
-        .case-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .search-bar {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #10b981;
-        }
-
-        .search-results-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .search-result-item {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: #f9fafb;
-        }
-
-        .search-result-item h5 {
-            margin: 0 0 8px 0;
-            color: #1f2937;
-        }
-
-        .case-summary {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #10b981;
-        }
-
-        .evidence-item {
-            transition: all 0.2s ease;
-        }
-
-        .evidence-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-
+    <script src="public-utils.js"></script>
+    <script src="public-api.js"></script>
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.href = 'desktop-only.html'; }</script>
 </head>
 
 <body>
-    <!-- Navbar will be injected by navbar.js -->
+    <main class="pv-page">
+        <!-- Hero header -->
+        <header class="pv-hero">
+            <div class="pv-hero-inner">
+                <div class="pv-eyebrow"><i data-lucide="shield-check"></i> EVID-DGC Transparency Portal</div>
+                <h1>Public Viewer Dashboard</h1>
+                <p class="pv-tagline">Independently verify published case records and evidence authenticity — secured
+                    with SHA-256, IPFS and Polygon.</p>
+            </div>
+        </header>
 
-    <!-- Hero Section -->
-    <div class="public-hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>👁️ Public Viewer Dashboard</h1>
-                <p>Access public case information and evidence records</p>
-                <div class="public-stats">
-                    <div class="stat-card">
-                        <span class="stat-number" id="publicCases">12</span>
-                        <span>Public Cases</span>
+        <div class="pv-main">
+            <!-- Live statistics -->
+            <section class="pv-stats-grid" aria-label="Public transparency statistics">
+                <article class="pv-stat-card">
+                    <div class="pv-stat-icon"><i data-lucide="folder-open"></i></div>
+                    <div>
+                        <div class="pv-stat-value" id="statPublishedCases">—</div>
+                        <div class="pv-stat-label">Published Cases</div>
                     </div>
-                    <div class="stat-card">
-                        <span class="stat-number" id="closedCases">8</span>
-                        <span>Closed Cases</span>
+                    <span class="pv-tip" tabindex="0" aria-label="Published Cases"
+                        data-tip="Cases explicitly approved for public release"></span>
+                </article>
+                <article class="pv-stat-card">
+                    <div class="pv-stat-icon"><i data-lucide="file-search"></i></div>
+                    <div>
+                        <div class="pv-stat-value" id="statPublicEvidence">—</div>
+                        <div class="pv-stat-label">Public Evidence</div>
                     </div>
-                    <div class="stat-card">
-                        <span class="stat-number" id="publicEvidence">45</span>
-                        <span>Public Evidence</span>
+                    <span class="pv-tip" tabindex="0" aria-label="Public Evidence"
+                        data-tip="Released evidence items viewable by the public"></span>
+                </article>
+                <article class="pv-stat-card">
+                    <div class="pv-stat-icon"><i data-lucide="badge-check"></i></div>
+                    <div>
+                        <div class="pv-stat-value" id="statBlockchainVerified">—</div>
+                        <div class="pv-stat-label">Blockchain Verified</div>
+                    </div>
+                    <span class="pv-tip" tabindex="0" aria-label="Blockchain Verified"
+                        data-tip="Released evidence confirmed on the Polygon blockchain"></span>
+                </article>
+                <article class="pv-stat-card">
+                    <div class="pv-stat-icon"><i data-lucide="clock"></i></div>
+                    <div>
+                        <div class="pv-stat-value" id="statRecentlyUpdated">—</div>
+                        <div class="pv-stat-label">Recently Updated</div>
+                    </div>
+                    <span class="pv-tip" tabindex="0" aria-label="Recently Updated"
+                        data-tip="Public cases updated or published in the last 7 days"></span>
+                </article>
+            </section>
+
+            <!-- Search / Verify action area -->
+            <section class="pv-search-area" aria-label="Search and verify">
+                <div class="pv-search-row">
+                    <div class="pv-search-input-wrap">
+                        <i class="pv-search-icon" data-lucide="search"></i>
+                        <input type="search" id="pvSearchInput" class="pv-input"
+                            placeholder="Search case number, title, keywords..."
+                            aria-label="Search case number, title, keywords">
+                    </div>
+                    <button type="button" id="pvSearchBtn" class="pv-btn pv-btn--primary">
+                        <i data-lucide="search"></i> Search
+                    </button>
+                    <button type="button" id="pvVerifyBtn" class="pv-btn pv-btn--outline">
+                        <i data-lucide="scan-search"></i> Verify Evidence
+                    </button>
+                </div>
+                <p class="pv-hint">Searching opens the public cases directory. Verifying checks an evidence ID,
+                    SHA-256 hash, or blockchain transaction against released records.</p>
+            </section>
+
+            <div class="pv-split">
+                <!-- Recent public cases -->
+                <section class="pv-section" aria-labelledby="pvRecentTitle">
+                    <h2 class="pv-section-title" id="pvRecentTitle"><i data-lucide="folder-open"></i> Recently
+                        Published Cases</h2>
+                    <p class="pv-section-sub">The latest records explicitly released to the public.</p>
+                    <div class="pv-cards-grid" id="pvRecentCases">
+                        <div class="pv-skeleton"></div>
+                        <div class="pv-skeleton"></div>
+                        <div class="pv-skeleton"></div>
+                    </div>
+                    <div style="margin-top: 18px; text-align: center;">
+                        <a href="cases-public.html" class="pv-btn pv-btn--outline"><i
+                                data-lucide="list"></i>Browse all published cases</a>
+                    </div>
+                </section>
+
+                <!-- Recent activity feed -->
+                <section class="pv-section" aria-labelledby="pvActivityTitle">
+                    <h2 class="pv-section-title" id="pvActivityTitle"><i data-lucide="activity"></i> Recent
+                        Activity</h2>
+                    <p class="pv-section-sub">Public events across the transparency portal.</p>
+                    <div class="pv-activity" id="pvActivityFeed">
+                        <div class="pv-skeleton"></div>
+                        <div class="pv-skeleton"></div>
+                        <div class="pv-skeleton"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Chain of custody -->
+            <section class="pv-section" aria-labelledby="pvCocTitle">
+                <h2 class="pv-section-title" id="pvCocTitle"><i data-lucide="link-2"></i> Chain of Custody</h2>
+                <p class="pv-section-sub">How every released record is protected from collection to publication.</p>
+                <div class="pv-coc">
+                    <div class="pv-coc-steps">
+                        <div class="pv-coc-step pv-tip" tabindex="0" data-tip="Evidence is collected with secure, role-based access">
+                            <div class="pv-coc-dot"><i data-lucide="package-search"></i></div>
+                            <small>Collected</small>
+                            <span>Secure intake with access control</span>
+                        </div>
+                        <div class="pv-coc-step pv-tip" tabindex="0" data-tip="A SHA-256 fingerprint is computed for the file">
+                            <div class="pv-coc-dot"><i data-lucide="fingerprint"></i></div>
+                            <small>SHA-256 Hashed</small>
+                            <span>Tamper-evident fingerprint</span>
+                        </div>
+                        <div class="pv-coc-step pv-tip" tabindex="0" data-tip="Encrypted storage on distributed IPFS nodes">
+                            <div class="pv-coc-dot"><i data-lucide="cloud"></i></div>
+                            <small>IPFS Secured</small>
+                            <span>Distributed content storage</span>
+                        </div>
+                        <div class="pv-coc-step pv-tip" tabindex="0" data-tip="The hash is anchored on the Polygon blockchain">
+                            <div class="pv-coc-dot"><i data-lucide="shield-check"></i></div>
+                            <small>Polygon Verified</small>
+                            <span>Immutable on-chain proof</span>
+                        </div>
+                        <div class="pv-coc-step pv-tip" tabindex="0" data-tip="Only privacy-redacted records are published here">
+                            <div class="pv-coc-dot"><i data-lucide="eye-off"></i></div>
+                            <small>Published</small>
+                            <span>Privacy-redacted release</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Trust bar -->
+    <div class="pv-trust-bar" role="complementary" aria-label="Transparency trust guarantees">
+        <div class="pv-trust-inner">
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Every file has a SHA-256 hash that can be re-checked at any time">
+                <i data-lucide="hash"></i> SHA-256 Integrity
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Evidence hashes are anchored on the Polygon blockchain">
+                <i data-lucide="shield-check"></i> Polygon Verified
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Files are stored on the distributed IPFS network">
+                <i data-lucide="cloud-lock"></i> IPFS Secured
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Private details are removed before anything is published">
+                <i data-lucide="eye-off"></i> Privacy Redacted
+            </span>
+            <span class="pv-trust-item pv-tip" tabindex="0" data-tip="Anyone can audit the published record trail">
+                <i data-lucide="scale"></i> Publicly Auditable
+            </span>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Search Section -->
-        <div class="search-bar">
-            <h3 style="margin-bottom: 15px;">🔍 Search Public Records</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" class="search-input" placeholder="Search by case ID, location, or keywords..."
-                    id="searchInput">
-                <button class="btn btn-primary" onclick="searchCases()">
-                    <i data-lucide="search"></i>
-                    Search
+    <!-- Verify modal -->
+    <div class="pv-modal-backdrop" id="pvVerifyModal" role="dialog" aria-modal="true"
+        aria-labelledby="pvVerifyTitle" aria-hidden="true">
+        <div class="pv-modal" role="document">
+            <div class="pv-modal-head">
+                <h3 id="pvVerifyTitle">Verify Evidence Authenticity</h3>
+                <button type="button" class="pv-modal-close" id="pvVerifyClose" aria-label="Close verification dialog">
+                    <i data-lucide="x"></i>
                 </button>
             </div>
-        </div>
-
-        <!-- Public Cases -->
-        <div class="card">
-            <div class="card-header">
-                <h2>📋 Public Cases</h2>
-                <p>View publicly available case information</p>
-            </div>
-            <div class="card-body">
-                <div class="public-cases" id="publicCasesGrid">
-                    <div class="public-case-card">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3>Downtown Burglary Case</h3>
-                            <span class="case-status">CLOSED</span>
-                        </div>
-                        <p><strong>Case ID:</strong> PUB-2024-001</p>
-                        <p><strong>Location:</strong> Downtown District</p>
-                        <p><strong>Date:</strong> February 15, 2024</p>
-                        <p><strong>Status:</strong> Investigation Complete</p>
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-001')">View
-                                Summary</button>
-                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-001')">Evidence
-                                List</button>
-                        </div>
-                    </div>
-
-                    <div class="public-case-card">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3>Public Safety Incident</h3>
-                            <span class="case-status">CLOSED</span>
-                        </div>
-                        <p><strong>Case ID:</strong> PUB-2024-002</p>
-                        <p><strong>Location:</strong> City Park</p>
-                        <p><strong>Date:</strong> February 20, 2024</p>
-                        <p><strong>Status:</strong> Resolved</p>
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-002')">View
-                                Summary</button>
-                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-002')">Evidence
-                                List</button>
-                        </div>
-                    </div>
-
-                    <div class="public-case-card">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3>Traffic Investigation</h3>
-                            <span class="case-status">CLOSED</span>
-                        </div>
-                        <p><strong>Case ID:</strong> PUB-2024-003</p>
-                        <p><strong>Location:</strong> Main Street</p>
-                        <p><strong>Date:</strong> February 25, 2024</p>
-                        <p><strong>Status:</strong> Case Closed</p>
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('PUB-2024-003')">View
-                                Summary</button>
-                            <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('PUB-2024-003')">Evidence
-                                List</button>
-                        </div>
-                    </div>
+            <form id="pvVerifyForm" novalidate>
+                <label class="pv-field-label" for="pvVerifyInput">Evidence ID, SHA-256 hash, or blockchain
+                    transaction</label>
+                <input type="text" id="pvVerifyInput" class="pv-input" autocomplete="off"
+                    placeholder="e.g. 42, a1b2c3d4…, 0x9f2c…"
+                    aria-describedby="pvVerifyHint pvVerifyError">
+                <p class="pv-hint" id="pvVerifyHint">Paste a released evidence ID, its 64-character SHA-256 hash, or a
+                    0x… transaction hash from the Polygon explorer.</p>
+                <p class="pv-error-banner" id="pvVerifyError" style="display:none;" role="alert"></p>
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button type="submit" class="pv-btn pv-btn--primary" id="pvVerifySubmit">
+                        <i data-lucide="badge-check"></i> Verify
+                    </button>
+                    <button type="button" class="pv-btn pv-btn--outline" id="pvVerifyCancel">Cancel</button>
                 </div>
-            </div>
+            </form>
+            <div id="pvVerifyResult" aria-live="polite"></div>
         </div>
+    </div>
 
-        <!-- Public Information -->
-        <div class="card">
-            <div class="card-header">
-                <h2>ℹ️ Public Information</h2>
-                <p>Important notices and system information</p>
+    <!-- Public case summary modal -->
+    <div class="pv-modal-backdrop" id="pvSummaryModal" role="dialog" aria-modal="true"
+        aria-labelledby="pvSummaryTitle" aria-hidden="true">
+        <div class="pv-modal" role="document">
+            <div class="pv-modal-head">
+                <h3 id="pvSummaryTitle">Public Case Summary</h3>
+                <button type="button" class="pv-modal-close" id="pvSummaryClose" aria-label="Close case summary dialog">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
-            <div class="card-body">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                    <div
-                        style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
-                        <h4>🔒 Data Privacy</h4>
-                        <p>All public records are filtered to protect sensitive information while maintaining
-                            transparency.</p>
-                    </div>
-                    <div
-                        style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e;">
-                        <h4>✅ Verified Records</h4>
-                        <p>All evidence and case information is blockchain-verified for authenticity and integrity.</p>
-                    </div>
-                    <div
-                        style="background: #fefce8; padding: 20px; border-radius: 8px; border-left: 4px solid #eab308;">
-                        <h4>📅 Regular Updates</h4>
-                        <p>Public records are updated regularly as cases progress through the legal system.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Evidence Statistics -->
-        <div class="card">
-            <div class="card-header">
-                <h2>📊 Evidence Statistics</h2>
-                <p>Public evidence transparency metrics</p>
-            </div>
-            <div class="card-body">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #3b82f6;">📸</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">28</div>
-                        <div>Public Photos</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #10b981;">📄</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">15</div>
-                        <div>Public Documents</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #f59e0b;">🎥</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">2</div>
-                        <div>Public Videos</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #ef4444;">🔒</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">100%</div>
-                        <div>Verified</div>
-                    </div>
-                </div>
-            </div>
+            <div id="pvSummaryBody"><div class="pv-skeleton"></div></div>
         </div>
     </div>
 
     <script>
-        let currentUser = null;
+        // ==========================================================================
+        // EVID-DGC Public Viewer Dashboard — live data, XSS-safe rendering
+        // ==========================================================================
+        (function () {
+            'use strict';
 
-        document.addEventListener('DOMContentLoaded', async function () {
-            lucide.createIcons();
-            const userAccount = localStorage.getItem('currentUser');
-            if (!userAccount) {
-                window.location.href = 'index.html';
-                return;
+            var u = window.EVIDPublic;
+
+            function setText(id, value) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = value === null || value === undefined ? '—' : String(value);
             }
 
-            currentUser = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
-            updateUserInterface();
-            await loadDashboardData();
-        });
+            function createEl(tag, className, text) {
+                var el = document.createElement(tag);
+                if (className) el.className = className;
+                if (text !== undefined) el.textContent = text;
+                return el;
+            }
 
-        async function initializeDashboard() {
-            try {
-                const currentUserRaw = localStorage.getItem('currentUser');
-                if (!currentUserRaw) {
-                    window.location.href = 'index.html';
+            function showError(container, message) {
+                container.innerHTML = '';
+                var banner = createEl('div', 'pv-error-banner', message);
+                container.appendChild(banner);
+            }
+
+            // ----------------------------------------------------------------
+            // Statistics
+            // ----------------------------------------------------------------
+            async function loadStatistics() {
+                try {
+                    var res = await window.publicAPI.getStatistics();
+                    var d = res.data;
+                    setText('statPublishedCases', d.published_cases);
+                    setText('statPublicEvidence', d.public_evidence);
+                    setText('statBlockchainVerified', d.blockchain_verified);
+                    setText('statRecentlyUpdated', d.recently_updated);
+                    renderActivity(d.recent_activity || []);
+                } catch (err) {
+                    setText('statPublishedCases', '—');
+                    setText('statPublicEvidence', '—');
+                    setText('statBlockchainVerified', '—');
+                    setText('statRecentlyUpdated', '—');
+                    var feed = document.getElementById('pvActivityFeed');
+                    if (feed) {
+                        feed.innerHTML = '';
+                        feed.appendChild(createEl('div', 'pv-empty', 'Statistics unavailable. Please try again later.'));
+                    }
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // Recent public cases
+            // ----------------------------------------------------------------
+            async function loadRecentCases() {
+                var container = document.getElementById('pvRecentCases');
+                try {
+                    var res = await window.publicAPI.getCases({ limit: 3 });
+                    container.innerHTML = '';
+                    if (!res.data || res.data.length === 0) {
+                        container.appendChild(createEl('div', 'pv-empty',
+                            'No published cases yet. Records appear here after they are explicitly approved for public release.'));
+                        return;
+                    }
+                    res.data.forEach(function (c) { container.appendChild(buildCaseCard(c)); });
+                } catch (err) {
+                    container.innerHTML = '';
+                    showError(container, 'Unable to load published cases.');
+                }
+            }
+
+            function buildCaseCard(c) {
+                var card = createEl('article', 'pv-case-card' + (c.blockchain_verified ? ' pv-verified' : ''));
+                var head = createEl('div', 'pv-case-head');
+                head.appendChild(createEl('span', 'pv-reference', u.toPublicReference(c.reference_number, c.id)));
+
+                var statusWrap = createEl('span', '');
+                if (c.blockchain_verified) {
+                    var badge = createEl('span', 'pv-badge pv-badge--verified');
+                    badge.appendChild(createEl('i', '', ''));
+                    badge.dataset.lucide = 'badge-check';
+                    badge.appendChild(document.createTextNode(' Blockchain Verified'));
+                    statusWrap.appendChild(badge);
+                } else {
+                    var neutral = createEl('span', 'pv-badge pv-badge--published');
+                    neutral.textContent = 'Published';
+                    statusWrap.appendChild(neutral);
+                }
+                head.appendChild(statusWrap);
+                card.appendChild(head);
+
+                card.appendChild(createEl('h3', 'pv-case-title', c.title || 'Untitled case'));
+
+                var summary = c.summary || 'A privacy-redacted summary for this case will be shown here once released.';
+                card.appendChild(createEl('p', 'pv-case-summary', summary));
+
+                var meta = createEl('div', 'pv-case-meta');
+                var j = createEl('div');
+                j.appendChild(createEl('span', 'pv-meta-key', 'Jurisdiction: '));
+                j.appendChild(document.createTextNode(c.jurisdiction || 'General'));
+                meta.appendChild(j);
+                var pd = createEl('div');
+                pd.appendChild(createEl('span', 'pv-meta-key', 'Published: '));
+                pd.appendChild(document.createTextNode(u.formatDate(c.published_date)));
+                meta.appendChild(pd);
+                var ct = createEl('div');
+                ct.appendChild(createEl('span', 'pv-meta-key', 'Type: '));
+                ct.appendChild(document.createTextNode(c.case_type || 'criminal'));
+                meta.appendChild(ct);
+                var ec = createEl('div');
+                ec.appendChild(createEl('span', 'pv-meta-key', 'Evidence: '));
+                ec.appendChild(document.createTextNode(String(c.evidence_count || 0)));
+                meta.appendChild(ec);
+                card.appendChild(meta);
+
+                var actions = createEl('div', 'pv-case-actions');
+                var btn = createEl('button', 'pv-btn pv-btn--outline', 'View Public Summary');
+                btn.type = 'button';
+                btn.style.padding = '10px 16px';
+                btn.addEventListener('click', function () { openSummary(c); });
+                actions.appendChild(btn);
+                card.appendChild(actions);
+                return card;
+            }
+
+            // ----------------------------------------------------------------
+            // Public summary modal
+            // ----------------------------------------------------------------
+            async function openSummary(c) {
+                var backdrop = document.getElementById('pvSummaryModal');
+                var body = document.getElementById('pvSummaryBody');
+                backdrop.classList.add('open');
+                backdrop.setAttribute('aria-hidden', 'false');
+                body.innerHTML = '';
+                body.appendChild(createEl('div', 'pv-skeleton'));
+
+                var detail, evidence;
+                try {
+                    var results = await Promise.all([
+                        window.publicAPI.getCase(c.id),
+                        window.publicAPI.getCaseEvidence(c.id)
+                    ]);
+                    detail = results[0].data;
+                    evidence = results[1].data || [];
+                } catch (err) {
+                    body.innerHTML = '';
+                    body.appendChild(createEl('p', 'pv-error-banner', 'Unable to load the public case summary.'));
                     return;
                 }
 
-                let userAccount = currentUserRaw;
-                let userData = {};
+                body.innerHTML = '';
+                var ref = createEl('div');
+                ref.appendChild(createEl('span', 'pv-reference', u.toPublicReference(detail.reference_number, detail.id)));
+                var badge = createEl('span', 'pv-badge pv-badge--published', ' Published');
+                badge.style.marginLeft = '10px';
+                ref.appendChild(badge);
+                body.appendChild(ref);
 
-                // Parse if it's a JSON object (new format)
-                if (currentUserRaw.startsWith('{')) {
-                    try {
-                        const parsed = JSON.parse(currentUserRaw);
-                        userData = parsed.user;
-                        // Map fields if necessary
-                        if (!userData.role) userData.role = parsed.user.role;
+                body.appendChild(createEl('h3', 'pv-case-title', detail.title || 'Untitled case'));
+                var sum = createEl('p', 'pv-case-summary', detail.summary || 'No public summary has been released for this case.');
+                sum.style.marginTop = '10px';
+                body.appendChild(sum);
 
-                        // Set userAccount for legacy lookups if needed (though we have userData now)
-                        if (parsed.type === 'email') {
-                            userAccount = userData.email;
-                        } else {
-                            userAccount = userData.walletAddress || userData.address;
-                        }
-                    } catch (e) {
-                        console.error('Error parsing currentUser:', e);
-                    }
+                var meta = createEl('div', 'pv-case-meta');
+                meta.style.marginTop = '14px';
+                meta.appendChild(metaItem('Jurisdiction', detail.jurisdiction));
+                meta.appendChild(metaItem('Published', u.formatDate(detail.published_date)));
+                meta.appendChild(metaItem('Case type', detail.case_type));
+                meta.appendChild(metaItem('Released evidence', String(detail.evidence_count || 0)));
+                body.appendChild(meta);
+
+                body.appendChild(createEl('h4', 'pv-section-title', 'Released Evidence'));
+                var list = createEl('ul', 'pv-activity-list');
+                list.style.marginTop = '8px';
+                if (!evidence.length) {
+                    list.appendChild(createEl('li', 'pv-activity-item', 'No evidence items have been released for this case.'));
                 } else {
-                    // Legacy
-                    userData = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
+                    evidence.forEach(function (e) {
+                        var li = createEl('li', 'pv-activity-item');
+                        var icon = createEl('div', 'pv-activity-icon');
+                        icon.appendChild(createEl('i', '', ''));
+                        icon.firstChild.dataset.lucide = e.blockchain_verified ? 'badge-check' : 'file';
+                        li.appendChild(icon);
+                        var b = createEl('div', 'pv-activity-body');
+                        b.appendChild(createEl('div', 'pv-activity-action', e.title || ('Evidence ' + e.id)));
+                        var sub = createEl('div');
+                        sub.style.fontSize = '0.82rem';
+                        sub.style.color = '#5f6368';
+                        sub.textContent = (e.file_type || 'file') + ' · ' + u.formatDate(e.timestamp) + ' · ' +
+                            (e.blockchain_verified ? 'verified' : 'released');
+                        b.appendChild(sub);
+                        if (e.hash) {
+                            var code = createEl('code', '', '');
+                            code.textContent = u.truncate(e.hash, 10);
+                            code.style.fontSize = '0.78rem';
+                            b.appendChild(code);
+                        }
+                        li.appendChild(b);
+                        list.appendChild(li);
+                    });
                 }
+                body.appendChild(list);
 
-                if (!userData.role) {
-                    // Try to get role from selectedRole if user data is missing
-                    const selectedRole = localStorage.getItem('selectedRole');
-                    if (selectedRole) {
-                        userData.role = selectedRole;
-                        userData.fullName = localStorage.getItem('testUserName') || 'Public Viewer';
-                        userData.walletAddress = userAccount;
-                        // Save the user data
-                        localStorage.setItem('evidUser_' + userAccount, JSON.stringify(userData));
-                    } else {
-                        alert('User data not found. Please login again.');
-                        logout();
-                        return;
+                if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (_) { } }
+            }
+
+            function metaItem(key, value) {
+                var div = createEl('div');
+                div.appendChild(createEl('span', 'pv-meta-key', key + ': '));
+                div.appendChild(document.createTextNode(value === null || value === undefined ? '—' : String(value)));
+                return div;
+            }
+
+            // ----------------------------------------------------------------
+            // Activity feed
+            // ----------------------------------------------------------------
+            function renderActivity(events) {
+                var feed = document.getElementById('pvActivityFeed');
+                if (!feed) return;
+                feed.innerHTML = '';
+                if (!events.length) {
+                    feed.appendChild(createEl('div', 'pv-empty', 'No public activity yet.'));
+                    return;
+                }
+                var list = createEl('ul', 'pv-activity-list');
+                events.forEach(function (ev) {
+                    var li = createEl('li', 'pv-activity-item');
+                    var icon = createEl('div', 'pv-activity-icon');
+                    var i = createEl('i', '', '');
+                    i.dataset.lucide = ev.type === 'evidence_verified' ? 'badge-check' : 'mega-phone';
+                    icon.appendChild(i);
+                    li.appendChild(icon);
+                    var body = createEl('div', 'pv-activity-body');
+                    body.appendChild(createEl('div', 'pv-activity-action', ev.action || 'Event'));
+                    if (ev.title) {
+                        body.appendChild(createEl('div', '', ev.title));
                     }
+                    var refTime = createEl('div', '');
+                    if (ev.reference) {
+                        refTime.appendChild(createEl('span', 'pv-activity-ref', u.toPublicReference(ev.reference)));
+                    }
+                    refTime.appendChild(createEl('span', 'pv-activity-time', '  ' + u.formatDate(ev.timestamp)));
+                    body.appendChild(refTime);
+                    li.appendChild(body);
+                    list.appendChild(li);
+                });
+                feed.appendChild(list);
+                if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (_) { } }
+            }
+
+            // ----------------------------------------------------------------
+            // Verify modal
+            // ----------------------------------------------------------------
+            var lastFocused = null;
+
+            function openVerifyModal() {
+                var backdrop = document.getElementById('pvVerifyModal');
+                lastFocused = document.activeElement;
+                backdrop.classList.add('open');
+                backdrop.setAttribute('aria-hidden', 'false');
+                var input = document.getElementById('pvVerifyInput');
+                input.value = '';
+                var error = document.getElementById('pvVerifyError');
+                error.style.display = 'none';
+                error.textContent = '';
+                document.getElementById('pvVerifyResult').innerHTML = '';
+                setTimeout(function () { input.focus(); }, 50);
+            }
+
+            function closeVerifyModal() {
+                var backdrop = document.getElementById('pvVerifyModal');
+                backdrop.classList.remove('open');
+                backdrop.setAttribute('aria-hidden', 'true');
+                if (lastFocused) lastFocused.focus();
+            }
+
+            function closeSummaryModal() {
+                var backdrop = document.getElementById('pvSummaryModal');
+                backdrop.classList.remove('open');
+                backdrop.setAttribute('aria-hidden', 'true');
+            }
+
+            async function submitVerify(event) {
+                event.preventDefault();
+                var input = document.getElementById('pvVerifyInput');
+                var error = document.getElementById('pvVerifyError');
+                var resultBox = document.getElementById('pvVerifyResult');
+                var submitBtn = document.getElementById('pvVerifySubmit');
+
+                var validation = u.validateVerifyInput(input.value);
+                if (!validation.ok) {
+                    error.textContent = validation.message;
+                    error.style.display = 'block';
+                    input.focus();
+                    return;
                 }
+                error.style.display = 'none';
+                resultBox.innerHTML = '';
+                resultBox.appendChild(createEl('div', 'pv-skeleton'));
+                submitBtn.disabled = true;
 
-                currentUser = userData;
-                updateUserInterface();
-                loadDashboardData();
-                initializeTabs();
-
-            } catch (error) {
-                console.error('Dashboard initialization error:', error);
-                alert('Failed to load dashboard. Please try again.');
-            }
-        }
-
-        function initializeTabs() {
-            // Add click handlers for tab navigation
-            document.addEventListener('click', function (e) {
-                if (e.target.matches('[data-tab]')) {
-                    e.preventDefault();
-                    const tabName = e.target.getAttribute('data-tab');
-                    switchTab(tabName);
-                }
-            });
-        }
-
-        function switchTab(tabName) {
-            console.log('Switching to tab:', tabName);
-
-            switch (tabName) {
-                case 'cases':
-                    window.location.href = 'cases.html';
-                    break;
-                case 'search':
-                    showSearchInterface();
-                    break;
-                default:
-                    console.log('Unknown tab:', tabName);
-            }
-        }
-
-        function showSearchInterface() {
-            const searchModal = document.createElement('div');
-            searchModal.className = 'modal active';
-            searchModal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>🔍 Search Cases & Evidence</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Search Term</label>
-                            <input type="text" id="searchTerm" class="form-control" placeholder="Enter case ID, keywords, or location...">
-                        </div>
-                        <div class="form-group">
-                            <label>Search Type</label>
-                            <select id="searchType" class="form-control">
-                                <option value="all">All Records</option>
-                                <option value="cases">Cases Only</option>
-                                <option value="evidence">Evidence Only</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button onclick="performSearch()" class="btn btn-primary">
-                                <i data-lucide="search"></i> Search
-                            </button>
-                            <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Cancel</button>
-                        </div>
-                        <div id="searchResults" class="search-results" style="margin-top: 20px;"></div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(searchModal);
-            lucide.createIcons();
-        }
-
-        function performSearch() {
-            const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
-            const searchType = document.getElementById('searchType').value;
-            const resultsDiv = document.getElementById('searchResults');
-
-            if (!searchTerm.trim()) {
-                resultsDiv.innerHTML = '<p class="text-warning">Please enter a search term.</p>';
-                return;
-            }
-
-            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-            const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
-
-            let results = [];
-
-            if (searchType === 'all' || searchType === 'cases') {
-                const caseResults = cases.filter(c =>
-                    (c.status === 'CLOSED' || c.isPublic) &&
-                    (c.id.toLowerCase().includes(searchTerm) ||
-                        c.title.toLowerCase().includes(searchTerm) ||
-                        c.location?.toLowerCase().includes(searchTerm))
-                ).map(c => ({ ...c, type: 'case' }));
-                results = results.concat(caseResults);
-            }
-
-            if (searchType === 'all' || searchType === 'evidence') {
-                const evidenceResults = evidence.filter(e =>
-                    (e.isPublic || e.status === 'Verified') &&
-                    (e.title.toLowerCase().includes(searchTerm) ||
-                        e.description?.toLowerCase().includes(searchTerm))
-                ).map(e => ({ ...e, type: 'evidence' }));
-                results = results.concat(evidenceResults);
-            }
-
-            if (results.length > 0) {
-                let html = `<h4>Search Results (${results.length} found):</h4><div class="search-results-list">`;
-                results.forEach(item => {
-                    if (item.type === 'case') {
-                        html += `
-                            <div class="search-result-item">
-                                <h5>📋 Case: ${item.title}</h5>
-                                <p><strong>ID:</strong> ${item.id} | <strong>Status:</strong> ${item.status}</p>
-                                <p><strong>Location:</strong> ${item.location || 'N/A'} | <strong>Date:</strong> ${item.date}</p>
-                            </div>
-                        `;
+                try {
+                    var res = await window.publicAPI.verify({ identifier: validation.normalized });
+                    resultBox.innerHTML = '';
+                    if (res.data && res.data.match) {
+                        resultBox.appendChild(buildVerifyMatch(res.data));
                     } else {
-                        html += `
-                            <div class="search-result-item">
-                                <h5>📎 Evidence: ${item.title}</h5>
-                                <p><strong>Type:</strong> ${item.type} | <strong>Status:</strong> ${item.status}</p>
-                                <p><strong>Case:</strong> ${item.case_id} | <strong>Date:</strong> ${new Date(item.timestamp).toLocaleDateString()}</p>
-                            </div>
-                        `;
+                        resultBox.appendChild(buildVerifyNoMatch(res.data));
+                    }
+                } catch (err) {
+                    resultBox.innerHTML = '';
+                    resultBox.appendChild(createEl('p', 'pv-error-banner',
+                        'Verification failed: ' + u.escapeHtml(err.message || 'server error')));
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            }
+
+            function buildVerifyMatch(d) {
+                var box = createEl('div', 'pv-result pv-result--match');
+                var title = createEl('div', 'pv-result-title');
+                title.appendChild(createEl('i', '', ''));
+                title.firstChild.dataset.lucide = 'badge-check';
+                title.appendChild(document.createTextNode(' Authentic — record matches a publicly released evidence item'));
+                box.appendChild(title);
+
+                var grid = createEl('div', 'pv-result-grid');
+                grid.appendChild(verifyRow('Evidence ID', String(d.evidence.id)));
+                grid.appendChild(verifyRow('Title', d.evidence.title));
+                grid.appendChild(verifyRow('Case', d.evidence.case_number || '—'));
+                grid.appendChild(verifyRow('SHA-256 hash', d.evidence.hash, true));
+                grid.appendChild(verifyRow('Transaction hash', d.evidence.blockchain_tx_hash || '—', true));
+                grid.appendChild(verifyRow('Block', String(d.evidence.blockchain.block_number !== null &&
+                    d.evidence.blockchain.block_number !== undefined ? d.evidence.blockchain.block_number : '—')));
+                grid.appendChild(verifyRow('Block timestamp', u.formatDate(d.evidence.blockchain.timestamp)));
+                grid.appendChild(verifyRow('Recorded', u.formatDate(d.evidence.recorded_at)));
+                grid.appendChild(verifyRow('Status', d.evidence.blockchain.status || 'recorded'));
+                box.appendChild(grid);
+
+                if (d.evidence.explorer_url) {
+                    var link = createEl('a', 'pv-result-link', '');
+                    link.href = d.evidence.explorer_url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.appendChild(createEl('i', '', ''));
+                    link.firstChild.dataset.lucide = 'external-link';
+                    link.appendChild(document.createTextNode(' View on block explorer'));
+                    box.appendChild(link);
+                }
+                if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (_) { } }
+                return box;
+            }
+
+            function buildVerifyNoMatch(d) {
+                var box = createEl('div', 'pv-result pv-result--no-match');
+                var title = createEl('div', 'pv-result-title');
+                title.appendChild(createEl('i', '', ''));
+                title.firstChild.dataset.lucide = 'circle-x';
+                title.appendChild(document.createTextNode(' No public match'));
+                box.appendChild(title);
+                box.appendChild(createEl('p', '', d.message || 'No publicly released record matches this reference.'));
+                if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (_) { } }
+                return box;
+            }
+
+            function verifyRow(label, value, mono) {
+                var div = createEl('div');
+                div.appendChild(createEl('span', 'pv-meta-key', label));
+                var v = createEl('span', '');
+                if (mono) {
+                    var code = createEl('code', '', '');
+                    code.textContent = value;
+                    div.appendChild(code);
+                } else {
+                    v.textContent = value;
+                    div.appendChild(v);
+                }
+                return div;
+            }
+
+            // ----------------------------------------------------------------
+            // Wire-up
+            // ----------------------------------------------------------------
+            function runSearch() {
+                var input = document.getElementById('pvSearchInput');
+                var term = (input.value || '').trim();
+                var url = 'cases-public.html';
+                if (term) url += '?search=' + encodeURIComponent(term);
+                window.location.href = url;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof lucide !== 'undefined') { try { lucide.createIcons(); } catch (_) { } }
+
+                var searchInput = document.getElementById('pvSearchInput');
+                var searchBtn = document.getElementById('pvSearchBtn');
+                var verifyBtn = document.getElementById('pvVerifyBtn');
+
+                if (searchInput) {
+                    searchInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+                    });
+                }
+                if (searchBtn) searchBtn.addEventListener('click', runSearch);
+                if (verifyBtn) verifyBtn.addEventListener('click', openVerifyModal);
+
+                document.getElementById('pvVerifyForm').addEventListener('submit', submitVerify);
+                document.getElementById('pvVerifyClose').addEventListener('click', closeVerifyModal);
+                document.getElementById('pvVerifyCancel').addEventListener('click', closeVerifyModal);
+                document.getElementById('pvVerifyModal').addEventListener('click', function (e) {
+                    if (e.target === this) closeVerifyModal();
+                });
+                document.getElementById('pvSummaryClose').addEventListener('click', closeSummaryModal);
+                document.getElementById('pvSummaryModal').addEventListener('click', function (e) {
+                    if (e.target === this) closeSummaryModal();
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeVerifyModal();
+                        closeSummaryModal();
                     }
                 });
-                html += '</div>';
-                resultsDiv.innerHTML = html;
-            } else {
-                resultsDiv.innerHTML = `<p class="text-muted">No public records found matching "${searchTerm}".</p>`;
-            }
-        }
 
-        function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
-            const userName = currentUser.fullName || currentUser.full_name || 'Public Viewer';
-
-            const userRoleEl = document.getElementById('userRole');
-            if (userRoleEl) {
-                userRoleEl.textContent = isTestUser ?
-                    `👁️ ${userName} (Test)` : `👁️ Public Viewer`;
-            }
-
-            const userWalletEl = document.getElementById('userWallet');
-            if (userWalletEl && currentUser.walletAddress) {
-                userWalletEl.textContent =
-                    currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
-            }
-        }
-
-        async function loadDashboardData() {
-            try {
-                // Fetch public cases and evidence from backend
-                const [cases, evidence] = await Promise.all([
-                    window.storage.getAllCases(),
-                    window.storage.getAllEvidence()
-                ]);
-
-                // Filter for public/closed cases only (safety filter)
-                const publicCases = cases.filter(c => c.status === 'CLOSED' || c.is_public);
-                const publicEvidence = evidence.filter(e => e.is_public || e.status === 'VERIFIED');
-
-                document.getElementById('publicCases').textContent = publicCases.length;
-                document.getElementById('closedCases').textContent = cases.filter(c => c.status === 'CLOSED').length;
-                document.getElementById('publicEvidence').textContent = publicEvidence.length;
-
-                renderPublicCases(publicCases);
-            } catch (error) {
-                console.error('Error loading public data:', error);
-            }
-        }
-
-        function renderPublicCases(cases) {
-            const container = document.getElementById('publicCasesGrid');
-            if (!cases || cases.length === 0) {
-                container.innerHTML = '<p>No public cases available.</p>';
-                return;
-            }
-
-            container.innerHTML = cases.map(c => `
-                <div class="public-case-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3>${c.title}</h3>
-                        <span class="case-status">${c.status}</span>
-                    </div>
-                    <p><strong>Case ID:</strong> ${c.id}</p>
-                    <p><strong>Location:</strong> ${c.location || 'N/A'}</p>
-                    <p><strong>Date:</strong> ${new Date(c.created_at).toLocaleDateString()}</p>
-                    <div style="margin-top: 15px;">
-                        <button class="btn btn-sm btn-outline" onclick="viewCaseSummary('${c.id}')">View Summary</button>
-                        <button class="btn btn-sm btn-outline" onclick="viewEvidenceList('${c.id}')">Evidence List</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function searchCases() {
-            const searchTerm = document.getElementById('searchInput').value;
-            if (searchTerm.trim()) {
-                const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-                const publicCases = cases.filter(c => c.status === 'CLOSED' || c.isPublic);
-                const results = publicCases.filter(c =>
-                    c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    c.location.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-
-                if (results.length > 0) {
-                    let resultText = `🔍 Public Search Results for "${searchTerm}":\n\n`;
-                    results.forEach(c => {
-                        resultText += `• ${c.id}: ${c.title} (${c.status})\n  Location: ${c.location}\n  Date: ${c.date}\n\n`;
-                    });
-                    alert(resultText);
-                } else {
-                    alert(`No public cases found matching "${searchTerm}"`);
-                }
-            } else {
-                alert('Please enter a search term');
-            }
-        }
-
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.clear();
-                window.location.href = 'index.html';
-            }
-        }
-
-        function viewCaseSummary(caseId) {
-            const caseData = {
-                'PUB-2024-001': {
-                    title: 'Downtown Burglary Case',
-                    description: 'Investigation of commercial burglary in downtown district involving multiple businesses.',
-                    officer: 'Detective Johnson',
-                    dateOpened: 'February 15, 2024',
-                    dateClosed: 'March 10, 2024',
-                    status: 'Investigation Complete',
-                    location: 'Downtown District',
-                    evidenceCount: 12
-                },
-                'PUB-2024-002': {
-                    title: 'Public Safety Incident',
-                    description: 'Public safety incident at City Park involving vandalism and property damage.',
-                    officer: 'Officer Smith',
-                    dateOpened: 'February 20, 2024',
-                    dateClosed: 'February 28, 2024',
-                    status: 'Resolved',
-                    location: 'City Park',
-                    evidenceCount: 8
-                },
-                'PUB-2024-003': {
-                    title: 'Traffic Investigation',
-                    description: 'Traffic accident investigation on Main Street with multiple vehicles involved.',
-                    officer: 'Sergeant Davis',
-                    dateOpened: 'February 25, 2024',
-                    dateClosed: 'March 5, 2024',
-                    status: 'Case Closed',
-                    location: 'Main Street',
-                    evidenceCount: 15
-                }
-            };
-
-            const data = caseData[caseId];
-            if (!data) return;
-
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>📋 Case Summary - ${caseId}</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="case-summary">
-                            <h4>${data.title}</h4>
-                            <p><strong>Description:</strong> ${data.description}</p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-                                <div><strong>Assigned Officer:</strong> ${data.officer}</div>
-                                <div><strong>Location:</strong> ${data.location}</div>
-                                <div><strong>Date Opened:</strong> ${data.dateOpened}</div>
-                                <div><strong>Date Closed:</strong> ${data.dateClosed}</div>
-                                <div><strong>Status:</strong> <span class="case-status">${data.status}</span></div>
-                                <div><strong>Evidence Items:</strong> ${data.evidenceCount}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Close</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            lucide.createIcons();
-        }
-
-        function viewEvidenceList(caseId) {
-            const evidenceData = {
-                'PUB-2024-001': [
-                    { id: 'E001', type: 'Photo', description: 'Security camera footage', date: '2024-02-15', hash: 'abc123...' },
-                    { id: 'E002', type: 'Document', description: 'Police report', date: '2024-02-15', hash: 'def456...' },
-                    { id: 'E003', type: 'Photo', description: 'Crime scene photos', date: '2024-02-16', hash: 'ghi789...' }
-                ],
-                'PUB-2024-002': [
-                    { id: 'E004', type: 'Photo', description: 'Damage assessment photos', date: '2024-02-20', hash: 'jkl012...' },
-                    { id: 'E005', type: 'Document', description: 'Witness statements', date: '2024-02-21', hash: 'mno345...' }
-                ],
-                'PUB-2024-003': [
-                    { id: 'E006', type: 'Photo', description: 'Accident scene photos', date: '2024-02-25', hash: 'pqr678...' },
-                    { id: 'E007', type: 'Video', description: 'Traffic camera footage', date: '2024-02-25', hash: 'stu901...' },
-                    { id: 'E008', type: 'Document', description: 'Vehicle inspection report', date: '2024-02-26', hash: 'vwx234...' }
-                ]
-            };
-
-            const evidence = evidenceData[caseId] || [];
-
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px;">
-                    <div class="modal-header">
-                        <h3>📁 Evidence List - ${caseId}</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="evidence-list">
-                            ${evidence.length > 0 ? evidence.map(item => `
-                                <div class="evidence-item" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div>
-                                            <h5>${item.id} - ${item.description}</h5>
-                                            <p><strong>Type:</strong> ${item.type} | <strong>Date:</strong> ${item.date}</p>
-                                            <p><strong>Hash:</strong> <code style="font-size: 0.8em;">${item.hash}</code></p>
-                                        </div>
-                                        <div>
-                                            <span class="badge" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px;">Verified</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('') : '<p class="text-muted">No evidence items available for public viewing.</p>'}
-                        </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Close</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            lucide.createIcons();
-        }
+                loadStatistics();
+                loadRecentCases();
+            });
+        })();
     </script>
+    <script src="fixed-navbar.js"></script>
     <script src="footer.js"></script>
 </body>
 

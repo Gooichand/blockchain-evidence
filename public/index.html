@@ -1105,6 +1105,16 @@
                     </div>
                 </div>
 
+                <!-- Public Login Entry -->
+                <div class="login-public-entry">
+                    <div class="login-public-divider"><span>or</span></div>
+                    <p class="login-public-note">Public Visitor? View published case records with email login — no MetaMask needed.</p>
+                    <button type="button" class="login-card-btn login-card-btn--public" onclick="openPublicLoginModal()" id="loginPublicBtn">
+                        <span class="login-btn-text"><i data-lucide="eye"></i> Public Login</span>
+                        <span class="login-btn-spinner"></span>
+                    </button>
+                </div>
+
                 <!-- Security Strip -->
                 <div class="login-security-strip">
                     <div class="login-security-badge">
@@ -1213,6 +1223,44 @@
                     <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closeRegistrationModal()">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Public Login Sub-Modal -->
+    <div id="publicLoginOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="publicLoginTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="publicLoginTitle"><i data-lucide="eye"></i> Public Login</h3>
+                <button class="login-submodal-close" onclick="closePublicLoginModal()" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <p class="login-sub-text">Sign in with your email and password to view published case records. No MetaMask required.</p>
+            <form id="publicLoginForm">
+                <div class="login-sub-field">
+                    <label for="publicEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="publicEmail" class="login-sub-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="login-sub-field">
+                    <label for="publicPassword"><i data-lucide="lock"></i> Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="publicPassword" class="login-sub-input" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('publicPassword')" aria-label="Toggle password visibility">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--primary" id="publicLoginSubmit">
+                        <i data-lucide="log-in"></i> Sign In
+                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closePublicLoginModal()">Cancel</button>
+                </div>
+            </form>
+            <p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--lm-text-muted);">
+                Don't have an account?
+                <a href="#" onclick="event.preventDefault(); closePublicLoginModal(); openRegistrationModal()" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
+            </p>
         </div>
     </div>
 
