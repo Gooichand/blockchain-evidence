@@ -141,12 +141,6 @@ const emailLogin = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Block unverified email accounts (catches false, null, and undefined for legacy rows)
-    // Intentionally returns the same generic error to prevent credential enumeration
-    if (user.email_verified !== true) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
     // Log login activity (check returned error since Supabase does not throw on DB failures)
     const { error: logError } = await supabase.from('activity_logs').insert({
       user_id: user.id,
@@ -236,9 +230,9 @@ const emailRegister = async (req, res) => {
     // Hash password using bcrypt (12 salt rounds)
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
+    // Accounts are activated immediately — no email verification step (per project decision)
+    const verificationToken = null;
+    const tokenExpires = null;
 
     // Create user
     const { data: newUser, error } = await supabase
@@ -254,7 +248,7 @@ const emailRegister = async (req, res) => {
         account_type: 'real',
         created_by: 'self_registration',
         is_active: true,
-        email_verified: false,
+        email_verified: true,
         verification_token: verificationToken,
         verification_token_expires: tokenExpires,
       })
@@ -285,11 +279,9 @@ const emailRegister = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful — please verify your email before logging in.',
-      email_verification_required: true,
-      email_verified: false,
-      instructions:
-        'A verification link has been generated. Email delivery is not yet configured; contact an administrator to activate your account.',
+      message: 'Registration successful — you can now log in with your email.',
+      email_verification_required: false,
+      email_verified: true,
       user: {
         id: newUser.id,
         email: newUser.email,

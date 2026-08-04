@@ -417,9 +417,26 @@ function closeForgotPasswordModal() {
   if (ov) ov.classList.remove('active');
 }
 
-function openRegistrationModal() {
+function openRegistrationModal(preferredRole) {
   const ov = document.getElementById('registrationOverlay');
-  if (ov) { ov.classList.add('active'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+  if (!ov) return;
+
+  const roleSel = document.getElementById('regRole');
+  const roleHint = document.getElementById('regRoleHint');
+  if (preferredRole && roleSel) {
+    roleSel.value = preferredRole;
+    if (roleHint) {
+      roleHint.textContent = preferredRole === 'public_viewer'
+        ? 'Public Viewer accounts use email only — no MetaMask required.'
+        : '';
+      roleHint.style.display = preferredRole === 'public_viewer' ? 'block' : 'none';
+    }
+  } else if (roleHint) {
+    roleHint.style.display = 'none';
+  }
+
+  ov.classList.add('active');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function closeRegistrationModal() {
@@ -504,7 +521,7 @@ async function handlePublicLogin(event) {
     console.error("Public login error:", error);
     let message = error.message || "Login failed. Please try again.";
     if (error.status === 401) {
-      message = "Invalid email or password. If you just registered, please verify your email first.";
+      message = "Invalid email or password. Please check your credentials and try again.";
     } else if (error.status === 429) {
       message = "Too many login attempts. Please wait a moment and try again.";
     } else if (error.status >= 500) {
@@ -627,9 +644,8 @@ async function handleEmailLogin(event) {
   } catch (error) {
     console.error("Login error:", error);
     let message = error.message || "Login failed. Please try again.";
-    // Surface clearer message for unverified accounts
     if (error.status === 401) {
-      message = "Invalid email or password. If you just registered, please verify your email first.";
+      message = "Invalid email or password. Please check your credentials and try again.";
     } else if (error.status === 429) {
       message = "Too many login attempts. Please wait a moment and try again.";
     } else if (error.status >= 500) {
@@ -685,7 +701,7 @@ async function handleEmailRegistration(event) {
 
     if (data.success) {
       showAlert(
-        "Registration successful! Please verify your email, then login.",
+        "Registration successful! You can now log in with your email.",
         "success"
       );
       closeRegistrationModal();

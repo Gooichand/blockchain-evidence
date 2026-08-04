@@ -1215,6 +1215,7 @@
                         <option value="evidence_manager">Evidence Manager</option>
                         <option value="auditor">Auditor</option>
                     </select>
+                    <p class="login-sub-text" id="regRoleHint" style="display:none;"></p>
                 </div>
                 <div class="login-sub-actions">
                     <button type="submit" class="login-sub-btn login-sub-btn--success">
@@ -1259,7 +1260,7 @@
             </form>
             <p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--lm-text-muted);">
                 Don't have an account?
-                <a href="#" onclick="event.preventDefault(); closePublicLoginModal(); openRegistrationModal()" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
+                <a href="#" onclick="event.preventDefault(); closePublicLoginModal(); openRegistrationModal('public_viewer')" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
             </p>
         </div>
     </div>
