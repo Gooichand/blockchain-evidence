@@ -59,6 +59,7 @@ class APIClient {
     async request(path, options = {}) {
         const method = options.method || 'GET';
         const skipAuth = options.skipAuth || false;
+        const skipWallet = options.skipWalletAuth || false;
         const url = `${this.baseUrl}${path.startsWith('/') ? path : '/' + path}`;
 
         let authHeaders = {};
@@ -72,16 +73,18 @@ class APIClient {
 
             // Additionally include wallet signing headers if MetaMask is active
             // (these are used by admin/blockchain endpoints that verify on-chain identity)
-            try {
-                const walletHeaders = await this.getWalletAuthHeaders(method, path);
-                authHeaders = { ...authHeaders, ...walletHeaders };
-            } catch (_) {
-                // Wallet headers optional — JWT alone is sufficient for most routes
+            if (!skipWallet) {
+                try {
+                    const walletHeaders = await this.getWalletAuthHeaders(method, path);
+                    authHeaders = { ...authHeaders, ...walletHeaders };
+                } catch (_) {
+                    // Wallet headers optional — JWT alone is sufficient for most routes
+                }
             }
         }
 
         // Remove non-fetch options before passing to fetch
-        const { skipAuth: _, ...fetchOptions } = options;
+        const { skipAuth: _, skipWalletAuth: __, ...fetchOptions } = options;
 
         const headers = {
             'Content-Type': 'application/json',

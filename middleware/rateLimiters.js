@@ -86,6 +86,15 @@ const verificationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Analyst module rate limiting
+const analystLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: { success: false, error: 'Too many analyst requests. Access throttled.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   authLimiter,
   limiter,
@@ -96,4 +105,5 @@ module.exports = {
   blockchainLimiter,
   uploadLimiter,
   verificationLimiter,
+  analystLimiter,
 };

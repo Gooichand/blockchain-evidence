@@ -14,6 +14,7 @@ class FixedNavbarManager {
         await this.loadUserData();
         this.injectStyles();
         this.renderNavbar();
+        this.highlightCurrent();
         this.attachEventListeners();
     }
 
@@ -141,6 +142,12 @@ class FixedNavbarManager {
             border-color: rgba(220, 38, 38, 0.15);
             text-decoration: none;
             transform: translateY(-1px);
+        }
+
+        .nav-item.active {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.08);
+            border-color: rgba(220, 38, 38, 0.22);
         }
 
         .nav-item i {
@@ -303,8 +310,11 @@ class FixedNavbarManager {
     }
 
     renderNavbar() {
+        // Never stack a second app navbar (e.g. after SPA view swaps).
+        if (document.getElementById('appNavbar')) return;
+
         const navbarHTML = `
-            <nav class="fixed-navbar">
+            <nav class="fixed-navbar" id="appNavbar">
                 <div class="navbar-container">
                     <div class="navbar-left">
                         <a href="index.html" class="navbar-brand">
@@ -327,8 +337,8 @@ class FixedNavbarManager {
             </nav>
         `;
 
-        // Remove existing navbars
-        const existingNavs = document.querySelectorAll('nav, .dashboard-nav, .header-nav, .role-nav-header, .unified-navbar');
+        // Remove existing navbars (keep page-specific nav elements like the analyst tab bar)
+        const existingNavs = document.querySelectorAll('nav:not(.analyst-tabs), .dashboard-nav, .header-nav, .role-nav-header, .unified-navbar');
         existingNavs.forEach(nav => nav.remove());
 
         // Insert at the beginning of body
@@ -370,8 +380,9 @@ class FixedNavbarManager {
             ],
             'forensic_analyst': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-analyst.html' },
-                { label: 'Analysis', icon: 'microscope', href: 'analysis.html' },
-                { label: 'Reports', icon: 'file-text', href: 'reports.html' }
+                { label: 'Queue', icon: 'inbox', href: 'dashboard-analyst.html#queue' },
+                { label: 'Tools', icon: 'microscope', href: 'dashboard-analyst.html#tools' },
+                { label: 'Reports', icon: 'file-text', href: 'dashboard-analyst.html#reports' }
             ],
             'legal_professional': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-legal.html' },
@@ -471,8 +482,37 @@ class FixedNavbarManager {
             event.preventDefault();
         }
 
+        // Single-navbar UX: analyst workstation views switch in place via the SPA.
+        if (href.startsWith('dashboard-analyst.html') && window.analystDashboard && window.analystDashboard.showView) {
+            const idx = href.indexOf('#');
+            const view = idx !== -1 ? href.slice(idx + 1) : 'dashboard';
+            if (['dashboard', 'queue', 'tools', 'reports'].includes(view)) {
+                window.analystDashboard.showView(view);
+                this.markActiveNav(href);
+                return;
+            }
+        }
+
         // Navigate in same tab
         window.location.href = href;
+    }
+
+    markActiveNav(href) {
+        const items = document.querySelectorAll('.role-nav-items .nav-item');
+        items.forEach((item) => {
+            item.classList.toggle('active', item.getAttribute('href') === href);
+        });
+    }
+
+    highlightCurrent() {
+        const hash = (window.location.hash || '').replace('#', '') || 'dashboard';
+        const items = document.querySelectorAll('.role-nav-items .nav-item');
+        items.forEach((item) => {
+            const href = item.getAttribute('href') || '';
+            if (!href.startsWith('dashboard-analyst.html')) return;
+            const expected = 'dashboard-analyst.html' + (hash === 'dashboard' ? '' : '#' + hash);
+            item.classList.toggle('active', href === expected);
+        });
     }
 
     toggleMobileMenu() {

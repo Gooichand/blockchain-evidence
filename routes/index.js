@@ -12,6 +12,7 @@ const blockchainRoutes = require('./blockchainRoutes');
 const monitoringRoutes = require('./monitoringRoutes');
 const contactRoutes = require('./contactRoutes');
 const publicRoutes = require('./publicRoutes');
+const analystRoutes = require('./analystRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -28,6 +29,7 @@ function registerRoutes(app) {
   app.use('/api/monitoring', monitoringRoutes);
   app.use('/api', contactRoutes);
   app.use('/api', publicRoutes);
+  app.use('/api', analystRoutes);
 }
 
 module.exports = registerRoutes;
