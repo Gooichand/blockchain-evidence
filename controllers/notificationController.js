@@ -35,11 +35,11 @@ const getNotifications = async (req, res) => {
     if (error) throw error;
 
     // Get unread count
-    const { count: unreadCount } = await supabase
+    const { count: unreadCount } = (await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
       .eq('user_wallet', wallet)
-      .eq('is_read', false);
+      .eq('is_read', false)) || {};
 
     res.json({ notifications, unreadCount });
   } catch (error) {
@@ -58,11 +58,11 @@ const markAsRead = async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('notifications')
       .update({ is_read: true })
       .eq('id', id)
-      .eq('user_wallet', userWallet);
+      .eq('user_wallet', userWallet)) || {};
 
     if (error) throw error;
 
@@ -82,11 +82,11 @@ const markAllAsRead = async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('notifications')
       .update({ is_read: true })
       .eq('user_wallet', userWallet)
-      .eq('is_read', false);
+      .eq('is_read', false)) || {};
 
     if (error) throw error;
 

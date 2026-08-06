@@ -4,10 +4,10 @@ const { validateWalletAddress } = require('../middleware/verifyAdmin');
 // Get all tags with usage statistics
 const getAllTags = async (req, res) => {
   try {
-    const { data: tags, error } = await supabase
+    const { data: tags, error } = (await supabase
       .from('tags')
       .select('*')
-      .order('usage_count', { ascending: false });
+      .order('usage_count', { ascending: false })) || {};
 
     if (error) throw error;
 
@@ -31,7 +31,7 @@ const createTag = async (req, res) => {
       return res.status(400).json({ error: 'Tag name is required' });
     }
 
-    const { data: tag, error } = await supabase
+    const { data: tag, error } = (await supabase
       .from('tags')
       .insert({
         name: name.trim().toLowerCase(),
@@ -40,7 +40,7 @@ const createTag = async (req, res) => {
         created_by: userWallet,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) {
       if (error.code === '23505') {
@@ -76,7 +76,7 @@ const addTagsToEvidence = async (req, res) => {
       tagged_by: userWallet,
     }));
 
-    const { data, error } = await supabase.from('evidence_tags').insert(evidenceTags).select();
+    const { data, error } = (await supabase.from('evidence_tags').insert(evidenceTags).select()) || {};
 
     if (error) throw error;
 
@@ -97,12 +97,12 @@ const removeTagFromEvidence = async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
 
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('evidence_tags')
       .delete()
       .eq('evidence_id', id)
       .eq('tag_id', tagId)
-      .eq('tagged_by', userWallet);
+      .eq('tagged_by', userWallet)) || {};
 
     if (error) throw error;
 
@@ -137,7 +137,7 @@ const batchTag = async (req, res) => {
       });
     });
 
-    const { data, error } = await supabase.from('evidence_tags').insert(evidenceTags).select();
+    const { data, error } = (await supabase.from('evidence_tags').insert(evidenceTags).select()) || {};
 
     if (error) throw error;
 
@@ -195,12 +195,12 @@ const suggestTags = async (req, res) => {
   try {
     const { query = '', limit = 10 } = req.query;
 
-    const { data: tags, error } = await supabase
+    const { data: tags, error } = (await supabase
       .from('tags')
       .select('*')
       .ilike('name', `%${query}%`)
       .order('usage_count', { ascending: false })
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))) || {};
 
     if (error) throw error;
 

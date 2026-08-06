@@ -39,22 +39,22 @@ const getBlockchainConfig = async (req, res) => {
 
 const getBlockchainStats = async (req, res) => {
   try {
-    const { data: evidenceCount, error: countError } = await supabase
+    const { data: evidenceCount, error: countError } = (await supabase
       .from('evidence')
       .select('id', { count: 'exact', head: true })
-      .eq('blockchain_verified', true);
+      .eq('blockchain_verified', true)) || {};
 
-    const { data: recentTx, error: txError } = await supabase
+    const { data: recentTx, error: txError } = (await supabase
       .from('evidence')
       .select('blockchain_tx_hash, blockchain_block_number, blockchain_timestamp, gas_used')
       .not('blockchain_tx_hash', 'is', null)
       .order('blockchain_timestamp', { ascending: false })
-      .limit(10);
+      .limit(10)) || {};
 
-    const { data: gasStats, error: gasError } = await supabase
+    const { data: gasStats, error: gasError } = (await supabase
       .from('evidence')
       .select('gas_used')
-      .not('gas_used', 'is', null);
+      .not('gas_used', 'is', null)) || {};
 
     const totalGas = gasStats?.reduce((sum, item) => sum + parseFloat(item.gas_used || 0), 0) || 0;
     const avgGas = gasStats?.length > 0 ? totalGas / gasStats.length : 0;
@@ -86,22 +86,22 @@ const getBlockchainStats = async (req, res) => {
 
 const getIPFSStats = async (req, res) => {
   try {
-    const { data: ipfsCount, error: countError } = await supabase
+    const { data: ipfsCount, error: countError } = (await supabase
       .from('evidence')
       .select('id', { count: 'exact', head: true })
-      .not('ipfs_cid', 'is', null);
+      .not('ipfs_cid', 'is', null)) || {};
 
-    const { data: recentUploads, error: uploadsError } = await supabase
+    const { data: recentUploads, error: uploadsError } = (await supabase
       .from('evidence')
       .select('ipfs_cid, name, file_size, timestamp')
       .not('ipfs_cid', 'is', null)
       .order('timestamp', { ascending: false })
-      .limit(10);
+      .limit(10)) || {};
 
-    const { data: sizeStats, error: sizeError } = await supabase
+    const { data: sizeStats, error: sizeError } = (await supabase
       .from('evidence')
       .select('file_size')
-      .not('ipfs_cid', 'is', null);
+      .not('ipfs_cid', 'is', null)) || {};
 
     const totalSize = sizeStats?.reduce((sum, item) => sum + (item.file_size || 0), 0) || 0;
 
@@ -127,11 +127,11 @@ const verifyTransaction = async (req, res) => {
   try {
     const { txHash } = req.params;
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('*')
       .eq('blockchain_tx_hash', txHash)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ error: 'Transaction not found in database' });
@@ -207,7 +207,7 @@ const healthCheck = async (req, res) => {
     health.ipfs.status = ipfsStorageService.isConfigured() ? 'healthy' : 'not configured';
 
     try {
-      const { error } = await supabase.from('evidence').select('id').limit(1);
+      const { error } = (await supabase.from('evidence').select('id').limit(1)) || {};
       health.database.status = error ? 'unhealthy' : 'healthy';
       if (error) health.database.error = error.message;
     } catch (error) {

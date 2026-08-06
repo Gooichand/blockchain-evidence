@@ -5,24 +5,24 @@ const { createNotification } = require('./notificationService');
 async function createStatusChangeNotification(caseId, fromStatusId, toStatusId, changedBy) {
   try {
     // Get case details
-    const { data: caseData } = await supabase
+    const { data: caseData } = (await supabase
       .from('cases')
       .select('title, case_number, assigned_investigator, assigned_prosecutor, assigned_judge')
       .eq('id', caseId)
-      .single();
+      .single()) || {};
 
     // Get status names
-    const { data: fromStatus } = await supabase
+    const { data: fromStatus } = (await supabase
       .from('case_statuses')
       .select('status_name')
       .eq('id', fromStatusId)
-      .single();
+      .single()) || {};
 
-    const { data: toStatus } = await supabase
+    const { data: toStatus } = (await supabase
       .from('case_statuses')
       .select('status_name')
       .eq('id', toStatusId)
-      .single();
+      .single()) || {};
 
     if (!caseData || !toStatus) return;
 

@@ -64,24 +64,24 @@ const walletLogin = async (req, res) => {
     }
 
     // Get user by wallet address
-    const { data: user, error } = await supabase
+    const { data: user, error } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', walletAddress.toLowerCase())
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (error || !user) {
       return res.status(401).json({ error: 'Wallet address not registered' });
     }
 
     // Log login activity (check returned error since Supabase does not throw on DB failures)
-    const { error: logError } = await supabase.from('activity_logs').insert({
+    const { error: logError } = (await supabase.from('activity_logs').insert({
       user_id: user.id,
       action: 'wallet_login',
       details: JSON.stringify({ auth_type: 'wallet' }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (logError) {
       console.error('Failed to log wallet login activity:', logError);
     }
@@ -123,12 +123,12 @@ const emailLogin = async (req, res) => {
     }
 
     // Get user by email
-    const { data: user, error } = await supabase
+    const { data: user, error } = (await supabase
       .from('users')
       .select('*')
       .eq('email', email.toLowerCase())
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (error || !user) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -142,12 +142,12 @@ const emailLogin = async (req, res) => {
     }
 
     // Log login activity (check returned error since Supabase does not throw on DB failures)
-    const { error: logError } = await supabase.from('activity_logs').insert({
+    const { error: logError } = (await supabase.from('activity_logs').insert({
       user_id: user.id,
       action: 'email_login',
       details: JSON.stringify({ auth_type: 'email' }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (logError) {
       console.error('Failed to log email login activity:', logError);
     }
@@ -212,11 +212,11 @@ const emailRegister = async (req, res) => {
     }
 
     // Check if email already exists
-    const { data: existingUser, error: lookupError } = await supabase
+    const { data: existingUser, error: lookupError } = (await supabase
       .from('users')
       .select('email')
       .eq('email', email.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (lookupError && lookupError.code !== 'PGRST116') {
       console.error('Email lookup error:', lookupError);
@@ -235,7 +235,7 @@ const emailRegister = async (req, res) => {
     const tokenExpires = null;
 
     // Create user
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error } = (await supabase
       .from('users')
       .insert({
         email: email.toLowerCase(),
@@ -253,7 +253,7 @@ const emailRegister = async (req, res) => {
         verification_token_expires: tokenExpires,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) {
       console.error('User creation error:', error);
@@ -263,7 +263,7 @@ const emailRegister = async (req, res) => {
     console.log('User created successfully:', newUser.id);
 
     // Log registration activity (check returned error since Supabase does not throw on DB failures)
-    const { error: logError } = await supabase.from('activity_logs').insert({
+    const { error: logError } = (await supabase.from('activity_logs').insert({
       user_id: newUser.id,
       action: 'email_registration',
       details: JSON.stringify({
@@ -272,7 +272,7 @@ const emailRegister = async (req, res) => {
         department: department || 'General',
       }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (logError) {
       console.error('Failed to log email registration activity:', logError);
     }
@@ -366,11 +366,11 @@ const walletRegister = async (req, res) => {
     }
 
     // Check if wallet already exists
-    const { data: existingUser, error: lookupError } = await supabase
+    const { data: existingUser, error: lookupError } = (await supabase
       .from('users')
       .select('wallet_address')
       .eq('wallet_address', walletAddress.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (lookupError && lookupError.code !== 'PGRST116') {
       console.error('Wallet lookup error:', lookupError);
@@ -382,7 +382,7 @@ const walletRegister = async (req, res) => {
     }
 
     // Create user
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error } = (await supabase
       .from('users')
       .insert({
         wallet_address: walletAddress.toLowerCase(),
@@ -397,7 +397,7 @@ const walletRegister = async (req, res) => {
         is_active: true,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) {
       console.error('Wallet user creation error:', error);
@@ -407,7 +407,7 @@ const walletRegister = async (req, res) => {
     console.log('Wallet user created successfully:', newUser.id);
 
     // Log registration activity (check returned error since Supabase does not throw on DB failures)
-    const { error: logError } = await supabase.from('activity_logs').insert({
+    const { error: logError } = (await supabase.from('activity_logs').insert({
       user_id: newUser.id,
       action: 'wallet_registration',
       details: JSON.stringify({
@@ -416,7 +416,7 @@ const walletRegister = async (req, res) => {
         department: department || 'General',
       }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (logError) {
       console.error('Failed to log wallet registration activity:', logError);
     }
@@ -451,11 +451,11 @@ const verifyEmail = async (req, res) => {
     }
 
     // Get user by token (only fetch needed fields to avoid exposing password_hash)
-    const { data: user, error } = await supabase
+    const { data: user, error } = (await supabase
       .from('users')
       .select('id, email_verified, verification_token_expires')
       .eq('verification_token', token)
-      .single();
+      .single()) || {};
 
     if (error || !user) {
       return res.status(400).json({ error: 'Invalid or expired verification token' });
@@ -467,14 +467,14 @@ const verifyEmail = async (req, res) => {
     }
 
     // Update user
-    const { error: updateError } = await supabase
+    const { error: updateError } = (await supabase
       .from('users')
       .update({
         email_verified: true,
         verification_token: null,
         verification_token_expires: null,
       })
-      .eq('id', user.id);
+      .eq('id', user.id)) || {};
 
     if (updateError) {
       console.error('Verify email error:', updateError);
@@ -482,12 +482,12 @@ const verifyEmail = async (req, res) => {
     }
 
     // Audit log for email verification (check returned error since Supabase does not throw on DB failures)
-    const { error: auditLogError } = await supabase.from('activity_logs').insert({
+    const { error: auditLogError } = (await supabase.from('activity_logs').insert({
       user_id: user.id,
       action: 'email_verified',
       details: JSON.stringify({ user_id: user.id, verified: true }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (auditLogError) {
       console.error('Failed to log email verification:', auditLogError);
     }

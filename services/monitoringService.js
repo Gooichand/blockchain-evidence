@@ -17,28 +17,28 @@ class MonitoringService {
 
   async getDatabaseMetrics() {
     try {
-      const { count: totalEvidence } = await supabase
+      const { count: totalEvidence } = (await supabase
         .from('evidence')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })) || {};
 
-      const { count: totalCases } = await supabase
+      const { count: totalCases } = (await supabase
         .from('cases')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })) || {};
 
-      const { count: totalUsers } = await supabase
+      const { count: totalUsers } = (await supabase
         .from('users')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })) || {};
 
-      const { count: activeUsers } = await supabase
+      const { count: activeUsers } = (await supabase
         .from('users')
         .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .eq('is_active', true)) || {};
 
-      const { data: recentActivity } = await supabase
+      const { data: recentActivity } = (await supabase
         .from('activity_logs')
         .select('action')
         .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false })) || {};
 
       return {
         totalEvidence: totalEvidence || 0,
@@ -60,15 +60,15 @@ class MonitoringService {
     try {
       await blockchainService.initialize();
 
-      const { count: onChainEvidence } = await supabase
+      const { count: onChainEvidence } = (await supabase
         .from('evidence')
         .select('*', { count: 'exact', head: true })
-        .eq('blockchain_verified', true);
+        .eq('blockchain_verified', true)) || {};
 
-      const { data: gasData } = await supabase
+      const { data: gasData } = (await supabase
         .from('evidence')
         .select('gas_used')
-        .not('gas_used', 'is', null);
+        .not('gas_used', 'is', null)) || {};
 
       const totalGas = gasData?.reduce((sum, item) => sum + parseFloat(item.gas_used || 0), 0) || 0;
 
@@ -97,15 +97,15 @@ class MonitoringService {
 
   async getIPFSMetrics() {
     try {
-      const { count: ipfsFiles } = await supabase
+      const { count: ipfsFiles } = (await supabase
         .from('evidence')
         .select('*', { count: 'exact', head: true })
-        .not('ipfs_cid', 'is', null);
+        .not('ipfs_cid', 'is', null)) || {};
 
-      const { data: sizeData } = await supabase
+      const { data: sizeData } = (await supabase
         .from('evidence')
         .select('file_size')
-        .not('ipfs_cid', 'is', null);
+        .not('ipfs_cid', 'is', null)) || {};
 
       const totalSize = sizeData?.reduce((sum, item) => sum + (item.file_size || 0), 0) || 0;
 
@@ -126,16 +126,16 @@ class MonitoringService {
 
   async getPerformanceMetrics() {
     try {
-      const { data: recentUploads } = await supabase
+      const { data: recentUploads } = (await supabase
         .from('evidence')
         .select('timestamp')
-        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())) || {};
 
-      const { data: recentVerifications } = await supabase
+      const { data: recentVerifications } = (await supabase
         .from('activity_logs')
         .select('timestamp')
         .eq('action', 'evidence_verification')
-        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())) || {};
 
       return {
         uploadsLast24h: recentUploads?.length || 0,

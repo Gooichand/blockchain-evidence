@@ -9,7 +9,7 @@ const setIO = (socketIO) => {
 
 const createNotification = async (userWallet, title, message, type, data = {}) => {
   try {
-    const { data: notification, error } = await supabase
+    const { data: notification, error } = (await supabase
       .from('notifications')
       .insert({
         user_wallet: userWallet,
@@ -19,7 +19,7 @@ const createNotification = async (userWallet, title, message, type, data = {}) =
         data,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) throw error;
 
@@ -44,10 +44,10 @@ const notifyMultipleUsers = async (userWallets, title, message, type, data = {})
   }));
 
   try {
-    const { data: createdNotifications, error } = await supabase
+    const { data: createdNotifications, error } = (await supabase
       .from('notifications')
       .insert(notifications)
-      .select();
+      .select()) || {};
 
     if (error) throw error;
 

@@ -38,18 +38,18 @@ const createUser = async (req, res) => {
     }
 
     // Check if wallet already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = (await supabase
       .from('users')
       .select('wallet_address')
       .eq('wallet_address', walletAddress)
-      .single();
+      .single()) || {};
 
     if (existingUser) {
       return res.status(409).json({ success: false, error: 'Wallet address already registered' });
     }
 
     // Create user
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error } = (await supabase
       .from('users')
       .insert({
         wallet_address: walletAddress,
@@ -63,7 +63,7 @@ const createUser = async (req, res) => {
         is_active: true,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) {
       throw error;
@@ -127,29 +127,29 @@ const createAdmin = async (req, res) => {
     }
 
     // Check admin limit
-    const { count } = await supabase
+    const { count } = (await supabase
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'admin')
-      .eq('is_active', true);
+      .eq('is_active', true)) || {};
 
     if (count >= 10) {
       return res.status(400).json({ success: false, error: 'Maximum admin limit (10) reached' });
     }
 
     // Check if wallet already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = (await supabase
       .from('users')
       .select('wallet_address')
       .eq('wallet_address', walletAddress)
-      .single();
+      .single()) || {};
 
     if (existingUser) {
       return res.status(409).json({ success: false, error: 'Wallet address already registered' });
     }
 
     // Create admin
-    const { data: newAdmin, error } = await supabase
+    const { data: newAdmin, error } = (await supabase
       .from('users')
       .insert({
         wallet_address: walletAddress,
@@ -162,7 +162,7 @@ const createAdmin = async (req, res) => {
         is_active: true,
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) {
       throw error;
@@ -219,24 +219,24 @@ const deleteUser = async (req, res) => {
     }
 
     // Get target user info for logging
-    const { data: targetUser } = await supabase
+    const { data: targetUser } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', targetWallet)
-      .single();
+      .single()) || {};
 
     if (!targetUser) {
       return res.status(404).json({ success: false, error: 'Target user not found' });
     }
 
     // Soft delete user
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('users')
       .update({
         is_active: false,
         last_updated: new Date().toISOString(),
       })
-      .eq('wallet_address', targetWallet);
+      .eq('wallet_address', targetWallet)) || {};
 
     if (error) {
       throw error;
@@ -268,24 +268,24 @@ const getAllUsers = async (req, res) => {
     const { limit = 50, offset = 0, role, active_only = 'true' } = req.query;
 
     // Verify admin permissions using verified wallet
-    const { data: admin } = await supabase
+    const { data: admin } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (!admin || admin.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Admin privileges required' });
     }
 
     // Use database function for efficient user retrieval
-    const { data: result, error } = await supabase.rpc('get_all_users', {
+    const { data: result, error } = (await supabase.rpc('get_all_users', {
       p_limit: parseInt(limit),
       p_offset: parseInt(offset),
       p_role_filter: role || null,
       p_active_only: active_only === 'true',
-    });
+    })) || {};
 
     if (error) {
       throw error;
@@ -320,17 +320,17 @@ const roleChangeRequest = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Cannot change own role' });
     }
 
-    const { data: targetUser } = await supabase
+    const { data: targetUser } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', targetWallet)
-      .single();
+      .single()) || {};
 
     if (!targetUser) {
       return res.status(404).json({ success: false, error: 'Target user not found' });
     }
 
-    const { data: request, error } = await supabase
+    const { data: request, error } = (await supabase
       .from('role_change_requests')
       .insert({
         requesting_admin: adminWallet,
@@ -341,7 +341,7 @@ const roleChangeRequest = async (req, res) => {
         status: 'pending',
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) throw error;
 
@@ -362,23 +362,23 @@ const getRoleChangeRequests = async (req, res) => {
     }
 
     // Verify admin role
-    const { data: admin } = await supabase
+    const { data: admin } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (!admin || admin.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Admin privileges required' });
     }
 
-    const { data: requests, error } = await supabase
+    const { data: requests, error } = (await supabase
       .from('role_change_requests')
       .select('*')
       .eq('status', 'pending')
       .neq('requesting_admin', verifiedWallet)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })) || {};
 
     if (error) throw error;
 
@@ -404,12 +404,12 @@ const approveRoleChange = async (req, res) => {
       return res.status(400).json({ success: false, error: 'requestId is required' });
     }
 
-    const { data: request } = await supabase
+    const { data: request } = (await supabase
       .from('role_change_requests')
       .select('*')
       .eq('id', requestId)
       .eq('status', 'pending')
-      .single();
+      .single()) || {};
 
     if (!request) {
       return res.status(404).json({ success: false, error: 'Request not found or already processed' });
@@ -420,22 +420,22 @@ const approveRoleChange = async (req, res) => {
     }
 
     // Update user role
-    const { error: userError } = await supabase
+    const { error: userError } = (await supabase
       .from('users')
       .update({ role: request.new_role })
-      .eq('wallet_address', request.target_wallet);
+      .eq('wallet_address', request.target_wallet)) || {};
 
     if (userError) throw userError;
 
     // Update request status
-    const { error: requestError } = await supabase
+    const { error: requestError } = (await supabase
       .from('role_change_requests')
       .update({
         status: 'approved',
         approved_by: adminWallet,
         approved_at: new Date().toISOString(),
       })
-      .eq('id', requestId);
+      .eq('id', requestId)) || {};
 
     if (requestError) throw requestError;
 
@@ -467,18 +467,18 @@ const rejectRoleChange = async (req, res) => {
       return res.status(400).json({ success: false, error: 'requestId is required' });
     }
 
-    const { data: request } = await supabase
+    const { data: request } = (await supabase
       .from('role_change_requests')
       .select('*')
       .eq('id', requestId)
       .eq('status', 'pending')
-      .single();
+      .single()) || {};
 
     if (!request) {
       return res.status(404).json({ success: false, error: 'Request not found or already processed' });
     }
 
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('role_change_requests')
       .update({
         status: 'rejected',
@@ -486,7 +486,7 @@ const rejectRoleChange = async (req, res) => {
         rejected_at: new Date().toISOString(),
         rejection_reason: reason || '',
       })
-      .eq('id', requestId);
+      .eq('id', requestId)) || {};
 
     if (error) throw error;
 

@@ -21,23 +21,23 @@ const updateProfile = async (req, res) => {
     }
 
     // Get updater info using verified identity
-    const { data: updater } = await supabase
+    const { data: updater } = (await supabase
       .from('users')
       .select('id, role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (!updater) {
       return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     // Check if user can update this profile (self or admin)
-    const { data: targetUser } = await supabase
+    const { data: targetUser } = (await supabase
       .from('users')
       .select('wallet_address')
       .eq('id', id)
-      .single();
+      .single()) || {};
 
     if (!targetUser) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -55,14 +55,14 @@ const updateProfile = async (req, res) => {
     }
 
     // Use database function to update profile
-    const { data: result, error } = await supabase.rpc('update_user_profile', {
+    const { data: result, error } = (await supabase.rpc('update_user_profile', {
       p_user_id: userId,
       p_full_name: fullName,
       p_department: department,
       p_jurisdiction: jurisdiction,
       p_badge_number: badgeNumber,
       p_updated_by: updater.id,
-    });
+    })) || {};
 
     if (error) {
       throw error;

@@ -4,11 +4,11 @@ const { createNotification } = require('../services/notificationService');
 
 const getRetentionPolicies = async (req, res) => {
   try {
-    const { data: policies, error } = await supabase
+    const { data: policies, error } = (await supabase
       .from('retention_policies')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })) || {};
     if (error) throw error;
     res.json({ success: true, policies });
   } catch (error) {
@@ -24,7 +24,7 @@ const createRetentionPolicy = async (req, res) => {
     if (!validateWalletAddress(userWallet)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
     }
-    const { data: policy, error } = await supabase
+    const { data: policy, error } = (await supabase
       .from('retention_policies')
       .insert({
         name,
@@ -36,7 +36,7 @@ const createRetentionPolicy = async (req, res) => {
         created_by: userWallet,
       })
       .select()
-      .single();
+      .single()) || {};
     if (error) throw error;
     res.json({ success: true, policy });
   } catch (error) {
@@ -76,11 +76,11 @@ const getEvidenceExpiry = async (req, res) => {
     }
 
     // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('id, role, is_active')
       .eq('wallet_address', wallet.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (userError || !user || !user.is_active) {
       return res.status(403).json({ error: 'Unauthorized access' });
@@ -144,11 +144,11 @@ const setLegalHold = async (req, res) => {
     }
 
     // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('id, role, is_active')
       .eq('wallet_address', userWallet.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ error: 'User not found' });
@@ -164,30 +164,30 @@ const setLegalHold = async (req, res) => {
         .json({ error: 'Unauthorized: Insufficient role for legal hold operations' });
     }
 
-    const { data: evidence, error: fetchError } = await supabase
+    const { data: evidence, error: fetchError } = (await supabase
       .from('evidence')
       .select('id')
       .eq('id', id)
-      .single();
+      .single()) || {};
 
     if (fetchError || !evidence) {
       return res.status(404).json({ error: 'Evidence not found' });
     }
 
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('evidence')
       .update({ legal_hold: legalHold })
-      .eq('id', id);
+      .eq('id', id)) || {};
 
     if (error) throw error;
 
     // Audit log (check returned error since Supabase does not throw on DB failures)
-    const { error: auditLogError } = await supabase.from('activity_logs').insert({
+    const { error: auditLogError } = (await supabase.from('activity_logs').insert({
       user_id: userWallet,
       action: legalHold ? 'legal_hold_set' : 'legal_hold_removed',
       details: `Evidence ID: ${id}`,
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (auditLogError) {
       console.error('Failed to log legal hold action:', auditLogError);
     }
@@ -209,11 +209,11 @@ const bulkRetentionPolicy = async (req, res) => {
     }
 
     // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('id, role, is_active')
       .eq('wallet_address', userWallet.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (userError || !user || !user.is_active) {
       return res.status(403).json({ error: 'User not found or inactive' });
@@ -231,11 +231,11 @@ const bulkRetentionPolicy = async (req, res) => {
       return res.status(400).json({ error: 'policyId is required' });
     }
 
-    const { data: policy, error: policyError } = await supabase
+    const { data: policy, error: policyError } = (await supabase
       .from('retention_policies')
       .select('*')
       .eq('id', policyId)
-      .single();
+      .single()) || {};
 
     if (policyError || !policy) {
       return res.status(404).json({ error: 'Retention policy not found' });
@@ -244,7 +244,7 @@ const bulkRetentionPolicy = async (req, res) => {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + policy.retention_days);
 
-    const { error, count } = await supabase
+    const { error, count } = (await supabase
       .from('evidence')
       .update(
         {
@@ -254,12 +254,12 @@ const bulkRetentionPolicy = async (req, res) => {
         { count: 'exact' },
       )
       .in('id', evidenceIds)
-      .select();
+      .select()) || {};
 
     if (error) throw error;
 
     // Audit log (check returned error since Supabase does not throw on DB failures)
-    const { error: auditLogError } = await supabase.from('activity_logs').insert({
+    const { error: auditLogError } = (await supabase.from('activity_logs').insert({
       user_id: userWallet,
       action: 'bulk_retention_policy_applied',
       details: JSON.stringify({
@@ -268,7 +268,7 @@ const bulkRetentionPolicy = async (req, res) => {
         affected_count: count || 0,
       }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (auditLogError) {
       console.error('Failed to log bulk retention policy action:', auditLogError);
     }
@@ -290,11 +290,11 @@ const checkExpiry = async (req, res) => {
     }
 
     // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('id, role, is_active')
       .eq('wallet_address', wallet.toLowerCase())
-      .single();
+      .single()) || {};
 
     if (userError || !user || !user.is_active) {
       return res.status(403).json({ error: 'Unauthorized access' });
@@ -309,12 +309,12 @@ const checkExpiry = async (req, res) => {
 
     let notificationsSent = 0;
 
-    const { data: expiring30, error: error30 } = await supabase
+    const { data: expiring30, error: error30 } = (await supabase
       .from('evidence')
       .select('*')
       .lte('expiry_date', thirtyDaysFromNow.toISOString())
       .gte('expiry_date', now.toISOString())
-      .eq('legal_hold', false);
+      .eq('legal_hold', false)) || {};
 
     if (error30) {
       console.error('Database error checking expiry:', error30);

@@ -115,12 +115,12 @@ const getStatistics = async (req, res) => {
     const recentlyUpdated = await countPublicCases(schema, { field: recentField });
 
     const recentCases = await getRecentPublicCases(schema);
-    const { data: recentEvidence, error: evidenceError } = await supabase
+    const { data: recentEvidence, error: evidenceError } = (await supabase
       .from('evidence')
       .select('*')
       .eq('is_public', true)
       .order('timestamp', { ascending: false })
-      .limit(8);
+      .limit(8)) || {};
     if (evidenceError) throw evidenceError;
 
     const activity = [];
@@ -247,10 +247,10 @@ const getPublicCases = async (req, res) => {
     const uniqueRefs = [...new Set(refs)];
     const byCase = {};
     if (uniqueRefs.length) {
-      const { data: evRows, error: evErr } = await supabase
+      const { data: evRows, error: evErr } = (await supabase
         .from('evidence')
         .select('case_id, blockchain_verified')
-        .in('case_id', uniqueRefs);
+        .in('case_id', uniqueRefs)) || {};
       if (!evErr && evRows) {
         for (const e of evRows) {
           const key = e.case_id;

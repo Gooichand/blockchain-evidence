@@ -10,10 +10,10 @@ const getCases = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: cases, error } = await supabase
+    const { data: cases, error } = (await supabase
       .from('cases')
       .select('id, title, description, status, created_date')
-      .order('created_date', { ascending: false });
+      .order('created_date', { ascending: false })) || {};
     
     if (error) throw error;
     res.json({ success: true, data: cases });
@@ -27,11 +27,11 @@ const getCases = async (req, res) => {
 // Get all case statuses
 const getCaseStatuses = async (req, res) => {
   try {
-    const { data: statuses, error } = await supabase
+    const { data: statuses, error } = (await supabase
       .from('case_statuses')
       .select('*')
       .eq('is_active', true)
-      .order('sort_order', { ascending: true });
+      .order('sort_order', { ascending: true })) || {};
     
     if (error) throw error;
     res.json({ success: true, data: statuses });
@@ -103,9 +103,9 @@ const getEnhancedCases = async (req, res) => {
     const { data: cases, error } = await query;
     if (error) throw error;
 
-    const { count: totalCount } = await supabase
+    const { count: totalCount } = (await supabase
       .from('cases')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })) || {};
 
     res.json({
       success: true,
@@ -147,24 +147,24 @@ const createCase = async (req, res) => {
     }
 
     // Check user permissions to create cases
-    const { data: user } = await supabase
+    const { data: user } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (!user || !['admin', 'investigator', 'evidence_manager'].includes(user.role)) {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to create cases' });
     }
 
-    const { data: defaultStatus } = await supabase
+    const { data: defaultStatus } = (await supabase
       .from('case_statuses')
       .select('id')
       .eq('status_code', 'open')
-      .single();
+      .single()) || {};
 
-    const { data: newCase, error } = await supabase
+    const { data: newCase, error } = (await supabase
       .from('cases')
       .insert({
         title,
@@ -178,7 +178,7 @@ const createCase = async (req, res) => {
         status_changed_by: verifiedWallet, // SECURITY FIX
       })
       .select()
-      .single();
+      .single()) || {};
 
     if (error) throw error;
 
@@ -212,36 +212,36 @@ const getCaseDetails = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid case ID' });
     }
 
-    const { data: caseData, error: caseError } = await supabase
+    const { data: caseData, error: caseError } = (await supabase
       .from('cases')
       .select(`*, case_statuses(status_code, status_name, color_code, icon, description)`)
       .eq('id', safeId)
-      .single();
+      .single()) || {};
     
     if (caseError || !caseData) return res.status(404).json({ success: false, error: 'Case not found' });
 
-    const { data: statusHistory, error: historyError } = await supabase
+    const { data: statusHistory, error: historyError } = (await supabase
       .from('case_status_history')
       .select(
         `*, from_status:case_statuses!case_status_history_from_status_id_fkey(status_name, color_code), to_status:case_statuses!case_status_history_to_status_id_fkey(status_name, color_code)`,
       )
       .eq('case_id', safeId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })) || {};
     
     if (historyError) throw historyError;
 
-    const { data: assignments, error: assignmentError } = await supabase
+    const { data: assignments, error: assignmentError } = (await supabase
       .from('case_assignments')
       .select('*')
       .eq('case_id', safeId)
-      .eq('is_active', true);
+      .eq('is_active', true)) || {};
     
     if (assignmentError) throw assignmentError;
 
-    const { count: evidenceCount } = await supabase
+    const { count: evidenceCount } = (await supabase
       .from('evidence')
       .select('*', { count: 'exact', head: true })
-      .eq('case_id', safeId);
+      .eq('case_id', safeId)) || {};
 
     res.json({
       success: true,
@@ -276,40 +276,40 @@ const updateCaseStatus = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid case ID' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
     
     if (userError || !user) return res.status(403).json({ success: false, error: 'User not found or inactive' });
 
-    const { data: currentCase, error: caseError } = await supabase
+    const { data: currentCase, error: caseError } = (await supabase
       .from('cases')
       .select('status_id, case_statuses(status_code)')
       .eq('id', safeId)
-      .single();
+      .single()) || {};
     
     if (caseError || !currentCase) return res.status(404).json({ success: false, error: 'Case not found' });
 
-    const { data: newStatus, error: statusError } = await supabase
+    const { data: newStatus, error: statusError } = (await supabase
       .from('case_statuses')
       .select('id')
       .eq('status_code', newStatusCode)
-      .single();
+      .single()) || {};
     
     if (statusError || !newStatus) return res.status(400).json({ success: false, error: 'Invalid status code' });
 
     // Transition validation
-    const { data: transition, error: transitionError } = await supabase
+    const { data: transition, error: transitionError } = (await supabase
       .from('case_status_transitions')
       .select('*')
       .eq('from_status_id', currentCase.status_id)
       .eq('to_status_id', newStatus.id)
       .eq('required_role', user.role)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
     
     if (transitionError || !transition) {
       return res.status(403).json({
@@ -321,14 +321,14 @@ const updateCaseStatus = async (req, res) => {
     }
 
     // Perform update
-    const { error: updateError } = await supabase
+    const { error: updateError } = (await supabase
       .from('cases')
       .update({
         status_id: newStatus.id,
         status_changed_by: verifiedWallet,
         last_status_change: new Date().toISOString(),
       })
-      .eq('id', safeId);
+      .eq('id', safeId)) || {};
     
     if (updateError) throw updateError;
 
@@ -390,30 +390,30 @@ const getAvailableTransitions = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid case ID' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
-      .single();
+      .single()) || {};
     
     if (userError || !user) return res.status(403).json({ success: false, error: 'User not found' });
 
-    const { data: currentCase, error: caseError } = await supabase
+    const { data: currentCase, error: caseError } = (await supabase
       .from('cases')
       .select('status_id')
       .eq('id', safeId)
-      .single();
+      .single()) || {};
     
     if (caseError || !currentCase) return res.status(404).json({ success: false, error: 'Case not found' });
 
-    const { data: transitions, error: transitionError } = await supabase
+    const { data: transitions, error: transitionError } = (await supabase
       .from('case_status_transitions')
       .select(
         `*, to_status:case_statuses!case_status_transitions_to_status_id_fkey(status_code, status_name, color_code, icon)`,
       )
       .eq('from_status_id', currentCase.status_id)
       .eq('required_role', user.role)
-      .eq('is_active', true);
+      .eq('is_active', true)) || {};
     
     if (transitionError) throw transitionError;
 
@@ -453,11 +453,11 @@ const assignCase = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid assignee wallet address' });
     }
 
-    const { data: assigner, error: assignerError } = await supabase
+    const { data: assigner, error: assignerError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', assignedByWallet)
-      .single();
+      .single()) || {};
     
     if (
       assignerError ||
@@ -467,11 +467,11 @@ const assignCase = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to assign cases' });
     }
 
-    const { data: assignee, error: assigneeError } = await supabase
+    const { data: assignee, error: assigneeError } = (await supabase
       .from('users')
       .select('role, full_name')
       .eq('wallet_address', assignToWallet)
-      .single();
+      .single()) || {};
     
     if (assigneeError || !assignee) return res.status(404).json({ success: false, error: 'Assignee not found' });
 
@@ -484,14 +484,14 @@ const assignCase = async (req, res) => {
       .eq('assignment_type', assignmentType);
 
     // New assignment
-    const { error: assignError } = await supabase.from('case_assignments').insert({
+    const { error: assignError } = (await supabase.from('case_assignments').insert({
       case_id: safeId,
       assigned_to: assignToWallet,
       assigned_by: assignedByWallet,
       role_type: roleType,
       assignment_type: assignmentType,
       notes: notes || '',
-    });
+    })) || {};
     
     if (assignError) throw assignError;
 
@@ -562,10 +562,10 @@ const getCaseStatistics = async (req, res) => {
         dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
     }
 
-    const { data: statusStats, error: statusError } = await supabase
+    const { data: statusStats, error: statusError } = (await supabase
       .from('cases')
       .select(`status_id, case_statuses(status_code, status_name, color_code)`)
-      .gte('created_date', dateFilter);
+      .gte('created_date', dateFilter)) || {};
     
     if (statusError) throw statusError;
 
@@ -577,10 +577,10 @@ const getCaseStatistics = async (req, res) => {
       return acc;
     }, {});
 
-    const { data: priorityStats, error: priorityError } = await supabase
+    const { data: priorityStats, error: priorityError } = (await supabase
       .from('cases')
       .select('priority_level')
-      .gte('created_date', dateFilter);
+      .gte('created_date', dateFilter)) || {};
     
     if (priorityError) throw priorityError;
 
@@ -590,14 +590,14 @@ const getCaseStatistics = async (req, res) => {
       return acc;
     }, {});
 
-    const { data: recentActivity, error: activityError } = await supabase
+    const { data: recentActivity, error: activityError } = (await supabase
       .from('case_status_history')
       .select(
         `*, cases(title, case_number), to_status:case_statuses!case_status_history_to_status_id_fkey(status_name, color_code)`,
       )
       .gte('created_at', dateFilter)
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(10)) || {};
     
     if (activityError) throw activityError;
 

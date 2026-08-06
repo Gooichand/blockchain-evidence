@@ -25,12 +25,12 @@ const downloadEvidence = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });
@@ -40,11 +40,11 @@ const downloadEvidence = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Public viewers cannot download evidence' });
     }
 
-    const { data: evidence, error: evidenceError } = await supabase
+    const { data: evidence, error: evidenceError } = (await supabase
       .from('evidence')
       .select('*')
       .eq('id', id)
-      .single();
+      .single()) || {};
 
     if (evidenceError || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -102,12 +102,12 @@ const bulkExport = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Maximum 50 files per bulk export' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access' });
@@ -117,10 +117,10 @@ const bulkExport = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Public viewers cannot export evidence' });
     }
 
-    const { data: evidenceItems, error: evidenceError } = await supabase
+    const { data: evidenceItems, error: evidenceError } = (await supabase
       .from('evidence')
       .select('*')
-      .in('id', evidenceIds);
+      .in('id', evidenceIds)) || {};
 
     if (evidenceError || !evidenceItems || evidenceItems.length === 0) {
       return res.status(404).json({ success: false, error: 'No evidence found with provided IDs' });
@@ -215,12 +215,12 @@ const getDownloadHistory = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user || !['admin', 'auditor'].includes(user.role)) {
       return res.status(403).json({ success: false, error: 'Unauthorized: Admin or Auditor role required' });
@@ -232,12 +232,12 @@ const getDownloadHistory = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID format' });
     }
 
-    const { data: downloadHistory, error } = await supabase
+    const { data: downloadHistory, error } = (await supabase
       .from('activity_logs')
       .select('*')
       .or('action.eq.evidence_download,action.eq.evidence_bulk_export')
       .ilike('details', `%"evidence_id":${safeId}%`)
-      .order('timestamp', { ascending: false });
+      .order('timestamp', { ascending: false })) || {};
 
     if (error) throw error;
 
@@ -281,12 +281,12 @@ const getAllEvidence = async (req, res) => {
 
     const { limit = 50, offset = 0, case_id, status, submitted_by } = req.query;
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access' });
@@ -347,12 +347,12 @@ const getEvidenceById = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access' });
@@ -362,11 +362,11 @@ const getEvidenceById = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Public viewers cannot view evidence details' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('*')
       .eq('id', id)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -390,12 +390,12 @@ const getEvidenceByCase = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('role')
       .eq('wallet_address', verifiedWallet)
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access' });
@@ -405,11 +405,11 @@ const getEvidenceByCase = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Public viewers cannot view case evidence' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('*')
       .eq('case_id', caseId)
-      .order('timestamp', { ascending: true });
+      .order('timestamp', { ascending: true })) || {};
 
     if (error) throw error;
 

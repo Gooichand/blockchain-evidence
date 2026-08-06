@@ -6,12 +6,12 @@ const logActivity = async (req, res) => {
     if (!user_id || !action) {
       return res.status(400).json({ error: 'User ID and action are required' });
     }
-    const { error } = await supabase.from('activity_logs').insert({
+    const { error } = (await supabase.from('activity_logs').insert({
       user_id,
       action,
       details: typeof details === 'string' ? details : JSON.stringify(details),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     if (error) throw error;
     res.json({ success: true, message: 'Activity logged successfully' });
   } catch (error) {

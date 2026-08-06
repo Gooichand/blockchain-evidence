@@ -44,7 +44,7 @@ class IntegratedEvidenceService {
       }
 
       try {
-        const { data: evidence, error: dbError } = await supabase
+        const { data: evidence, error: dbError } = (await supabase
           .from('evidence')
           .insert({
             case_id: metadata.caseId,
@@ -65,7 +65,7 @@ class IntegratedEvidenceService {
             timestamp: new Date().toISOString(),
           })
           .select()
-          .single();
+          .single()) || {};
 
         if (dbError) throw dbError;
         results.database = evidence;
@@ -95,11 +95,11 @@ class IntegratedEvidenceService {
 
   async verifyEvidence(evidenceId) {
     try {
-      const { data: evidence, error } = await supabase
+      const { data: evidence, error } = (await supabase
         .from('evidence')
         .select('*')
         .eq('id', evidenceId)
-        .single();
+        .single()) || {};
 
       if (error || !evidence) {
         throw new Error('Evidence not found');
@@ -144,11 +144,11 @@ class IntegratedEvidenceService {
 
   async getEvidenceProof(evidenceId) {
     try {
-      const { data: evidence, error } = await supabase
+      const { data: evidence, error } = (await supabase
         .from('evidence')
         .select('*')
         .eq('id', evidenceId)
-        .single();
+        .single()) || {};
 
       if (error || !evidence) {
         throw new Error('Evidence not found');

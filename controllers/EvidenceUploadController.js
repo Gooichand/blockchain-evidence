@@ -32,12 +32,12 @@ const uploadEvidence = async (req, res) => {
     }
 
     // SECURITY FIX: Verify the uploader exists and has permissions in DB
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = (await supabase
       .from('users')
       .select('id, role')
       .eq('wallet_address', uploadedBy.toLowerCase())
       .eq('is_active', true)
-      .single();
+      .single()) || {};
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });

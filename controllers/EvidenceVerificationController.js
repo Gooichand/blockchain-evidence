@@ -15,12 +15,12 @@ const authorizeAdminOrAuditor = async (req, res) => {
     return null;
   }
 
-  const { data: user, error: userError } = await supabase
+  const { data: user, error: userError } = (await supabase
     .from('users')
     .select('id, role')
     .eq('wallet_address', wallet.toLowerCase())
     .eq('is_active', true)
-    .single();
+    .single()) || {};
 
   if (userError || !user || !['admin', 'auditor'].includes(user.role)) {
     res.status(403).json({ success: false, error: 'Unauthorized: Admin or Auditor role required' });
@@ -45,11 +45,11 @@ const verifyEvidenceHash = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('id, blockchain_tx_hash')
       .eq('id', safeId)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -90,11 +90,11 @@ const getBlockchainProof = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('id, timestamp, blockchain_tx_hash')
       .eq('id', safeId)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -154,11 +154,11 @@ const verifyIntegrity = async (req, res) => {
         return res.status(400).json({ success: false, error: 'Invalid evidenceId' });
       }
 
-      const { data: evidenceData, error: errorById } = await supabase
+      const { data: evidenceData, error: errorById } = (await supabase
         .from('evidence')
         .select('*')
         .eq('id', safeId)
-        .single();
+        .single()) || {};
 
       if (errorById && errorById.code !== 'PGRST116') {
         throw errorById;
@@ -171,11 +171,11 @@ const verifyIntegrity = async (req, res) => {
       }
     } else {
       // Find by hash
-      const { data: evidenceData, error: errorByHash } = await supabase
+      const { data: evidenceData, error: errorByHash } = (await supabase
         .from('evidence')
         .select('*')
         .eq('hash', calculatedHash)
-        .single();
+        .single()) || {};
 
       if (errorByHash && errorByHash.code !== 'PGRST116') {
         throw errorByHash;
@@ -199,7 +199,7 @@ const verifyIntegrity = async (req, res) => {
     }
 
     // Audit log
-    const { error: auditLogError } = await supabase.from('activity_logs').insert({
+    const { error: auditLogError } = (await supabase.from('activity_logs').insert({
       user_id: req.authenticatedWallet || 'anonymous_verification',
       action: 'evidence_verification',
       details: JSON.stringify({
@@ -210,7 +210,7 @@ const verifyIntegrity = async (req, res) => {
         evidenceId,
       }),
       timestamp: new Date().toISOString(),
-    });
+    })) || {};
     
     if (auditLogError) {
       console.error('Failed to log verification activity:', auditLogError);
@@ -247,11 +247,11 @@ const generateVerificationCertificate = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Valid numeric evidenceId is required' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('*')
       .eq('id', safeId)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -302,11 +302,11 @@ const publicVerify = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Hash is required' });
     }
 
-    const { data: evidence, error } = await supabase
+    const { data: evidence, error } = (await supabase
       .from('evidence')
       .select('id, title, case_id, timestamp, submitted_by, hash')
       .eq('hash', hash)
-      .single();
+      .single()) || {};
 
     if (error || !evidence) {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
@@ -348,12 +348,12 @@ const getVerificationHistory = async (req, res) => {
     const sanitizedLimit =
       !isNaN(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 500) : 100;
 
-    const { data: history, error } = await supabase
+    const { data: history, error } = (await supabase
       .from('activity_logs')
       .select('*')
       .eq('action', 'evidence_verification')
       .order('timestamp', { ascending: false })
-      .limit(sanitizedLimit);
+      .limit(sanitizedLimit)) || {};
 
     if (error) throw error;
 
@@ -393,10 +393,10 @@ const compareEvidence = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please provide 2-4 evidence IDs' });
     }
 
-    const { data: evidenceItems, error } = await supabase
+    const { data: evidenceItems, error } = (await supabase
       .from('evidence')
       .select('id, title, case_id, type, timestamp, hash, blockchain_tx_hash, ipfs_cid')
-      .in('id', evidenceIds);
+      .in('id', evidenceIds)) || {};
 
     if (error) throw error;
 
@@ -451,11 +451,11 @@ const createComparisonReport = async (req, res) => {
       report_type: 'evidence_comparison',
     };
 
-    const { data: insertedReport, error: insertError } = await supabase
+    const { data: insertedReport, error: insertError } = (await supabase
       .from('comparison_reports')
       .insert(reportRecord)
       .select()
-      .single();
+      .single()) || {};
 
     if (insertError) throw insertError;
 

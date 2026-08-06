@@ -162,8 +162,23 @@ describe('emailLogin', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid email or password' });
   });
 
-  it('returns 401 for an unverified email account', async () => {
+  it('allows login for an account without email verification (verification disabled)', async () => {
     const lookup = mockUserLookup({ data: { ...baseUser, email_verified: false }, error: null });
+    const logs = { insert: jest.fn().mockResolvedValue({ error: null }) };
+    supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : logs));
+
+    const req = { body: { email: 'investigator@evid-dgc.com', password: 'password123' } };
+    const res = mockRes();
+
+    await emailLogin(req, res);
+
+    const payload = res.json.mock.calls[0][0];
+    expect(payload.success).toBe(true);
+    expect(payload.token).toBeDefined();
+  });
+
+  it('does not crash (500) when the activity log insert returns undefined', async () => {
+    const lookup = mockUserLookup({ data: baseUser, error: null });
     supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : { insert: jest.fn() }));
 
     const req = { body: { email: 'investigator@evid-dgc.com', password: 'password123' } };
@@ -171,8 +186,10 @@ describe('emailLogin', () => {
 
     await emailLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid email or password' });
+    const payload = res.json.mock.calls[0][0];
+    expect(payload.success).toBe(true);
+    expect(payload.token).toBeDefined();
+    expect(res.status).not.toHaveBeenCalledWith(500);
   });
 
   it('returns 400 when email or password is missing', async () => {
