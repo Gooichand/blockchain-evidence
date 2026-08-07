@@ -137,11 +137,28 @@ app.use((error, req, res, _next) => {
 
 // -- Start server (only when run directly, not when imported for testing) --
 if (require.main === module) {
+  // Resilience: never let a transient async/parse error silently kill the API.
+  // Log it and keep serving (each unhandled error is also caught by the Express error handler).
+  process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled rejection (kept alive):', reason);
+  });
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception (kept alive):', err);
+  });
+
   server.listen(PORT, () => {
     console.log(`EVID-DGC API Server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);
     console.log(`WebSocket notifications enabled`);
   });
+
+  const shutdown = (signal) => {
+    console.log(`${signal} received, shutting down gracefully...`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 3000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 module.exports = app;

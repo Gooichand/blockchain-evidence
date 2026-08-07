@@ -156,7 +156,8 @@
         </div>
     </div>
 
-    <script src="storage.js"></script>
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script>
         let selectedEvidence = new Set();
         let currentUser = null;
@@ -169,28 +170,16 @@
 
         async function initializePage() {
             try {
-                // Get current user from localStorage or MetaMask
-                const walletAddress = localStorage.getItem('currentWallet');
-                if (!walletAddress) {
-                    alert('Please connect your wallet first');
+                if (!localStorage.getItem('authToken')) {
+                    alert('Please log in first');
                     window.location.href = 'index.html';
                     return;
                 }
 
-                // Verify user
-                const response = await fetch(`/api/user/${walletAddress}`);
-                const data = await response.json();
-
-                if (!data.user) {
-                    alert('User not found');
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                currentUser = data.user;
+                currentUser = window.apiClient.getCurrentUser();
 
                 // Check if user can download evidence
-                if (currentUser.role === 'public_viewer') {
+                if (currentUser && currentUser.role === 'public_viewer') {
                     alert('Public viewers cannot download evidence');
                     window.location.href = 'dashboard.html';
                     return;
@@ -205,45 +194,31 @@
 
         async function loadEvidence() {
             try {
-                // For demo purposes, create mock evidence data
-                evidenceItems = [
-                    {
-                        id: 1,
-                        name: 'Crime Scene Photo 1',
-                        case_number: 'CASE-2024-001',
-                        file_type: 'image/jpeg',
-                        hash: '0x1234...abcd',
-                        submitted_by: '0x1111...1111',
-                        timestamp: '2024-01-15T10:30:00Z',
-                        size: '2.5 MB'
-                    },
-                    {
-                        id: 2,
-                        name: 'Witness Statement',
-                        case_number: 'CASE-2024-001',
-                        file_type: 'application/pdf',
-                        hash: '0x5678...efgh',
-                        submitted_by: '0x2222...2222',
-                        timestamp: '2024-01-16T14:20:00Z',
-                        size: '1.2 MB'
-                    },
-                    {
-                        id: 3,
-                        name: 'Security Footage',
-                        case_number: 'CASE-2024-002',
-                        file_type: 'video/mp4',
-                        hash: '0x9abc...ijkl',
-                        submitted_by: '0x3333...3333',
-                        timestamp: '2024-01-17T09:15:00Z',
-                        size: '15.7 MB'
-                    }
-                ];
+                const result = await window.apiClient.get('/evidence', { skipWalletAuth: true });
+                evidenceItems = (result.data || result.evidence || []).map(e => ({
+                    id: e.id,
+                    name: e.title || e.name || e.file_name || `Evidence ${e.id}`,
+                    case_number: e.case_number || e.case_id || 'N/A',
+                    file_type: e.file_type || e.type || 'Unknown',
+                    hash: e.hash || 'N/A',
+                    submitted_by: e.submitted_by || 'Unknown',
+                    timestamp: e.timestamp || null,
+                    file_size: e.file_size || 0
+                }));
 
                 renderEvidence();
             } catch (error) {
                 console.error('Error loading evidence:', error);
                 alert('Failed to load evidence');
             }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return 'N/A';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         function renderEvidence() {
@@ -262,9 +237,9 @@
                     </div>
                     <div><strong>Case:</strong> ${evidence.case_number}</div>
                     <div><strong>Type:</strong> ${evidence.file_type}</div>
-                    <div><strong>Size:</strong> ${evidence.size}</div>
+                    <div><strong>Size:</strong> ${formatFileSize(evidence.file_size)}</div>
                     <div><strong>Hash:</strong> ${evidence.hash}</div>
-                    <div><strong>Submitted:</strong> ${new Date(evidence.timestamp).toLocaleString()}</div>
+                    <div><strong>Submitted:</strong> ${evidence.timestamp ? new Date(evidence.timestamp).toLocaleString() : 'N/A'}</div>
                     <div style="margin-top: 10px;">
                         <button class="btn btn-primary" onclick="downloadSingle(${evidence.id})" style="font-size: 12px; padding: 5px 10px;">
                             📥 Download
@@ -319,19 +294,23 @@
 
         async function downloadSingle(evidenceId) {
             try {
+                const signedHeaders = await window.apiClient.getAuthHeaders();
                 const response = await fetch(`/api/evidence/${evidenceId}/download`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...signedHeaders
                     },
-                    body: JSON.stringify({
-                        userWallet: currentUser.wallet_address
-                    })
+                    body: JSON.stringify({})
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Download failed');
+                    let message = 'Download failed';
+                    try {
+                        const error = await response.json();
+                        if (error && error.error) message = error.error;
+                    } catch (_) { /* non-JSON error body */ }
+                    throw new Error(message);
                 }
 
                 // Get filename from response headers
@@ -375,20 +354,25 @@
             }
 
             try {
+                const signedHeaders = await window.apiClient.getAuthHeaders();
                 const response = await fetch('/api/evidence/bulk-export', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        ...signedHeaders
                     },
                     body: JSON.stringify({
-                        evidenceIds: Array.from(selectedEvidence),
-                        userWallet: currentUser.wallet_address
+                        evidenceIds: Array.from(selectedEvidence)
                     })
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Export failed');
+                    let message = 'Export failed';
+                    try {
+                        const error = await response.json();
+                        if (error && error.error) message = error.error;
+                    } catch (_) { /* non-JSON error body */ }
+                    throw new Error(message);
                 }
 
                 // Get filename from response headers
@@ -422,35 +406,41 @@
 
             if (historyDiv.style.display === 'none') {
                 try {
-                    // For demo purposes, show mock history data
-                    const mockHistory = [
-                        {
-                            timestamp: '2024-01-20T10:30:00Z',
-                            user_id: currentUser.wallet_address,
-                            action: 'evidence_download',
-                            details: { evidence_id: 1, evidence_name: 'Crime Scene Photo 1' }
-                        },
-                        {
-                            timestamp: '2024-01-19T15:45:00Z',
-                            user_id: currentUser.wallet_address,
-                            action: 'evidence_bulk_export',
-                            details: { evidence_ids: [1, 2], total_files: 2 }
-                        }
-                    ];
+                    if (selectedEvidence.size !== 1) {
+                        contentDiv.innerHTML = '<p>Select exactly one evidence file to view its download history.</p>';
+                        historyDiv.style.display = 'block';
+                        return;
+                    }
 
-                    contentDiv.innerHTML = mockHistory.map(entry => `
-                        <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                            <strong>${new Date(entry.timestamp).toLocaleString()}</strong><br>
-                            Action: ${entry.action}<br>
-                            User: ${entry.user_id.slice(0, 8)}...<br>
-                            Details: ${JSON.stringify(entry.details)}
-                        </div>
-                    `).join('');
+                    const evidenceId = Array.from(selectedEvidence)[0];
+                    const result = await window.apiClient.get(`/evidence/${evidenceId}/download-history`, { skipWalletAuth: true });
+                    const data = result.data || {};
+                    const history = data.download_history || result.history || [];
+
+                    if (history.length === 0) {
+                        contentDiv.innerHTML = '<p>No download history found for this evidence file.</p>';
+                    } else {
+                        contentDiv.innerHTML = history.map(entry => {
+                            let details = entry.details;
+                            try {
+                                details = typeof details === 'string' ? JSON.parse(details) : details;
+                            } catch (_) { /* keep raw */ }
+                            return `
+                                <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+                                    <strong>${new Date(entry.timestamp || entry.downloaded_at || entry.created_at).toLocaleString()}</strong><br>
+                                    Action: ${entry.action || 'evidence_download'}<br>
+                                    User: ${(entry.user_id || entry.user_wallet || 'Unknown').substring(0, 12)}<br>
+                                    Details: ${JSON.stringify(details)}
+                                </div>
+                            `;
+                        }).join('');
+                    }
 
                     historyDiv.style.display = 'block';
                 } catch (error) {
                     console.error('History error:', error);
-                    alert('Failed to load download history');
+                    contentDiv.innerHTML = `<p>Download history is restricted to Auditor/Admin accounts. ${error.message || ''}</p>`;
+                    historyDiv.style.display = 'block';
                 }
             } else {
                 historyDiv.style.display = 'none';

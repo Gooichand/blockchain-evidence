@@ -6,6 +6,7 @@ const {
   getPublicCases,
   getPublicCaseById,
   getPublicCaseEvidence,
+  getPublicEvidence,
   verifyEvidence,
 } = require('../controllers/publicController');
 
@@ -14,6 +15,7 @@ router.get('/public/statistics', getStatistics);
 router.get('/public/cases', getPublicCases);
 router.get('/public/cases/:id', getPublicCaseById);
 router.get('/public/cases/:id/evidence', getPublicCaseEvidence);
+router.get('/public/evidence', getPublicEvidence);
 router.post('/public/verify', verificationLimiter, verifyEvidence);
 
 module.exports = router;

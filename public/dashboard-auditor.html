@@ -39,15 +39,15 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">45</span>
+                    <span id="statAuditReports" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Audit Reports</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">12</span>
-                    <span>Compliance Issues</span>
+                    <span id="statBlockHeight" style="font-size: 2rem; font-weight: bold; display: block;">N/A</span>
+                    <span>Blockchain Height</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">98.5%</span>
+                    <span id="statSystemIntegrity" style="font-size: 2rem; font-weight: bold; display: block;">—</span>
                     <span>System Integrity</span>
                 </div>
             </div>
@@ -62,25 +62,25 @@
             <div class="card-body">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📊 System Audit - Comprehensive system integrity checks')">
+                        onclick="window.location.href='system-health.html'">
                         <span style="font-size: 2.5rem; color: #6366f1;">📊</span>
                         <h3>System Audit</h3>
                         <p>Comprehensive system integrity checks</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('✅ Compliance Check - Monitor regulatory compliance')">
+                        onclick="window.location.href='retention-policy.html'">
                         <span style="font-size: 2.5rem; color: #6366f1;">✅</span>
                         <h3>Compliance Check</h3>
                         <p>Monitor regulatory compliance</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('🔗 Blockchain Verification - Verify blockchain integrity')">
+                        onclick="window.location.href='evidence-verification.html'">
                         <span style="font-size: 2.5rem; color: #6366f1;">🔗</span>
                         <h3>Blockchain Verification</h3>
                         <p>Verify blockchain integrity</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📋 Audit Reports - Generate comprehensive audit reports')">
+                        onclick="window.location.href='audit-trail.html'">
                         <span style="font-size: 2.5rem; color: #6366f1;">📋</span>
                         <h3>Audit Reports</h3>
                         <p>Generate comprehensive audit reports</p>
@@ -143,11 +143,9 @@
         });
 
         function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Auditor';
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = isTestUser ?
-                    `🔍 ${userName} (Test)` : `🔍 Auditor`;
+                document.getElementById('userRole').textContent = `🔍 ${userName}`;
             }
 
             if (currentUser.walletAddress && document.getElementById('userWallet')) {
@@ -158,11 +156,21 @@
 
         async function loadDashboardData() {
             try {
-                // Fetch audit logs from backend
-                const result = await window.apiClient.get('/audit/logs');
-                if (result.success) {
-                    renderAuditLogs(result.data || []);
+                // Real stats: audit log count + blockchain system status
+                const [logsResult, systemStatus] = await Promise.all([
+                    window.apiClient.get('/audit/logs', { params: { limit: 500 } }),
+                    window.apiClient.get('/blockchain/status')
+                ]);
+
+                if (logsResult.success) {
+                    const logs = logsResult.data || [];
+                    if (document.getElementById('statAuditReports')) document.getElementById('statAuditReports').textContent = logs.length;
+                    renderAuditLogs(logs);
                 }
+                const chain = systemStatus.success && systemStatus.status ? systemStatus.status.blockchain : null;
+                if (document.getElementById('statBlockHeight')) document.getElementById('statBlockHeight').textContent = chain && chain.blockNumber != null ? chain.blockNumber : 'N/A';
+                if (document.getElementById('statSystemIntegrity')) document.getElementById('statSystemIntegrity').textContent =
+                    chain && chain.initialized ? 'Healthy' : 'Degraded';
             } catch (error) {
                 console.error('Error loading audit data:', error);
                 document.getElementById('auditTrailList').innerHTML = '<p style="color:red">Failed to load audit logs.</p>';
@@ -189,10 +197,10 @@
                     <tbody>
                         ${logs.map(log => `
                             <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 12px;">${new Date(log.created_at).toLocaleString()}</td>
-                                <td style="padding: 12px;">${log.user_wallet.slice(0,6)}...</td>
-                                <td style="padding: 12px;">${log.action}</td>
-                                <td style="padding: 12px; font-family: monospace;">${log.tx_hash ? log.tx_hash.slice(0,10) + '...' : 'N/A'}</td>
+                                <td style="padding: 12px;">${log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}</td>
+                                <td style="padding: 12px;">${(log.user_wallet || log.user_name || 'System').toString().slice(0, 12)}</td>
+                                <td style="padding: 12px;">${log.action || '—'}</td>
+                                <td style="padding: 12px; font-family: monospace;">${log.tx_hash ? log.tx_hash.slice(0, 10) + '...' : 'N/A'}</td>
                             </tr>
                         `).join('')}
                     </tbody>

@@ -105,7 +105,7 @@ class NavbarManager {
         const roleNavigation = {
             'admin': [
                 { label: 'Dashboard', icon: 'home', href: 'admin.html' },
-                { label: 'Users', icon: 'users', href: 'user-management.html' },
+                { label: 'Users', icon: 'users', href: 'admin.html#users' },
                 { label: 'Settings', icon: 'settings', href: 'settings.html' }
             ],
             'investigator': [
@@ -115,28 +115,28 @@ class NavbarManager {
             ],
             'forensic_analyst': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-analyst.html' },
-                { label: 'Analysis', icon: 'microscope', href: 'analysis.html' },
-                { label: 'Reports', icon: 'file-text', href: 'reports.html' }
+                { label: 'Queue', icon: 'inbox', href: 'dashboard-analyst.html#queue' },
+                { label: 'Reports', icon: 'file-text', href: 'dashboard-analyst.html#reports' }
             ],
             'legal_professional': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-legal.html' },
-                { label: 'Cases', icon: 'briefcase', href: 'legal-cases.html' },
-                { label: 'Documents', icon: 'file-plus', href: 'legal-docs.html' }
+                { label: 'Cases', icon: 'briefcase', href: 'cases.html' },
+                { label: 'Documents', icon: 'file-plus', href: 'cases-public.html' }
             ],
             'court_official': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-court.html' },
-                { label: 'Proceedings', icon: 'gavel', href: 'proceedings.html' },
-                { label: 'Schedule', icon: 'calendar', href: 'scheduling.html' }
+                { label: 'Proceedings', icon: 'gavel', href: 'audit-trail.html' },
+                { label: 'Schedule', icon: 'calendar', href: 'evidence-manager.html' }
             ],
             'evidence_manager': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-manager.html' },
                 { label: 'Evidence', icon: 'package', href: 'evidence-manager.html' },
-                { label: 'Inventory', icon: 'warehouse', href: 'inventory.html' }
+                { label: 'Inventory', icon: 'warehouse', href: 'evidence-manager.html#inventory' }
             ],
             'auditor': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-auditor.html' },
                 { label: 'Audit Trail', icon: 'activity', href: 'audit-trail.html' },
-                { label: 'Compliance', icon: 'check-square', href: 'compliance.html' }
+                { label: 'Compliance', icon: 'check-square', href: 'dashboard-auditor.html#compliance' }
             ],
             'public_viewer': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-public.html' },

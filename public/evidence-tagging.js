@@ -11,6 +11,11 @@ class EvidenceTagging {
         this.setupEventListeners();
     }
 
+    async loadAllEvidence() {
+        const result = await window.apiClient.get('/evidence', { skipWalletAuth: true });
+        return (result.data || result.evidence || []);
+    }
+
     async loadTags() {
         try {
             const result = await window.apiClient.get('/tags');
@@ -179,7 +184,7 @@ class EvidenceTagging {
                 this.selectedTags.clear();
                 this.updateSelectedTagsDisplay();
                 // Reload evidence to show new tags
-                const evidence = await window.storage.getAllEvidence();
+                const evidence = await this.loadAllEvidence();
                 this.renderFilteredEvidence(evidence);
             } else {
                 this.showMessage(result.error, 'error');
@@ -211,17 +216,24 @@ class EvidenceTagging {
         const evidenceContainer = document.getElementById('evidenceContainer');
         if (!evidenceContainer) return;
 
-        evidenceContainer.innerHTML = evidence.map(item => `
+        evidenceContainer.innerHTML = evidence.map(rawItem => {
+            const item = {
+                ...rawItem,
+                name: rawItem.title || rawItem.name || rawItem.file_name || 'Unnamed Evidence',
+                file_type: rawItem.type || rawItem.file_type || 'Unknown',
+                case_number: rawItem.case_number || rawItem.case_id || 'N/A'
+            };
+            return `
             <div class="evidence-item" data-evidence-id="${item.id}">
                 <div class="evidence-header">
                     <input type="checkbox" class="evidence-checkbox" value="${item.id}">
-                    <h4>${item.name || 'Unnamed Evidence'}</h4>
+                    <h4>${item.name}</h4>
                 </div>
                 <div class="evidence-details">
-                    <p><strong>Case:</strong> ${item.case_number || 'N/A'}</p>
-                    <p><strong>Type:</strong> ${item.file_type || 'Unknown'}</p>
-                    <p><strong>Hash:</strong> ${item.hash?.substring(0, 16)}...</p>
-                    <p><strong>Submitted:</strong> ${new Date(item.timestamp).toLocaleDateString()}</p>
+                    <p><strong>Case:</strong> ${item.case_number}</p>
+                    <p><strong>Type:</strong> ${item.file_type}</p>
+                    <p><strong>Hash:</strong> ${item.hash ? item.hash.substring(0, 16) + '...' : 'N/A'}</p>
+                    <p><strong>Submitted:</strong> ${item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div class="evidence-tags">
                     ${this.renderEvidenceTags(item.evidence_tags || [])}
@@ -232,7 +244,8 @@ class EvidenceTagging {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     renderEvidenceTags(evidenceTags) {

@@ -130,10 +130,50 @@ const createTestNotification = async (req, res) => {
   }
 };
 
+// Bulk-create notifications for multiple recipients
+const bulkCreateNotifications = async (req, res) => {
+  try {
+    const { notifications } = req.body;
+
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+      return res.status(400).json({ success: false, error: 'notifications must be a non-empty array' });
+    }
+
+    const rows = notifications.map((n) => ({
+      user_wallet: n.recipient,
+      title: n.title,
+      message: n.message,
+      type: n.type || 'system',
+      data: n.data || {},
+      is_read: false,
+    }));
+
+    const { data: created, error } = (await supabase
+      .from('notifications')
+      .insert(rows)
+      .select()) || {};
+
+    if (error) throw error;
+
+    // Real-time push
+    (created || []).forEach((notification) => {
+      if (io && connectedUsers.has(notification.user_wallet)) {
+        io.to(notification.user_wallet).emit('notification', notification);
+      }
+    });
+
+    res.json({ success: true, created: (created || []).length });
+  } catch (error) {
+    console.error('Bulk create notifications error:', error);
+    res.status(500).json({ success: false, error: 'Failed to create notifications' });
+  }
+};
+
 module.exports = {
   setIO,
   getNotifications,
   markAsRead,
   markAllAsRead,
   createTestNotification,
+  bulkCreateNotifications,
 };

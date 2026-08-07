@@ -453,7 +453,8 @@
         </div>
     </div>
 
-    <script src="storage.js"></script>
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script src="evidence-tagging.js"></script>
     <script>
         // Additional helper functions
@@ -471,7 +472,7 @@
         // Load real evidence data on page load
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const evidence = await window.storage.getAllEvidence();
+                const evidence = await window.evidenceTagging.loadAllEvidence();
                 window.evidenceTagging.renderFilteredEvidence(evidence);
             } catch (error) {
                 console.error('Failed to load real evidence:', error);

@@ -58,16 +58,16 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">8</span>
+                    <span id="statCasesReview" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Cases Under Review</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">15</span>
-                    <span>Legal Opinions</span>
+                    <span id="statLegalHold" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
+                    <span>Evidence Under Legal Hold</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">3</span>
-                    <span>Court Filings</span>
+                    <span id="statEvidenceTotal" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
+                    <span>Evidence Items</span>
                 </div>
             </div>
         </div>
@@ -80,25 +80,22 @@
             </div>
             <div class="card-body">
                 <div class="legal-tools">
-                    <div class="tool-card"
-                        onclick="alert('📋 Case Review Tool - Review evidence admissibility and legal compliance')">
+                    <div class="tool-card" onclick="window.location.href='case-management.html'">
                         <span style="font-size: 2.5rem; color: #dc2626;">📋</span>
                         <h3>Case Review</h3>
                         <p>Review evidence admissibility and legal compliance</p>
                     </div>
-                    <div class="tool-card"
-                        onclick="alert('📄 Legal Opinion Generator - Create formal legal opinions and recommendations')">
+                    <div class="tool-card" onclick="window.location.href='legal-hold-management.html'">
                         <span style="font-size: 2.5rem; color: #dc2626;">📄</span>
                         <h3>Legal Opinions</h3>
                         <p>Create formal legal opinions and recommendations</p>
                     </div>
-                    <div class="tool-card"
-                        onclick="alert('🏛️ Court Filing System - Prepare and submit court documents')">
+                    <div class="tool-card" onclick="window.location.href='evidence-export.html'">
                         <span style="font-size: 2.5rem; color: #dc2626;">🏛️</span>
                         <h3>Court Filings</h3>
                         <p>Prepare and submit court documents</p>
                     </div>
-                    <div class="tool-card" onclick="alert('📚 Legal Research - Access legal databases and precedents')">
+                    <div class="tool-card" onclick="window.location.href='cases-public.html'">
                         <span style="font-size: 2.5rem; color: #dc2626;">📚</span>
                         <h3>Legal Research</h3>
                         <p>Access legal databases and precedents</p>
@@ -159,11 +156,9 @@
         });
 
         function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Legal Professional';
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = isTestUser ?
-                    `⚖️ ${userName} (Test)` : `⚖️ Legal Professional`;
+                document.getElementById('userRole').textContent = `⚖️ ${userName}`;
             }
 
             if (currentUser.walletAddress && document.getElementById('userWallet')) {
@@ -174,6 +169,23 @@
 
         async function loadDashboardData() {
             try {
+                // Real stats from backend
+                const [casesStats, managerStats] = await Promise.all([
+                    window.apiClient.get('/cases/statistics'),
+                    window.apiClient.get('/evidence/manager-stats')
+                ]);
+
+                if (casesStats.success) {
+                    const byStatus = (casesStats.statistics && casesStats.statistics.by_status) || [];
+                    const review = byStatus.find(s => /review/i.test(s.status_code || s.status_name)) || { count: 0 };
+                    if (document.getElementById('statCasesReview')) document.getElementById('statCasesReview').textContent = review.count || 0;
+                }
+                if (managerStats.success) {
+                    const ms = managerStats.data || {};
+                    if (document.getElementById('statLegalHold')) document.getElementById('statLegalHold').textContent = ms.legal_hold || 0;
+                    if (document.getElementById('statEvidenceTotal')) document.getElementById('statEvidenceTotal').textContent = ms.total || 0;
+                }
+
                 // Use storage.js which is already refactored to use apiClient
                 const evidence = await window.storage.getAllEvidence();
                 renderEvidence(evidence);
@@ -204,16 +216,16 @@
                     <tbody>
                         ${evidence.map(item => `
                             <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 12px;">${item.id}</td>
-                                <td style="padding: 12px;">${item.title}</td>
-                                <td style="padding: 12px;">${item.type}</td>
+                                <td style="padding: 12px;">${item.id || item.evidence_id || ''}</td>
+                                <td style="padding: 12px;">${item.title || item.name || item.file_name || 'Untitled'}</td>
+                                <td style="padding: 12px;">${item.type || item.file_type || 'document'}</td>
                                 <td style="padding: 12px;">
                                     <span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
                                         ${item.status || 'PENDING_REVIEW'}
                                     </span>
                                 </td>
                                 <td style="padding: 12px;">
-                                    <button class="btn btn-sm btn-primary" onclick="issueLegalOpinion('${item.id}')">Issue Opinion</button>
+                                    <button class="btn btn-sm btn-primary" onclick="issueLegalOpinion('${item.id || item.evidence_id}')">Issue Opinion</button>
                                 </td>
                             </tr>
                         `).join('')}

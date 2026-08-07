@@ -13,6 +13,10 @@ const monitoringRoutes = require('./monitoringRoutes');
 const contactRoutes = require('./contactRoutes');
 const publicRoutes = require('./publicRoutes');
 const analystRoutes = require('./analystRoutes');
+const auditRoutes = require('./auditRoutes');
+const legalRoutes = require('./legalRoutes');
+const courtRoutes = require('./courtRoutes');
+const legalHoldRoutes = require('./legalHoldRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -20,8 +24,8 @@ function registerRoutes(app) {
   app.use('/api', authRoutes);
   app.use('/api', userRoutes);
   app.use('/api', adminRoutes);
-  app.use('/api', evidenceRoutes);
   app.use('/api', tagRoutes);
+  app.use('/api', evidenceRoutes);
   app.use('/api', retentionRoutes);
   app.use('/api', caseRoutes);
   app.use('/api', activityRoutes);
@@ -30,6 +34,10 @@ function registerRoutes(app) {
   app.use('/api', contactRoutes);
   app.use('/api', publicRoutes);
   app.use('/api', analystRoutes);
+  app.use('/api', auditRoutes);
+  app.use('/api', legalRoutes);
+  app.use('/api', courtRoutes);
+  app.use('/api', legalHoldRoutes);
 }
 
 module.exports = registerRoutes;

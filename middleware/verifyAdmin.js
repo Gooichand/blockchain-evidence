@@ -6,19 +6,41 @@ const validateWalletAddress = (address) => {
 };
 
 /**
- * SECURITY FIX: verifyAdmin now uses the cryptographically verified wallet 
- * from the verifySignature middleware. It NO LONGER trusts req.body.adminWallet.
+ * SECURITY FIX: verifyAdmin now uses a verified identity:
+ *  1. req.user (JWT email user verified by requireAuth) — checked against DB
+ *  2. The cryptographically verified wallet from the verifySignature middleware.
+ * It NO LONGER trusts req.body.adminWallet.
  * This prevents authentication bypass by simply knowing an admin wallet address.
  */
 const verifyAdmin = async (req, res, next) => {
   try {
-    // SECURITY FIX: Use the identity established by verifySignature
+    // Path 1: JWT identity (email users) already verified by requireAuth
+    if (req.user) {
+      const { data: admin, error } = await supabase
+        .from('users')
+        .select('id, wallet_address, full_name, role, is_active, department, jurisdiction, email')
+        .eq('id', req.user.id)
+        .eq('role', 'admin')
+        .eq('is_active', true)
+        .single();
+
+      if (!error && admin) {
+        req.admin = admin;
+        return next();
+      }
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. Administrator privileges required.',
+      });
+    }
+
+    // Path 2: wallet signature identity established by verifySignature
     const adminWallet = req.authenticatedWallet;
 
     if (!adminWallet) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Authentication required. Please provide a valid cryptographic signature.' 
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required. Please provide a valid cryptographic signature.',
       });
     }
 
@@ -32,9 +54,9 @@ const verifyAdmin = async (req, res, next) => {
       .single();
 
     if (error || !admin) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Access denied. Administrator privileges required.' 
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. Administrator privileges required.',
       });
     }
 

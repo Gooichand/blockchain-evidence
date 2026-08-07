@@ -102,17 +102,28 @@ async function loadCaseEvidence() {
     currentCase = caseId;
     
     try {
-        const result = await window.apiClient.get(`/evidence/by-case/${caseId}`);
+        const result = await window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true });
         
-        if (result.success) {
-            allEvidence = result.evidence;
-            populateFilters();
-            updateTimeline();
-            updateStatistics();
-            analyzeTimelineGaps();
-        }
+        allEvidence = (result.data || result.evidence || []).map(item => ({
+            id: item.id,
+            title: item.title || item.name || item.file_name || 'Unnamed Evidence',
+            type: item.type || item.file_type || 'unknown',
+            timestamp: item.timestamp || item.created_at || new Date().toISOString(),
+            submitted_by: item.submitted_by || item.user_wallet || 'Unknown',
+            case_id: item.case_id || caseId,
+            description: item.description || '',
+            file_name: item.file_name || item.name || '',
+            file_size: item.file_size || 0,
+            hash: item.hash || '',
+            status: item.status || 'submitted'
+        }));
+        populateFilters();
+        updateTimeline();
+        updateStatistics();
+        analyzeTimelineGaps();
     } catch (error) {
         console.error('Error loading case evidence:', error);
+        alert('Failed to load evidence for this case: ' + (error.message || error));
     }
 }
 
@@ -492,7 +503,8 @@ function exportTimelineData() {
         caseId: currentCase,
         exportDate: new Date().toISOString(),
         totalEvidence: filteredEvidence.length,
-        evidence: filteredEvidence.map(item => ({\n            id: item.id,
+        evidence: filteredEvidence.map(item => ({
+            id: item.id,
             title: item.title,
             type: getEvidenceType(item.type),
             timestamp: item.timestamp,
@@ -528,14 +540,51 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function downloadEvidence(evidenceId) {
-    // Implementation would depend on your download API
-    console.log('Download evidence:', evidenceId);
+async function downloadEvidence(evidenceId) {
+    try {
+        const signedHeaders = await window.apiClient.getAuthHeaders();
+        const apiUrl = window.config?.API_BASE_URL || '/api';
+        const response = await fetch(`${apiUrl}/evidence/${evidenceId}/download`, {
+            method: 'POST',
+            headers: { ...signedHeaders }
+        });
+
+        if (!response.ok) {
+            let msg = 'Download failed';
+            try {
+                const j = await response.json();
+                if (j && j.error) msg = j.error;
+            } catch (_) { /* non-JSON error body */ }
+            throw new Error(msg);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const cd = response.headers.get('Content-Disposition') || '';
+        const m = cd.match(/filename="?([^";]+)"?/);
+        a.href = url;
+        a.download = m ? m[1] : `evidence_${evidenceId}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Download evidence error:', error);
+        alert('Download failed: ' + (error.message || error));
+    }
 }
 
-function verifyEvidence(evidenceId) {
-    // Implementation would depend on your verification system
-    console.log('Verify evidence:', evidenceId);
+async function verifyEvidence(evidenceId) {
+    try {
+        const result = await window.apiClient.get(`/evidence/${evidenceId}/verify`, { skipWalletAuth: true });
+        const data = result.data || result;
+        if (data.valid === true || data.blockchainVerified === true) {
+            alert('✅ Hash verified: blockchain match confirmed.');
+        } else {
+            alert('⚠️ Verification inconclusive: ' + ((data.errors && data.errors.join(', ')) || data.error || 'record not found on-chain'));
+        }
+    } catch (error) {
+        alert('Verification failed: ' + (error.message || error));
+    }
 }
 
 // Close modal when clicking outside

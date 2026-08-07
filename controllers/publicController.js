@@ -380,6 +380,52 @@ const getPublicCaseEvidence = async (req, res) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// GET /public/evidence
+// ---------------------------------------------------------------------------
+const getPublicEvidence = async (req, res) => {
+  try {
+    const schema = await getSchema();
+    const { q = '', page = 1, limit = 20 } = req.query;
+
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+
+    let query = supabase.from('evidence').select('*', { count: 'exact' });
+    if (schema.evidenceIsPublic) query = query.eq('is_public', true);
+
+    const sanitized = q.replace(/[%_.*(),'"]/g, '').trim();
+    if (sanitized) {
+      query = query.or(
+        `title.ilike.%${sanitized}%,name.ilike.%${sanitized}%,file_name.ilike.%${sanitized}%,case_id.ilike.%${sanitized}%`,
+      );
+    }
+
+    query = query
+      .order('timestamp', { ascending: false })
+      .range((pageNum - 1) * limitNum, pageNum * limitNum - 1);
+
+    const { data: rows, count, error } = await query;
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: (rows || []).map(sanitizeEvidence),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: count || 0,
+        pages: Math.ceil((count || 0) / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Public evidence list error:', error);
+    const msg =
+      process.env.NODE_ENV === 'production' ? 'Failed to load public evidence' : error.message;
+    res.status(500).json({ success: false, error: msg });
+  }
+};
+
 /**
  * Normalize a POST /public/verify body into an evidence lookup key.
  * Accepted references: evidence id (numeric), sha-256 hash, on-chain tx hash.
@@ -495,6 +541,7 @@ module.exports = {
   getPublicCases,
   getPublicCaseById,
   getPublicCaseEvidence,
+  getPublicEvidence,
   verifyEvidence,
   sanitizeCase,
   sanitizeEvidence,

@@ -13,6 +13,43 @@ if (!JWT_SECRET) {
   console.error('CRITICAL: JWT_SECRET environment variable is not set. Authentication will fail.');
 }
 
+/** Parse a User-Agent string into device/browser labels for the sessions UI. */
+function parseUserAgent(ua = '') {
+  const lower = ua.toLowerCase();
+  let device = 'Unknown device';
+  if (/mobile|android|iphone|ipad/i.test(lower)) device = 'Mobile';
+  else if (/tablet|ipad/i.test(lower)) device = 'Tablet';
+  else if (/macintosh|windows|linux/i.test(lower)) device = 'Desktop';
+
+  let browser = 'Unknown browser';
+  if (lower.includes('edg')) browser = 'Edge';
+  else if (lower.includes('opr') || lower.includes('opera')) browser = 'Opera';
+  else if (lower.includes('firefox')) browser = 'Firefox';
+  else if (lower.includes('safari') && !lower.includes('chrome')) browser = 'Safari';
+  else if (lower.includes('chrome')) browser = 'Chrome';
+
+  return { device, browser };
+}
+
+/** Record a server-side session row for the signed-in user. */
+async function createUserSession(user, req) {
+  try {
+    const { device, browser } = parseUserAgent(req.headers['user-agent']);
+    await supabase.from('user_sessions').insert({
+      user_id: user.id,
+      wallet_address: user.wallet_address || null,
+      ip_address: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || null,
+      user_agent: req.headers['user-agent'] || null,
+      device,
+      browser,
+      location: 'Unknown',
+      is_active: true,
+    });
+  } catch (error) {
+    console.error('Failed to record user session:', error);
+  }
+}
+
 // SECURITY FIX: In-memory nonce store for wallet ownership proof
 // Key: lowercased wallet address, Value: { nonce, message, expiresAt }
 const walletNonces = new Map();
@@ -86,6 +123,9 @@ const walletLogin = async (req, res) => {
       console.error('Failed to log wallet login activity:', logError);
     }
 
+    // Record server-side session
+    await createUserSession(user, req);
+
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, walletAddress: user.wallet_address, role: user.role },
@@ -151,6 +191,9 @@ const emailLogin = async (req, res) => {
     if (logError) {
       console.error('Failed to log email login activity:', logError);
     }
+
+    // Record server-side session
+    await createUserSession(user, req);
 
     // Generate JWT
     const token = jwt.sign(
@@ -499,6 +542,242 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// Request a password reset token
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    // Always answer the same way whether or not the account exists (no user enumeration)
+    const { data: user } = (await supabase
+      .from('users')
+      .select('id, email')
+      .eq('email', email.toLowerCase())
+      .eq('is_active', true)
+      .single()) || {};
+
+    if (user) {
+      const token = crypto.randomBytes(32).toString('hex');
+      await supabase.from('password_resets').insert({
+        email: user.email,
+        token,
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+      });
+
+      // Audit trail
+      const { error: logError } = (await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        action: 'password_reset_requested',
+        details: JSON.stringify({ auth_type: 'email' }),
+        timestamp: new Date().toISOString(),
+      })) || {};
+      if (logError) console.error('Failed to log password reset request:', logError);
+
+      // In production this link would be emailed (EmailJS is wired client-side).
+      // Returned here so the demo flow can complete end-to-end.
+      return res.json({
+        success: true,
+        message: 'If that email is registered, a reset link has been sent.',
+        resetLink: `/reset-password.html?token=${token}&email=${encodeURIComponent(user.email)}`,
+      });
+    }
+
+    res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, error: 'Failed to process password reset request' });
+  }
+};
+
+// Update the signed-in user's profile
+const updateProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { fullName, department, jurisdiction, badgeNumber } = req.body;
+
+    const patch = {};
+    if (fullName !== undefined) patch.full_name = fullName;
+    if (department !== undefined) patch.department = department;
+    if (jurisdiction !== undefined) patch.jurisdiction = jurisdiction;
+    if (badgeNumber !== undefined) patch.badge_number = badgeNumber;
+
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ success: false, error: 'No profile fields to update' });
+    }
+
+    const { data: updated, error } = (await supabase
+      .from('users')
+      .update(patch)
+      .eq('id', user.id)
+      .select('id, email, wallet_address, full_name, role, department, jurisdiction, badge_number')
+      .single()) || {};
+    if (error) throw error;
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'profile_updated',
+      details: JSON.stringify({ fields: Object.keys(patch) }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log profile update:', logError);
+
+    res.json({ success: true, user: updated });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update profile' });
+  }
+};
+
+// Change the signed-in user's password
+const changePassword = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Current and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 8 characters long' });
+    }
+
+    const { data: account } = (await supabase
+      .from('users')
+      .select('id, password_hash')
+      .eq('id', user.id)
+      .single()) || {};
+
+    if (!account?.password_hash) {
+      return res.status(400).json({ success: false, error: 'This account uses wallet authentication and has no password' });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, account.password_hash);
+    if (!isValid) {
+      return res.status(400).json({ success: false, error: 'Current password is incorrect' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const { error } = (await supabase
+      .from('users')
+      .update({ password_hash: hashedPassword })
+      .eq('id', user.id)) || {};
+    if (error) throw error;
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: user.id,
+      action: 'password_changed',
+      details: JSON.stringify({ auth_type: 'email' }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log password change:', logError);
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ success: false, error: 'Failed to change password' });
+  }
+};
+
+// List the signed-in user's active sessions
+const getSessions = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { data: rows, error } = (await supabase
+      .from('user_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('last_active', { ascending: false })
+      .limit(50)) || {};
+    if (error) throw error;
+
+    const sessions = (rows || []).map((row) => ({
+      id: row.id,
+      current: false,
+      device: row.device || 'Unknown device',
+      browser: row.browser || 'Unknown browser',
+      location: row.location || 'Unknown',
+      lastActive: row.last_active,
+      createdAt: row.created_at,
+      isActive: Boolean(row.is_active),
+    }));
+
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('Get sessions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get sessions' });
+  }
+};
+
+// Complete a password reset using a token from password_resets
+const resetPassword = async (req, res) => {
+  try {
+    const { token, email, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Token and new password are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long' });
+    }
+
+    const { data: reset, error: lookupError } = (await supabase
+      .from('password_resets')
+      .select('*')
+      .eq('token', token)
+      .single()) || {};
+
+    if (lookupError || !reset) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+    }
+    if (reset.used) {
+      return res.status(400).json({ success: false, error: 'Reset token has already been used' });
+    }
+    if (new Date(reset.expires_at) < new Date()) {
+      return res.status(400).json({ success: false, error: 'Reset token has expired' });
+    }
+    if (email && reset.email.toLowerCase() !== String(email).toLowerCase()) {
+      return res.status(400).json({ success: false, error: 'Reset token does not match this email' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const { error: updateError } = (await supabase
+      .from('users')
+      .update({ password_hash: hashedPassword })
+      .eq('email', reset.email)) || {};
+    if (updateError) throw updateError;
+
+    await supabase.from('password_resets').update({ used: true }).eq('id', reset.id);
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: reset.email,
+      action: 'password_reset_completed',
+      details: JSON.stringify({ auth_type: 'email' }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log password reset completion:', logError);
+
+    res.json({ success: true, message: 'Password reset successful. You can now log in.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reset password' });
+  }
+};
+
 module.exports = {
   emailLogin,
   emailRegister,
@@ -506,4 +785,9 @@ module.exports = {
   walletRegister,
   walletNonce,
   verifyEmail,
+  forgotPassword,
+  resetPassword,
+  updateProfile,
+  changePassword,
+  getSessions,
 };

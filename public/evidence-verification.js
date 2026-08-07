@@ -87,6 +87,14 @@ async function calculateFileHash(file) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Normalize API response ({ success: true, data: {...} } -> data object)
+function unwrapVerification(result) {
+    if (result && result.data && typeof result.data === 'object' && 'verified' in result.data) {
+        return result.data;
+    }
+    return result;
+}
+
 // Verify single file
 async function verifyFile() {
     if (!selectedFile) return;
@@ -109,21 +117,23 @@ async function verifyFile() {
             calculatedHash,
             evidenceId: evidenceId || null
         });
+
+        const data = unwrapVerification(result);
         
-        displayVerificationResult(result, calculatedHash);
+        displayVerificationResult(data, calculatedHash);
         
         // Add to history
         addToHistory({
             fileName: selectedFile.name,
-            result: result.verified ? 'verified' : 'tampered',
+            result: data.verified ? 'verified' : 'tampered',
             timestamp: new Date().toISOString(),
             hash: calculatedHash,
             evidenceId: evidenceId || null
         });
         
         // Generate QR code
-        if (result.verified) {
-            generateQRCode(result.verificationUrl || `${window.location.origin}/verify/${calculatedHash}`);
+        if (data.verified) {
+            generateQRCode(data.verificationUrl || `${window.location.origin}/verify/${calculatedHash}`);
         }
         
     } catch (error) {
@@ -160,11 +170,12 @@ async function verifyBulkFiles() {
                 calculatedHash
             });
             
-            const resultClass = result.verified ? 'result-verified' : 'result-tampered';
-            const resultIcon = result.verified ? '✅' : '❌';
-            const resultText = result.verified ? 'Verified' : 'Tampered';
+            const data = unwrapVerification(result);
+            const resultClass = data.verified ? 'result-verified' : 'result-tampered';
+            const resultIcon = data.verified ? '✅' : '❌';
+            const resultText = data.verified ? 'Verified' : 'Tampered';
             
-            if (result.verified) verified++;
+            if (data.verified) verified++;
             else tampered++;
             
             bulkResults.innerHTML += `
@@ -199,8 +210,7 @@ function displayVerificationResult(result, calculatedHash) {
     const resultDiv = document.getElementById('verificationResult');
     resultDiv.style.display = 'block';
     
-    const isVerified = result.verified;
-    const resultClass = isVerified ? 'result-verified' : 'result-tampered';
+    const isVerified = result.verified;    const resultClass = isVerified ? 'result-verified' : 'result-tampered';
     const resultIcon = isVerified ? '✅' : '❌';
     const resultText = isVerified ? 'VERIFIED' : 'TAMPERED';
     
@@ -266,7 +276,10 @@ async function downloadCertificate() {
         // apiClient doesn't handle binary blobs yet, so we use a custom signed fetch wrapper
         const signedHeaders = await window.apiClient.getAuthHeaders();
         const apiUrl = window.config?.API_BASE_URL || '/api';
-        
+
+        const evidenceIdInput = document.getElementById('evidenceId');
+        const evidenceId = evidenceIdInput ? evidenceIdInput.value.trim() : '';
+
         const response = await fetch(`${apiUrl}/evidence/verification-certificate`, {
             method: 'POST',
             headers: { 
@@ -274,7 +287,8 @@ async function downloadCertificate() {
                 ...signedHeaders
             },
             body: JSON.stringify({
-                fileName: selectedFile.name,
+                fileName: selectedFile ? selectedFile.name : 'verification',
+                evidenceId: evidenceId || undefined,
                 verificationResult: 'verified',
                 timestamp: new Date().toISOString()
             })
@@ -285,15 +299,20 @@ async function downloadCertificate() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `verification_certificate_${selectedFile.name}_${Date.now()}.pdf`;
+            a.download = `verification_certificate_${selectedFile ? selectedFile.name : 'evidence'}_${Date.now()}.txt`;
             a.click();
             window.URL.revokeObjectURL(url);
         } else {
-            throw new Error('Failed to generate certificate');
+            let message = 'Failed to generate certificate';
+            try {
+                const j = await response.json();
+                if (j && j.error) message = j.error;
+            } catch (_) { /* ignore */ }
+            throw new Error(message);
         }
     } catch (error) {
         console.error('Certificate download error:', error);
-        showError('Failed to download certificate: ' + error.message);
+        showError('Failed to download certificate: ' + (error.message || 'please ensure the evidence ID was provided and you are signed in'));
     }
 }
 

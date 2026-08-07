@@ -46,8 +46,14 @@ const config = {
     // API endpoints
     API_BASE_URL: (() => {
         const host = window.location.hostname;
+        const isLocal = host === 'localhost' || host === '127.0.0.1';
         if (host.includes('onrender.com')) {
             return 'https://blockchain-evidence.onrender.com/api';
+        }
+        // When the frontend is served from a different local dev port (e.g. Live Server),
+        // route API calls to the backend on port 10000.
+        if (isLocal && window.location.port && window.location.port !== '10000') {
+            return 'http://' + host + ':10000/api';
         }
         return window.location.origin + '/api';
     })(),

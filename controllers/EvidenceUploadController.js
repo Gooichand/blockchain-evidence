@@ -2,15 +2,16 @@ const { supabase } = require('../config');
 const integratedEvidenceService = require('../services/integratedEvidenceService');
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
+const { getAuthUser, getStableWallet } = require('../middleware/identity');
 
 // SECURITY FIX: Enhanced Evidence Upload with REAL Blockchain & IPFS
-// Identity is now pulled from req.authenticatedWallet (cryptographically verified)
+// Identity is pulled from the verified session (JWT or crypto signature), never req.body
 const uploadEvidence = async (req, res) => {
   try {
-    // SECURITY FIX: Identity is now pulled from the verified session, not req.body
-    const uploadedBy = req.authenticatedWallet;
-    
-    if (!uploadedBy) {
+    const authUser = await getAuthUser(req);
+    const uploadedBy = getStableWallet(req);
+
+    if (!authUser || !uploadedBy) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -31,19 +32,16 @@ const uploadEvidence = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Evidence type is required' });
     }
 
-    // SECURITY FIX: Verify the uploader exists and has permissions in DB
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('id, role')
-      .eq('wallet_address', uploadedBy.toLowerCase())
-      .eq('is_active', true)
-      .single()) || {};
+    // SECURITY FIX: Verify the uploader has permissions in DB
+    if (!['admin', 'investigator', 'evidence_manager', 'legal_professional', 'court_official', 'forensic_analyst'].includes(authUser.role)) {
+      return res.status(403).json({ success: false, error: 'Insufficient permissions to upload evidence' });
+    }
 
     if (userError || !user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });
     }
 
-    if (user.role === 'public_viewer') {
+    if (authUser.role === 'public_viewer') {
       return res.status(403).json({ success: false, error: 'Public viewers cannot upload evidence' });
     }
 

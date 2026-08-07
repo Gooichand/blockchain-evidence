@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/requireAuth');
 const {
   getCases,
   getCaseStatuses,
@@ -14,15 +15,15 @@ const {
 } = require('../controllers/caseController');
 
 // Note: /statistics and /export must be before /:id routes to avoid param conflicts
-router.get('/cases/statistics', getCaseStatistics);
-router.get('/cases/export', exportCases);
-router.get('/cases/enhanced', getEnhancedCases);
-router.get('/cases', getCases);
-router.post('/cases', createCase);
-router.get('/case-statuses', getCaseStatuses);
-router.get('/cases/:id/details', getCaseDetails);
-router.post('/cases/:id/status', updateCaseStatus);
-router.get('/cases/:id/available-transitions', getAvailableTransitions);
-router.post('/cases/:id/assign', assignCase);
+router.get('/cases/statistics', requireAuth, getCaseStatistics);
+router.get('/cases/export', requireAuth, exportCases);
+router.get('/cases/enhanced', requireAuth, getEnhancedCases);
+router.get('/cases', requireAuth, getCases);
+router.post('/cases', requireAuth, createCase);
+router.get('/case-statuses', requireAuth, getCaseStatuses);
+router.get('/cases/:id/details', requireAuth, getCaseDetails);
+router.post('/cases/:id/status', requireAuth, updateCaseStatus);
+router.get('/cases/:id/available-transitions', requireAuth, getAvailableTransitions);
+router.post('/cases/:id/assign', requireAuth, assignCase);
 
 module.exports = router;

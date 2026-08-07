@@ -1,1 +1,92 @@
-// Role Management Utility\nclass RoleManager {\n    constructor() {\n        this.roleMapping = {\n            'public_viewer': 'dashboard-public.html',\n            'investigator': 'dashboard-investigator.html',\n            'forensic_analyst': 'dashboard-analyst.html',\n            'legal_professional': 'dashboard-legal.html',\n            'court_official': 'dashboard-court.html',\n            'evidence_manager': 'dashboard-manager.html',\n            'auditor': 'dashboard-auditor.html',\n            'admin': 'admin.html'\n        };\n    }\n\n    getCurrentRole() {\n        return localStorage.getItem('selectedRole');\n    }\n\n    isRoleSelected() {\n        return localStorage.getItem('roleWizardCompleted') === 'true' && \n               localStorage.getItem('selectedRole') !== null;\n    }\n\n    getDashboardUrl(role) {\n        return this.roleMapping[role] || 'dashboard.html';\n    }\n\n    redirectToDashboard(role = null) {\n        const selectedRole = role || this.getCurrentRole();\n        if (selectedRole) {\n            const dashboardUrl = this.getDashboardUrl(selectedRole);\n            window.location.href = dashboardUrl;\n        } else {\n            window.location.href = 'index.html';\n        }\n    }\n\n    checkRoleAccess(requiredRole = null) {\n        const currentRole = this.getCurrentRole();\n        \n        if (!this.isRoleSelected()) {\n            window.location.href = 'index.html';\n            return false;\n        }\n\n        if (requiredRole && currentRole !== requiredRole) {\n            this.redirectToDashboard();\n            return false;\n        }\n\n        return true;\n    }\n\n    resetRole() {\n        localStorage.removeItem('roleWizardCompleted');\n        localStorage.removeItem('selectedRole');\n        window.location.href = 'index.html';\n    }\n}\n\n// Global instance\nconst roleManager = new RoleManager();\n\n// Auto-redirect if on wrong dashboard\ndocument.addEventListener('DOMContentLoaded', function() {\n    // Skip check for index page\n    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {\n        return;\n    }\n\n    // Check if user has selected a role\n    if (!roleManager.isRoleSelected()) {\n        window.location.href = 'index.html';\n        return;\n    }\n\n    // Get current page and expected page\n    const currentPage = window.location.pathname.split('/').pop();\n    const currentRole = roleManager.getCurrentRole();\n    const expectedPage = roleManager.getDashboardUrl(currentRole).split('/').pop();\n\n    // Redirect if on wrong dashboard\n    if (currentPage !== expectedPage && currentPage !== 'index.html') {\n        roleManager.redirectToDashboard();\n    }\n});\n\n// Export for use in other scripts\nif (typeof module !== 'undefined' && module.exports) {\n    module.exports = { RoleManager, roleManager };\n}
+// Role Management Utility
+class RoleManager {
+    constructor() {
+        this.roleMapping = {
+            'public_viewer': 'dashboard-public.html',
+            'investigator': 'dashboard-investigator.html',
+            'forensic_analyst': 'dashboard-analyst.html',
+            'legal_professional': 'dashboard-legal.html',
+            'court_official': 'dashboard-court.html',
+            'evidence_manager': 'dashboard-manager.html',
+            'auditor': 'dashboard-auditor.html',
+            'admin': 'admin.html'
+        };
+    }
+
+    getCurrentRole() {
+        return localStorage.getItem('selectedRole');
+    }
+
+    isRoleSelected() {
+        return localStorage.getItem('roleWizardCompleted') === 'true' &&
+            localStorage.getItem('selectedRole') !== null;
+    }
+
+    getDashboardUrl(role) {
+        return this.roleMapping[role] || 'dashboard.html';
+    }
+
+    redirectToDashboard(role = null) {
+        const selectedRole = role || this.getCurrentRole();
+        if (selectedRole) {
+            const dashboardUrl = this.getDashboardUrl(selectedRole);
+            window.location.href = dashboardUrl;
+        } else {
+            window.location.href = 'index.html';
+        }
+    }
+
+    checkRoleAccess(requiredRole = null) {
+        const currentRole = this.getCurrentRole();
+
+        if (!this.isRoleSelected()) {
+            window.location.href = 'index.html';
+            return false;
+        }
+
+        if (requiredRole && currentRole !== requiredRole) {
+            this.redirectToDashboard();
+            return false;
+        }
+
+        return true;
+    }
+
+    resetRole() {
+        localStorage.removeItem('roleWizardCompleted');
+        localStorage.removeItem('selectedRole');
+        window.location.href = 'index.html';
+    }
+}
+
+// Global instance
+const roleManager = new RoleManager();
+
+// Auto-redirect if on wrong dashboard
+document.addEventListener('DOMContentLoaded', function () {
+    // Skip check for index page
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        return;
+    }
+
+    // Check if user has selected a role
+    if (!roleManager.isRoleSelected()) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Get current page and expected page
+    const currentPage = window.location.pathname.split('/').pop();
+    const currentRole = roleManager.getCurrentRole();
+    const expectedPage = roleManager.getDashboardUrl(currentRole).split('/').pop();
+
+    // Redirect if on wrong dashboard
+    if (currentPage !== expectedPage && currentPage !== 'index.html') {
+        roleManager.redirectToDashboard();
+    }
+});
+
+// Export for use in other scripts
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { RoleManager, roleManager };
+}

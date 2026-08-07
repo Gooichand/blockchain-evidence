@@ -144,29 +144,13 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script src="storage.js"></script>
     <script src="enhanced-evidence-upload.js"></script>
     <script>
         let currentUser = null;
-        let web3 = null;
-        let evidenceContract = null;
         let evidenceList = [];
-
-        // Smart contract ABI (simplified)
-        const contractABI = [
-            {
-                "inputs": [{ "type": "string", "name": "_hash" }, { "type": "string", "name": "_metadata" }],
-                "name": "storeEvidence",
-                "outputs": [{ "type": "uint256" }],
-                "type": "function"
-            },
-            {
-                "inputs": [{ "type": "uint256", "name": "_id" }],
-                "name": "getEvidence",
-                "outputs": [{ "type": "string" }, { "type": "string" }, { "type": "address" }, { "type": "uint256" }],
-                "type": "function"
-            }
-        ];
 
         document.addEventListener('DOMContentLoaded', async function () {
             lucide.createIcons();
@@ -175,14 +159,13 @@
 
         async function initializeEvidenceManager() {
             try {
-                const wallet = localStorage.getItem('currentUser');
-                if (!wallet) {
+                currentUser = window.apiClient.getCurrentUser();
+                const token = localStorage.getItem('authToken');
+                if (!currentUser || !token) {
                     window.location.href = 'index.html';
                     return;
                 }
 
-                // Session management handled by session-manager.js
-                // Just load the dashboard data
                 await loadEvidence();
                 await updateBlockchainStatus();
 
@@ -212,26 +195,14 @@
 
         function updateUserUI(user) {
             const roleName = getRoleName(user.role);
-            document.getElementById('userRole').textContent = roleName;
-            document.getElementById('userRole').className = `badge badge-${getRoleClass(user.role)}`;
-            document.getElementById('userWallet').textContent = user.wallet_address.substring(0, 8) + '...';
-        }
-
-        async function initializeWeb3() {
-            try {
-                if (window.ethereum) {
-                    web3 = new Web3(window.ethereum);
-
-                    // Mock contract address - replace with actual deployed contract
-                    const contractAddress = '0x1234567890123456789012345678901234567890';
-                    evidenceContract = new web3.eth.Contract(contractABI, contractAddress);
-
-                    document.getElementById('contractStatus').textContent = '✅ Connected';
-                } else {
-                    document.getElementById('contractStatus').textContent = '❌ No Web3';
-                }
-            } catch (error) {
-                document.getElementById('contractStatus').textContent = '❌ Error';
+            const roleEl = document.getElementById('userRole');
+            const walletEl = document.getElementById('userWallet');
+            if (roleEl) {
+                roleEl.textContent = roleName;
+                roleEl.className = `badge badge-${getRoleClass(user.role)}`;
+            }
+            if (walletEl && user.wallet_address) {
+                walletEl.textContent = user.wallet_address.substring(0, 8) + '...';
             }
         }
 
@@ -257,7 +228,6 @@
                 formData.append('description', document.getElementById('description').value);
                 formData.append('location', document.getElementById('location').value || '');
                 formData.append('collectionDate', document.getElementById('collectionDate').value || '');
-                formData.append('uploadedBy', currentUser.wallet_address);
 
                 const result = await evidenceUploader.handleUpload(formData, file);
 
@@ -290,6 +260,15 @@
             }
         }
 
+        function normalizeEvidence(item) {
+            if (!item) return item;
+            return {
+                ...item,
+                name: item.title || item.name || item.file_name || 'Untitled',
+                file_type: item.type || item.file_type || 'Unknown'
+            };
+        }
+
         function renderEvidence(evidence) {
             const container = document.getElementById('evidenceList');
 
@@ -298,17 +277,19 @@
                 return;
             }
 
-            const evidenceHtml = evidence.map(item => `
+            const evidenceHtml = evidence.map(rawItem => {
+                const item = normalizeEvidence(rawItem);
+                return `
                 <div class="evidence-card" onclick="viewEvidence('${item.id}')">
                     <div class="evidence-header">
-                        <h3>${item.name || 'Untitled'}</h3>
+                        <h3>${item.name}</h3>
                         <span class="badge badge-${item.blockchain_verified ? 'success' : 'warning'}">
                             ${item.blockchain_verified ? '✅ Verified' : '⏳ Pending'}
                         </span>
                     </div>
                     <div class="evidence-meta">
                         <p><strong>Case:</strong> ${item.case_id || 'N/A'}</p>
-                        <p><strong>Type:</strong> ${item.file_type || 'Unknown'}</p>
+                        <p><strong>Type:</strong> ${item.file_type}</p>
                         <p><strong>Size:</strong> ${formatFileSize(item.file_size || 0)}</p>
                         <p><strong>Hash:</strong> ${item.hash ? item.hash.substring(0, 16) + '...' : 'N/A'}</p>
                         ${item.ipfs_cid ? `<p><strong>IPFS:</strong> ${item.ipfs_cid.substring(0, 12)}...</p>` : ''}
@@ -324,7 +305,8 @@
                         ` : ''}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             container.innerHTML = evidenceHtml;
         }
@@ -332,6 +314,7 @@
         function filterEvidence() {
             const searchTerm = document.getElementById('searchEvidence').value.toLowerCase();
             const filtered = evidenceList.filter(item =>
+                (item.title && item.title.toLowerCase().includes(searchTerm)) ||
                 (item.name && item.name.toLowerCase().includes(searchTerm)) ||
                 (item.case_id && item.case_id.toLowerCase().includes(searchTerm)) ||
                 (item.description && item.description.toLowerCase().includes(searchTerm)) ||
@@ -341,29 +324,29 @@
         }
 
         async function updateBlockchainStatus() {
-            try {
-                if (web3) {
-                    const network = await web3.eth.net.getNetworkType();
-                    const blockNumber = await web3.eth.getBlockNumber();
-                    const gasPrice = await web3.eth.getGasPrice();
+            const networkEl = document.getElementById('networkStatus');
+            const blockEl = document.getElementById('blockHeight');
+            const gasEl = document.getElementById('gasPrice');
+            if (!networkEl || !blockEl || !gasEl) return;
 
-                    document.getElementById('networkStatus').textContent = network;
-                    document.getElementById('blockHeight').textContent = blockNumber;
-                    document.getElementById('gasPrice').textContent = web3.utils.fromWei(gasPrice, 'gwei') + ' Gwei';
-                } else {
-                    document.getElementById('networkStatus').textContent = 'Not connected';
-                    document.getElementById('blockHeight').textContent = 'N/A';
-                    document.getElementById('gasPrice').textContent = 'N/A';
-                }
+            try {
+                const status = await window.apiClient.get('/blockchain/status', { skipWalletAuth: true });
+                const info = status.status || status;
+                networkEl.textContent = info.networkName || info.network || info.networkInfo?.name || 'Connected';
+                blockEl.textContent = info.latestBlock ? Number(info.latestBlock).toLocaleString() : (info.blockHeight || 'N/A');
+                gasEl.textContent = info.gasPrice ? `${info.gasPrice} Gwei` : (info.avgGasPrice || 'N/A');
             } catch (error) {
+                networkEl.textContent = 'Unavailable';
+                blockEl.textContent = 'N/A';
+                gasEl.textContent = 'N/A';
             }
         }
 
         function viewEvidence(evidenceId) {
-            const evidence = evidenceList.find(e => e.id == evidenceId);
+            const evidence = normalizeEvidence(evidenceList.find(e => e.id == evidenceId));
             if (!evidence) return;
 
-            document.getElementById('evidenceModalTitle').textContent = evidence.name || 'Evidence Details';
+            document.getElementById('evidenceModalTitle').textContent = evidence.name;
             document.getElementById('evidenceModalContent').innerHTML = `
                 <div class="evidence-details">
                     <div class="detail-section">
@@ -371,7 +354,7 @@
                         <p><strong>Evidence ID:</strong> ${evidence.id}</p>
                         <p><strong>Case ID:</strong> ${evidence.case_id || 'N/A'}</p>
                         <p><strong>File Name:</strong> ${evidence.name}</p>
-                        <p><strong>File Type:</strong> ${evidence.file_type || 'Unknown'}</p>
+                        <p><strong>File Type:</strong> ${evidence.file_type}</p>
                         <p><strong>Description:</strong> ${evidence.description || 'No description'}</p>
                         <p><strong>Location:</strong> ${evidence.location || 'Not specified'}</p>
                         <p><strong>Collection Date:</strong> ${evidence.collection_date ? new Date(evidence.collection_date).toLocaleString() : 'Not specified'}</p>
@@ -400,18 +383,42 @@
                         <h3>👤 Chain of Custody</h3>
                         <p><strong>Submitted By:</strong> ${evidence.submitted_by || 'Unknown'}</p>
                         <p><strong>Upload Date:</strong> ${evidence.timestamp ? new Date(evidence.timestamp).toLocaleString() : 'N/A'}</p>
+                        <button class="btn btn-sm btn-outline" onclick="viewChainOfCustody('${evidence.id}')">🔗 View Full Chain of Custody</button>
                     </div>
                 </div>
             `;
             document.getElementById('evidenceModal').classList.add('active');
         }
 
-        function verifyHash(evidenceId) {
-            showAlert('Hash verification feature coming soon!', 'info');
+        async function verifyHash(evidenceId) {
+            try {
+                const result = await window.apiClient.get(`/evidence/${evidenceId}/verify`, { skipWalletAuth: true });
+                const data = result.data || result;
+                const verified = data.valid === true || data.blockchainVerified === true || data.verified === true || data.status === 'verified';
+                if (verified) {
+                    const explorerLink = data.explorerUrl ? `<br><a href="${data.explorerUrl}" target="_blank" rel="noopener">View on blockchain explorer</a>` : '';
+                    showAlert(`✅ Hash verified on blockchain${explorerLink}`, 'success');
+                } else {
+                    showAlert('⚠️ Hash verification inconclusive: ' + (data.message || data.error || (data.errors && data.errors.join(', ')) || 'record not found on-chain'), 'error');
+                }
+            } catch (error) {
+                showAlert('Verification failed: ' + (error.message || error), 'error');
+            }
         }
 
-        function viewChainOfCustody(evidenceId) {
-            showAlert('Chain of custody viewer coming soon!', 'info');
+        async function viewChainOfCustody(evidenceId) {
+            try {
+                const result = await window.apiClient.get(`/evidence/${evidenceId}/blockchain-proof`, { skipWalletAuth: true });
+                const data = result.data || result;
+                const status = data.verification_status || 'unknown';
+                const method = data.verification_method || 'SHA-256';
+                const network = data.blockchain_network || 'Polygon';
+                const createdAt = data.chain_of_custody?.created || 'N/A';
+                const verifiedAt = data.integrity_check?.verified_at || 'N/A';
+                showAlert(`⛓️ Chain of Custody — Status: ${status} | Method: ${method} | Network: ${network} | Created: ${new Date(createdAt).toLocaleString()} | Verified: ${verifiedAt ? new Date(verifiedAt).toLocaleString() : 'N/A'}`, 'info');
+            } catch (error) {
+                showAlert('Chain of custody unavailable: ' + (error.message || error), 'error');
+            }
         }
 
         function refreshEvidence() {

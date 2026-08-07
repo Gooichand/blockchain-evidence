@@ -1,5 +1,18 @@
 const { supabase } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
+const { getAuthUser, getStableWallet } = require('../middleware/identity');
+
+const resolveActor = async (req) => {
+  const authUser = await getAuthUser(req);
+  if (authUser) {
+    return { wallet: getStableWallet(req) || `user_${authUser.id}` };
+  }
+  const claimed = req.body?.userWallet;
+  if (claimed && validateWalletAddress(claimed)) {
+    return { wallet: claimed };
+  }
+  return null;
+};
 
 // Get all tags with usage statistics
 const getAllTags = async (req, res) => {
@@ -21,10 +34,11 @@ const getAllTags = async (req, res) => {
 // Create new tag
 const createTag = async (req, res) => {
   try {
-    const { name, color, category, userWallet } = req.body;
+    const { name, color, category } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
     if (!name || name.trim().length === 0) {
@@ -37,7 +51,7 @@ const createTag = async (req, res) => {
         name: name.trim().toLowerCase(),
         color: color || '#3B82F6',
         category: category || 'general',
-        created_by: userWallet,
+        created_by: actor.wallet,
       })
       .select()
       .single()) || {};
@@ -60,10 +74,11 @@ const createTag = async (req, res) => {
 const addTagsToEvidence = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tagIds, userWallet } = req.body;
+    const { tagIds } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
     if (!tagIds || !Array.isArray(tagIds)) {
@@ -73,7 +88,7 @@ const addTagsToEvidence = async (req, res) => {
     const evidenceTags = tagIds.map((tagId) => ({
       evidence_id: parseInt(id),
       tag_id: tagId,
-      tagged_by: userWallet,
+      tagged_by: actor.wallet,
     }));
 
     const { data, error } = (await supabase.from('evidence_tags').insert(evidenceTags).select()) || {};
@@ -91,10 +106,10 @@ const addTagsToEvidence = async (req, res) => {
 const removeTagFromEvidence = async (req, res) => {
   try {
     const { id, tagId } = req.params;
-    const { userWallet } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
     const { error } = (await supabase
@@ -102,7 +117,7 @@ const removeTagFromEvidence = async (req, res) => {
       .delete()
       .eq('evidence_id', id)
       .eq('tag_id', tagId)
-      .eq('tagged_by', userWallet)) || {};
+      .eq('tagged_by', actor.wallet)) || {};
 
     if (error) throw error;
 
@@ -116,10 +131,11 @@ const removeTagFromEvidence = async (req, res) => {
 // Batch tag operations
 const batchTag = async (req, res) => {
   try {
-    const { evidenceIds, tagIds, userWallet } = req.body;
+    const { evidenceIds, tagIds } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
     if (!evidenceIds || !Array.isArray(evidenceIds) || !tagIds || !Array.isArray(tagIds)) {
@@ -132,7 +148,7 @@ const batchTag = async (req, res) => {
         evidenceTags.push({
           evidence_id: evidenceId,
           tag_id: tagId,
-          tagged_by: userWallet,
+          tagged_by: actor.wallet,
         });
       });
     });
@@ -174,14 +190,31 @@ const filterByTags = async (req, res) => {
         )
         .in('evidence_tags.tag_id', tagIdArray);
     } else {
-      query = supabase.rpc('get_evidence_with_all_tags', {
-        tag_ids: tagIdArray,
-      });
+      query = supabase
+        .from('evidence')
+        .select(
+          `
+                    *,
+                    evidence_tags(
+                        tag_id,
+                        tags(name, color)
+                    )
+                `,
+        );
     }
 
-    const { data: evidence, error } = await query;
+    const { data: fetched, error } = await query;
 
     if (error) throw error;
+
+    let evidence = fetched || [];
+    if (logic !== 'OR') {
+      // Enforce AND semantics in JS: every requested tag must be present.
+      evidence = evidence.filter((item) => {
+        const present = new Set((item.evidence_tags || []).map((et) => et.tag_id));
+        return tagIdArray.every((tagId) => present.has(tagId));
+      });
+    }
 
     res.json({ success: true, evidence, filter_logic: logic });
   } catch (error) {

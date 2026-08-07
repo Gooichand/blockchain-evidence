@@ -81,17 +81,20 @@
                 <form id="createUserForm" class="admin-form">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="userWalletAddress">
-                                <i data-lucide="wallet"></i>
-                                Wallet Address *
+                            <label for="userEmail">
+                                <i data-lucide="mail"></i>
+                                Email Address *
                             </label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="userWalletAddress" class="form-control" placeholder="0x..."
-                                    required style="flex: 1;">
-                                <button type="button" class="btn btn-outline btn-sm" onclick="autoFillWalletAddress()">
-                                    Generate
-                                </button>
-                            </div>
+                            <input type="email" id="userEmail" class="form-control" placeholder="user@example.com"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userPassword">
+                                <i data-lucide="key"></i>
+                                Temporary Password *
+                            </label>
+                            <input type="password" id="userPassword" class="form-control" placeholder="Minimum 8 characters"
+                                required minlength="8">
                         </div>
                         <div class="form-group">
                             <label for="userFirstName">
@@ -107,14 +110,6 @@
                                 Last Name *
                             </label>
                             <input type="text" id="userLastName" class="form-control" placeholder="Enter last name"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="userEmail">
-                                <i data-lucide="mail"></i>
-                                Email Address *
-                            </label>
-                            <input type="email" id="userEmail" class="form-control" placeholder="user@example.com"
                                 required>
                         </div>
                         <div class="form-group">
@@ -140,6 +135,18 @@
                             </label>
                             <input type="text" id="userDepartment" class="form-control" placeholder="Enter department">
                         </div>
+                        <div class="form-group">
+                            <label for="userWalletAddress">
+                                <i data-lucide="wallet"></i>
+                                Wallet Address (optional)
+                            </label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="userWalletAddress" class="form-control" placeholder="0x...">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="autoFillWalletAddress()">
+                                    Generate
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success">
@@ -152,39 +159,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-
-        <!-- Test Accounts -->
-        <div class="admin-section card">
-            <div class="card-header">
-                <h2>Test Accounts</h2>
-                <p>Create and manage test accounts for development</p>
-            </div>
-            <div class="card-body">
-                <div class="admin-form" style="background: #e8f5e8; border: 2px solid #28a745;">
-                    <h3>Quick Setup</h3>
-                    <p>Create test accounts for all user roles:</p>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button id="createAllTestAccounts" class="btn btn-success btn-lg"
-                            onclick="createAllTestAccounts()">
-                            <i data-lucide="plus"></i>
-                            Create All Test Accounts
-                        </button>
-                        <button class="btn btn-warning" onclick="forceRecreateTestAccounts()">
-                            <i data-lucide="refresh-cw"></i>
-                            Recreate All
-                        </button>
-                    </div>
-                    <div id="allTestStatus" class="mt-3"></div>
-                </div>
-
-                <div class="admin-section" style="margin-top: 30px;">
-                    <h3>Role Testing Dashboard</h3>
-                    <div id="roleTestingGrid" class="stats-grid">
-                        <!-- Will be populated with role cards -->
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -240,305 +214,34 @@
         document.addEventListener('DOMContentLoaded', async function () {
             lucide.createIcons();
             await checkAdminAuth();
-            await createDefaultTestAccounts();
             await loadSystemOverview();
             await loadAllUsers();
-            await loadRoleTestingDashboard();
             await loadPendingRoleRequests();
             initializeEventListeners();
-
-            // Test notification after everything loads
-            setTimeout(() => {
-                if (window.simpleNotifications) {
-                    window.simpleNotifications.addNotification(
-                        'Admin Dashboard Ready',
-                        'All systems operational!',
-                        'system'
-                    );
-                }
-            }, 2000);
         });
 
-        async function createDefaultTestAccounts() {
-            const testRoles = [
-                { role: 'public_viewer', name: 'Test Public Viewer' },
-                { role: 'investigator', name: 'Test Investigator' },
-                { role: 'forensic_analyst', name: 'Test Forensic Analyst' },
-                { role: 'legal_professional', name: 'Test Legal Professional' },
-                { role: 'court_official', name: 'Test Court Official' },
-                { role: 'evidence_manager', name: 'Test Evidence Manager' },
-                { role: 'auditor', name: 'Test Auditor' }
-            ];
-
-            testRoles.forEach((testRole, index) => {
-                const testWallet = `0xtest${testRole.role}${(1000 + index).toString()}`;
-                const existingKey = `evidUser_${testWallet}`;
-
-                const existingTest = Object.keys(localStorage)
-                    .filter(key => key.startsWith('evidUser_0xtest'))
-                    .find(key => {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            return userData.role === testRole.role && userData.fullName === testRole.name;
-                        } catch (e) {
-                            return false;
-                        }
-                    });
-
-                if (!existingTest) {
-                    const testUserData = {
-                        walletAddress: testWallet,
-                        fullName: testRole.name,
-                        firstName: 'Test',
-                        lastName: testRole.name.replace('Test ', ''),
-                        email: `${testRole.role}@test.com`,
-                        role: testRole.role,
-                        department: 'Test Department',
-                        accountType: 'test',
-                        isRegistered: true,
-                        registrationDate: new Date().toISOString(),
-                        createdBy: currentAdmin
-                    };
-                    localStorage.setItem(existingKey, JSON.stringify(testUserData));
-                }
-            });
-
-            await loadRoleTestingDashboard();
-        }
-
-        async function createAllTestAccounts() {
-            const button = document.getElementById('createAllTestAccounts');
-            const status = document.getElementById('allTestStatus');
-
-            button.disabled = true;
-            button.innerHTML = '<i data-lucide="loader"></i> Creating...';
-
-            const testRoles = [
-                { role: 'public_viewer', name: 'Test Public Viewer' },
-                { role: 'investigator', name: 'Test Investigator' },
-                { role: 'forensic_analyst', name: 'Test Forensic Analyst' },
-                { role: 'legal_professional', name: 'Test Legal Professional' },
-                { role: 'court_official', name: 'Test Court Official' },
-                { role: 'evidence_manager', name: 'Test Evidence Manager' },
-                { role: 'auditor', name: 'Test Auditor' }
-            ];
-
-            let created = 0;
-
-            testRoles.forEach((testRole, index) => {
-                const testWallet = `0xtest${testRole.role}${1000 + index}`;
-                const existingTest = localStorage.getItem(`evidUser_${testWallet}`);
-
-                if (!existingTest) {
-                    const testUserData = {
-                        walletAddress: testWallet,
-                        fullName: testRole.name,
-                        firstName: 'Test',
-                        lastName: testRole.name.replace('Test ', ''),
-                        email: `${testRole.role}@test.com`,
-                        role: testRole.role,
-                        department: 'Test Department',
-                        accountType: 'test',
-                        isRegistered: true,
-                        registrationDate: new Date().toISOString(),
-                        createdBy: currentAdmin
-                    };
-                    localStorage.setItem(`evidUser_${testWallet}`, JSON.stringify(testUserData));
-                    created++;
-                }
-            });
-
-            status.innerHTML = `<div class="alert alert-success">Created ${created} test accounts</div>`;
-
-            await loadRoleTestingDashboard();
-            await loadAllUsers();
-
-            setTimeout(() => status.innerHTML = '', 3000);
-            button.disabled = false;
-            button.innerHTML = '<i data-lucide="plus"></i> Create All Test Accounts';
-            lucide.createIcons();
-        }
-
-        async function loadRoleTestingDashboard() {
-            const testRoles = [
-                { role: 'public_viewer', name: 'Public Viewer', icon: 'eye', description: 'View public cases' },
-                { role: 'investigator', name: 'Investigator', icon: 'search', description: 'Create investigations' },
-                { role: 'forensic_analyst', name: 'Forensic Analyst', icon: 'microscope', description: 'Analyze evidence' },
-                { role: 'legal_professional', name: 'Legal Professional', icon: 'scale', description: 'Legal review' },
-                { role: 'court_official', name: 'Court Official', icon: 'building', description: 'Court proceedings' },
-                { role: 'evidence_manager', name: 'Evidence Manager', icon: 'clipboard-list', description: 'Manage evidence' },
-                { role: 'auditor', name: 'Auditor', icon: 'audit', description: 'System auditing' }
-            ];
-
-            const testAccounts = Object.keys(localStorage)
-                .filter(key => key.startsWith('evidUser_0xtest'))
-                .map(key => {
-                    try {
-                        const userData = JSON.parse(localStorage.getItem(key));
-                        return {
-                            wallet_address: userData.walletAddress,
-                            role: userData.role
-                        };
-                    } catch (e) {
-                        return null;
-                    }
-                })
-                .filter(account => account !== null);
-
-            const grid = document.getElementById('roleTestingGrid');
-
-            grid.innerHTML = testRoles.map(role => {
-                const account = testAccounts.find(acc => acc.role === role.role);
-                const hasAccount = !!account;
-
-                return `
-                    <div class="stat-card ${hasAccount ? 'test-ready' : 'test-missing'}" style="${hasAccount ? 'border: 2px solid #28a745;' : 'border: 2px solid #ffc107;'}">
-                        <div class="stat-icon"><i data-lucide="${role.icon}"></i></div>
-                        <div class="stat-info">
-                            <h4>${role.name}</h4>
-                            <p>${role.description}</p>
-                            ${hasAccount ?
-                        `<button class="btn btn-sm btn-success" onclick="testRoleInterface('${account.wallet_address}', '${role.name}')">
-                                    <i data-lucide="play"></i> Test Interface
-                                </button>
-                                <button class="btn btn-sm btn-outline" onclick="copyToClipboard('${account.wallet_address}')">
-                                    <i data-lucide="copy"></i> Copy Wallet
-                                </button>` :
-                        `<button class="btn btn-sm btn-warning" onclick="createSingleTestAccount('${role.role}', 'Test ${role.name}')">
-                                    <i data-lucide="plus"></i> Create Account
-                                </button>`
-                    }
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            lucide.createIcons();
-        }
-
-        async function createSingleTestAccount(role, name) {
-            const testWallet = `0xtest${role}${Math.random().toString(36).substring(2, 8)}`;
-            const testUserData = {
-                walletAddress: testWallet,
-                fullName: name,
-                role: role,
-                department: 'Test Department',
-                accountType: 'test',
-                isRegistered: true,
-                registrationDate: new Date().toISOString(),
-                createdBy: currentAdmin
-            };
-
-            localStorage.setItem(`evidUser_${testWallet}`, JSON.stringify(testUserData));
-            showAlert(`Test account created for ${name}!`, 'success');
-            await loadRoleTestingDashboard();
-            await loadAllUsers();
-        }
-
-        function testRoleInterface(walletAddress, roleName) {
-            try {
-                let testUserData = localStorage.getItem('evidUser_' + walletAddress);
-
-                if (!testUserData) {
-                    showAlert('Test user data not found. Please recreate test accounts.', 'error');
-                    return;
-                }
-
-                testUserData = JSON.parse(testUserData);
-
-                // Clear any existing user data
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('testUserMode');
-                localStorage.removeItem('testUserName');
-                localStorage.removeItem('selectedRole');
-                localStorage.removeItem('roleWizardCompleted');
-
-                // Set the new user data with proper role mapping
-                localStorage.setItem('currentUser', walletAddress);
-                localStorage.setItem('testUserMode', 'true');
-                localStorage.setItem('testUserName', roleName);
-                localStorage.setItem('selectedRole', testUserData.role);
-                localStorage.setItem('roleWizardCompleted', 'true');
-
-                // Ensure user data is properly stored
-                const updatedUserData = {
-                    ...testUserData,
-                    isRegistered: true,
-                    registrationDate: testUserData.registrationDate || new Date().toISOString()
-                };
-                localStorage.setItem('evidUser_' + walletAddress, JSON.stringify(updatedUserData));
-
-                console.log('Test role setup complete:', {
-                    currentUser: walletAddress,
-                    selectedRole: testUserData.role,
-                    testUserMode: 'true',
-                    userData: updatedUserData
-                });
-
-                showAlert(`Testing ${roleName} interface...`, 'success');
-
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Error testing interface:', error);
-                showAlert('Error testing interface: ' + error.message, 'error');
-            }
-        }
-
         async function checkAdminAuth() {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-
             try {
-                // Try localStorage first
-                let userData = JSON.parse(localStorage.getItem('evidUser_' + currentUser) || 'null');
-
-                // If not in localStorage, fetch from API (wallet login stores data from DB)
-                if (!userData || !userData.role) {
-                    try {
-                        const response = await window.apiClient.get(`/users/wallet/${currentUser}`, { skipAuth: true });
-                        if (response && response.user) {
-                            userData = response.user;
-                            // Cache it in localStorage
-                            localStorage.setItem('evidUser_' + currentUser, JSON.stringify(userData));
-                        }
-                    } catch (apiError) {
-                        console.warn('API fetch failed, checking localStorage only:', apiError);
-                    }
-                }
-
-                if (!userData) {
-                    alert('Access denied. User not found.');
+                const user = await window.apiClient.getCurrentUser();
+                if (!user) {
                     window.location.href = 'index.html';
                     return;
                 }
 
-                // Check admin role - handle both string and numeric roles
-                const isAdmin = userData.role === 'admin' || userData.role === 8 || userData.role === '8';
-
-                if (!isAdmin) {
+                if (user.role !== 'admin') {
                     alert('Access denied. Administrator privileges required.');
                     window.location.href = 'index.html';
                     return;
                 }
 
-                currentAdmin = currentUser;
-                const displayWallet = currentUser.startsWith('email_') ? 'Email Login' : currentUser.substring(0, 8) + '...';
+                currentAdmin = user;
                 const adminWalletEl = document.getElementById('adminWallet');
                 if (adminWalletEl) {
-                    adminWalletEl.textContent = displayWallet;
+                    adminWalletEl.textContent = user.email || user.full_name || 'Administrator';
                 }
-
-                autoFillWalletAddress();
-
             } catch (error) {
                 console.error('Admin auth error:', error);
-                currentAdmin = currentUser;
+                window.location.href = 'index.html';
             }
         }
 
@@ -554,65 +257,50 @@
                 const firstName = document.getElementById('userFirstName').value.trim();
                 const lastName = document.getElementById('userLastName').value.trim();
                 const email = document.getElementById('userEmail').value.trim();
+                const password = document.getElementById('userPassword').value;
                 const role = document.getElementById('userRole').value;
                 const department = document.getElementById('userDepartment').value.trim();
-
-                if (!walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-                    throw new Error('Invalid wallet address format');
-                }
 
                 if (!role) {
                     throw new Error('Please select a role');
                 }
 
-                if (!firstName || !lastName || !email) {
+                if (!firstName || !lastName || !email || !password) {
                     throw new Error('Please fill in all required fields');
                 }
 
-                const userData = {
-                    walletAddress,
-                    fullName: `${firstName} ${lastName}`,
-                    firstName,
-                    lastName,
-                    email,
-                    role,
-                    department: department || 'General',
-                    accountType: 'real',
-                    isRegistered: true,
-                    registrationDate: new Date().toISOString(),
-                    createdBy: currentAdmin
-                };
-
-                // Use secure apiClient
-                try {
-                    const result = await window.apiClient.post('/admin/create-user', {
-                        userData: {
-                            walletAddress,
-                            fullName: userData.fullName,
-                            role,
-                            department: userData.department,
-                            jurisdiction: 'General',
-                            badgeNumber: ''
-                        }
-                    });
-
-                    if (result.success) {
-                        showAlert('User account created successfully in database!', 'success');
-                    } else {
-                        console.warn('Backend creation failed, using localStorage fallback');
-                    }
-                } catch (error) {
-                    console.warn('Backend not available, using localStorage:', error);
+                if (password.length < 8) {
+                    throw new Error('Password must be at least 8 characters');
                 }
 
-                // Always store in localStorage as well for immediate display
-                localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
+                if (walletAddress && !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+                    throw new Error('Invalid wallet address format');
+                }
 
-                showAlert('User account created successfully!', 'success');
+                const result = await window.apiClient.post('/admin/create-user', {
+                    userData: {
+                        walletAddress: walletAddress || null,
+                        email,
+                        password,
+                        fullName: `${firstName} ${lastName}`,
+                        role,
+                        department: department || 'General',
+                        jurisdiction: 'General',
+                        badgeNumber: ''
+                    }
+                });
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to create user');
+                }
+
+                await logAdminAction('create_user', email, { role });
+                showAlert('User account created successfully', 'success');
                 document.getElementById('createUserForm').reset();
                 await loadAllUsers();
+                await loadSystemOverview();
             } catch (error) {
-                showAlert('Error creating user: ' + error.message, 'error');
+                showAlert('Error creating user: ' + (error.message || error), 'error');
             }
         }
 
@@ -623,37 +311,9 @@
                     displayUsers(result.users || result.data || []);
                     return;
                 }
+                throw new Error(result.error || 'Failed to load users');
             } catch (error) {
-                console.warn('Backend not available, using localStorage:', error);
-            }
-
-            // Fallback to localStorage
-            try {
-                const keys = Object.keys(localStorage);
-                const users = keys
-                    .filter(key => key.startsWith('evidUser_'))
-                    .map(key => {
-                        try {
-                            const userData = JSON.parse(localStorage.getItem(key));
-                            return {
-                                wallet_address: userData.walletAddress || key.replace('evidUser_', ''),
-                                full_name: userData.fullName || userData.firstName + ' ' + userData.lastName || 'Unknown',
-                                email: userData.email || 'N/A',
-                                role: userData.role || userData.userRole || 1,
-                                account_type: userData.accountType || 'real',
-                                is_active: userData.is_active !== false,
-                                created_at: userData.registrationDate || new Date().toISOString()
-                            };
-                        } catch (e) {
-                            console.error('Error parsing user data for key:', key, e);
-                            return null;
-                        }
-                    })
-                    .filter(user => user !== null);
-
-                displayUsers(users);
-            } catch (error) {
-                console.error('Error loading users from localStorage:', error);
+                console.error('Error loading users:', error);
                 const tbody = document.getElementById('usersTableBody');
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading users</td></tr>';
             }
@@ -670,30 +330,44 @@
                 return;
             }
 
-            tbody.innerHTML = users.map(user => `
-                <tr class="${!user.is_active ? 'inactive-user' : ''} ${user.account_type === 'test' ? 'test-account' : ''}">
-                    <td>${user.email} ${user.account_type === 'test' ? '<span class="badge" style="background: #ffc107; color: #000; font-size: 0.7em;">TEST</span>' : ''}</td>
-                    <td class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</td>
+            tbody.innerHTML = users.map(user => {
+                const userId = user.id ?? user.user_id;
+                const isSelf = currentAdmin && String(userId) === String(currentAdmin.id);
+                const isAdmin = user.role === 'admin';
+                const walletDisplay = user.wallet_address
+                    ? `<span class="wallet-address">${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-6)}</span>`
+                    : '<span class="text-muted">—</span>';
+
+                return `
+                <tr class="${!user.is_active ? 'inactive-user' : ''}">
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${walletDisplay}</td>
                     <td><span class="badge badge-${getRoleClass(user.role)}">${formatRole(user.role)}</span></td>
                     <td><span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">${user.is_active ? 'Active' : 'Inactive'}</span></td>
                     <td class="action-buttons">
-                        ${user.wallet_address !== currentAdmin ? `
-                            ${user.role !== 'admin' && user.role !== 8 ? `
-                                <button class="btn btn-sm btn-warning" onclick="makeAdmin('${user.wallet_address}', '${user.full_name}')" title="Make Admin">
+                        ${isSelf ? '<span class="text-muted">Current Admin</span>' : `
+                            ${!isAdmin ? `
+                                <button class="btn btn-sm btn-warning" onclick="makeAdmin('${userId}', '${(user.full_name || '').replace(/'/g, '')}')" title="Make Admin">
                                     <i data-lucide="shield-plus"></i>
                                     Make Admin
                                 </button>
+                            ` : ''}
+                            ${user.is_active ? `
+                                <button class="btn btn-sm btn-danger" onclick="deactivateUser('${userId}', '${(user.full_name || '').replace(/'/g, '')}')" title="Deactivate User">
+                                    <i data-lucide="user-x"></i>
+                                    Deactivate
+                                </button>
                             ` : `
-                                <span class="badge badge-admin">Admin</span>
+                                <button class="btn btn-sm btn-success" onclick="reactivateUser('${userId}', '${(user.full_name || '').replace(/'/g, '')}')" title="Reactivate User">
+                                    <i data-lucide="user-check"></i>
+                                    Reactivate
+                                </button>
                             `}
-                            <button class="btn btn-sm btn-danger" onclick="deactivateUser('${user.wallet_address}', '${user.full_name}')" title="Deactivate User">
-                                <i data-lucide="user-x"></i>
-                                Deactivate
-                            </button>
-                        ` : '<span class="text-muted">Current Admin</span>'}
+                        `}
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             lucide.createIcons();
         }
@@ -704,7 +378,7 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>👥 Add New Administrator</h3>
+                        <h3>Add New Administrator</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">
                             <i data-lucide="x"></i>
                         </button>
@@ -716,25 +390,21 @@
                                 <input type="email" id="adminEmail" class="form-control" placeholder="admin@example.com" required>
                             </div>
                             <div class="form-group">
-                                <label>Wallet Address *</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <input type="text" id="adminWallet" class="form-control" placeholder="0x..." required style="flex: 1;">
-                                    <button type="button" class="btn btn-outline btn-sm" onclick="generateWallet()">
-                                        Generate
-                                    </button>
-                                </div>
+                                <label>Password *</label>
+                                <input type="password" id="adminPassword" class="form-control" placeholder="Minimum 8 characters" required minlength="8">
                             </div>
                             <div class="form-group">
                                 <label>Full Name *</label>
                                 <input type="text" id="adminName" class="form-control" placeholder="Administrator Name" required>
                             </div>
                             <div class="form-group">
-                                <label>Role</label>
-                                <select id="adminRole" class="form-control">
-                                    <option value="admin">Administrator</option>
-                                    <option value="auditor">Auditor</option>
-                                    <option value="evidence_manager">Evidence Manager</option>
-                                </select>
+                                <label>Wallet Address (optional)</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="adminWallet" class="form-control" placeholder="0x..." style="flex: 1;">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="generateWallet()">
+                                        Generate
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -760,160 +430,130 @@
             document.getElementById('adminWallet').value = result;
         }
 
-        function submitNewAdmin() {
+        async function submitNewAdmin() {
             const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
             const wallet = document.getElementById('adminWallet').value.trim();
             const name = document.getElementById('adminName').value.trim();
-            const role = document.getElementById('adminRole').value;
 
-            if (!email || !wallet || !name) {
+            if (!email || !password || !name) {
                 showAlert('Please fill in all required fields', 'error');
                 return;
             }
 
-            if (!wallet.match(/^0x[a-fA-F0-9]{40}$/)) {
+            if (password.length < 8) {
+                showAlert('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            if (wallet && !wallet.match(/^0x[a-fA-F0-9]{40}$/)) {
                 showAlert('Invalid wallet address format', 'error');
                 return;
             }
 
-            // Check if user already exists
-            if (localStorage.getItem(`evidUser_${wallet}`)) {
-                showAlert('User with this wallet address already exists', 'error');
-                return;
+            try {
+                const result = await window.apiClient.post('/admin/create-admin', {
+                    adminData: {
+                        walletAddress: wallet || null,
+                        email,
+                        password,
+                        fullName: name
+                    }
+                });
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to create administrator');
+                }
+
+                await logAdminAction('create_admin', email, { name, role: 'admin' });
+
+                const modal = document.querySelector('.modal');
+                if (modal) modal.remove();
+                showAlert(`Administrator ${name} created successfully!`, 'success');
+                await loadAllUsers();
+                await loadSystemOverview();
+            } catch (error) {
+                showAlert('Error: ' + (error.message || error), 'error');
             }
-
-            const adminData = {
-                walletAddress: wallet,
-                fullName: name,
-                email: email,
-                role: role,
-                department: 'Administration',
-                accountType: 'real',
-                isRegistered: true,
-                registrationDate: new Date().toISOString(),
-                createdBy: currentAdmin
-            };
-
-            localStorage.setItem(`evidUser_${wallet}`, JSON.stringify(adminData));
-
-            // Log admin action
-            logAdminAction('create_admin', wallet, {
-                email: email,
-                name: name,
-                role: role
-            });
-
-            document.querySelector('.modal').remove();
-            showAlert(`Administrator ${name} created successfully!`, 'success');
-            loadAllUsers();
         }
 
-        function makeAdmin(walletAddress, userName) {
+        async function makeAdmin(userId, userName) {
             if (!confirm(`Are you sure you want to make ${userName} an administrator?\n\nThis will grant them full system access.`)) {
                 return;
             }
 
             try {
-                const userData = JSON.parse(localStorage.getItem(`evidUser_${walletAddress}`));
-                userData.role = 'admin';
-                userData.department = 'Administration';
-                userData.promotedBy = currentAdmin;
-                userData.promotedAt = new Date().toISOString();
-
-                localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
-
-                // Log admin action
-                logAdminAction('promote_admin', walletAddress, {
-                    previousRole: userData.role,
-                    newRole: 'admin',
-                    userName: userName
-                });
-
+                const result = await window.apiClient.put(`/admin/users/${userId}/role`, { newRole: 'admin' });
+                if (!result.success) throw new Error(result.error || 'Failed to update role');
+                await logAdminAction('promote_admin', String(userId), { userName, newRole: 'admin' });
                 showAlert(`${userName} has been promoted to Administrator`, 'success');
-                loadAllUsers();
+                await loadAllUsers();
             } catch (error) {
-                showAlert('Error promoting user: ' + error.message, 'error');
+                showAlert('Error promoting user: ' + (error.message || error), 'error');
             }
         }
 
-        function deactivateUser(walletAddress, userName) {
+        async function deactivateUser(userId, userName) {
             if (!confirm(`Are you sure you want to deactivate ${userName}?\n\nThis will revoke their system access.`)) {
                 return;
             }
 
             try {
-                const userData = JSON.parse(localStorage.getItem(`evidUser_${walletAddress}`));
-                userData.is_active = false;
-                userData.deactivatedBy = currentAdmin;
-                userData.deactivatedAt = new Date().toISOString();
-
-                localStorage.setItem(`evidUser_${walletAddress}`, JSON.stringify(userData));
-
-                // Log admin action
-                logAdminAction('deactivate_user', walletAddress, {
-                    userName: userName,
-                    previousRole: userData.role
-                });
-
+                const result = await window.apiClient.put(`/admin/users/${userId}/status`, { isActive: false });
+                if (!result.success) throw new Error(result.error || 'Failed to deactivate user');
+                await logAdminAction('deactivate_user', String(userId), { userName });
                 showAlert(`${userName} has been deactivated`, 'success');
-                loadAllUsers();
+                await loadAllUsers();
             } catch (error) {
-                showAlert('Error deactivating user: ' + error.message, 'error');
+                showAlert('Error deactivating user: ' + (error.message || error), 'error');
             }
         }
 
-        function logAdminAction(actionType, targetWallet, details) {
-            const auditLog = {
-                id: Date.now(),
-                adminWallet: currentAdmin,
-                actionType: actionType,
-                targetWallet: targetWallet,
-                details: details,
-                timestamp: new Date().toISOString()
-            };
-
-            const existingLogs = JSON.parse(localStorage.getItem('adminAuditLog') || '[]');
-            existingLogs.unshift(auditLog);
-
-            // Keep only last 100 logs
-            if (existingLogs.length > 100) {
-                existingLogs.splice(100);
+        async function reactivateUser(userId, userName) {
+            try {
+                const result = await window.apiClient.put(`/admin/users/${userId}/status`, { isActive: true });
+                if (!result.success) throw new Error(result.error || 'Failed to reactivate user');
+                await logAdminAction('user_activated', String(userId), { userName });
+                showAlert(`${userName} has been reactivated`, 'success');
+                await loadAllUsers();
+            } catch (error) {
+                showAlert('Error reactivating user: ' + (error.message || error), 'error');
             }
+        }
 
-            localStorage.setItem('adminAuditLog', JSON.stringify(existingLogs));
+        async function logAdminAction(actionType, target, details) {
+            try {
+                await window.apiClient.post('/admin-actions/log', {
+                    action: actionType,
+                    targetId: target,
+                    details: details || null
+                }, { skipAuth: true });
+            } catch (error) {
+                console.warn('Failed to log admin action:', error);
+            }
         }
 
         async function loadSystemOverview() {
             try {
-                // Try to get stats from backend first
-                try {
-                    const response = await fetch('/api/admin/users', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            adminWallet: currentAdmin
-                        })
-                    });
+                const [usersRes, statsRes, casesRes] = await Promise.allSettled([
+                    window.apiClient.get('/admin/users'),
+                    window.apiClient.get('/evidence/manager-stats'),
+                    window.apiClient.get('/cases/statistics')
+                ]);
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        document.getElementById('totalUsers').textContent = data.users?.length || 0;
-                        document.getElementById('totalEvidence').textContent = 'N/A';
-                        document.getElementById('totalCases').textContent = 'N/A';
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Backend not available for stats, using localStorage');
-                }
+                const userCount = usersRes.status === 'fulfilled' && usersRes.value.success
+                    ? (usersRes.value.users || usersRes.value.data || []).length
+                    : 'N/A';
+                const evidenceCount = statsRes.status === 'fulfilled' && statsRes.value.success
+                    ? statsRes.value.data.total
+                    : 'N/A';
+                const caseCount = casesRes.status === 'fulfilled' && casesRes.value.success
+                    ? (casesRes.value.data.by_status || []).reduce((sum, s) => sum + (s.count || 0), 0)
+                    : 'N/A';
 
-                // Fallback to localStorage
-                const keys = Object.keys(localStorage);
-                const users = keys.filter(key => key.startsWith('evidUser_'));
-                document.getElementById('totalUsers').textContent = users.length;
-                document.getElementById('totalEvidence').textContent = 'N/A';
-                document.getElementById('totalCases').textContent = 'N/A';
+                document.getElementById('totalUsers').textContent = userCount;
+                document.getElementById('totalEvidence').textContent = evidenceCount;
+                document.getElementById('totalCases').textContent = caseCount;
             } catch (error) {
                 document.getElementById('totalUsers').textContent = 'Error';
                 document.getElementById('totalEvidence').textContent = 'Error';
@@ -927,11 +567,12 @@
             }
 
             try {
-                localStorage.removeItem(`evidUser_${walletAddress}`);
+                const result = await window.apiClient.post('/admin/delete-user', { targetWallet: walletAddress });
+                if (!result.success) throw new Error(result.error || 'Failed to delete user');
                 showAlert('User deleted successfully', 'success');
                 await loadAllUsers();
             } catch (error) {
-                showAlert('Error deleting user: ' + error.message, 'error');
+                showAlert('Error deleting user: ' + (error.message || error), 'error');
             }
         }
 
@@ -1011,20 +652,6 @@
             const walletField = document.getElementById('userWalletAddress');
             if (walletField && !walletField.value) {
                 walletField.value = generateWalletAddress();
-            }
-        }
-
-        function forceRecreateTestAccounts() {
-            if (confirm('This will delete and recreate all test accounts. Continue?')) {
-                const keys = Object.keys(localStorage);
-                keys.forEach(key => {
-                    if (key.startsWith('evidUser_0xtest')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-
-                showAlert('Recreating test accounts...', 'info');
-                setTimeout(() => createAllTestAccounts(), 1000);
             }
         }
 
@@ -1228,16 +855,6 @@
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-    </style>
-    <style>
-        .test-account {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
-        }
-
-        .test-account:hover {
-            background: #ffeaa7;
         }
     </style>
     <script src="footer.js"></script>

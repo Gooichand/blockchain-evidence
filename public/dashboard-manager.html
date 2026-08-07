@@ -39,15 +39,15 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">156</span>
+                    <span id="statEvidenceItems" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Evidence Items</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">23</span>
+                    <span id="statPendingIntake" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Pending Intake</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">8</span>
+                    <span id="statReadyDisposal" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Ready for Disposal</span>
                 </div>
             </div>
@@ -62,25 +62,25 @@
             <div class="card-body">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📥 Evidence Intake - Process new evidence submissions')">
+                        onclick="window.location.href='enhanced-evidence-upload.html'">
                         <span style="font-size: 2.5rem; color: #14b8a6;">📥</span>
                         <h3>Evidence Intake</h3>
                         <p>Process new evidence submissions</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('🔍 Inventory Tracking - Track evidence location and status')">
+                        onclick="window.location.href='evidence-manager.html'">
                         <span style="font-size: 2.5rem; color: #14b8a6;">🔍</span>
                         <h3>Inventory Tracking</h3>
                         <p>Track evidence location and status</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('🔗 Chain of Custody - Maintain evidence chain of custody')">
+                        onclick="window.location.href='evidence-manager.html'">
                         <span style="font-size: 2.5rem; color: #14b8a6;">🔗</span>
                         <h3>Chain of Custody</h3>
                         <p>Maintain evidence chain of custody</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('🗂️ Evidence Disposal - Manage evidence retention and disposal')">
+                        onclick="window.location.href='retention-policy.html'">
                         <span style="font-size: 2.5rem; color: #14b8a6;">🗂️</span>
                         <h3>Evidence Disposal</h3>
                         <p>Manage evidence retention and disposal</p>
@@ -145,11 +145,9 @@
         });
 
         function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Evidence Manager';
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = isTestUser ?
-                    `📋 ${userName} (Test)` : `📋 Evidence Manager`;
+                document.getElementById('userRole').textContent = `📋 ${userName}`;
             }
 
             if (currentUser.walletAddress && document.getElementById('userWallet')) {
@@ -163,13 +161,16 @@
                 // Statistics loading
                 const stats = await window.apiClient.get('/evidence/manager-stats');
                 if (stats.success) {
-                    // Update stats counters if elements exist (manual update since they are hardcoded in HTML)
+                    const s = stats.data || {};
+                    if (document.getElementById('statEvidenceItems')) document.getElementById('statEvidenceItems').textContent = s.total || 0;
+                    if (document.getElementById('statPendingIntake')) document.getElementById('statPendingIntake').textContent = s.pending_intake || 0;
+                    if (document.getElementById('statReadyDisposal')) document.getElementById('statReadyDisposal').textContent = s.ready_for_disposal || 0;
                 }
                 
                 // Refresh inventory via dashboard-manager-evidence.js if needed
                 if (window.managerEvidence) await window.managerEvidence.init();
             } catch (error) {
-                console.warn('Backend stats load failed');
+                console.warn('Backend stats load failed', error);
             }
         }
 

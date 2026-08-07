@@ -9,16 +9,29 @@ class AccountSettings {
     init() {
         this.loadCurrentUser();
         this.setupEventListeners();
-        this.loadUserData();
-        this.loadSessions();
     }
 
     async loadCurrentUser() {
-        this.currentUser = await window.apiClient.getCurrentUser();
+        if (!localStorage.getItem('authToken')) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        this.currentUser = window.apiClient.getCurrentUser();
+        if (!this.currentUser) {
+            // Fallback: minimal session identity derived from stored token key
+            const key = localStorage.getItem('currentUser');
+            this.currentUser = key
+                ? { id: key, email: key, walletAddress: null, role: null }
+                : null;
+        }
         if (!this.currentUser) {
             window.location.href = 'index.html';
             return;
         }
+
+        this.loadUserData();
+        await this.loadSessions();
     }
 
     setupEventListeners() {
@@ -36,20 +49,26 @@ class AccountSettings {
     loadUserData() {
         if (!this.currentUser) return;
 
+        const u = this.currentUser;
+
         // Load profile data
-        document.getElementById('fullName').value = this.currentUser.fullName || '';
-        document.getElementById('email').value = this.currentUser.email || this.currentUser.walletAddress || '';
-        document.getElementById('department').value = this.currentUser.department || '';
-        document.getElementById('jurisdiction').value = this.currentUser.jurisdiction || '';
-        document.getElementById('badgeNumber').value = this.currentUser.badgeNumber || '';
+        document.getElementById('fullName').value = u.fullName || u.full_name || '';
+        document.getElementById('email').value = u.email || u.walletAddress || u.wallet_address || '';
+        document.getElementById('department').value = u.department || '';
+        document.getElementById('jurisdiction').value = u.jurisdiction || '';
+        document.getElementById('badgeNumber').value = u.badgeNumber || u.badge_number || '';
         
         // Display role
         const roleNames = {
             1: 'Public Viewer', 2: 'Investigator', 3: 'Forensic Analyst',
             4: 'Legal Professional', 5: 'Court Official', 6: 'Evidence Manager',
-            7: 'Auditor', 8: 'Administrator'
+            7: 'Auditor', 8: 'Administrator',
+            public_viewer: 'Public Viewer', investigator: 'Investigator',
+            forensic_analyst: 'Forensic Analyst', legal_professional: 'Legal Professional',
+            court_official: 'Court Official', evidence_manager: 'Evidence Manager',
+            auditor: 'Auditor', admin: 'Administrator'
         };
-        document.getElementById('currentRole').value = roleNames[this.currentUser.role] || this.currentUser.role || 'Unknown';
+        document.getElementById('currentRole').value = roleNames[u.role] || u.role || 'Unknown';
 
         // Load notification preferences
         this.loadNotificationSettings();
@@ -72,7 +91,8 @@ class AccountSettings {
             if (result.success) {
                 this.currentUser = { ...this.currentUser, ...updatePayload };
                 // Update local cache as well
-                localStorage.setItem('evidUser_' + this.currentUser.walletAddress, JSON.stringify(this.currentUser));
+                const key = localStorage.getItem('currentUser') || this.currentUser.email || this.currentUser.walletAddress || 'user';
+                localStorage.setItem('evidUser_' + key, JSON.stringify(this.currentUser));
                 this.showAlert('Profile updated successfully!', 'success');
             } else {
                 throw new Error(result.error || 'Failed to update profile');
@@ -174,21 +194,19 @@ class AccountSettings {
                 this.renderSessions();
             }
         } catch (error) {
-            console.warn('Failed to load real sessions, using default');
-            this.sessions = [{
-                id: 1,
-                device: 'Current Session',
-                browser: 'Verified Secure Browser',
-                location: 'Remote',
-                lastActive: new Date().toISOString(),
-                current: true
-            }];
+            console.warn('Failed to load sessions:', error);
+            this.sessions = [];
             this.renderSessions();
         }
     }
 
     renderSessions() {
         const sessionsList = document.getElementById('sessionsList');
+        if (!this.sessions || this.sessions.length === 0) {
+            sessionsList.innerHTML = '<p class="empty-state">No active sessions recorded.</p>';
+            return;
+        }
+
         sessionsList.innerHTML = this.sessions.map(session => `
             <div class="session-item ${session.current ? 'current-session' : ''}">
                 <div class="session-info">
@@ -249,7 +267,7 @@ class AccountSettings {
     }
 
     loadNotificationSettings() {
-        const settings = JSON.parse(localStorage.getItem('notificationSettings_' + this.currentUser.walletAddress)) || {
+        const settings = JSON.parse(localStorage.getItem('notificationSettings_' + this.userKey())) || {
             evidenceUploads: true,
             evidenceVerification: true,
             caseAssignments: true,
@@ -276,8 +294,12 @@ class AccountSettings {
             securityAlerts: document.getElementById('securityAlerts').checked
         };
 
-        localStorage.setItem('notificationSettings_' + this.currentUser.walletAddress, JSON.stringify(settings));
+        localStorage.setItem('notificationSettings_' + this.userKey(), JSON.stringify(settings));
         this.showAlert('Notification preferences saved', 'success');
+    }
+
+    userKey() {
+        return localStorage.getItem('currentUser') || this.currentUser?.email || this.currentUser?.walletAddress || 'user';
     }
 
     resetProfileForm() {

@@ -38,7 +38,7 @@
                     <i data-lucide="folder"></i>
                     <span>Cases</span>
                 </a>
-                <a href="evidence.html" class="nav-link">
+                <a href="evidence-manager.html" class="nav-link">
                     <i data-lucide="file-text"></i>
                     <span>Evidence</span>
                 </a>
@@ -269,6 +269,8 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script src="case-status-manager.js"></script>
     <script>
         // Additional case management functionality
@@ -304,20 +306,11 @@
                 priority_level: parseInt(document.getElementById('casePriority').value),
                 case_type: document.getElementById('caseTypeCreate').value,
                 jurisdiction: document.getElementById('caseJurisdiction').value,
-                estimated_completion: document.getElementById('estimatedCompletion').value,
-                created_by: currentUser.wallet_address
+                estimated_completion: document.getElementById('estimatedCompletion').value
             };
 
             try {
-                const response = await fetch('/api/cases', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
+                const data = await window.apiClient.post('/cases', formData);
 
                 if (data.success) {
                     caseStatusManager.showSuccess('Case created successfully');
@@ -334,11 +327,9 @@
 
         async function loadStatistics() {
             const timeframe = document.getElementById('statsTimeframe').value;
-            const currentUser = caseStatusManager.getCurrentUser();
 
             try {
-                const response = await fetch(`/api/cases/statistics?timeframe=${timeframe}&userWallet=${currentUser?.wallet_address || ''}`);
-                const data = await response.json();
+                const data = await window.apiClient.get('/cases/statistics', { params: { timeframe } });
 
                 if (data.success) {
                     renderStatistics(data.statistics);
@@ -419,7 +410,18 @@
                 const params = new URLSearchParams(caseStatusManager.currentFilters);
                 params.append('export', 'true');
 
-                const response = await fetch(`/api/cases/export?${params}`);
+                const signedHeaders = await window.apiClient.getAuthHeaders();
+                const response = await fetch(`/api/cases/export?${params}`, { headers: signedHeaders });
+
+                if (!response.ok) {
+                    let message = 'Export failed';
+                    try {
+                        const j = await response.json();
+                        if (j && j.error) message = j.error;
+                    } catch (_) { /* ignore */ }
+                    throw new Error(message);
+                }
+
                 const blob = await response.blob();
 
                 const url = window.URL.createObjectURL(blob);
@@ -432,7 +434,7 @@
                 caseStatusManager.showSuccess('Cases exported successfully');
             } catch (error) {
                 console.error('Export cases error:', error);
-                caseStatusManager.showError('Failed to export cases');
+                caseStatusManager.showError('Failed to export cases: ' + (error.message || error));
             }
         }
 

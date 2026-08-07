@@ -78,9 +78,11 @@ function initializeApp() {
       const role = userData && userData.role;
       if (role) {
         const dashboardUrl = getDashboardUrl(role);
-        // Only redirect if not already on a dashboard page
-        const path = window.location.pathname;
-        if (!path.includes('dashboard') && !path.includes('admin') && !path.includes('login')) {
+        // Only auto-redirect when on the landing page or generic dashboard —
+        // never bounce users away from working pages (settings, cases, evidence, etc.)
+        const path = window.location.pathname.split('/').pop() || '/';
+        const landingPages = ['/', 'index.html', 'dashboard.html', 'login.html'];
+        if (landingPages.includes(path)) {
           console.log("Existing session found. Redirecting to:", dashboardUrl);
           window.location.href = dashboardUrl;
           return;
@@ -143,14 +145,8 @@ function initializeApp() {
         loginConnectBtn.classList.add('loading');
         loginConnectBtn.disabled = true;
         try {
-          await connectWallet();
-          // After connection, if wallet is valid, trigger auth immediately
-          if (userAccount) {
-            refreshLoginWalletUI();
-            await checkRegistrationStatus();
-          } else {
-            refreshLoginWalletUI();
-          }
+          await connectWallet(); // connectWallet() itself performs auth + redirect now
+          refreshLoginWalletUI();
         } catch (err) {
           console.error('Modal connect error:', err);
         } finally {
@@ -810,25 +806,17 @@ async function connectWallet() {
     userAccount = await walletManager.connect();
     console.log("Wallet connected:", userAccount);
 
-    if (!walletManager.isSupportedNetwork()) {
-      showLoading(false);
-      resetConnectButton();
-      showWrongNetworkUI();
-      return;
-    }
-
-    if (!walletManager.isContractDeployed()) {
-      localStorage.setItem("wasConnected", "true");
-      showLoading(false);
-      updateWalletUI();
-      showNoContractBanner();
-      return;
-    }
-
     localStorage.setItem("wasConnected", "true");
-
     updateWalletUI();
     removeNetworkBanner();
+
+    // Informational (non-blocking) network notices — wallet login does not depend on the contract
+    if (!walletManager.isSupportedNetwork()) {
+      showWrongNetworkUI();
+    } else if (!walletManager.isContractDeployed()) {
+      showNoContractBanner();
+    }
+
     await checkRegistrationStatus();
     showLoading(false);
   } catch (error) {
@@ -843,22 +831,16 @@ async function connectWallet() {
         try {
           showLoading(true, "Retrying connection...");
           userAccount = await walletManager.connect();
-          if (!walletManager.isSupportedNetwork()) {
-            showLoading(false);
-            resetConnectButton();
-            showWrongNetworkUI();
-            return;
-          }
-          if (!walletManager.isContractDeployed()) {
-            localStorage.setItem("wasConnected", "true");
-            showLoading(false);
-            updateWalletUI();
-            showNoContractBanner();
-            return;
-          }
           localStorage.setItem("wasConnected", "true");
           updateWalletUI();
           removeNetworkBanner();
+
+          if (!walletManager.isSupportedNetwork()) {
+            showWrongNetworkUI();
+          } else if (!walletManager.isContractDeployed()) {
+            showNoContractBanner();
+          }
+
           await checkRegistrationStatus();
           showLoading(false);
         } catch (retryError) {
@@ -980,16 +962,13 @@ function showWrongNetworkUI() {
   const network = getNetworkByChainId(chainId);
   const networkName = network ? network.name : 'Unknown Network (Chain ID: ' + chainId + ')';
 
-  showErrorModal(
-    "Unsupported Network",
-    `Connected to ${networkName}.<br><br>This application supports:
-    <ul style="text-align:left;margin-top:8px;">
-      <li><strong>Polygon Amoy Testnet</strong> (Contract Deployed)</li>
-      <li><strong>Polygon Mainnet</strong> (Supported, No Contract Yet)</li>
-    </ul>`,
-    "Switch to Polygon Amoy",
-    () => switchNetwork(80002)
-  );
+  showNetworkBanner('error', [
+    'Connected to ' + networkName + '. ',
+    'Wallet login is available on any network, but blockchain evidence operations require a supported network: ',
+    'Polygon Amoy Testnet (Contract Deployed) or Polygon Mainnet (Supported, No Contract Yet).',
+  ], [
+    { text: 'Switch to Polygon Amoy', chainId: 80002 },
+  ]);
 }
 
 function showNoContractBanner() {
@@ -1067,6 +1046,7 @@ async function refreshWalletState() {
   removeNetworkBanner();
 
   if (!walletManager.isSupportedNetwork()) {
+    updateWalletUI();
     showWrongNetworkUI();
     return;
   }
@@ -1081,10 +1061,14 @@ async function refreshWalletState() {
 }
 
 // Check registration status — authenticates wallet, stores session, redirects
+let _authCheckInProgress = false;
 async function checkRegistrationStatus() {
+  if (_authCheckInProgress) return;
+  _authCheckInProgress = true;
   console.log("[Auth] Wallet Connected.");
   if (!userAccount) {
     console.warn("[Auth] No wallet address.");
+    _authCheckInProgress = false;
     showAlert("Please connect your wallet first.", "error");
     return;
   }
@@ -1097,13 +1081,16 @@ async function checkRegistrationStatus() {
 
     // Step 1: Look up user by wallet address
     console.log("[Auth] Searching Database...");
+    const shortAddr = walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4);
     let userData;
     try {
       userData = await window.apiClient.get(`/users/wallet/${walletAddr}`, { skipAuth: true });
     } catch (lookupError) {
       console.warn("[Auth] Wallet lookup failed:", lookupError);
       if (lookupError.status === 404 || lookupError.status === 401) {
-        showAlert("Wallet not registered. Please register or use Email Login.", "warning");
+        showAlert(`${shortAddr} is not registered. Please register this wallet or use Email Login.`, "error");
+      } else if (!lookupError.status && lookupError.message) {
+        showAlert("Network error: " + lookupError.message + ". Make sure the backend is running on port 10000.", "error");
       } else {
         showAlert("Unable to reach server. Please check your connection and try again.", "error");
       }
@@ -1136,7 +1123,9 @@ async function checkRegistrationStatus() {
       console.error("[Auth] JWT Creation Failed:", authError);
       let msg = "Authentication failed. Please try again.";
       if (authError.status === 401) msg = "Wallet not authorized. Please register first.";
+      else if (authError.status === 429) msg = "Too many authentication attempts. Please wait a moment and try again.";
       else if (authError.status >= 500) msg = "Server error during authentication. Please try again later.";
+      else if (!authError.status && authError.message) msg = "Network error: " + authError.message + ". Make sure the backend is running on port 10000.";
       showAlert(msg, "error");
       return;
     }
@@ -1181,6 +1170,7 @@ async function checkRegistrationStatus() {
     console.error("[Auth] Unexpected Error:", error);
     showAlert("Authentication failed: " + (error.message || "Unexpected error"), "error");
   } finally {
+    _authCheckInProgress = false;
     showLoading(false);
   }
 }
@@ -1328,14 +1318,15 @@ function goToAdminDashboard() {
 }
 
 function logout() {
+  // Capture session id BEFORE clearing storage
   const walletAddr = localStorage.getItem("currentUser");
+  const sessionId = localStorage.getItem('sessionId');
   localStorage.clear();
   userAccount = null;
 
   // Terminate client session
-  if (walletAddr && typeof sessionManager !== 'undefined') {
-    const sessionId = localStorage.getItem('sessionId');
-    if (sessionId) sessionManager.terminateSession(sessionId);
+  if (sessionId && typeof sessionManager !== 'undefined') {
+    sessionManager.terminateSession(sessionId);
   }
 
   const walletStatus = document.getElementById("walletStatus");

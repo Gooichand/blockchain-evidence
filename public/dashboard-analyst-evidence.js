@@ -77,7 +77,7 @@ class AnalystEvidenceDisplay {
                 const actions = document.createElement('td');
                 const view = document.createElement('a');
                 view.className = 'btn btn-outline btn-sm';
-                view.href = 'evidence-preview.html?id=' + item.id;
+                view.href = 'evidence-verification.html?id=' + item.id;
                 view.textContent = 'View';
                 view.setAttribute('aria-label', 'View evidence #' + item.id);
                 actions.appendChild(view);

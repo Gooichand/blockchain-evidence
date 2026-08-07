@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         .search-container {
             max-width: 1200px;
@@ -621,13 +621,13 @@
             }
         }
 
-        // Load cases and evidence from API
+        // Load public cases and evidence from API
         async function loadInitialData() {
             try {
                 const apiBase = config.API_BASE_URL || window.location.origin;
                 const [casesRes, evidenceRes] = await Promise.all([
-                    fetch(`${apiBase}/cases`),
-                    fetch(`${apiBase}/evidence`)
+                    fetch(`${apiBase}/public/cases?limit=100&page=1`),
+                    fetch(`${apiBase}/public/evidence?limit=100&page=1`)
                 ]);
 
                 if (!casesRes.ok || !evidenceRes.ok) {
@@ -638,8 +638,29 @@
                 const evidenceData = await evidenceRes.json();
 
                 searchData = [
-                    ...(casesData.cases || []).map(c => ({ ...c, type: 'case' })),
-                    ...(evidenceData.evidence || []).map(e => ({ ...e, type: 'evidence' }))
+                    ...(casesData.data || casesData.cases || []).map(c => ({
+                        type: 'case',
+                        id: c.id,
+                        title: c.title,
+                        case_number: c.reference_number,
+                        status: c.publication_status || 'Published',
+                        description: c.summary || '',
+                        created_at: c.published_date || c.updated_at,
+                        file_type: null,
+                        file_size: null
+                    })),
+                    ...(evidenceData.data || evidenceData.evidence || []).map(e => ({
+                        type: 'evidence',
+                        id: e.id,
+                        title: e.title,
+                        file_name: e.title,
+                        case_number: e.case_number,
+                        created_at: e.timestamp || e.published_date,
+                        file_type: e.file_type,
+                        status: e.blockchain_verified ? 'Blockchain Verified' : null,
+                        description: e.blockchain_verified ? 'Recorded on blockchain with verified hash' : '',
+                        file_size: null
+                    }))
                 ];
 
                 console.log('Loaded data:', searchData.length, 'items');
@@ -853,7 +874,7 @@
 
         function viewResult(result) {
             if (result.type === 'case') {
-                window.location.href = `case-details.html?case=${result.case_number}`;
+                window.location.href = `cases-public.html?search=${result.case_number}`;
             } else {
                 window.location.href = `evidence-verification.html?id=${result.id}`;
             }

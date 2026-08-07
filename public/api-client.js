@@ -51,28 +51,100 @@ class APIClient {
     }
 
     /**
+     * Returns JWT auth headers (Authorization bearer). Includes the connected
+     * wallet address as a convenience header when available (no signing).
+     * @returns {object}
+     */
+    getAuthHeaders() {
+        const headers = {};
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const wallet = this.getConnectedWallet();
+        if (wallet) {
+            headers['x-user-wallet'] = wallet;
+        }
+        return headers;
+    }
+
+    /**
+     * Resolves the currently signed-in user object from local storage.
+     * Falls back to the connected MetaMask wallet address if no stored user.
+     * @returns {object|null}
+     */
+    getCurrentUser() {
+        const currentUserKey = localStorage.getItem('currentUser');
+        if (!currentUserKey) return null;
+
+        try {
+            const stored = localStorage.getItem('evidUser_' + currentUserKey);
+            if (stored) return JSON.parse(stored);
+            const alt = localStorage.getItem('evidUser_' + currentUserKey.toLowerCase());
+            if (alt) return JSON.parse(alt);
+        } catch (_) {
+            // fall through
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the connected MetaMask address, if any.
+     * @returns {string|null}
+     */
+    getConnectedWallet() {
+        try {
+            const stored = this.getCurrentUser();
+            if (stored?.walletAddress || stored?.wallet_address) {
+                return stored.walletAddress || stored.wallet_address;
+            }
+        } catch (_) { /* ignore */ }
+        return localStorage.getItem('currentUser') || null;
+    }
+
+    /**
+     * Serializes an object of query parameters into a query string.
+     */
+    buildQueryString(params) {
+        if (!params || typeof params !== 'object') return '';
+        const qs = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+            if (value === undefined || value === null || value === '') continue;
+            qs.append(key, value);
+        }
+        const str = qs.toString();
+        return str ? (str.startsWith('?') ? str : '?' + str) : '';
+    }
+
+    /**
      * Generic request wrapper.
      * @param {string} path - API path
      * @param {object} options - fetch options
      * @param {boolean} options.skipAuth - If true, skip all auth headers (for public/login endpoints)
+     * @param {boolean} options.skipWalletAuth - If true, skip wallet signing (JWT only)
+     * @param {object} options.params - Query parameters appended to the URL
+     * @param {*} options.body - Optional body. FormData/Blob passed through untouched so the
+     *                           browser sets the multipart boundary (do NOT JSON.stringify).
      */
     async request(path, options = {}) {
-        const method = options.method || 'GET';
+        const method = (options.method || 'GET').toUpperCase();
         const skipAuth = options.skipAuth || false;
         const skipWallet = options.skipWalletAuth || false;
-        const url = `${this.baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+
+        let url = `${this.baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+        if (options.params) {
+            url += this.buildQueryString(options.params);
+        }
 
         let authHeaders = {};
 
         if (!skipAuth) {
-            // Always include JWT token if available (works for both wallet and email users)
             const token = localStorage.getItem('authToken');
             if (token) {
                 authHeaders['Authorization'] = `Bearer ${token}`;
             }
 
-            // Additionally include wallet signing headers if MetaMask is active
-            // (these are used by admin/blockchain endpoints that verify on-chain identity)
             if (!skipWallet) {
                 try {
                     const walletHeaders = await this.getWalletAuthHeaders(method, path);
@@ -84,24 +156,58 @@ class APIClient {
         }
 
         // Remove non-fetch options before passing to fetch
-        const { skipAuth: _, skipWalletAuth: __, ...fetchOptions } = options;
+        const { skipAuth: _, skipWalletAuth: __, params: ___, ...fetchOptions } = options;
+
+        const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
+        const isBlob = typeof Blob !== 'undefined' && fetchOptions.body instanceof Blob;
+        const isArrayBuffer = fetchOptions.body instanceof ArrayBuffer;
+
+        // fetch() stringifies a plain object body as "[object Object]". Serialize object
+        // bodies ourselves so the server receives valid JSON (this broke all POST logins).
+        let bodyToSend = fetchOptions.body;
+        if (
+            bodyToSend !== undefined &&
+            bodyToSend !== null &&
+            !isFormData &&
+            !isBlob &&
+            !isArrayBuffer &&
+            typeof bodyToSend === 'object'
+        ) {
+            bodyToSend = JSON.stringify(bodyToSend);
+        }
 
         const headers = {
-            'Content-Type': 'application/json',
             ...authHeaders,
             ...fetchOptions.headers
         };
+        if (!isFormData && bodyToSend !== undefined) {
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+        }
 
-        const response = await fetch(url, {
+        const requestInit = {
             ...fetchOptions,
+            method,
             headers,
             credentials: 'include'
-        });
+        };
+        if (bodyToSend !== undefined) {
+            requestInit.body = bodyToSend;
+        }
 
-        const data = await response.json();
+        const response = await fetch(url, requestInit);
 
-        if (!response.ok || data.success === false) {
-            const error = new Error(data.error || `HTTP error ${response.status}`);
+        let data = null;
+        const contentType = response.headers.get('content-type') || '';
+        if (response.status === 204) {
+            data = { success: true };
+        } else if (contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
+
+        if (!response.ok || (data && typeof data === 'object' && data.success === false)) {
+            const error = new Error((data && data.error) || `HTTP error ${response.status}`);
             error.status = response.status;
             error.data = data;
             throw error;
@@ -116,10 +222,103 @@ class APIClient {
     }
 
     async post(path, body, options = {}) {
-        return this.request(path, {
-            ...options,
-            method: 'POST',
-            body: JSON.stringify(body)
+        return this.request(path, { ...options, method: 'POST', body });
+    }
+
+    async put(path, body, options = {}) {
+        return this.request(path, { ...options, method: 'PUT', body });
+    }
+
+    async delete(path, options = {}) {
+        return this.request(path, { ...options, method: 'DELETE' });
+    }
+
+    async patch(path, body, options = {}) {
+        return this.request(path, { ...options, method: 'PATCH', body });
+    }
+
+    /**
+     * Multipart file upload (FormData passthrough with auth headers).
+     * @param {string} path - API path
+     * @param {FormData} formData - multipart form data (file fields + metadata)
+     * @param {Function|object} onProgressOrOptions - progress callback fn(percent) OR standard
+     *                                                request options (skipWalletAuth, params,
+     *                                                onProgress).
+     */
+    async upload(path, formData, onProgressOrOptions = {}) {
+        if (!(formData instanceof FormData)) {
+            throw new Error('upload() expects a FormData body');
+        }
+
+        let options = {};
+        let onProgress = null;
+        if (typeof onProgressOrOptions === 'function') {
+            onProgress = onProgressOrOptions;
+        } else if (onProgressOrOptions && typeof onProgressOrOptions === 'object') {
+            options = onProgressOrOptions;
+            onProgress = onProgressOrOptions.onProgress || null;
+        }
+
+        if (!onProgress) {
+            return this.request(path, { ...options, method: 'POST', body: formData });
+        }
+
+        // XHR path when a progress callback is requested
+        const method = 'POST';
+        const skipAuth = options.skipAuth || false;
+        const skipWallet = options.skipWalletAuth || false;
+
+        let url = `${this.baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+        if (options.params) {
+            url += this.buildQueryString(options.params);
+        }
+
+        const headers = {};
+        if (!skipAuth) {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            if (!skipWallet) {
+                try {
+                    const walletHeaders = await this.getWalletAuthHeaders(method, path);
+                    Object.assign(headers, walletHeaders);
+                } catch (_) {
+                    // Wallet headers optional — JWT alone is sufficient for most routes
+                }
+            }
+        }
+
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, url);
+            Object.keys(headers).forEach((key) => xhr.setRequestHeader(key, headers[key]));
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable && onProgress) {
+                    onProgress(Math.round((event.loaded / event.total) * 100));
+                }
+            };
+
+            xhr.onload = () => {
+                let data = null;
+                try {
+                    data = JSON.parse(xhr.responseText);
+                } catch (_) {
+                    data = { success: xhr.status < 400, error: xhr.responseText };
+                }
+                if (xhr.status >= 400 || (data && typeof data === 'object' && data.success === false)) {
+                    const error = new Error((data && data.error) || `HTTP error ${xhr.status}`);
+                    error.status = xhr.status;
+                    error.data = data;
+                    reject(error);
+                } else {
+                    resolve(data);
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.send(formData);
         });
     }
 }

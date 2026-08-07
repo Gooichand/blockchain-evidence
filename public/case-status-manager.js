@@ -120,7 +120,7 @@ class CaseStatusManager {
 
     async loadCases(filters = {}) {
         try {
-            const result = await window.apiClient.get('/cases/enhanced', filters);
+            const result = await window.apiClient.get('/cases/enhanced', { params: filters });
             
             if (result.success) {
                 this.renderCaseList(result.cases);

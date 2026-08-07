@@ -35,9 +35,15 @@ const verifyEvidenceHash = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // SECURITY FIX: Authorization check using verified session
-    const user = await authorizeAdminOrAuditor(req, res);
-    if (!user) return;
+    // SECURITY FIX: Authorization check using verified JWT/wallet session
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot verify evidence records' });
+    }
 
     // BUG FIX: Validate ID
     const safeId = parseInt(id, 10);
@@ -239,8 +245,14 @@ const generateVerificationCertificate = async (req, res) => {
   try {
     const { evidenceId } = req.body;
 
-    const user = await authorizeAdminOrAuditor(req, res);
-    if (!user) return;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot generate certificates' });
+    }
 
     const safeId = parseInt(evidenceId, 10);
     if (!evidenceId || isNaN(safeId)) {

@@ -39,16 +39,16 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">12</span>
+                    <span id="statActiveCases" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
                     <span>Active Cases</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">5</span>
-                    <span>Scheduled Hearings</span>
+                    <span id="statEvidenceItems" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
+                    <span>Evidence Items</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                    <span style="font-size: 2rem; font-weight: bold; display: block;">28</span>
-                    <span>Evidence Items</span>
+                    <span id="statLegalHold" style="font-size: 2rem; font-weight: bold; display: block;">0</span>
+                    <span>Evidence Under Legal Hold</span>
                 </div>
             </div>
         </div>
@@ -62,25 +62,25 @@
             <div class="card-body">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📅 Case Scheduling - Manage court dates and hearings')">
+                        onclick="window.location.href='case-management.html'">
                         <span style="font-size: 2.5rem; color: #ea580c;">📅</span>
                         <h3>Case Scheduling</h3>
                         <p>Manage court dates and hearings</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📋 Evidence Review - Review and approve evidence for court')">
+                        onclick="window.location.href='evidence-manager.html'">
                         <span style="font-size: 2.5rem; color: #ea580c;">📋</span>
                         <h3>Evidence Review</h3>
                         <p>Review and approve evidence for court</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('⚖️ Judicial Orders - Create and manage court orders')">
+                        onclick="window.location.href='evidence-export.html'">
                         <span style="font-size: 2.5rem; color: #ea580c;">⚖️</span>
                         <h3>Judicial Orders</h3>
                         <p>Create and manage court orders</p>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;"
-                        onclick="alert('📊 Court Reports - Generate judicial reports and statistics')">
+                        onclick="window.location.href='audit-trail.html'">
                         <span style="font-size: 2.5rem; color: #ea580c;">📊</span>
                         <h3>Court Reports</h3>
                         <p>Generate judicial reports and statistics</p>
@@ -143,11 +143,9 @@
         });
 
         function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
             const userName = currentUser.fullName || 'Court Official';
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = isTestUser ?
-                    `🏛️ ${userName} (Test)` : `🏛️ Court Official`;
+                document.getElementById('userRole').textContent = `🏛️ ${userName}`;
             }
 
             if (currentUser.walletAddress && document.getElementById('userWallet')) {
@@ -158,7 +156,23 @@
 
         async function loadDashboardData() {
             try {
-                const cases = await window.storage.getAllCases();
+                const [casesStats, managerStats, cases] = await Promise.all([
+                    window.apiClient.get('/cases/statistics'),
+                    window.apiClient.get('/evidence/manager-stats'),
+                    window.storage.getAllCases()
+                ]);
+
+                if (casesStats.success) {
+                    const byStatus = (casesStats.statistics && casesStats.statistics.by_status) || [];
+                    const total = byStatus.reduce((sum, s) => sum + (s.count || 0), 0);
+                    if (document.getElementById('statActiveCases')) document.getElementById('statActiveCases').textContent = total;
+                }
+                if (managerStats.success) {
+                    const ms = managerStats.data || {};
+                    if (document.getElementById('statEvidenceItems')) document.getElementById('statEvidenceItems').textContent = ms.total || 0;
+                    if (document.getElementById('statLegalHold')) document.getElementById('statLegalHold').textContent = ms.legal_hold || 0;
+                }
+
                 renderCases(cases);
             } catch (error) {
                 console.error('Error loading court data:', error);
@@ -186,15 +200,15 @@
                     <tbody>
                         ${cases.map(item => `
                             <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 12px;">${item.id}</td>
-                                <td style="padding: 12px;">${item.title}</td>
+                                <td style="padding: 12px;">${item.case_number || item.id || ''}</td>
+                                <td style="padding: 12px;">${item.title || 'Untitled'}</td>
                                 <td style="padding: 12px;">
                                     <span style="background: #ffedd5; color: #9a3412; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
-                                        ${item.status || 'ACTIVE'}
+                                        ${item.status_name || item.status || 'ACTIVE'}
                                     </span>
                                 </td>
                                 <td style="padding: 12px;">
-                                    <button class="btn btn-sm btn-primary" onclick="issueCourtOrder('${item.id}')">Issue Order</button>
+                                    <button class="btn btn-sm btn-primary" onclick="issueCourtOrder('${item.case_number || item.id}')">Issue Order</button>
                                 </td>
                             </tr>
                         `).join('')}

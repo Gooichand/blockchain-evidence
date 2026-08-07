@@ -1,12 +1,13 @@
 const { supabase } = require('../config');
 const { createNotification } = require('../services/notificationService');
 const { createStatusChangeNotification } = require('../services/caseHelpers');
+const { getAuthUser, getStableWallet } = require('../middleware/identity');
 
 // Get cases for timeline
 const getCases = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -16,7 +17,7 @@ const getCases = async (req, res) => {
       .order('created_date', { ascending: false })) || {};
     
     if (error) throw error;
-    res.json({ success: true, data: cases });
+    res.json({ success: true, data: cases, cases });
   } catch (error) {
     console.error('Get cases error:', error);
     const msg = process.env.NODE_ENV === 'production' ? 'Failed to get cases' : error.message;
@@ -34,7 +35,7 @@ const getCaseStatuses = async (req, res) => {
       .order('sort_order', { ascending: true })) || {};
     
     if (error) throw error;
-    res.json({ success: true, data: statuses });
+    res.json({ success: true, data: statuses, statuses });
   } catch (error) {
     console.error('Get case statuses error:', error);
     const msg = process.env.NODE_ENV === 'production' ? 'Failed to get case statuses' : error.message;
@@ -45,8 +46,8 @@ const getCaseStatuses = async (req, res) => {
 // Get cases with enhanced filtering
 const getEnhancedCases = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -110,6 +111,7 @@ const getEnhancedCases = async (req, res) => {
     res.json({
       success: true,
       data: cases,
+      cases,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -128,10 +130,11 @@ const getEnhancedCases = async (req, res) => {
 const createCase = async (req, res) => {
   try {
     // SECURITY FIX: Use verified wallet from session
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+    const verifiedWallet = getStableWallet(req) || `user_${authUser.id}`;
 
     const {
       title,
@@ -146,15 +149,7 @@ const createCase = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Case title is required' });
     }
 
-    // Check user permissions to create cases
-    const { data: user } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (!user || !['admin', 'investigator', 'evidence_manager'].includes(user.role)) {
+    if (!['admin', 'investigator', 'evidence_manager'].includes(authUser.role)) {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to create cases' });
     }
 
@@ -201,9 +196,9 @@ const createCase = async (req, res) => {
 const getCaseDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const authUser = await getAuthUser(req);
 
-    if (!verifiedWallet) {
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -245,6 +240,12 @@ const getCaseDetails = async (req, res) => {
 
     res.json({
       success: true,
+      case: {
+        ...caseData,
+        status_history: statusHistory,
+        assignments,
+        evidence_count: evidenceCount || 0,
+      },
       data: {
         ...caseData,
         status_history: statusHistory,
@@ -266,24 +267,16 @@ const updateCaseStatus = async (req, res) => {
     const { newStatusCode, reason, metadata = {} } = req.body;
     
     // SECURITY FIX: Use verified identity
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+    const verifiedWallet = getStableWallet(req) || `user_${authUser.id}`;
 
     const safeId = parseInt(id, 10);
     if (isNaN(safeId)) {
       return res.status(400).json({ success: false, error: 'Invalid case ID' });
     }
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-    
-    if (userError || !user) return res.status(403).json({ success: false, error: 'User not found or inactive' });
 
     const { data: currentCase, error: caseError } = (await supabase
       .from('cases')
@@ -307,14 +300,14 @@ const updateCaseStatus = async (req, res) => {
       .select('*')
       .eq('from_status_id', currentCase.status_id)
       .eq('to_status_id', newStatus.id)
-      .eq('required_role', user.role)
+      .eq('required_role', authUser.role)
       .eq('is_active', true)
       .single()) || {};
     
     if (transitionError || !transition) {
       return res.status(403).json({
         success: false,
-        error: `Status transition not allowed for role: ${user.role}`,
+        error: `Status transition not allowed for role: ${authUser.role}`,
         currentStatus: currentCase.case_statuses.status_code,
         requestedStatus: newStatusCode,
       });
@@ -341,7 +334,7 @@ const updateCaseStatus = async (req, res) => {
       change_reason: reason || 'Status updated via API',
       metadata: {
         ...metadata,
-        user_role: user.role,
+        user_role: authUser.role,
         transition_name: transition.transition_name,
       },
     });
@@ -379,9 +372,9 @@ const updateCaseStatus = async (req, res) => {
 const getAvailableTransitions = async (req, res) => {
   try {
     const { id } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const authUser = await getAuthUser(req);
 
-    if (!verifiedWallet) {
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -389,14 +382,6 @@ const getAvailableTransitions = async (req, res) => {
     if (isNaN(safeId)) {
       return res.status(400).json({ success: false, error: 'Invalid case ID' });
     }
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .single()) || {};
-    
-    if (userError || !user) return res.status(403).json({ success: false, error: 'User not found' });
 
     const { data: currentCase, error: caseError } = (await supabase
       .from('cases')
@@ -412,12 +397,12 @@ const getAvailableTransitions = async (req, res) => {
         `*, to_status:case_statuses!case_status_transitions_to_status_id_fkey(status_code, status_name, color_code, icon)`,
       )
       .eq('from_status_id', currentCase.status_id)
-      .eq('required_role', user.role)
+      .eq('required_role', authUser.role)
       .eq('is_active', true)) || {};
     
     if (transitionError) throw transitionError;
 
-    res.json({ success: true, data: transitions });
+    res.json({ success: true, data: transitions, transitions });
   } catch (error) {
     console.error('Get available transitions error:', error);
     const msg = process.env.NODE_ENV === 'production' ? 'Failed to get transitions' : error.message;
@@ -437,10 +422,11 @@ const assignCase = async (req, res) => {
     } = req.body;
     
     // SECURITY FIX: Use verified identity for 'assignedBy'
-    const assignedByWallet = req.authenticatedWallet;
-    if (!assignedByWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
+    const assignedByWallet = getStableWallet(req) || `user_${authUser.id}`;
 
     const safeId = parseInt(id, 10);
     if (isNaN(safeId)) {
@@ -453,17 +439,7 @@ const assignCase = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid assignee wallet address' });
     }
 
-    const { data: assigner, error: assignerError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', assignedByWallet)
-      .single()) || {};
-    
-    if (
-      assignerError ||
-      !assigner ||
-      !['admin', 'court_official', 'evidence_manager'].includes(assigner.role)
-    ) {
+    if (!['admin', 'court_official', 'evidence_manager'].includes(authUser.role)) {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to assign cases' });
     }
 
@@ -536,8 +512,8 @@ const assignCase = async (req, res) => {
 // Get case statistics by status
 const getCaseStatistics = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -609,6 +585,12 @@ const getCaseStatistics = async (req, res) => {
         recent_activity: recentActivity,
         timeframe,
       },
+      statistics: {
+        by_status: Object.values(statusCounts),
+        by_priority: priorityCounts,
+        recent_activity: recentActivity,
+        timeframe,
+      },
     });
   } catch (error) {
     console.error('Get case statistics error:', error);
@@ -620,8 +602,8 @@ const getCaseStatistics = async (req, res) => {
 // Export cases as CSV
 const exportCases = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
-    if (!verifiedWallet) {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 

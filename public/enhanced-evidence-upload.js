@@ -234,7 +234,10 @@ class EvidenceUploader {
             this.updateProgress(100, file.size, file.size, 'Upload complete!');
             await this.delay(500);
 
-            this.showSuccess(`✅ Evidence uploaded successfully!\n📦 IPFS: ${result.evidence?.ipfs_cid?.substring(0, 12)}...\n⛓️ TX: ${result.evidence?.blockchain_tx_hash?.substring(0, 12)}...`);
+            const uploaded = result.data || result.evidence || result;
+            const ipfsCid = uploaded.ipfs_cid || (result.ipfs && result.ipfs.cid);
+            const txHash = uploaded.blockchain_tx_hash || (result.blockchain && result.blockchain.txHash);
+            this.showSuccess(`✅ Evidence uploaded successfully!\n📦 IPFS: ${(ipfsCid || 'n/a').substring(0, 12)}...\n⛓️ TX: ${(txHash || 'n/a').substring(0, 12)}...`);
             return result;
 
         } catch (error) {

@@ -19,20 +19,16 @@ const archiver = require('archiver');
 const downloadEvidence = async (req, res) => {
   try {
     const { id } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const { getAuthUser, getStableWallet } = require('../middleware/identity');
+    const verifiedWallet = getStableWallet(req);
 
     if (!verifiedWallet) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('*')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
+    const user = await getAuthUser(req);
 
-    if (userError || !user) {
+    if (!user) {
       return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });
     }
 
@@ -87,10 +83,11 @@ const downloadEvidence = async (req, res) => {
 // Bulk export multiple evidence files as ZIP
 const bulkExport = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
     const { evidenceIds } = req.body;
 
-    if (!verifiedWallet) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
@@ -100,17 +97,6 @@ const bulkExport = async (req, res) => {
 
     if (evidenceIds.length > 50) {
       return res.status(400).json({ success: false, error: 'Maximum 50 files per bulk export' });
-    }
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('*')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (userError || !user) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
@@ -135,6 +121,9 @@ const bulkExport = async (req, res) => {
     res.on('error', (err) => {
       console.error('Response stream error:', err);
     });
+
+    const { getStableWallet } = require('../middleware/identity');
+    const verifiedWallet = getStableWallet(req) || 'unknown';
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const zipFilename = `evidence_export_${timestamp}.zip`;
@@ -209,20 +198,14 @@ const bulkExport = async (req, res) => {
 const getDownloadHistory = async (req, res) => {
   try {
     const { id } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
 
-    if (!verifiedWallet) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (userError || !user || !['admin', 'auditor'].includes(user.role)) {
+    if (!['admin', 'auditor'].includes(user.role)) {
       return res.status(403).json({ success: false, error: 'Unauthorized: Admin or Auditor role required' });
     }
 
@@ -273,24 +256,14 @@ const getDownloadHistory = async (req, res) => {
 // Get all evidence with filtering
 const getAllEvidence = async (req, res) => {
   try {
-    const verifiedWallet = req.authenticatedWallet;
-    
-    if (!verifiedWallet) {
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const { limit = 50, offset = 0, case_id, status, submitted_by } = req.query;
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('*')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (userError || !user) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access' });
-    }
 
     if (user.role === 'public_viewer') {
       return res.status(403).json({ success: false, error: 'Public viewers cannot list evidence' });
@@ -341,21 +314,11 @@ const getAllEvidence = async (req, res) => {
 const getEvidenceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
 
-    if (!verifiedWallet) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
-    }
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (userError || !user) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {
@@ -384,21 +347,11 @@ const getEvidenceById = async (req, res) => {
 const getEvidenceByCase = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const verifiedWallet = req.authenticatedWallet;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
 
-    if (!verifiedWallet) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
-    }
-
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('role')
-      .eq('wallet_address', verifiedWallet)
-      .eq('is_active', true)
-      .single()) || {};
-
-    if (userError || !user) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access' });
     }
 
     if (user.role === 'public_viewer') {

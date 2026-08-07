@@ -1,6 +1,24 @@
 const { supabase } = require('../config');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
 const { createNotification } = require('../services/notificationService');
+const { getAuthUser, getStableWallet } = require('../middleware/identity');
+
+const resolveActor = async (req) => {
+  const authUser = await getAuthUser(req);
+  if (authUser) {
+    return { user: authUser, wallet: getStableWallet(req) || `user_${authUser.id}` };
+  }
+  const claimed = req.body?.userWallet;
+  if (claimed && validateWalletAddress(claimed)) {
+    const { data: legacyUser } = (await supabase
+      .from('users')
+      .select('*')
+      .eq('wallet_address', claimed.toLowerCase())
+      .single()) || {};
+    return { user: legacyUser || null, wallet: claimed };
+  }
+  return null;
+};
 
 const getRetentionPolicies = async (req, res) => {
   try {
@@ -19,10 +37,10 @@ const getRetentionPolicies = async (req, res) => {
 
 const createRetentionPolicy = async (req, res) => {
   try {
-    const { name, caseType, retentionDays, archiveMethod, jurisdiction, lawReference, userWallet } =
-      req.body;
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const { name, caseType, retentionDays, archiveMethod, jurisdiction, lawReference } = req.body;
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
     const { data: policy, error } = (await supabase
       .from('retention_policies')
@@ -33,7 +51,7 @@ const createRetentionPolicy = async (req, res) => {
         archive_method: archiveMethod,
         jurisdiction,
         law_reference: lawReference,
-        created_by: userWallet,
+        created_by: actor.wallet,
       })
       .select()
       .single()) || {};
@@ -133,24 +151,19 @@ const getEvidenceExpiry = async (req, res) => {
 const setLegalHold = async (req, res) => {
   try {
     const { id } = req.params;
-    const { legalHold, userWallet } = req.body;
+    const { legalHold } = req.body;
 
     if (typeof legalHold !== 'boolean') {
       return res.status(400).json({ error: 'legalHold must be a boolean value' });
     }
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
-    // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('id, role, is_active')
-      .eq('wallet_address', userWallet.toLowerCase())
-      .single()) || {};
-
-    if (userError || !user) {
+    const user = actor.user;
+    if (!user) {
       return res.status(403).json({ error: 'User not found' });
     }
 
@@ -183,7 +196,7 @@ const setLegalHold = async (req, res) => {
 
     // Audit log (check returned error since Supabase does not throw on DB failures)
     const { error: auditLogError } = (await supabase.from('activity_logs').insert({
-      user_id: userWallet,
+      user_id: actor.wallet,
       action: legalHold ? 'legal_hold_set' : 'legal_hold_removed',
       details: `Evidence ID: ${id}`,
       timestamp: new Date().toISOString(),
@@ -202,20 +215,15 @@ const setLegalHold = async (req, res) => {
 // Apply retention policy to multiple evidence
 const bulkRetentionPolicy = async (req, res) => {
   try {
-    const { policyId, evidenceIds, userWallet } = req.body;
+    const { policyId, evidenceIds } = req.body;
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
-    // Verify user exists, is active, and has an authorized role
-    const { data: user, error: userError } = (await supabase
-      .from('users')
-      .select('id, role, is_active')
-      .eq('wallet_address', userWallet.toLowerCase())
-      .single()) || {};
-
-    if (userError || !user || !user.is_active) {
+    const user = actor.user;
+    if (!user || !user.is_active) {
       return res.status(403).json({ error: 'User not found or inactive' });
     }
 
@@ -260,7 +268,7 @@ const bulkRetentionPolicy = async (req, res) => {
 
     // Audit log (check returned error since Supabase does not throw on DB failures)
     const { error: auditLogError } = (await supabase.from('activity_logs').insert({
-      user_id: userWallet,
+      user_id: actor.wallet,
       action: 'bulk_retention_policy_applied',
       details: JSON.stringify({
         policy_id: policyId,
@@ -277,6 +285,178 @@ const bulkRetentionPolicy = async (req, res) => {
   } catch (error) {
     console.error('Bulk retention policy error:', error);
     res.status(500).json({ error: 'Failed to apply retention policy' });
+  }
+};
+
+// Update an existing retention policy
+const updateRetentionPolicy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const safeId = parseInt(id, 10);
+    if (isNaN(safeId)) {
+      return res.status(400).json({ error: 'Invalid policy ID' });
+    }
+
+    const {
+      name, caseType, retentionDays, archiveMethod, jurisdiction, lawReference, isActive,
+    } = req.body;
+
+    const patch = {};
+    if (name !== undefined) patch.name = name;
+    if (caseType !== undefined) patch.case_type = caseType;
+    if (retentionDays !== undefined) patch.retention_days = parseInt(retentionDays, 10);
+    if (archiveMethod !== undefined) patch.archive_method = archiveMethod;
+    if (jurisdiction !== undefined) patch.jurisdiction = jurisdiction;
+    if (lawReference !== undefined) patch.law_reference = lawReference;
+    if (isActive !== undefined) patch.is_active = Boolean(isActive);
+
+    const { data: policy, error } = (await supabase
+      .from('retention_policies')
+      .update(patch)
+      .eq('id', safeId)
+      .select()
+      .single()) || {};
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, error: 'Retention policy not found' });
+      }
+      throw error;
+    }
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: req.headers['x-user-wallet'] || req.authenticatedWallet || 'system',
+      action: 'retention_policy_updated',
+      details: JSON.stringify({ policy_id: safeId }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log retention policy update:', logError);
+
+    res.json({ success: true, policy });
+  } catch (error) {
+    console.error('Update retention policy error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update retention policy' });
+  }
+};
+
+// Deactivate (soft delete) a retention policy
+const deleteRetentionPolicy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const safeId = parseInt(id, 10);
+    if (isNaN(safeId)) {
+      return res.status(400).json({ success: false, error: 'Invalid policy ID' });
+    }
+
+    const { data: policy, error } = (await supabase
+      .from('retention_policies')
+      .update({ is_active: false })
+      .eq('id', safeId)
+      .select()
+      .single()) || {};
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, error: 'Retention policy not found' });
+      }
+      throw error;
+    }
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: req.headers['x-user-wallet'] || req.authenticatedWallet || 'system',
+      action: 'retention_policy_deleted',
+      details: JSON.stringify({ policy_id: safeId, name: policy.name }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log retention policy delete:', logError);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete retention policy error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete retention policy' });
+  }
+};
+
+// Evidence expiring within N days (legacy raw-array contract used across workstations)
+const getEvidenceExpiring = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const daysNum = parseInt(days, 10);
+
+    const now = new Date();
+    const horizon = new Date(now.getTime() + (daysNum || 0) * 24 * 60 * 60 * 1000);
+
+    let query = supabase
+      .from('evidence')
+      .select('id, title, file_name, case_id, expiry_date, retention_policy_id, submitted_by, legal_hold, archived, timestamp');
+
+    if (daysNum > 0) {
+      query = query
+        .not('expiry_date', 'is', null)
+        .lte('expiry_date', horizon.toISOString());
+    }
+    // days === 0 → everything with an expiry_date (incl. expired)
+
+    const { data: rows, error } = (await query.order('expiry_date', { ascending: true }).limit(500)) || {};
+    if (error) throw error;
+
+    const data = (rows || []).map((row) => {
+      const daysUntil = row.expiry_date
+        ? Math.ceil((new Date(row.expiry_date) - now) / (24 * 60 * 60 * 1000))
+        : null;
+      return {
+        id: row.id,
+        title: row.title || row.file_name || `Evidence ${row.id}`,
+        caseId: row.case_id || null,
+        expiryDate: row.expiry_date,
+        daysUntilExpiry: daysUntil,
+        retentionPolicyId: row.retention_policy_id || null,
+        submittedBy: row.submitted_by || null,
+        legal_hold: Boolean(row.legal_hold),
+        archived: Boolean(row.archived),
+      };
+    });
+
+    res.json(data);
+  } catch (error) {
+    console.error('Get evidence expiring error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get expiring evidence' });
+  }
+};
+
+// Archive evidence items (retention archive flow)
+const archiveEvidence = async (req, res) => {
+  try {
+    const { evidenceIds, archiveLocation, archivedBy } = req.body;
+
+    if (!Array.isArray(evidenceIds) || evidenceIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'evidenceIds must be a non-empty array' });
+    }
+
+    const { error, count } = (await supabase
+      .from('evidence')
+      .update({
+        archived: true,
+        archive_location: archiveLocation || 'Archive',
+        archived_at: new Date().toISOString(),
+        archived_by: archivedBy || req.headers['x-user-wallet'] || req.authenticatedWallet || 'system',
+      }, { count: 'exact' })
+      .in('id', evidenceIds)) || {};
+
+    if (error) throw error;
+
+    const updatedCount = count ?? 0;
+
+    const { error: logError } = (await supabase.from('activity_logs').insert({
+      user_id: req.headers['x-user-wallet'] || req.authenticatedWallet || 'system',
+      action: 'evidence_archived',
+      details: JSON.stringify({ evidence_ids: evidenceIds, location: archiveLocation || 'Archive' }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (logError) console.error('Failed to log evidence archive:', logError);
+
+    res.json({ success: true, updated: updatedCount });
+  } catch (error) {
+    console.error('Archive evidence error:', error);
+    res.status(500).json({ success: false, error: 'Failed to archive evidence' });
   }
 };
 
@@ -351,4 +531,8 @@ module.exports = {
   setLegalHold,
   bulkRetentionPolicy,
   checkExpiry,
+  updateRetentionPolicy,
+  deleteRetentionPolicy,
+  getEvidenceExpiring,
+  archiveEvidence,
 };

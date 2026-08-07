@@ -318,53 +318,7 @@
             </div>
             <div class="card-body">
                 <div class="cases-grid" id="casesGrid">
-                    <div class="case-card">
-                        <div class="case-header">
-                            <h3>Burglary Investigation</h3>
-                            <span class="status-badge status-open">OPEN</span>
-                        </div>
-                        <p><strong>Case ID:</strong> INV-2024-001</p>
-                        <p><strong>Location:</strong> Downtown Office Building</p>
-                        <p><strong>Date:</strong> March 15, 2024</p>
-                        <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-001')">View
-                                Details</button>
-                            <button class="btn btn-sm btn-outline" onclick="addEvidence('INV-2024-001')">Add
-                                Evidence</button>
-                        </div>
-                    </div>
-
-                    <div class="case-card">
-                        <div class="case-header">
-                            <h3>Fraud Investigation</h3>
-                            <span class="status-badge status-analyzing">ANALYZING</span>
-                        </div>
-                        <p><strong>Case ID:</strong> INV-2024-002</p>
-                        <p><strong>Location:</strong> Financial District</p>
-                        <p><strong>Date:</strong> March 12, 2024</p>
-                        <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('INV-2024-002')">View
-                                Details</button>
-                            <button class="btn btn-sm btn-outline" onclick="requestAnalysis('INV-2024-002')">Request
-                                Analysis</button>
-                        </div>
-                    </div>
-
-                    <div class="case-card">
-                        <div class="case-header">
-                            <h3>Theft Investigation</h3>
-                            <span class="status-badge status-closed">CLOSED</span>
-                        </div>
-                        <p><strong>Case ID:</strong> INV-2024-003</p>
-                        <p><strong>Location:</strong> Retail Store</p>
-                        <p><strong>Date:</strong> March 10, 2024</p>
-                        <div class="case-actions" style="margin-top: 15px;">
-                            <button class="btn btn-sm btn-outline" onclick="viewReport('INV-2024-003')">View
-                                Report</button>
-                            <button class="btn btn-sm btn-outline"
-                                onclick="archiveCase('INV-2024-003')">Archive</button>
-                        </div>
-                    </div>
+                    <div class="no-data">Loading cases...</div>
                 </div>
             </div>
         </div>
@@ -381,25 +335,25 @@
                     <div class="stat-item"
                         style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
                         <div style="font-size: 2rem; color: #3b82f6;">📸</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">12</div>
+                        <div id="statPhotos" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Photos</div>
                     </div>
                     <div class="stat-item"
                         style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
                         <div style="font-size: 2rem; color: #10b981;">📄</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">8</div>
+                        <div id="statDocs" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Documents</div>
                     </div>
                     <div class="stat-item"
                         style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
                         <div style="font-size: 2rem; color: #f59e0b;">🎥</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">3</div>
+                        <div id="statVideos" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Videos</div>
                     </div>
                     <div class="stat-item"
                         style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
                         <div style="font-size: 2rem; color: #ef4444;">🔒</div>
-                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">100%</div>
+                        <div id="statVerified" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0%</div>
                         <div>Verified</div>
                     </div>
                 </div>
@@ -417,29 +371,22 @@
 
         async function initializeDashboard() {
             try {
-                const userAccount = localStorage.getItem('currentUser');
-                if (!userAccount) {
+                if (!localStorage.getItem('authToken')) {
                     window.location.href = 'index.html';
                     return;
                 }
 
-                // Get user data from localStorage
-                let userData = JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}');
+                const userAccount = localStorage.getItem('currentUser');
+                let userData = userAccount ? JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}') : null;
 
-                if (!userData.role) {
-                    // Try to get role from selectedRole if user data is missing
-                    const selectedRole = localStorage.getItem('selectedRole');
-                    if (selectedRole) {
-                        userData.role = selectedRole;
-                        userData.fullName = localStorage.getItem('testUserName') || 'Investigator';
-                        userData.walletAddress = userAccount;
-                        // Save the user data
-                        localStorage.setItem('evidUser_' + userAccount, JSON.stringify(userData));
-                    } else {
-                        alert('User data not found. Please login again.');
-                        logout();
-                        return;
-                    }
+                if (!userData || !userData.role) {
+                    userData = window.apiClient.getCurrentUser();
+                }
+
+                if (!userData || !userData.role) {
+                    alert('User data not found. Please login again.');
+                    logout();
+                    return;
                 }
 
                 currentUser = userData;
@@ -453,111 +400,93 @@
         }
 
         function updateUserInterface() {
-            const isTestUser = localStorage.getItem('testUserMode') === 'true';
-            const userName = currentUser.fullName || 'Investigator';
+            const userName = currentUser.fullName || currentUser.full_name || 'Investigator';
+            const roleName = currentUser.role || 'investigator';
 
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = isTestUser ?
-                    `🕵️ ${userName} (Test)` : `🕵️ Investigator`;
+                document.getElementById('userRole').textContent = `🕵️ ${userName} (${roleName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())})`;
             }
 
-            if (currentUser.walletAddress && document.getElementById('userWallet')) {
+            const wallet = currentUser.walletAddress || currentUser.wallet_address;
+            if (wallet && document.getElementById('userWallet')) {
                 document.getElementById('userWallet').textContent =
-                    currentUser.walletAddress.slice(0, 6) + '...' + currentUser.walletAddress.slice(-4);
+                    wallet.slice(0, 6) + '...' + wallet.slice(-4);
+            } else if (document.getElementById('userWallet')) {
+                document.getElementById('userWallet').textContent = currentUser.email || '';
             }
         }
 
         async function loadDashboardData() {
             try {
-                // Try to load real data from backend via secure apiClient
-                const result = await window.apiClient.get('/cases');
-                
-                if (result.success) {
-                    const cases = result.data || [];
-                    const activeCases = cases.filter(c => c.status === 'OPEN' || c.status === 'active').length;
-                    
-                    document.getElementById('activeCases').textContent = activeCases;
-                    document.getElementById('evidenceItems').textContent = '...'; // Will load per case or via separate endpoint
-                    
-                    const casesGrid = document.getElementById('casesGrid');
-                    if (cases.length > 0) {
-                        casesGrid.innerHTML = cases.slice(0, 6).map(c => `
+                const [casesResult, evidenceResult] = await Promise.all([
+                    window.apiClient.get('/cases'),
+                    window.apiClient.get('/evidence', { skipWalletAuth: true })
+                ]);
+
+                const cases = casesResult.data || casesResult.cases || [];
+                const evidence = evidenceResult.data || evidenceResult.evidence || [];
+
+                const activeCases = cases.filter(c => {
+                    const s = (c.status || '').toLowerCase();
+                    return !['closed', 'archived', 'completed'].includes(s);
+                }).length;
+
+                document.getElementById('activeCases').textContent = activeCases;
+                document.getElementById('evidenceItems').textContent = evidence.length;
+
+                // Evidence type breakdown
+                const photos = evidence.filter(e => (e.file_type || '').includes('image')).length;
+                const docs = evidence.filter(e => (e.file_type || '').includes('pdf') || (e.file_type || '').includes('document') || (e.file_type || '').includes('word') || (e.file_type || '').includes('text')).length;
+                const videos = evidence.filter(e => (e.file_type || '').includes('video')).length;
+                const verified = evidence.length > 0
+                    ? Math.round((evidence.filter(e => e.blockchain_tx_hash || e.blockchain_verified).length / evidence.length) * 100)
+                    : 0;
+
+                if (document.getElementById('statPhotos')) document.getElementById('statPhotos').textContent = photos;
+                if (document.getElementById('statDocs')) document.getElementById('statDocs').textContent = docs;
+                if (document.getElementById('statVideos')) document.getElementById('statVideos').textContent = videos;
+                if (document.getElementById('statVerified')) document.getElementById('statVerified').textContent = verified + '%';
+
+                const casesGrid = document.getElementById('casesGrid');
+                if (cases.length > 0) {
+                    casesGrid.innerHTML = cases.slice(0, 6).map(c => `
                             <div class="case-card">
                                 <div class="case-header">
                                     <h3>${c.title}</h3>
                                     <span class="status-badge status-${(c.status || 'open').toLowerCase()}">${c.status || 'OPEN'}</span>
                                 </div>
                                 <p><strong>Case ID:</strong> ${c.id}</p>
-                                <p><strong>Location:</strong> ${c.location || 'N/A'}</p>
-                                <p><strong>Date:</strong> ${new Date(c.created_at || Date.now()).toLocaleDateString()}</p>
+                                <p><strong>Case Number:</strong> ${c.case_number || 'N/A'}</p>
+                                <p><strong>Date:</strong> ${new Date(c.created_date || c.created_at || Date.now()).toLocaleDateString()}</p>
                                 <div class="case-actions" style="margin-top: 15px;">
                                     <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('${c.id}')">View Details</button>
                                     <button class="btn btn-sm btn-outline" onclick="addEvidence('${c.id}')">Add Evidence</button>
                                 </div>
                             </div>
                         `).join('');
-                    } else {
-                        casesGrid.innerHTML = '<div class="no-data">No cases found in database.</div>';
-                    }
+                } else {
+                    casesGrid.innerHTML = '<div class="no-data">No cases found in database.</div>';
                 }
             } catch (error) {
-                console.warn('Backend data load failed, using localStorage fallback');
-                // Fallback to localStorage for demo/offline
-                const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-                const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
-                document.getElementById('activeCases').textContent = cases.filter(c => c.status === 'OPEN').length;
-                document.getElementById('evidenceItems').textContent = evidence.length;
+                console.error('Dashboard data load failed:', error);
+                document.getElementById('casesGrid').innerHTML = '<div class="no-data">Failed to load cases from server. Please refresh.</div>';
             }
         }
+        async function viewCaseDetails(caseId) {
+            try {
+                const result = await window.apiClient.get(`/cases/${caseId}/details`, { skipWalletAuth: true });
+                if (!result.success) throw new Error(result.error || 'Failed to load case');
 
-        function viewCaseDetails(caseId) {
-            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-            let caseData = cases.find(c => c.id === caseId);
+                const caseData = result.case || result.data;
+                const status = caseData.case_statuses || { status_name: caseData.status || 'OPEN' };
+                const priority = caseData.priority_level || 3;
 
-            // If not found in stored cases, use default data
-            if (!caseData) {
-                const defaultCases = {
-                    'INV-2024-001': {
-                        id: 'INV-2024-001',
-                        title: 'Burglary Investigation',
-                        status: 'OPEN',
-                        location: 'Downtown Office Building',
-                        date: 'March 15, 2024',
-                        description: 'Investigation of commercial burglary involving multiple offices',
-                        officer: 'Detective Johnson',
-                        priority: 'High'
-                    },
-                    'INV-2024-002': {
-                        id: 'INV-2024-002',
-                        title: 'Fraud Investigation',
-                        status: 'ANALYZING',
-                        location: 'Financial District',
-                        date: 'March 12, 2024',
-                        description: 'Financial fraud investigation involving multiple transactions',
-                        officer: 'Detective Smith',
-                        priority: 'Medium'
-                    },
-                    'INV-2024-003': {
-                        id: 'INV-2024-003',
-                        title: 'Theft Investigation',
-                        status: 'CLOSED',
-                        location: 'Retail Store',
-                        date: 'March 10, 2024',
-                        description: 'Retail theft investigation - case resolved',
-                        officer: 'Detective Davis',
-                        priority: 'Low'
-                    }
-                };
-                caseData = defaultCases[caseId];
-            }
-
-            if (caseData) {
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h3>📁 Case Details - ${caseData.id}</h3>
+                            <h3>📁 Case Details - ${caseData.case_number || caseData.id}</h3>
                             <button class="modal-close" onclick="this.closest('.modal').remove()">
                                 <i data-lucide="x"></i>
                             </button>
@@ -565,14 +494,14 @@
                         <div class="modal-body">
                             <div class="case-details">
                                 <h4>${caseData.title}</h4>
-                                <p><strong>Description:</strong> ${caseData.description}</p>
+                                <p><strong>Description:</strong> ${caseData.description || 'No description provided'}</p>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-                                    <div><strong>Status:</strong> <span class="status-badge status-${caseData.status.toLowerCase()}">${caseData.status}</span></div>
-                                    <div><strong>Priority:</strong> ${caseData.priority}</div>
-                                    <div><strong>Location:</strong> ${caseData.location}</div>
-                                    <div><strong>Date:</strong> ${caseData.date}</div>
-                                    <div><strong>Assigned Officer:</strong> ${caseData.officer}</div>
-                                    <div><strong>Created By:</strong> ${caseData.createdBy || 'System'}</div>
+                                    <div><strong>Status:</strong> <span class="status-badge status-${(caseData.status || 'open').toLowerCase()}">${status.status_name}</span></div>
+                                    <div><strong>Priority:</strong> Level ${priority}</div>
+                                    <div><strong>Case Type:</strong> ${caseData.case_type || 'N/A'}</div>
+                                    <div><strong>Jurisdiction:</strong> ${caseData.jurisdiction || 'N/A'}</div>
+                                    <div><strong>Date:</strong> ${new Date(caseData.created_date || Date.now()).toLocaleDateString()}</div>
+                                    <div><strong>Evidence Count:</strong> ${caseData.evidence_count || 0}</div>
                                 </div>
                             </div>
                         </div>
@@ -584,6 +513,9 @@
                 `;
                 document.body.appendChild(modal);
                 lucide.createIcons();
+            } catch (error) {
+                console.error('Failed to load case details:', error);
+                alert('Failed to load case details: ' + (error.message || error));
             }
         }
 
@@ -662,7 +594,7 @@
                 formData.append('file', file);
 
                 // Use secure apiClient for multipart upload
-                const result = await window.apiClient.post('/evidence/upload', formData);
+                const result = await window.apiClient.upload('/evidence/upload', formData);
 
                 if (result.success) {
                     // Close modal
@@ -678,20 +610,6 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
-            }
-        }
-
-        function requestAnalysis(caseId) {
-            showToast('🔬 Analysis request submitted for ' + caseId, 'info');
-        }
-
-        function viewReport(caseId) {
-            showToast('📊 Generating report for ' + caseId + '...', 'info');
-        }
-
-        function archiveCase(caseId) {
-            if (confirm('Are you sure you want to archive case ' + caseId + '?')) {
-                showToast('📦 Case ' + caseId + ' archived successfully', 'success');
             }
         }
 
@@ -759,73 +677,53 @@
         }
 
         function uploadEvidence() {
-            // Create a simple evidence upload interface
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*,video/*,.pdf,.doc,.docx,.txt';
-            input.onchange = function (e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const evidenceId = 'EVD-' + Date.now();
-                    const evidence = {
-                        id: evidenceId,
-                        fileName: file.name,
-                        fileSize: file.size,
-                        fileType: file.type,
-                        uploadedBy: currentUser.fullName || 'Investigator',
-                        uploadedAt: new Date().toISOString(),
-                        status: 'Verified',
-                        hash: 'sha256:' + Math.random().toString(36).substring(2, 15)
-                    };
-
-                    // Save to localStorage
-                    const evidenceList = JSON.parse(localStorage.getItem('evidence') || '[]');
-                    evidenceList.unshift(evidence);
-                    localStorage.setItem('evidence', JSON.stringify(evidenceList));
-
-                    alert(`✅ Evidence uploaded successfully!\n\nEvidence ID: ${evidenceId}\nFile: ${file.name}\nSize: ${(file.size / 1024).toFixed(2)} KB\nStatus: Verified`);
-                    loadDashboardData();
-                }
-            };
-            input.click();
+            window.location.href = 'enhanced-evidence-upload.html';
         }
 
-        function searchCases() {
-            const searchTerm = prompt('Enter search term (case ID, title, or location):');
-            if (searchTerm) {
-                const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-                const results = cases.filter(c =>
-                    c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    c.location.toLowerCase().includes(searchTerm.toLowerCase())
-                );
+        async function searchCases() {
+            const searchTerm = prompt('Enter search term (case title, description, or case number):');
+            if (!searchTerm) return;
 
-                if (results.length > 0) {
+            try {
+                const result = await window.apiClient.get('/cases/enhanced', { params: { search: searchTerm, limit: 20 } });
+                const cases = result.cases || result.data || [];
+
+                if (cases.length > 0) {
                     let resultText = `🔍 Search Results for "${searchTerm}":\n\n`;
-                    results.forEach(c => {
-                        resultText += `• ${c.id}: ${c.title} (${c.status})\n`;
+                    cases.forEach(c => {
+                        const status = c.case_statuses?.status_name || c.status || 'OPEN';
+                        resultText += `• ${c.case_number || c.id}: ${c.title} (${status})\n`;
                     });
                     alert(resultText);
                 } else {
                     alert(`No cases found matching "${searchTerm}"`);
                 }
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('Search failed: ' + (error.message || error));
             }
         }
 
-        function generateReport() {
-            const cases = JSON.parse(localStorage.getItem('cases') || '[]');
-            const evidence = JSON.parse(localStorage.getItem('evidence') || '[]');
+        async function generateReport() {
+            try {
+                const [casesResult, evidenceResult] = await Promise.all([
+                    window.apiClient.get('/cases'),
+                    window.apiClient.get('/evidence', { skipWalletAuth: true })
+                ]);
 
-            const report = {
-                generatedBy: currentUser.fullName || 'Investigator',
-                generatedAt: new Date().toISOString(),
-                totalCases: cases.length,
-                totalEvidence: evidence.length,
-                activeCases: cases.filter(c => c.status === 'OPEN').length,
-                closedCases: cases.filter(c => c.status === 'CLOSED').length
-            };
+                const cases = casesResult.data || casesResult.cases || [];
+                const evidence = evidenceResult.data || evidenceResult.evidence || [];
 
-            alert(`📊 Investigation Report\n\nGenerated by: ${report.generatedBy}\nDate: ${new Date(report.generatedAt).toLocaleDateString()}\n\nTotal Cases: ${report.totalCases}\nActive Cases: ${report.activeCases}\nClosed Cases: ${report.closedCases}\nTotal Evidence: ${report.totalEvidence}\n\n✅ Report generated successfully!`);
+                const activeCases = cases.filter(c => {
+                    const s = (c.status || '').toLowerCase();
+                    return !['closed', 'archived', 'completed'].includes(s);
+                }).length;
+
+                alert(`📊 Investigation Report\n\nGenerated by: ${currentUser.fullName || currentUser.full_name || 'Investigator'}\nDate: ${new Date().toLocaleDateString()}\n\nTotal Cases: ${cases.length}\nActive Cases: ${activeCases}\nClosed Cases: ${cases.length - activeCases}\nTotal Evidence: ${evidence.length}\n\n✅ Report generated successfully!`);
+            } catch (error) {
+                console.error('Report generation error:', error);
+                alert('Failed to generate report: ' + (error.message || error));
+            }
         }
 
         function refreshCases() {

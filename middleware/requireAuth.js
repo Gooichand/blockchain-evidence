@@ -68,6 +68,13 @@ const requireAuth = async (req, res, next) => {
       role: identity.role,
       full_name: identity.full_name || 'Forensic Analyst',
     };
+
+    // Legacy compatibility: controllers that read req.authenticatedWallet
+    // (set by verifySignature for wallet users) also work for JWT users
+    // whose account has a linked wallet.
+    if (identity.wallet_address) {
+      req.authenticatedWallet = identity.wallet_address;
+    }
     next();
   } catch (error) {
     console.error('requireAuth error:', error);

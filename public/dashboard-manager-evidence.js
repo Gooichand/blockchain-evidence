@@ -66,7 +66,7 @@ class ManagerEvidenceDisplay {
                             <td style="padding: 12px;">${item.type || 'Unknown'}</td>
                             <td style="padding: 12px;">${this.formatDate(item.timestamp || item.created_at)}</td>
                             <td style="padding: 12px;">
-                                <a href="evidence-preview.html?id=${item.id}" 
+                                <a href="evidence-verification.html?id=${item.id}" 
                                    style="background: #3b82f6; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">
                                     View
                                 </a>
