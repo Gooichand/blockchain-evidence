@@ -237,7 +237,10 @@ const AnalystDashboard = (() => {
     });
     if (name === 'dashboard') loadDashboard();
     if (name === 'queue') loadQueue();
-    if (name === 'tools') loadTools();
+    if (name === 'tools') {
+      loadTools();
+      if (window.ForensicLab) window.ForensicLab.ensureInit();
+    }
     if (name === 'reports') loadReports();
     if (name === 'workspace') loadWorkspace();
   }
@@ -747,22 +750,12 @@ const AnalystDashboard = (() => {
     panel.appendChild(el('div', { style: 'display:flex;gap:10px;align-items:center;' }, saveBtn, submitBtn, msg));
   }
 
-  // ---------------------------------------------------------------- tools
+  // ---------------------------------------------------------------- lab status
   async function loadTools() {
-    const grid = document.getElementById('toolsGrid');
     const lab = document.getElementById('labGrid');
-    if (!grid || !lab) return;
-    clear(grid);
+    if (!lab) return;
     clear(lab);
-    grid.appendChild(loadingBlock('Loading toolkit…'));
     lab.appendChild(loadingBlock('Loading lab status…'));
-    try {
-      const res = await apiGet('/analyst/tools');
-      renderTools(grid, res.data || []);
-    } catch (error) {
-      clear(grid);
-      grid.appendChild(errorBlock('Could not load the forensic toolkit. ' + (error.message || ''), loadTools));
-    }
     try {
       const stats = await apiGet('/analyst/stats');
       renderLab(lab, stats.data.lab_equipment || []);

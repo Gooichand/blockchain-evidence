@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="analyst-theme.css">
+    <link rel="stylesheet" href="forensic-lab.css">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="api-client.js"></script>
@@ -182,17 +183,12 @@
             </section>
 
             <!-- ============================ TOOLS ============================ -->
-            <section class="analyst-section" id="view-tools" hidden aria-label="Forensic toolkit">
+            <section class="analyst-section" id="view-tools" hidden aria-label="Digital forensics laboratory">
                 <div class="section-heading">
-                    <h2><i data-lucide="wrench"></i> Forensic Toolkit</h2>
-                    <p class="section-sub">Specialist analysis modules for digital evidence</p>
+                    <h2><i data-lucide="microscope"></i> Digital Forensics Laboratory</h2>
+                    <p class="section-sub">Specialist analysis modules — evidence engines integrate here</p>
                 </div>
-                <div class="tools-grid" id="toolsGrid" aria-live="polite">
-                    <div class="analyst-loading" style="grid-column: 1 / -1;">
-                        <div class="spinner" style="border-top-color:#7c3aed;"></div>
-                        <p>Loading toolkit…</p>
-                    </div>
-                </div>
+                <div class="fl-lab" id="flLab" aria-live="polite"></div>
 
                 <div class="section-heading" style="margin-top: 28px;">
                     <h2><i data-lucide="cpu"></i> Lab Equipment Status</h2>
@@ -237,6 +233,7 @@
     </div>
 
     <script src="empty-states-system.js"></script>
+    <script src="forensic-lab.js"></script>
     <script src="dashboard-analyst-evidence.js"></script>
     <script src="analyst-dashboard.js"></script>
     <script src="footer.js"></script>
