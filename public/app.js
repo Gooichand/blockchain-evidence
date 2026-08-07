@@ -35,16 +35,17 @@ let desktopGuard = null;
 function initializeApp() {
   console.log("Initializing EVID-DGC application...");
 
-  // DesktopGuard: warn if resized below minimum width
-  if (typeof DeviceDetector !== 'undefined' && DeviceDetector.DesktopGuard) {
-    desktopGuard = new DeviceDetector.DesktopGuard({
+  // DeviceGuard: only re-evaluates device class (phones blocked; tablets and
+  // desktops always allowed — never blocked by viewport width).
+  if (typeof DeviceDetector !== 'undefined' && DeviceDetector.DeviceGuard) {
+    desktopGuard = new DeviceDetector.DeviceGuard({
       onBlocked: function(info) {
         var overlay = document.getElementById('desktopGuardOverlay');
         if (!overlay) {
           overlay = document.createElement('div');
           overlay.id = 'desktopGuardOverlay';
           overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(10,10,15,0.95);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;text-align:center;color:#e0e0e0;';
-          overlay.innerHTML = '<div style="width:64px;height:64px;margin-bottom:20px;background:linear-gradient(135deg,#d32f2f,#b71c1c);border-radius:16px;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h2 style="margin:0 0 8px;color:#fff;">Desktop View Required</h2><p style="margin:0 0 16px;color:#9e9eb0;max-width:400px;">Please expand your browser window to at least 1024px wide to continue using EVID-DGC.</p><button onclick="window.location.href=\'desktop-only.html\'" style="background:#d32f2f;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;">Learn More</button>';
+          overlay.innerHTML = '<div style="width:64px;height:64px;margin-bottom:20px;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:16px;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h2 style="margin:0 0 8px;color:#fff;">Mobile Access Restricted</h2><p style="margin:0 0 16px;color:#9e9eb0;max-width:400px;">EVID-DGC supports desktop and tablet devices. Please continue on a supported device.</p><button onclick="window.location.href=\'desktop-only.html\'" style="background:#dc2626;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;">Learn More</button>';
           document.body.appendChild(overlay);
         }
         overlay.style.display = 'flex';
