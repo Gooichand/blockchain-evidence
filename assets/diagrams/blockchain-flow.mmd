@@ -1,4 +1,4 @@
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#2d3748', 'tertiaryTextColor': '#e8edf5', 'tertiaryBorderColor': '#36BCF7'}}}%
 sequenceDiagram
     autonumber
     participant User as 👤 Authorized User\n(Wallet Signer)
@@ -11,7 +11,7 @@ sequenceDiagram
     participant DB as 🐘 Supabase\nTx Record
 
     Note over User, DB: 🏗️ Smart Contract: EvidenceStorage.sol
-    Note right of Contract: struct Evidence {\n  string fileHash\n  string metadata\n  address uploadedBy\n  uint256 timestamp\n  bool isSealed\n}\n\nevent EvidenceStored(uint256 indexed evidenceId, string fileHash, address indexed uploadedBy);\nevent EvidenceSealed(uint256 indexed evidenceId, address indexed sealedBy);
+    Note right of Contract: Evidence Struct: fileHash, metadata,<br/>uploadedBy, timestamp, isSealed<br/><br/>EvidenceStored Event: evidenceId, sender
 
     rect rgb(0, 15, 30)
         Note over User, DB: Phase 1: Preparation & Signing
