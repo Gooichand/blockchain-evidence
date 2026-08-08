@@ -83,19 +83,40 @@ flowchart TD
     end
     subgraph API["⚡ API Gateway\nExpress.js + Socket.IO"]
         Auth["🔐 Auth Service\nJWT + ECDSA"]
-        RBAC["👥 RBAC Engine\n8-Role Hierarchy"]
+        RBAC["👥 RBAC Engine\n8-Role Hierarchy + ABAC"]
     end
     subgraph Services["🔧 Core Services"]
         Evidence["📁 Evidence Service"]
+        Cases["📋 Case Management"]
+        Audit["📝 Audit Trail"]
         Blockchain["⛓️ Blockchain Service\nPolygon + Smart Contract"]
         IPFS["📦 IPFS Storage\nPinata + CID"]
     end
     subgraph Chain["⛓️ Blockchain Layer"]
         Contract["📜 EvidenceStorage.sol\n0x3945...D9e3"]
     end
+    subgraph Storage["🗄️ Data Layer"]
+        Database["🐘 PostgreSQL\nSupabase + RLS"]
+    end
+    subgraph Realtime["🔔 Cross-Cutting"]
+        SocketIO["📡 Socket.IO\nReal-time Notifications"]
+    end
+
     Browser --> API
-    API --> Services
-    Services --> Chain
+    MetaMask --> Browser
+    API --> Auth
+    API --> RBAC
+    API --> Evidence
+    API --> Cases
+    API --> Audit
+    Evidence --> Blockchain
+    Evidence --> IPFS
+    Blockchain --> Contract
+    Evidence --> Database
+    Cases --> Database
+    Audit --> Database
+    SocketIO -.-> Evidence
+    SocketIO -.-> Cases
 ```
 
 </details>
@@ -109,14 +130,15 @@ quadrantChart
     y-axis Low Adoption --> High Adoption
     quadrant-1 🚀 Production Ready
     quadrant-2 🔬 Cutting Edge
+    quadrant-3 🧪 Experimental
     "Node.js 20.19+"          : [0.95, 0.98]
     "Express.js"              : [0.95, 0.95]
     "PostgreSQL (Supabase)"   : [0.90, 0.92]
     "Ethers.js v6"            : [0.90, 0.93]
-    "Polygon (Amoy/Mainnet)"  : [0.85, 0.88]
+    "Polygon (Amoy)"          : [0.85, 0.88]
     "IPFS (Pinata)"           : [0.85, 0.82]
-    "TensorFlow.js (AI)"      : [0.40, 0.30]
-    "Zero-Knowledge (zk-SNARKs)": [0.30, 0.20]
+    "TensorFlow.js (AI)"      : [0.25, 0.20]
+    "Zero-Knowledge (zk-SNARKs)": [0.15, 0.10]
 ```
 
 ---
@@ -125,49 +147,29 @@ quadrantChart
 
 ## 🚀 Project Status
 
-<p align="center">
-  <img src="assets/badges/phase1-complete.svg" alt="Phase 1 Complete">
-  <img src="assets/badges/phase2-complete.svg" alt="Phase 2 Complete">
-  <img src="assets/badges/phase3-progress.svg" alt="Phase 3 In Progress">
-</p>
+### Current Status (August 2026)
 
-### Development Roadmap
+| Area | Status | Notes |
+|------|--------|-------|
+| Core Platform | ✅ Stable | Auth, RBAC, cases, evidence, audit trail — all operational |
+| Blockchain Evidence | ✅ Implemented | Polygon Amoy testnet only — contract deployed and verified |
+| IPFS Storage | ✅ Implemented | Pinata pinning, CID validation, gateway retrieval |
+| 8-Role RBAC | ✅ Implemented | Administrator, Investigator, Analyst, Legal, Court, Manager, Auditor, Public Viewer |
+| Audit Trail | ✅ Implemented | Immutable activity logging with severity levels |
+| Real-time Notifications | ✅ Implemented | Socket.IO for uploads, verifications, assignments |
+| Forensic Lab (UI) | ✅ Implemented | 11 categories, 59 tools — UI framework with placeholder engines |
+| Advanced Forensics | 🟡 In Development | AI deepfake detection, metadata forensics, automated verification — UI scaffolds exist, backend engines pending |
+| Interactive 3D Viewer | 🔵 Planned | Currently an STL file download — web-based Three.js viewer planned |
+| Court Integration | 🔵 Planned | E-discovery APIs, digital exhibit packaging |
+| Multi-chain Support | 🔵 Planned | Ethereum, BSC, Arbitrum |
+| Zero-Knowledge Proofs | 🔬 Research | zk-SNARKs for private verification |
 
-```mermaid
-gantt
-    title EVID-DGC Development Roadmap
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %Y
-    section Phase 1: Core System ✅
-    Project Setup & Architecture          :done, p1-setup, 2024-01-15, 30d
-    Database Schema & RLS Policies        :done, p1-db, 2024-02-01, 21d
-    Authentication (Email + Wallet)       :done, p1-auth, 2024-02-15, 28d
-    RBAC Implementation (8 Roles)         :done, p1-rbac, 2024-03-01, 21d
-    Evidence CRUD & File Processing       :done, p1-evidence, 2024-03-15, 28d
-    Case Management & Status Workflow     :done, p1-cases, 2024-04-01, 21d
-    Admin Dashboard & User Management     :done, p1-admin, 2024-04-15, 21d
-    Real-time Notifications (Socket.IO)   :done, p1-ws, 2024-05-10, 14d
-    Production Deployment (Render)        :done, p1-deploy, 2024-06-01, 14d
-    
-    section Phase 2: Blockchain & IPFS ✅
-    Smart Contract Development            :done, p2-contract, 2024-06-15, 30d
-    Polygon Amoy Deployment               :done, p2-deploy, 2024-07-15, 14d
-    Blockchain Service Integration        :done, p2-service, 2024-07-20, 21d
-    IPFS/Pinata Integration               :done, p2-ipfs, 2024-08-01, 21d
-    Hash Verification Pipeline            :done, p2-verify, 2024-08-15, 14d
-    Advanced Rate Limiting                :done, p2-ratelimit, 2024-08-25, 10d
-    System Monitoring & Health Checks     :done, p2-monitor, 2024-09-01, 14d
-    
-    section Phase 3: Advanced Forensics 🔄
-    AI Deepfake Detection Engine          :active, p3-deepfake, 2024-10-01, 60d
-    Advanced Metadata Forensics           :active, p3-meta, 2024-10-15, 45d
-    Automated Verification Pipeline       :active, p3-auto, 2024-11-01, 45d
-    Evidence Quality Scoring System       :p3-quality, 2024-11-15, 30d
-    Legal Compliance Automation           :p3-compliance, 2024-12-01, 45d
-    Court Integration & E-Discovery       :p3-court, 2025-01-15, 60d
-    Multi-chain Support                   :p3-multichain, 2025-03-01, 60d
-    Zero-Knowledge Proof Integration      :p3-zk, 2025-04-01, 60d
-```
+### What This Means
+
+- **Phase 1 (Core System)** and **Phase 2 (Blockchain & IPFS)** are complete and deployed to production.
+- **Phase 3 (Advanced Forensics)** is partially implemented — the UI framework exists (`forensic-lab.js`) with 59 tool stubs, but the actual forensic engines are placeholder implementations. AI/ML models are not yet integrated.
+- **Blockchain deployment is Polygon Amoy testnet only.** Mainnet deployment is not yet active.
+- The system has **43 HTML pages** across 8 role-specific dashboards plus shared pages (cases, evidence, audit trail, settings, etc.).
 
 ---
 
@@ -192,11 +194,11 @@ gantt
 | **Real-time WS** | Socket.IO notifications for uploads, verifications, assignments | ✅ |
 | **Supabase + RLS** | PostgreSQL with Row Level Security policies | ✅ |
 
-### Phase 2: Blockchain & IPFS (Production Ready)
+### Phase 2: Blockchain & IPFS (Production Ready — Amoy Testnet)
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| **Smart Contract** | `EvidenceStorage.sol` deployed to Polygon Amoy (`0x3945...D9e3`) | ✅ |
+| **Smart Contract** | `EvidenceStorage.sol` deployed to Polygon Amoy (`0x3945...D9e3`) | ✅ Amoy |
 | **On-Chain Anchoring** | SHA-256 hash + metadata stored immutably | ✅ |
 | **Gas Optimization** | Estimation, tracking, 2-block confirmation | ✅ |
 | **IPFS Storage** | Pinata API, CID generation, gateway retrieval | ✅ |
@@ -205,18 +207,23 @@ gantt
 | **Advanced Rate Limiting** | Blockchain: 10/min, Upload: 50/hr, Verify: 30/min | ✅ |
 | **Health Monitoring** | Real-time blockchain, IPFS, database health checks | ✅ |
 
+> **Network Note:** All blockchain features are deployed on the **Polygon Amoy testnet** (Chain ID: 80002). Mainnet deployment (Chain ID: 137) is planned for a future release.
+
 ### Phase 3: Advanced Forensics (In Development)
 
-| Feature | Description | Target |
+| Feature | Description | Status |
 |---------|-------------|--------|
-| **AI Deepfake Detection** | TensorFlow.js + ONNX models for media authenticity | Q4 2024 |
-| **Metadata Forensics** | EXIF, C2PA, hidden data extraction & analysis | Q4 2024 |
-| **Auto Verification** | ML-powered evidence integrity scoring | Q1 2025 |
-| **Quality Scoring** | Evidence reliability & completeness metrics | Q1 2025 |
-| **Legal Compliance** | Automated GDPR, evidence retention, chain-of-custody | Q1 2025 |
-| **Court Integration** | E-discovery APIs, digital exhibit packaging | Q2 2025 |
-| **Multi-chain** | Ethereum, BSC, Arbitrum support | Q2 2025 |
-| **Zero-Knowledge** | zk-SNARKs for private verification | Q3 2025 |
+| **Forensic Lab UI** | 11 categories, 59 analysis tools — complete UI framework | ✅ UI |
+| **Hash & Integrity** | SHA-256, hash comparison, file integrity checking | ✅ |
+| **Image Forensics** | ELA, clone detection, noise analysis, metadata viewer | 🔵 Placeholder |
+| **Document Forensics** | PDF inspector, metadata viewer, OCR engine | 🔵 Placeholder |
+| **Video Forensics** | Metadata viewer, frame extraction, timeline viewer | 🔵 Placeholder |
+| **Audio Forensics** | Waveform viewer, spectrogram, audio fingerprinting | 🔵 Placeholder |
+| **Blockchain Verification** | Transaction verification, evidence anchoring, chain of custody | ✅ |
+| **Metadata Extraction** | EXIF, GPS, camera metadata, container metadata | 🔵 Placeholder |
+| **AI Deepfake Detection** | TensorFlow.js + ONNX models for media authenticity | 🔬 Research |
+| **C2PA Content Credentials** | Content provenance and authenticity metadata | 🔬 Research |
+| **Zero-Knowledge Proofs** | zk-SNARKs for private verification | 🔬 Research |
 
 ---
 
@@ -225,23 +232,33 @@ gantt
 ## 🔐 Role-Based Access Control (8 Roles)
 
 ```mermaid
-graph TD
-    Admin[("🛡️ ADMINISTRATOR\nFull System Control")]
-    Legal[("👨‍⚖️ LEGAL PROFESSIONAL\nCase Review & Certification")]
-    Court[("🏛️ COURT OFFICIAL\nJudicial Oversight")]
-    Manager[("📦 EVIDENCE MANAGER\nChain of Custody")]
-    Auditor[("🔍 AUDITOR\nCompliance & Audit")]
-    Analyst[("🔬 FORENSIC ANALYST\nTechnical Analysis")]
-    Investigator[("🕵️ INVESTIGATOR\nEvidence Collection")]
-    Viewer[("👁️ PUBLIC VIEWER\nRead-Only Access")]
-    
-    Admin -.-> Legal
-    Admin -.-> Court
-    Admin -.-> Manager
-    Admin -.-> Auditor
-    Admin -.-> Analyst
-    Admin -.-> Investigator
-    Admin -.-> Viewer
+flowchart TD
+    EVID["EVID-DGC Authorization System"]
+    EVID --> RBAC
+    EVID --> ABAC
+
+    RBAC["RBAC\nRole-Based Access Control"]
+    ABAC["ABAC\nAttribute-Based Access Control"]
+
+    RBAC --> Roles
+
+    subgraph Roles["Role Hierarchy"]
+        Admin["🛡️ Administrator\nFull System Control"]
+        Legal["👨‍⚖️ Legal Professional\nCase Review & Certification"]
+        Court["🏛️ Court Official\nJudicial Oversight"]
+        Manager["📦 Evidence Manager\nChain of Custody"]
+        Auditor["🔍 Auditor\nCompliance & Audit"]
+        Analyst["🔬 Forensic Analyst\nTechnical Analysis"]
+        Investigator["🕵️ Investigator\nEvidence Collection"]
+        Viewer["👁️ Public Viewer\nRead-Only Verification"]
+    end
+
+    ABAC --> Attrs["Context / Policy Attributes"]
+    Attrs --> Jurisdiction["Jurisdiction"]
+    Attrs --> CaseAssignment["Case Assignment"]
+    Attrs --> EvidenceStatus["Evidence Status"]
+    Attrs --> LegalHold["Legal Hold"]
+    Attrs --> Clearance["Clearance Level"]
 ```
 
 ### Permission Matrix
@@ -295,8 +312,14 @@ contract EvidenceStorage {
 ```
 
 **Deployed Address:** `0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3`  
-**Network:** Polygon Amoy (Chain ID: 80002) / Mainnet (137)  
-**Explorer:** [Polygonscan](https://amoy.polygonscan.com/address/0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3)
+**Network:** Polygon Amoy Testnet (Chain ID: 80002)  
+**Explorer:** [Polygonscan (Amoy)](https://amoy.polygonscan.com/address/0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3)
+
+> **Current Deployment Status:**
+> - **Polygon Amoy (Chain ID: 80002)** — ✅ Deployed and verified
+> - **Polygon Mainnet (Chain ID: 137)** — 🔵 Not yet deployed
+>
+> The contract is deployed on the Amoy testnet only. Mainnet deployment requires a separate deployment step and will incur real gas fees.
 
 ### Blockchain Transaction Flow
 
@@ -350,30 +373,68 @@ sequenceDiagram
 
 <img src="assets/section-divider.svg" alt="Section Divider" width="100%">
 
+## 📋 Evidence Workflow
+
+The complete evidence lifecycle in EVID-DGC:
+
+```mermaid
+flowchart LR
+    A["📥 COLLECT"] --> B["📋 REGISTER"]
+    B --> C["🔐 HASH"]
+    C --> D["📦 STORE"]
+    D --> E["⛓️ ANCHOR"]
+    E --> F["✅ VERIFY"]
+    F --> G["🔬 ANALYZE"]
+    G --> H["⚖️ REVIEW"]
+    H --> I["🏛️ CERTIFY"]
+    I --> J["📜 COURT"]
+    J --> K["🗄️ ARCHIVE"]
+
+    style A fill:#10b981,color:#fff
+    style B fill:#3b82f6,color:#fff
+    style C fill:#8b5cf6,color:#fff
+    style D fill:#06b6d4,color:#fff
+    style E fill:#f59e0b,color:#fff
+    style F fill:#10b981,color:#fff
+    style G fill:#ec4899,color:#fff
+    style H fill:#3b82f6,color:#fff
+    style I fill:#8b5cf6,color:#fff
+    style J fill:#ef4444,color:#fff
+    style K fill:#6b7280,color:#fff
+```
+
+| Step | Action | Actor | System |
+|------|--------|-------|--------|
+| 📥 Collect | Gather physical/digital evidence | Investigator | Frontend |
+| 📋 Register | Create evidence record with metadata | Investigator | Frontend + API |
+| 🔐 HASH | Compute SHA-256 hash | System | Frontend (Web Crypto) |
+| 📦 STORE | Upload to IPFS via Pinata | System | IPFS Service |
+| ⛓️ ANCHOR | Store hash on Polygon blockchain | System | Smart Contract |
+| ✅ VERIFY | Validate hash against blockchain + IPFS | Any authorized user | API |
+| 🔬 ANALYZE | Forensic examination and findings | Forensic Analyst | Forensic Lab |
+| ⚖️ REVIEW | Legal review and assessment | Legal Professional | Frontend |
+| 🏛️ CERTIFY | Court-ready certification | Court Official | Frontend |
+| 📜 COURT | Submit for judicial proceedings | Court Official | Frontend |
+| 🗄️ ARCHIVE | Long-term retention with legal hold | Evidence Manager | API |
+
+---
+
+<img src="assets/section-divider.svg" alt="Section Divider" width="100%">
+
 ## 📦 3D Evidence Model
 
 <p align="center">
   <a href="assets/evidence-cube.stl">
-    <img src="https://img.shields.io/badge/3D_Model-View_STL-36BCF7?style=for-the-badge&logo=github&logoColor=white" alt="3D Model">
+    <img src="https://img.shields.io/badge/3D_Model-Download_STL-36BCF7?style=for-the-badge&logo=github&logoColor=white" alt="3D Model">
   </a>
 </p>
 
-Interactive 3D evidence cube (STL format) - viewable natively on GitHub:
+The evidence cube concept is available as an **STL file** for external 3D viewing:
 
-```stl
-solid evidence_blockchain_cube
-  facet normal 0.0 0.0 1.0
-    outer loop
-      vertex 0.0 0.0 10.0
-      vertex 10.0 0.0 10.0
-      vertex 10.0 10.0 10.0
-    endloop
-  endfacet
-  ... (12 facets forming a cube)
-endsolid evidence_blockchain_cube
-```
+- [View STL file on GitHub](assets/evidence-cube.stl) — rotate, zoom, and inspect natively in the browser
+- [Download STL](assets/evidence-cube.stl) — open in any 3D viewer (Blender, MeshLab, etc.)
 
-**Click the badge above or [view the STL file](assets/evidence-cube.stl) directly on GitHub** to rotate, zoom, and inspect the 3D model.
+> **Note:** This is a static 3D model representing the evidence blockchain concept. An interactive web-based **3D Evidence Integrity Viewer** (Three.js) with mouse/touch rotation, zoom, and real-time evidence status indicators is planned for a future release.
 
 ---
 
@@ -486,6 +547,16 @@ npm run format:check
 - Rate limiting
 - Blockchain integration
 
+### End-to-End Workflow Tests (Planned)
+
+| Role | Workflow | Status |
+|------|----------|--------|
+| **Investigator** | Login → Create case → Upload evidence → SHA-256 → IPFS → Blockchain anchor → Evidence appears | 🔵 Planned |
+| **Analyst** | Login → Open assigned evidence → Analyze → Add findings → Verify hash → Submit analysis | 🔵 Planned |
+| **Legal** | Open case → Review evidence → Review custody → Verify integrity → Certify | 🔵 Planned |
+| **Court** | Open case → Review evidence → Verify blockchain proof → View chain of custody → Generate report | 🔵 Planned |
+| **Public** | Open public evidence → Enter verification ID/hash → Verify → Blockchain proof | 🔵 Planned |
+
 ---
 
 <img src="assets/section-divider.svg" alt="Section Divider" width="100%">
@@ -568,7 +639,7 @@ npm test
 **Apache License 2.0** — See [LICENSE](LICENSE) for details.
 
 ```
-Copyright 2025 EVID-DGC Blockchain Evidence Management System
+Copyright 2025-2026 EVID-DGC Blockchain Evidence Management System
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
