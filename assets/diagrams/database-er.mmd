@@ -74,7 +74,7 @@ erDiagram
         int created_by FK
         varchar status "open|review|court|closed"
         int status_id FK
-        int priority_level 1-5
+        int priority_level
         varchar assigned_investigator
         varchar assigned_prosecutor
         varchar assigned_judge
@@ -85,7 +85,7 @@ erDiagram
         varchar case_type
         timestamp estimated_completion
         timestamp actual_completion
-        text[] case_tags
+        text case_tags
         jsonb metadata
         timestamp last_status_change
         varchar status_changed_by
