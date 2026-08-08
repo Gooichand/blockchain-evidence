@@ -63,7 +63,7 @@ jobs:
               -b transparent \
               -w 1200 \
               --scale 2 \
-              --puppeteer-config '{"args": ["--no-sandbox", "--disable-setuid-sandbox"]}'
+              -p puppeteer-config.json
             
             # Check if file changed
             if ! git diff --quiet "$output_file" 2>/dev/null; then
