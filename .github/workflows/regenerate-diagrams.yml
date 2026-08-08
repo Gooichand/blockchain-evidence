@@ -62,7 +62,8 @@ jobs:
               -t neutral \
               -b transparent \
               -w 1200 \
-              --scale 2
+              --scale 2 \
+              --puppeteer-config '{"args": ["--no-sandbox", "--disable-setuid-sandbox"]}'
             
             # Check if file changed
             if ! git diff --quiet "$output_file" 2>/dev/null; then
