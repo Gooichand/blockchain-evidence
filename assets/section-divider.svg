@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" width="1200" height="60">
+  <defs>
+    <linearGradient id="dividerGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" style="stop-color:#0a0f1a"/>
+      <stop offset="10%" style="stop-color:#36BCF7" stop-opacity="0.3"/>
+      <stop offset="30%" style="stop-color:#36BCF7" stop-opacity="0.8"/>
+      <stop offset="50%" style="stop-color:#00D4FF" stop-opacity="1"/>
+      <stop offset="70%" style="stop-color:#7C4DFF" stop-opacity="0.8"/>
+      <stop offset="90%" style="stop-color:#36BCF7" stop-opacity="0.3"/>
+      <stop offset="100%" style="stop-color:#0a0f1a"/>
+    </linearGradient>
+    
+    <linearGradient id="dividerGradientDark" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" style="stop-color:#1a1f2e"/>
+      <stop offset="10%" style="stop-color:#36BCF7" stop-opacity="0.4"/>
+      <stop offset="30%" style="stop-color:#36BCF7" stop-opacity="0.9"/>
+      <stop offset="50%" style="stop-color:#00D4FF" stop-opacity="1"/>
+      <stop offset="70%" style="stop-color:#7C4DFF" stop-opacity="0.9"/>
+      <stop offset="90%" style="stop-color:#36BCF7" stop-opacity="0.4"/>
+      <stop offset="100%" style="stop-color:#1a1f2e"/>
+    </linearGradient>
+    
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#36BCF7;stop-opacity:0.8"/>
+      <stop offset="50%" style="stop-color:#00D4FF;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#7C4DFF;stop-opacity:0"/>
+    </radialGradient>
+    
+    <filter id="pulseGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background blend -->
+  <rect width="1200" height="60" fill="url(#dividerGradient)"/>
+  
+  <!-- Animated center line -->
+  <line x1="100" y1="30" x2="1100" y2="30" stroke="url(#dividerGradient)" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <animate attributeName="stroke-dasharray" values="10,20;50,10;10,20" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-dashoffset" values="0;100;0" dur="3s" repeatCount="indefinite"/>
+  </line>
+  
+  <!-- Center diamond -->
+  <polygon points="600,15 610,30 600,45 590,30" fill="url(#centerGlow)" filter="url(#pulseGlow)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 600 30" to="360 600 30" dur="20s" repeatCount="indefinite"/>
+  </polygon>
+  
+  <!-- Floating particles -->
+  <g opacity="0.7">
+    <circle cx="200" cy="30" r="3" fill="#36BCF7">
+      <animate attributeName="cy" values="30;20;40;30" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="400" cy="30" r="2" fill="#00D4FF">
+      <animate attributeName="cy" values="30;35;25;30" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="800" cy="30" r="2.5" fill="#7C4DFF">
+      <animate attributeName="cy" values="30;22;38;30" dur="4.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="4.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1000" cy="30" r="1.5" fill="#FF6B6B">
+      <animate attributeName="cy" values="30;28;32;30" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Side accent bars -->
+  <g fill="url(#dividerGradient)">
+    <rect x="50" y="25" width="3" height="10" rx="1.5">
+      <animate attributeName="height" values="10;20;10" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="25;20;25" dur="2.5s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="1147" y="25" width="3" height="10" rx="1.5">
+      <animate attributeName="height" values="10;20;10" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="y" values="25;20;25" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
+    </rect>
+  </g>
+</svg>

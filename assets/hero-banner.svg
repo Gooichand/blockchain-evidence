@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+  <defs>
+    <!-- Gradient Definitions -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1a"/>
+      <stop offset="50%" style="stop-color:#1a1f2e"/>
+      <stop offset="100%" style="stop-color:#0d1426"/>
+    </linearGradient>
+    
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#36BCF7"/>
+      <stop offset="30%" style="stop-color:#00D4FF"/>
+      <stop offset="60%" style="stop-color:#7C4DFF"/>
+      <stop offset="100%" style="stop-color:#FF6B6B"/>
+    </linearGradient>
+    
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF"/>
+      <stop offset="100%" style="stop-color:#36BCF7"/>
+    </linearGradient>
+    
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#36BCF7;stop-opacity:0.3"/>
+      <stop offset="70%" style="stop-color:#36BCF7;stop-opacity:0"/>
+      <stop offset="100%" style="stop-color:#36BCF7;stop-opacity:0"/>
+    </radialGradient>
+    
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="textGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#36BCF7" flood-opacity="0.8" result="glowColor"/>
+      <feComposite in="glowColor" in2="blur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Wave Pattern -->
+    <pattern id="wavePattern" x="0" y="0" width="1200" height="300" patternUnits="userSpaceOnUse">
+      <path d="M0,150 Q300,100 600,150 T1200,150" fill="none" stroke="url(#accentGradient)" stroke-width="1" opacity="0.15">
+        <animate attributeName="d" dur="8s" repeatCount="indefinite"
+          values="M0,150 Q300,100 600,150 T1200,150;
+                  M0,150 Q300,180 600,150 T1200,150;
+                  M0,150 Q300,100 600,150 T1200,150"/>
+      </path>
+      <path d="M0,180 Q300,130 600,180 T1200,180" fill="none" stroke="#7C4DFF" stroke-width="0.5" opacity="0.1">
+        <animate attributeName="d" dur="10s" repeatCount="indefinite"
+          values="M0,180 Q300,130 600,180 T1200,180;
+                  M0,180 Q300,210 600,180 T1200,180;
+                  M0,180 Q300,130 600,180 T1200,180"/>
+      </path>
+    </pattern>
+    
+    <!-- Particle System -->
+    <g id="particles">
+      <circle r="2" fill="#36BCF7" opacity="0.8">
+        <animateMotion path="M50,250 Q200,50 400,200 Q600,300 800,100 Q1000,250 1150,150" dur="15s" repeatCount="indefinite" rotate="auto"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="15s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="1;3;1" dur="15s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="1.5" fill="#00D4FF" opacity="0.6">
+        <animateMotion path="M100,50 Q300,250 500,100 Q700,50 900,200 Q1100,100 1200,280" dur="18s" repeatCount="indefinite" rotate="auto"/>
+        <animate attributeName="opacity" values="0;0.6;0" dur="18s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="2.5" fill="#7C4DFF" opacity="0.7">
+        <animateMotion path="M200,280 Q400,80 600,260 Q800,50 1000,240" dur="12s" repeatCount="indefinite" rotate="auto"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="12s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="1;4;1" dur="12s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="1.8" fill="#FF6B6B" opacity="0.5">
+        <animateMotion path="M50,100 Q250,280 450,80 Q650,300 850,120 Q1050,280 1200,100" dur="20s" repeatCount="indefinite" rotate="auto"/>
+        <animate attributeName="opacity" values="0;0.5;0" dur="20s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+    <!-- Circuit Pattern -->
+    <pattern id="circuitPattern" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="60" height="60" fill="none"/>
+      <path d="M0,30 L60,30 M30,0 L30,60" stroke="#36BCF7" stroke-width="0.3" opacity="0.08"/>
+      <circle cx="30" cy="30" r="3" fill="#36BCF7" opacity="0.15"/>
+      <circle cx="0" cy="0" r="1.5" fill="#36BCF7" opacity="0.1"/>
+      <circle cx="60" cy="0" r="1.5" fill="#36BCF7" opacity="0.1"/>
+      <circle cx="0" cy="60" r="1.5" fill="#36BCF7" opacity="0.1"/>
+      <circle cx="60" cy="60" r="1.5" fill="#36BCF7" opacity="0.1"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="300" fill="url(#bgGradient)"/>
+  <rect width="1200" height="300" fill="url(#circuitPattern)"/>
+  <rect width="1200" height="300" fill="url(#wavePattern)"/>
+  
+  <!-- Glow Orbs -->
+  <circle cx="200" cy="100" r="150" fill="url(#glowGradient)" filter="url(#glow)">
+    <animate attributeName="r" values="150;180;150" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.5;0.3" dur="6s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1000" cy="200" r="120" fill="url(#glowGradient)" filter="url(#glow)">
+    <animate attributeName="r" values="120;150;120" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="600" cy="50" r="100" fill="url(#glowGradient)" filter="url(#glow)">
+    <animate attributeName="r" values="100;130;100" dur="7s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.15;0.35;0.15" dur="7s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Particle System -->
+  <use href="#particles"/>
+  
+  <!-- Main Content -->
+  <g font-family="'JetBrains Mono', 'Fira Code', 'Consolas', monospace">
+    <!-- Badge -->
+    <g transform="translate(600, 40)">
+      <rect x="-80" y="-14" width="160" height="28" rx="14" fill="#36BCF7" fill-opacity="0.15" stroke="#36BCF7" stroke-width="1.5" stroke-opacity="0.5"/>
+      <text x="0" y="4" text-anchor="middle" font-size="11" font-weight="600" fill="#36BCF7" letter-spacing="1.5" style="text-transform:uppercase">Blockchain Evidence System</text>
+    </g>
+    
+    <!-- Main Title -->
+    <text x="600" y="135" text-anchor="middle" font-size="48" font-weight="800" fill="url(#textGradient)" filter="url(#textGlow)" letter-spacing="-1">
+      EVID-DGC
+    </text>
+    
+    <!-- Subtitle -->
+    <text x="600" y="185" text-anchor="middle" font-size="18" font-weight="400" fill="#A0B8D8" letter-spacing="0.5">
+      Secure Blockchain Evidence Management
+    </text>
+    
+    <!-- Tagline -->
+    <text x="600" y="215" text-anchor="middle" font-size="14" font-weight="500" fill="#36BCF7" opacity="0.9" letter-spacing="2" style="text-transform:uppercase">
+      Immutable • Verifiable • Court-Ready
+    </text>
+    
+    <!-- Status Indicators -->
+    <g transform="translate(600, 250)">
+      <!-- Status Dot 1 -->
+      <g transform="translate(-180, 0)">
+        <circle r="6" fill="#00FF88" filter="url(#glow)">
+          <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <text x="14" y="5" font-size="11" fill="#88D8B0" font-weight="500">Phase 1: Core ✓</text>
+      </g>
+      
+      <!-- Status Dot 2 -->
+      <g transform="translate(-10, 0)">
+        <circle r="6" fill="#00FF88" filter="url(#glow)">
+          <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <text x="14" y="5" font-size="11" fill="#88D8B0" font-weight="500">Phase 2: Blockchain ✓</text>
+      </g>
+      
+      <!-- Status Dot 3 -->
+      <g transform="translate(160, 0)">
+        <circle r="6" fill="#FFB800" filter="url(#glow)">
+          <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <text x="14" y="5" font-size="11" fill="#FFD880" font-weight="500">Phase 3: AI Forensics 🔄</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Decorative Elements -->
+  <!-- Top Accent Line -->
+  <line x1="300" y1="30" x2="900" y2="30" stroke="url(#accentGradient)" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <animate attributeName="stroke-dashoffset" values="0;600" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-dasharray" values="200,400;400,200" dur="3s" repeatCount="indefinite"/>
+  </line>
+  
+  <!-- Bottom Accent Line -->
+  <line x1="300" y1="270" x2="900" y2="270" stroke="url(#accentGradient)" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <animate attributeName="stroke-dashoffset" values="600;0" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-dasharray" values="400,200;200,400" dur="3s" repeatCount="indefinite"/>
+  </line>
+  
+  <!-- Corner Accents -->
+  <g stroke="#36BCF7" stroke-width="2" opacity="0.5">
+    <!-- Top Left -->
+    <path d="M50,50 L100,50 M50,50 L50,100">
+      <animate attributeName="stroke-dashoffset" values="0;100" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dasharray" values="50,50;0,100" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <!-- Top Right -->
+    <path d="M1150,50 L1100,50 M1150,50 L1150,100">
+      <animate attributeName="stroke-dashoffset" values="0;100" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dasharray" values="50,50;0,100" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <!-- Bottom Left -->
+    <path d="M50,250 L100,250 M50,250 L50,200">
+      <animate attributeName="stroke-dashoffset" values="0;100" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dasharray" values="50,50;0,100" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <!-- Bottom Right -->
+    <path d="M1150,250 L1100,250 M1150,250 L1150,200">
+      <animate attributeName="stroke-dashoffset" values="0;100" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-dasharray" values="50,50;0,100" dur="2s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  
+  <!-- Floating Geometric Shapes -->
+  <g opacity="0.15">
+    <polygon points="600,20 590,45 615,40 610,65 590,60 600,85 590,60 585,65 580,40 605,45" fill="#36BCF7">
+      <animateTransform attributeName="transform" type="rotate" from="0 600 50" to="360 600 50" dur="20s" repeatCount="indefinite"/>
+    </polygon>
+    <polygon points="150,100 145,115 158,112 155,128 142,122 150,138 142,122 138,128 135,112 148,115" fill="#7C4DFF">
+      <animateTransform attributeName="transform" type="rotate" from="0 150 120" to="-360 150 120" dur="15s" repeatCount="indefinite"/>
+    </polygon>
+    <polygon points="1050,180 1045,195 1058,192 1055,208 1042,202 1050,218 1042,202 1038,208 1035,192 1048,195" fill="#00D4FF">
+      <animateTransform attributeName="transform" type="rotate" from="0 1050 200" to="360 1050 200" dur="18s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'clusterBkg': '#0d1426', 'clusterBorder': '#7C4DFF', 'defaultLinkColor': '#36BCF7', 'titleColor': '#36BCF7', 'edgeLabelBackground': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+gantt
+    title EVID-DGC Development Roadmap
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %Y
+    todayMarker stroke-width:2,stroke:#FF6B6B,stroke-dasharray: 5 5
+    
+    section Phase 1: Core System ✅
+    Project Setup & Architecture          :done, p1-setup, 2024-01-15, 30d
+    Database Schema & RLS Policies        :done, p1-db, 2024-02-01, 21d
+    Authentication (Email + Wallet)       :done, p1-auth, 2024-02-15, 28d
+    RBAC Implementation (8 Roles)         :done, p1-rbac, 2024-03-01, 21d
+    Evidence CRUD & File Processing       :done, p1-evidence, 2024-03-15, 28d
+    Case Management & Status Workflow     :done, p1-cases, 2024-04-01, 21d
+    Admin Dashboard & User Management     :done, p1-admin, 2024-04-15, 21d
+    Audit Logging & Activity Tracking     :done, p1-audit, 2024-05-01, 14d
+    Real-time Notifications (Socket.IO)   :done, p1-ws, 2024-05-10, 14d
+    Frontend Pages (80+ Components)       :done, p1-frontend, 2024-03-01, 60d
+    Testing & Security Hardening          :done, p1-test, 2024-05-20, 21d
+    Production Deployment (Render)        :done, p1-deploy, 2024-06-01, 14d
+    
+    section Phase 2: Blockchain & IPFS ✅
+    Smart Contract Development            :done, p2-contract, 2024-06-15, 30d
+    Polygon Amoy Deployment               :done, p2-deploy, 2024-07-15, 14d
+    Blockchain Service Integration        :done, p2-service, 2024-07-20, 21d
+    IPFS/Pinata Integration               :done, p2-ipfs, 2024-08-01, 21d
+    Hash Verification Pipeline            :done, p2-verify, 2024-08-15, 14d
+    Gas Optimization & Estimation         :done, p2-gas, 2024-08-20, 14d
+    Advanced Rate Limiting                :done, p2-ratelimit, 2024-08-25, 10d
+    System Monitoring & Health Checks     :done, p2-monitor, 2024-09-01, 14d
+    Performance Optimization              :done, p2-perf, 2024-09-10, 14d
+    Security Hardening v2                 :done, p2-sec, 2024-09-20, 14d
+    Documentation & API Reference         :done, p2-docs, 2024-09-25, 14d
+    
+    section Phase 3: Advanced Forensics 🔄
+    AI Deepfake Detection Engine          :active, p3-deepfake, 2024-10-01, 60d
+    Advanced Metadata Forensics           :active, p3-meta, 2024-10-15, 45d
+    Automated Verification Pipeline       :active, p3-auto, 2024-11-01, 45d
+    Evidence Quality Scoring System       :p3-quality, 2024-11-15, 30d
+    Legal Compliance Automation           :p3-compliance, 2024-12-01, 45d
+    Court Integration & E-Discovery       :p3-court, 2025-01-15, 60d
+    Mobile App (React Native)             :p3-mobile, 2025-02-01, 90d
+    Advanced Analytics Dashboard          :p3-analytics, 2025-02-15, 45d
+    Multi-chain Support (Ethereum, BSC)   :p3-multichain, 2025-03-01, 60d
+    Zero-Knowledge Proof Integration      :p3-zk, 2025-04-01, 60d
+    
+    section Milestones
+    Phase 1 Complete                      :milestone, m1, 2024-06-15, 0d
+    Phase 2 Complete                      :milestone, m2, 2024-10-01, 0d
+    Phase 3 Alpha                         :milestone, m3a, 2025-02-01, 0d
+    Phase 3 Beta                          :milestone, m3b, 2025-05-01, 0d
+    Phase 3 Production                    :milestone, m3c, 2025-07-01, 0d
+```

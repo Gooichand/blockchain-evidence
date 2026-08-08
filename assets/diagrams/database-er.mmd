@@ -1,0 +1,304 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'clusterBkg': '#0d1426', 'clusterBorder': '#7C4DFF', 'defaultLinkColor': '#36BCF7', 'titleColor': '#36BCF7', 'edgeLabelBackground': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+erDiagram
+    USERS ||--o{ CASES : "creates"
+    USERS ||--o{ EVIDENCE : "submits"
+    USERS ||--o{ ACTIVITY_LOGS : "generates"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ USER_SESSIONS : "has"
+    USERS ||--o{ ADMIN_ACTIONS : "performs"
+    USERS ||--o{ ROLE_CHANGE_REQUESTS : "requests/approves"
+    USERS ||--o{ TAGS : "creates"
+    USERS ||--o{ PASSWORD_RESETS : "requests"
+    USERS ||--o{ USER_PERMISSIONS : "granted"
+    
+    CASES ||--o{ EVIDENCE : "contains"
+    CASES ||--o{ CASE_STATUSES : "has status"
+    CASES ||--o{ CASE_ASSIGNMENTS : "assigned to"
+    CASES ||--o{ CASE_STATUS_HISTORY : "tracks"
+    CASES ||--o{ CASE_STATUS_TRANSITIONS : "allows"
+    CASES ||--o{ LEGAL_HOLDS : "subject to"
+    
+    EVIDENCE ||--o{ EVIDENCE_TAGS : "tagged with"
+    EVIDENCE ||--o{ ACTIVITY_LOGS : "logs"
+    EVIDENCE ||--o{ DOWNLOAD_HISTORY : "downloaded"
+    EVIDENCE ||--o{ RETENTION_POLICIES : "governed by"
+    
+    TAGS ||--o{ EVIDENCE_TAGS : "applied to"
+    TAGS }|..|{ TAGS : "parent/child"
+    
+    CASE_STATUSES ||--o{ CASE_STATUS_TRANSITIONS : "from"
+    CASE_STATUSES ||--o{ CASE_STATUS_TRANSITIONS : "to"
+    
+    ADMIN_ACTIONS }|..|{ USERS : "target"
+    
+    ROLE_CHANGE_REQUESTS }|..|{ USERS : "target"
+    ROLE_CHANGE_REQUESTS }|..|{ USERS : "approver"
+    
+    LEGAL_HOLDS }|..|{ USERS : "placed by"
+    
+    DOWNLOAD_HISTORY }|..|{ USERS : "downloaded by"
+    
+    NOTIFICATIONS }|..|{ USERS : "recipient"
+    
+    USER_SESSIONS }|..|{ USERS : "belongs to"
+    
+    USER_PERMISSIONS }|..|{ USERS : "for user"
+    
+    PASSWORD_RESETS }|..|{ USERS : "for email"
+    
+    %% Core Tables
+    USERS {
+        int id PK
+        varchar wallet_address UK
+        varchar email UK
+        varchar password_hash
+        varchar full_name
+        varchar role "enum: 8 roles"
+        varchar department
+        varchar jurisdiction
+        varchar badge_number
+        varchar account_type "real|test"
+        varchar auth_type "wallet|email|both"
+        boolean email_verified
+        varchar created_by
+        timestamp created_at
+        timestamp last_updated
+        boolean is_active
+    }
+    
+    CASES {
+        int id PK
+        varchar title
+        text description
+        varchar priority "low|medium|high|critical"
+        int created_by FK
+        varchar status "open|review|court|closed"
+        int status_id FK
+        int priority_level 1-5
+        varchar assigned_investigator
+        varchar assigned_prosecutor
+        varchar assigned_judge
+        timestamp court_date
+        timestamp deadline_date
+        varchar case_number UK
+        varchar jurisdiction
+        varchar case_type
+        timestamp estimated_completion
+        timestamp actual_completion
+        text[] case_tags
+        jsonb metadata
+        timestamp last_status_change
+        varchar status_changed_by
+        timestamp created_at
+    }
+    
+    EVIDENCE {
+        int id PK
+        varchar case_id FK
+        varchar title
+        text description
+        varchar type "document|image|video|audio|other"
+        text file_data "base64 or path"
+        varchar file_name
+        bigint file_size
+        varchar hash "SHA-256"
+        varchar submitted_by FK
+        timestamp timestamp
+        varchar status "pending|verified|sealed|archived"
+        varchar ipfs_cid
+        varchar blockchain_tx_hash
+        bigint blockchain_block_number
+        bigint gas_used
+        boolean blockchain_verified
+        timestamp blockchain_timestamp
+        varchar mime_type
+        jsonb metadata
+        boolean is_sealed
+        timestamp sealed_at
+        varchar sealed_by
+    }
+    
+    ACTIVITY_LOGS {
+        int id PK
+        varchar user_id FK
+        varchar action
+        text details
+        timestamp timestamp
+        varchar ip_address
+        varchar user_agent
+        varchar severity "info|warning|critical"
+    }
+    
+    NOTIFICATIONS {
+        int id PK
+        varchar user_wallet FK
+        varchar title
+        text message
+        varchar type "evidence_upload|verification|assignment|comment|mention|system|urgent"
+        jsonb data
+        boolean is_read
+        timestamp created_at
+        timestamp expires_at
+    }
+    
+    TAGS {
+        int id PK
+        varchar name UK
+        varchar color
+        varchar category
+        int parent_id FK
+        int usage_count
+        varchar created_by FK
+        timestamp created_at
+    }
+    
+    EVIDENCE_TAGS {
+        int evidence_id FK
+        int tag_id FK
+        varchar tagged_by FK
+        timestamp tagged_at
+        PK(evidence_id, tag_id)
+    }
+    
+    CASE_STATUSES {
+        int id PK
+        varchar status_code UK
+        varchar status_name
+        text description
+        varchar color_code
+        varchar icon
+        int sort_order
+        boolean is_active
+        timestamp created_at
+    }
+    
+    CASE_ASSIGNMENTS {
+        int id PK
+        int case_id FK
+        varchar user_id FK
+        varchar role "investigator|prosecutor|judge|analyst"
+        timestamp assigned_at
+        timestamp unassigned_at
+        varchar assigned_by FK
+    }
+    
+    CASE_STATUS_HISTORY {
+        int id PK
+        int case_id FK
+        int from_status_id FK
+        int to_status_id FK
+        varchar changed_by FK
+        text reason
+        timestamp changed_at
+    }
+    
+    CASE_STATUS_TRANSITIONS {
+        int id PK
+        int from_status_id FK
+        int to_status_id FK
+        varchar required_role
+        boolean requires_approval
+        timestamp created_at
+    }
+    
+    ADMIN_ACTIONS {
+        int id PK
+        varchar admin_wallet FK
+        varchar action_type
+        varchar target_wallet
+        jsonb details
+        timestamp timestamp
+    }
+    
+    ROLE_CHANGE_REQUESTS {
+        int id PK
+        varchar requesting_admin FK
+        varchar target_wallet FK
+        varchar old_role
+        varchar new_role
+        text reason
+        varchar status "pending|approved|rejected"
+        varchar approved_by FK
+        timestamp approved_at
+        varchar rejected_by FK
+        timestamp rejected_at
+        text rejection_reason
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    USER_SESSIONS {
+        int id PK
+        int user_id FK
+        varchar session_token UK
+        varchar wallet_address
+        varchar email
+        varchar login_type "wallet|email"
+        varchar ip_address
+        varchar user_agent
+        varchar device
+        varchar browser
+        varchar location
+        timestamp created_at
+        timestamp expires_at
+        boolean is_active
+        timestamp last_active
+    }
+    
+    USER_PERMISSIONS {
+        int id PK
+        int user_id FK
+        varchar permission_name
+        varchar resource
+        varchar action "read|write|delete|admin"
+        boolean granted
+        timestamp created_at
+        timestamp expires_at
+    }
+    
+    PASSWORD_RESETS {
+        int id PK
+        varchar email
+        varchar token UK
+        timestamp expires_at
+        boolean used
+        timestamp created_at
+    }
+    
+    LEGAL_HOLDS {
+        int id PK
+        int case_id FK
+        int evidence_id FK
+        varchar placed_by FK
+        text reason
+        timestamp placed_at
+        timestamp released_at
+        varchar released_by FK
+        boolean active
+    }
+    
+    RETENTION_POLICIES {
+        int id PK
+        varchar name
+        varchar description
+        int retention_days
+        varchar trigger_event "created|closed|archived"
+        boolean auto_archive
+        boolean auto_delete
+        varchar created_by FK
+        timestamp created_at
+        boolean is_active
+    }
+    
+    DOWNLOAD_HISTORY {
+        int id PK
+        int evidence_id FK
+        varchar downloaded_by FK
+        timestamp downloaded_at
+        varchar ip_address
+        varchar user_agent
+        boolean watermarked
+        varchar format "original|pdf|watermarked"
+    }
+```

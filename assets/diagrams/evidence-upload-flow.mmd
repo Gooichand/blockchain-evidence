@@ -1,0 +1,79 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+sequenceDiagram
+    autonumber
+    actor User as 👤 User\n(Investigator/Analyst)
+    participant Frontend as 🌐 Frontend\nVanilla JS + Ethers.js
+    participant Auth as 🔐 Auth Service\nJWT + ECDSA
+    participant API as ⚡ API Gateway\nExpress + Rate Limit
+    participant EvidenceSvc as 📁 Evidence Service\nProcessing Pipeline
+    participant IPFS as 📦 IPFS/Pinata\nDecentralized Storage
+    participant Blockchain as ⛓️ Blockchain\nPolygon + Contract
+    participant DB as 🐘 Supabase\nPostgreSQL + RLS
+    participant WS as 🔌 WebSocket\nReal-time Notifications
+    participant Audit as 📋 Audit Log\nImmutable Trail
+
+    Note over User, Audit: 🔐 Phase 1: Authentication & Authorization
+    User->>Frontend: Connect MetaMask / Email Login
+    Frontend->>Auth: Request Nonce (Wallet) / Credentials (Email)
+    Auth-->>Frontend: Nonce Challenge / JWT Token
+    Frontend->>User: Sign Message (ECDSA) / Enter Password
+    User->>Frontend: Signature / Credentials
+    Frontend->>Auth: Verify Signature / Validate JWT
+    Auth-->>Frontend: ✅ Authenticated + Role
+    Auth->>DB: Log Login Activity
+    
+    Note over User, Audit: 📤 Phase 2: Evidence Upload
+    User->>Frontend: Select File + Metadata\n(Case, Description, Tags)
+    Frontend->>Frontend: Client-side Validation\nType, Size, Hash Preview
+    Frontend->>API: POST /api/evidence/upload\nMultipart + Auth Headers
+    API->>API: Rate Limit Check\n(50/hr upload limit)
+    API->>Auth: Verify JWT / Wallet Sig
+    Auth-->>API: ✅ Authorized + Role
+    API->>EvidenceSvc: Process Evidence
+    
+    par Parallel Processing
+        EvidenceSvc->>EvidenceSvc: 🔐 SHA-256 Hash\nGenerate File Fingerprint
+        EvidenceSvc->>EvidenceSvc: 🎨 Watermark + Compress\nSharp + PDF-Lib
+        EvidenceSvc->>EvidenceSvc: 📋 Extract Metadata\nEXIF, C2PA, File Info
+    end
+    
+    Note over User, Audit: 🌐 Phase 3: IPFS Storage
+    EvidenceSvc->>IPFS: Upload File + Metadata\nPinata API
+    IPFS-->>EvidenceSvc: ✅ CID Generated\nQmXxx... / bafy...
+    EvidenceSvc->>DB: Store CID + Metadata\nPending Blockchain
+    
+    Note over User, Audit: ⛓️ Phase 4: Blockchain Anchoring
+    EvidenceSvc->>Blockchain: Prepare Transaction\nHash + Metadata JSON
+    Blockchain->>Blockchain: Estimate Gas\nOptimize Cost
+    Blockchain->>Contract: storeEvidence(hash, metadata)
+    Contract-->>Blockchain: ✅ Tx Hash + Block #
+    Blockchain->>Explorer: Verify on Polygonscan
+    Blockchain-->>EvidenceSvc: ✅ Confirmed (2 blocks)
+    
+    Note over User, Audit: 💾 Phase 5: Database Persistence
+    EvidenceSvc->>DB: INSERT evidence\nHash, CID, TxHash, Block#, Gas
+    DB-->>EvidenceSvc: ✅ Evidence ID Created
+    EvidenceSvc->>DB: Link to Case\nUpdate Case Evidence Count
+    EvidenceSvc->>Audit: Log Upload Event\nUser, File, Hash, CID, Tx
+    
+    Note over User, Audit: 🔔 Phase 6: Real-time Notification
+    EvidenceSvc->>WS: Emit 'evidence:uploaded'\nCase Room + Role Rooms
+    WS-->>User: 📱 Push Notification\n"Evidence Added to Case #123"
+    WS-->>Team: 👥 Team Alert\nRole-based Distribution
+    
+    Note over User, Audit: ✅ Phase 7: Response
+    EvidenceSvc-->>API: {success, evidenceId, txHash, cid}
+    API-->>Frontend: 201 Created + Data
+    Frontend-->>User: 🎉 Success UI\nVerification Links
+    
+    Note over User, Audit: 🔍 Phase 8: Verification (Anytime)
+    User->>Frontend: Click "Verify on Blockchain"
+    Frontend->>API: GET /api/evidence/:id/blockchain-proof
+    API->>Blockchain: verifyHash(fileHash)
+    Blockchain->>Contract: verifyHash(hash)
+    Contract-->>Blockchain: {exists: true, evidenceId}
+    Blockchain-->>API: Verification Result
+    API-->>Frontend: Proof Data + Explorer URL
+    Frontend-->>User: 🔗 Polygonscan Link\n✅ Verified Badge
+```

@@ -1,0 +1,112 @@
+name: 🎨 Regenerate Mermaid Diagrams
+
+on:
+  push:
+    paths:
+      - 'assets/diagrams/*.mmd'
+      - '.github/workflows/regenerate-diagrams.yml'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force regeneration even if no changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regenerate-diagrams:
+    name: Regenerate Mermaid Diagrams
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📦 Install Mermaid CLI
+        run: |
+          npm install -g @mermaid-js/mermaid-cli@latest
+          mmdc --version
+      
+      - name: 🎨 Generate SVG Diagrams
+        id: generate
+        run: |
+          echo "Generating diagrams..."
+          CHANGED=false
+          
+          for mmd_file in assets/diagrams/*.mmd; do
+            if [ ! -f "$mmd_file" ]; then
+              continue
+            fi
+            
+            filename=$(basename "$mmd_file" .mmd)
+            output_file="assets/diagrams/${filename}.svg"
+            
+            echo "Processing: $filename"
+            
+            # Generate light theme SVG
+            mmdc -i "$mmd_file" -o "$output_file" \
+              -t neutral \
+              -b transparent \
+              -w 1200 \
+              --scale 2
+            
+            # Check if file changed
+            if ! git diff --quiet "$output_file" 2>/dev/null; then
+              echo "  ✅ Updated: $output_file"
+              CHANGED=true
+            else
+              echo "  ⏭️  Unchanged: $output_file"
+            fi
+          done
+          
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+      
+      - name: 📝 Commit Changes
+        if: steps.generate.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add assets/diagrams/*.svg
+          git commit -m "🎨 Auto-regenerate Mermaid diagrams [skip ci]"
+          git push
+      
+      - name: 📋 Summary
+        run: |
+          echo "## 🎨 Diagram Regeneration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Diagram | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for mmd_file in assets/diagrams/*.mmd; do
+            if [ ! -f "$mmd_file" ]; then
+              continue
+            fi
+            filename=$(basename "$mmd_file" .mmd)
+            output_file="assets/diagrams/${filename}.svg"
+            
+            if git diff --quiet "$output_file" 2>/dev/null; then
+              status="⏭️ Unchanged"
+            else
+              status="✅ Updated"
+            fi
+            
+            echo "| \`${filename}\` | ${status} |" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated with \`@mermaid-js/mermaid-cli\` using neutral theme with transparent background." >> $GITHUB_STEP_SUMMARY

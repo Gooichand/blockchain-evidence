@@ -1,0 +1,218 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'clusterBkg': '#0d1426', 'clusterBorder': '#7C4DFF', 'defaultLinkColor': '#36BCF7', 'titleColor': '#36BCF7', 'edgeLabelBackground': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+graph TD
+    subgraph System["🏛️ EVID-DGC RBAC System"]
+        direction TB
+        
+        subgraph AdminTier["👑 Administrative Tier"]
+            Admin[("🛡️ ADMINISTRATOR\nFull System Control\nUser Management\nConfig & Audit\nRole Assignment")]
+        end
+        
+        subgraph LegalTier["⚖️ Legal & Judicial Tier"]
+            direction LR
+            Legal[("👨‍⚖️ LEGAL PROFESSIONAL\nCase Review\nLegal Hold\nEvidence Certification\nCourt Filing")]
+            Court[("🏛️ COURT OFFICIAL\nJudicial Oversight\nScheduling\nRulings\nOrders")]
+        end
+        
+        subgraph ManagementTier["📋 Evidence Management Tier"]
+            Manager[("📦 EVIDENCE MANAGER\nChain of Custody\nStorage Integrity\nRetention Policy\nArchive/Retrieve")]
+            Auditor[("🔍 AUDITOR\nCompliance Review\nAudit Trail\nSystem Integrity\nReports")]
+        end
+        
+        subgraph OperationsTier["🔬 Operational Tier"]
+            direction LR
+            Analyst[("🔬 FORENSIC ANALYST\nTechnical Analysis\nDeepfake Detection\nMetadata Forensics\nExpert Reports")]
+            Investigator[("🕵️ INVESTIGATOR\nCase Creation\nEvidence Upload\nInitial Review\nField Collection")]
+        end
+        
+        subgraph PublicTier["👁️ Public Access Tier"]
+            Viewer[("👁️ PUBLIC VIEWER\nBrowse Public Cases\nView Verified Evidence\nTransparency Portal\nRead-Only Access")]
+        end
+    end
+    
+    %% Permission Matrix
+    subgraph Permissions["🔐 Permission Matrix"]
+        direction TB
+        P1["📤 Upload Evidence"]
+        P2["📥 Download/Export"]
+        P3["🔍 Verify Hash"]
+        P4["📝 Create Case"]
+        P5["🔄 Update Case Status"]
+        P6["👥 Manage Users"]
+        P7["⚙️ System Config"]
+        P8["📊 View Analytics"]
+        P9["📋 Audit Logs"]
+        P10["🏷️ Tag Evidence"]
+        P11["🔒 Legal Hold"]
+        P12["📜 Certify Evidence"]
+        P13["🏛️ Court Actions"]
+        P14["🤖 AI Analysis"]
+        P15["🌐 Public View"]
+    end
+    
+    %% Role -> Permission Mapping
+    Admin -->|All| P1
+    Admin -->|All| P2
+    Admin -->|All| P3
+    Admin -->|All| P4
+    Admin -->|All| P5
+    Admin -->|All| P6
+    Admin -->|All| P7
+    Admin -->|All| P8
+    Admin -->|All| P9
+    Admin -->|All| P10
+    Admin -->|All| P11
+    Admin -->|All| P12
+    Admin -->|All| P13
+    Admin -->|All| P14
+    Admin -->|All| P15
+    
+    Legal -->|✓| P1
+    Legal -->|✓| P2
+    Legal -->|✓| P3
+    Legal -->|✓| P4
+    Legal -->|✓| P5
+    Legal -->|✗| P6
+    Legal -->|✗| P7
+    Legal -->|✓| P8
+    Legal -->|✓| P9
+    Legal -->|✓| P10
+    Legal -->|✓| P11
+    Legal -->|✓| P12
+    Legal -->|✗| P13
+    Legal -->|✗| P14
+    Legal -->|✓| P15
+    
+    Court -->|✗| P1
+    Court -->|✓| P2
+    Court -->|✓| P3
+    Court -->|✗| P4
+    Court -->|✓| P5
+    Court -->|✗| P6
+    Court -->|✗| P7
+    Court -->|✓| P8
+    Court -->|✓| P9
+    Court -->|✗| P10
+    Court -->|✓| P11
+    Court -->|✗| P12
+    Court -->|✓| P13
+    Court -->|✗| P14
+    Court -->|✓| P15
+    
+    Manager -->|✓| P1
+    Manager -->|✓| P2
+    Manager -->|✓| P3
+    Manager -->|✓| P4
+    Manager -->|✓| P5
+    Manager -->|✗| P6
+    Manager -->|✗| P7
+    Manager -->|✓| P8
+    Manager -->|✓| P9
+    Manager -->|✓| P10
+    Manager -->|✓| P11
+    Manager -->|✗| P12
+    Manager -->|✗| P13
+    Manager -->|✗| P14
+    Manager -->|✓| P15
+    
+    Auditor -->|✗| P1
+    Auditor -->|✓| P2
+    Auditor -->|✓| P3
+    Auditor -->|✗| P4
+    Auditor -->|✗| P5
+    Auditor -->|✗| P6
+    Auditor -->|✗| P7
+    Auditor -->|✓| P8
+    Auditor -->|✓| P9
+    Auditor -->|✗| P10
+    Auditor -->|✗| P11
+    Auditor -->|✗| P12
+    Auditor -->|✗| P13
+    Auditor -->|✗| P14
+    Auditor -->|✓| P15
+    
+    Analyst -->|✗| P1
+    Analyst -->|✓| P2
+    Analyst -->|✓| P3
+    Analyst -->|✗| P4
+    Analyst -->|✗| P5
+    Analyst -->|✗| P6
+    Analyst -->|✗| P7
+    Analyst -->|✓| P8
+    Analyst -->|✓| P9
+    Analyst -->|✓| P10
+    Analyst -->|✗| P11
+    Analyst -->|✗| P12
+    Analyst -->|✗| P13
+    Analyst -->|✓| P14
+    Analyst -->|✓| P15
+    
+    Investigator -->|✓| P1
+    Investigator -->|✓| P2
+    Investigator -->|✓| P3
+    Investigator -->|✓| P4
+    Investigator -->|✓| P5
+    Investigator -->|✗| P6
+    Investigator -->|✗| P7
+    Investigator -->|✓| P8
+    Investigator -->|✓| P9
+    Investigator -->|✓| P10
+    Investigator -->|✗| P11
+    Investigator -->|✗| P12
+    Investigator -->|✗| P13
+    Investigator -->|✗| P14
+    Investigator -->|✓| P15
+    
+    Viewer -->|✗| P1
+    Viewer -->|✗| P2
+    Viewer -->|✓| P3
+    Viewer -->|✗| P4
+    Viewer -->|✗| P5
+    Viewer -->|✗| P6
+    Viewer -->|✗| P7
+    Viewer -->|✗| P8
+    Viewer -->|✗| P9
+    Viewer -->|✗| P10
+    Viewer -->|✗| P11
+    Viewer -->|✗| P12
+    Viewer -->|✗| P13
+    Viewer -->|✗| P14
+    Viewer -->|✓| P15
+    
+    %% Hierarchy Edges
+    Admin -.->|Delegates| Legal
+    Admin -.->|Delegates| Court
+    Admin -.->|Delegates| Manager
+    Admin -.->|Delegates| Auditor
+    Admin -.->|Delegates| Analyst
+    Admin -.->|Delegates| Investigator
+    Admin -.->|Delegates| Viewer
+    
+    Legal -.->|Collaborates| Court
+    Legal -.->|Requests| Manager
+    Legal -.->|Reviews| Analyst
+    Legal -.->|Guides| Investigator
+    
+    Manager -.->|Oversees| Investigator
+    Manager -.->|Coordinates| Analyst
+    Manager -.->|Reports| Auditor
+    
+    Auditor -.->|Audits| Manager
+    Auditor -.->|Reviews| Analyst
+    Auditor -.->|Validates| Investigator
+    
+    %% Styling
+    classDef admin fill:#1a1f2e,stroke:#FF6B6B,stroke-width:3px,color:#FFB8B8
+    classDef legal fill:#1a1f2e,stroke:#7C4DFF,stroke-width:2px,color:#B8A8FF
+    classDef mgmt fill:#1a1f2e,stroke:#00D4FF,stroke-width:2px,color:#A8E8FF
+    classDef ops fill:#1a1f2e,stroke:#00FF88,stroke-width:2px,color:#A8FFA8
+    classDef public fill:#1a1f2e,stroke:#FFA500,stroke-width:2px,color:#FFE8A8
+    classDef perm fill:#0d1426,stroke:#36BCF7,stroke-width:1px,color:#88CCFF,stroke-dasharray: 5 5
+    
+    class Admin admin
+    class Legal,Court legal
+    class Manager,Auditor mgmt
+    class Analyst,Investigator ops
+    class Viewer public
+    class P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15 perm
+```

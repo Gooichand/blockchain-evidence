@@ -1,0 +1,87 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'clusterBkg': '#0d1426', 'clusterBorder': '#7C4DFF', 'defaultLinkColor': '#36BCF7', 'titleColor': '#36BCF7', 'edgeLabelBackground': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+stateDiagram-v2
+    [*] --> DRAFT: Create Case\n(Investigator+)
+    
+    state DRAFT {
+        [*] --> INITIALIZE
+        INITIALIZE --> ADD_METADATA: Add Title, Description, Priority
+        ADD_METADATA --> ASSIGN_TEAM: Assign Investigator/Analyst
+        ASSIGN_TEAM --> READY_FOR_REVIEW
+    }
+    
+    DRAFT --> OPEN: Submit for Review\n(Investigator)
+    
+    state OPEN {
+        [*] --> ACTIVE_INVESTIGATION
+        ACTIVE_INVESTIGATION --> EVIDENCE_COLLECTION: Upload Evidence
+        EVIDENCE_COLLECTION --> ANALYSIS_QUEUE: Request Analysis
+        ANALYSIS_QUEUE --> ANALYSIS_IN_PROGRESS: Analyst Assigned
+        ANALYSIS_IN_PROGRESS --> ANALYSIS_COMPLETE: Report Generated
+        ANALYSIS_COMPLETE --> LEGAL_REVIEW_QUEUE: Legal Review Needed
+        LEGAL_REVIEW_QUEUE --> LEGAL_REVIEW: Legal Professional
+        LEGAL_REVIEW --> LEGAL_COMPLETE: Approved/Annotated
+    }
+    
+    OPEN --> UNDER_REVIEW: Escalate\n(Manager/Legal)
+    
+    state UNDER_REVIEW {
+        [*] --> MANAGER_REVIEW
+        MANAGER_REVIEW --> SENIOR_REVIEW: Complex Case
+        SENIOR_REVIEW --> DECISION_PENDING
+        DECISION_PENDING --> APPROVED: Proceed
+        DECISION_PENDING --> REJECTED: Return to OPEN
+    }
+    
+    UNDER_REVIEW --> COURT_READY: Legal Complete\n(Court Official)
+    
+    state COURT_READY {
+        [*] --> FILING_PREPARATION
+        FILING_PREPARATION --> EVIDENCE_CERTIFICATION: Legal Hold + Certify
+        EVIDENCE_CERTIFICATION --> COURT_FILING: Submit to Court
+        COURT_FILING --> SCHEDULED: Hearing Date Set
+        SCHEDULED --> IN_SESSION: Proceedings Active
+        IN_SESSION --> DELIBERATION: Evidence Presented
+        DELIBERATION --> VERDICT_PENDING
+        VERDICT_PENDING --> VERDICT_RENDERED
+    }
+    
+    COURT_READY --> CLOSED: Case Resolved\n(All Parties)
+    
+    state CLOSED {
+        [*] --> ARCHIVAL_PREP
+        ARCHIVAL_PREP --> RETENTION_APPLY: Apply Retention Policy
+        RETENTION_APPLY --> ARCHIVED: Move to Cold Storage
+        ARCHIVED --> [*]: End of Lifecycle
+    }
+    
+    %% Alternative paths
+    OPEN --> ON_HOLD: Legal Hold Requested
+    ON_HOLD --> OPEN: Hold Released
+    ON_HOLD --> CLOSED: Administrative Close
+    
+    UNDER_REVIEW --> REOPENED: New Evidence
+    REOPENED --> OPEN: Restart Investigation
+    
+    COURT_READY --> APPEALED: Appeal Filed
+    APPEALED --> UNDER_REVIEW: Remand
+    
+    CLOSED --> REOPENED: Post-Conviction\nNew Evidence
+    
+    %% Annotations
+    note right of DRAFT: 📝 Draft\nOnly creator & team can edit\nNo evidence immutable yet
+    
+    note right of OPEN: 🔓 Active Investigation\nEvidence being collected\nBlockchain anchoring active
+    
+    note right of UNDER_REVIEW: 👁️ Management Review\nQuality checks\nResource allocation
+    
+    note right of COURT_READY: ⚖️ Court Proceedings\nLegal holds enforced\nEvidence certified
+    
+    note right of CLOSED: 📦 Archived\nRetention policy applied\nRead-only access
+    
+    note right of ON_HOLD: ⏸️ Legal Hold\nEvidence frozen\nNo modifications allowed
+    
+    note right of REOPENED: 🔄 Reopened\nNew investigation\nAudit trail preserved
+    
+    note right of APPEALED: ⚖️ Appeal Process\nHigher court review\nEvidence re-examined
+```

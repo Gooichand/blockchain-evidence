@@ -1,0 +1,98 @@
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#0a0f1a', 'primaryTextColor': '#e8edf5', 'primaryBorderColor': '#36BCF7', 'lineColor': '#36BCF7', 'secondaryColor': '#1a1f2e', 'tertiaryColor': '#0d1426', 'background': '#0a0f1a', 'mainBkg': '#0a0f1a', 'secondBkg': '#1a1f2e', 'tertiaryBkg': '#0d1426', 'nodeBkg': '#1a1f2e', 'nodeBorder': '#36BCF7', 'actorBkg': '#1a1f2e', 'actorBorder': '#36BCF7', 'actorTextColor': '#e8edf5', 'actorLineColor': '#36BCF7', 'signalColor': '#36BCF7', 'signalTextColor': '#e8edf5', 'labelBoxBkgColor': '#0d1426', 'labelBoxBorderColor': '#7C4DFF', 'labelTextColor': '#e8edf5'}}}%%
+sequenceDiagram
+    autonumber
+    participant User as 👤 Authorized User\n(Wallet Signer)
+    participant Frontend as 🌐 Frontend\nEthers.js v6
+    participant API as ⚡ Backend\nBlockchain Service
+    participant Provider as 🔗 RPC Provider\nAlchemy/Polygon
+    participant Contract as 📜 EvidenceStorage.sol\n0x3945...D9e3
+    participant Network as ⛓️ Polygon Network\nAmoy (80002) / Mainnet (137)
+    participant Explorer as 🔍 Polygonscan\nVerification
+    participant DB as 🐘 Supabase\nTx Record
+
+    Note over User, DB: 🏗️ Smart Contract: EvidenceStorage.sol
+    Note right of Contract: struct Evidence {\n  string fileHash\n  string metadata\n  address uploadedBy\n  uint256 timestamp\n  bool isSealed\n}\n\nevent EvidenceStored(uint256 indexed evidenceId, string fileHash, address indexed uploadedBy);\nevent EvidenceSealed(uint256 indexed evidenceId, address indexed sealedBy);
+
+    rect rgb(0, 15, 30)
+        Note over User, DB: Phase 1: Preparation & Signing
+        User->>Frontend: Initiate Evidence Upload
+        Frontend->>Frontend: Compute SHA-256 Hash\nPrepare Metadata JSON
+        Frontend->>User: Request Wallet Signature\nEIP-191 Personal Sign
+        User->>Frontend: ✅ Signed Message
+        Frontend->>API: POST /api/evidence/upload\n{hash, metadata, signature}
+    end
+
+    rect rgb(10, 20, 40)
+        Note over User, DB: Phase 2: Backend Validation
+        API->>API: Verify Signature\nRecover Address
+        API->>API: Check Authorization\nDB: authorizedUsers[address]
+        API->>API: Estimate Gas\ncontract.estimateGas()
+        API-->>Frontend: Gas Estimate + Confirmation
+    end
+
+    rect rgb(0, 25, 50)
+        Note over User, DB: Phase 3: Transaction Submission
+        Frontend->>User: Confirm Gas Fee\n(MATIC)
+        User->>Frontend: ✅ Approve
+        Frontend->>Provider: eth_sendRawTransaction\nSigned Tx
+        Provider-->>Frontend: 📤 Tx Hash (Pending)
+        Frontend->>API: Store Pending Tx Hash
+        API->>DB: INSERT pending_tx\n{hash, user, evidence_id}
+    end
+
+    rect rgb(0, 30, 60)
+        Note over User, DB: Phase 4: Network Propagation
+        Provider->>Network: Broadcast to Mempool
+        Network->>Network: Validator Selection\nPoS Consensus
+        Network->>Contract: Execute storeEvidence()
+        Contract->>Contract: Verify Hash Unique\nIncrement Counter\nStore Evidence\nEmit EvidenceStored Event
+        Contract-->>Network: ✅ State Change
+        Network->>Network: Block Finalization\n2 Block Confirmations
+    end
+
+    rect rgb(10, 30, 50)
+        Note over User, DB: Phase 5: Confirmation & Indexing
+        Provider->>Frontend: 📥 Tx Receipt\n{blockNumber, gasUsed, status}
+        Frontend->>API: POST /api/blockchain/confirm\n{txHash, receipt}
+        API->>Provider: eth_getTransactionReceipt
+        Provider-->>API: Full Receipt Data
+        API->>DB: UPDATE evidence\nSET blockchain_tx_hash, block_number, gas_used, blockchain_verified=true
+        API->>DB: INSERT blockchain_tx\n{hash, block, gas, timestamp}
+    end
+
+    rect rgb(0, 35, 65)
+        Note over User, DB: Phase 6: Verification & Explorer
+        API->>Explorer: Submit for Indexing\n(Automatic via Polygonscan)
+        Explorer-->>API: ✅ Indexed
+        API->>Frontend: WebSocket Event\n'blockchain:confirmed'
+        Frontend-->>User: 🎉 Verified Badge\nExplorer Link\nBlock Number\nGas Used
+    end
+
+    rect rgb(0, 40, 70)
+        Note over User, DB: Phase 7: On-Chain Verification (Anytime)
+        User->>Frontend: Click "Verify on Blockchain"
+        Frontend->>API: GET /api/evidence/:id/verify
+        API->>Provider: eth_call\ncontract.verifyHash(hash)
+        Provider->>Contract: verifyHash(fileHash)
+        Contract-->>Provider: (exists: true, evidenceId: 123)
+        Provider-->>API: Verification Result
+        API-->>Frontend: {verified: true, evidenceId, explorerUrl}
+        Frontend-->>User: ✅ Immutable Proof\n🔗 Polygonscan URL
+    end
+
+    rect rgb(0, 45, 75)
+        Note over User, DB: Phase 8: Evidence Sealing (Optional)
+        User->>Frontend: Request Seal Evidence\n(Immutable Lock)
+        Frontend->>API: PUT /api/evidence/:id/seal
+        API->>Provider: eth_sendTransaction\ncontract.sealEvidence(id)
+        Provider->>Network: Mine Seal Transaction
+        Network->>Contract: Set isSealed=true\nEmit EvidenceSealed Event
+        Contract-->>Network: ✅ Sealed
+        Network-->>Provider: Receipt
+        Provider-->>API: Seal Confirmation
+        API->>DB: UPDATE evidence SET is_sealed=true
+        API-->>Frontend: 🔒 Sealed Status
+        Frontend-->>User: Permanent Lock Notice
+    end
+```
