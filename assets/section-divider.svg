@@ -1,31 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" width="1200" height="60">
   <defs>
     <linearGradient id="dividerGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-      <stop offset="0%" style="stop-color:#0a0f1a"/>
-      <stop offset="10%" style="stop-color:#36BCF7" stop-opacity="0.3"/>
-      <stop offset="30%" style="stop-color:#36BCF7" stop-opacity="0.8"/>
-      <stop offset="50%" style="stop-color:#00D4FF" stop-opacity="1"/>
-      <stop offset="70%" style="stop-color:#7C4DFF" stop-opacity="0.8"/>
-      <stop offset="90%" style="stop-color:#36BCF7" stop-opacity="0.3"/>
-      <stop offset="100%" style="stop-color:#0a0f1a"/>
+      <stop offset="0%" style="stop-color:#0b0e14"/>
+      <stop offset="10%" style="stop-color:#dc2626" stop-opacity="0.3"/>
+      <stop offset="30%" style="stop-color:#dc2626" stop-opacity="0.8"/>
+      <stop offset="50%" style="stop-color:#ef4444" stop-opacity="1"/>
+      <stop offset="70%" style="stop-color:#dc2626" stop-opacity="0.8"/>
+      <stop offset="90%" style="stop-color:#dc2626" stop-opacity="0.3"/>
+      <stop offset="100%" style="stop-color:#0b0e14"/>
     </linearGradient>
-    
+
     <linearGradient id="dividerGradientDark" x1="0%" y1="50%" x2="100%" y2="50%">
-      <stop offset="0%" style="stop-color:#1a1f2e"/>
-      <stop offset="10%" style="stop-color:#36BCF7" stop-opacity="0.4"/>
-      <stop offset="30%" style="stop-color:#36BCF7" stop-opacity="0.9"/>
-      <stop offset="50%" style="stop-color:#00D4FF" stop-opacity="1"/>
-      <stop offset="70%" style="stop-color:#7C4DFF" stop-opacity="0.9"/>
-      <stop offset="90%" style="stop-color:#36BCF7" stop-opacity="0.4"/>
-      <stop offset="100%" style="stop-color:#1a1f2e"/>
+      <stop offset="0%" style="stop-color:#141c24"/>
+      <stop offset="10%" style="stop-color:#dc2626" stop-opacity="0.4"/>
+      <stop offset="30%" style="stop-color:#dc2626" stop-opacity="0.9"/>
+      <stop offset="50%" style="stop-color:#f87171" stop-opacity="1"/>
+      <stop offset="70%" style="stop-color:#dc2626" stop-opacity="0.9"/>
+      <stop offset="90%" style="stop-color:#dc2626" stop-opacity="0.4"/>
+      <stop offset="100%" style="stop-color:#141c24"/>
     </linearGradient>
-    
+
     <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#36BCF7;stop-opacity:0.8"/>
-      <stop offset="50%" style="stop-color:#00D4FF;stop-opacity:0.3"/>
-      <stop offset="100%" style="stop-color:#7C4DFF;stop-opacity:0"/>
+      <stop offset="0%" style="stop-color:#ef4444;stop-opacity:0.9"/>
+      <stop offset="50%" style="stop-color:#dc2626;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#991b1b;stop-opacity:0"/>
     </radialGradient>
-    
+
     <filter id="pulseGlow">
       <feGaussianBlur stdDeviation="3" result="blur"/>
       <feMerge>
@@ -34,42 +34,42 @@
       </feMerge>
     </filter>
   </defs>
-  
+
   <!-- Background blend -->
   <rect width="1200" height="60" fill="url(#dividerGradient)"/>
-  
+
   <!-- Animated center line -->
   <line x1="100" y1="30" x2="1100" y2="30" stroke="url(#dividerGradient)" stroke-width="2" stroke-linecap="round" opacity="0.6">
     <animate attributeName="stroke-dasharray" values="10,20;50,10;10,20" dur="3s" repeatCount="indefinite"/>
     <animate attributeName="stroke-dashoffset" values="0;100;0" dur="3s" repeatCount="indefinite"/>
   </line>
-  
+
   <!-- Center diamond -->
   <polygon points="600,15 610,30 600,45 590,30" fill="url(#centerGlow)" filter="url(#pulseGlow)">
     <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
     <animateTransform attributeName="transform" type="rotate" from="0 600 30" to="360 600 30" dur="20s" repeatCount="indefinite"/>
   </polygon>
-  
+
   <!-- Floating particles -->
   <g opacity="0.7">
-    <circle cx="200" cy="30" r="3" fill="#36BCF7">
+    <circle cx="200" cy="30" r="3" fill="#dc2626">
       <animate attributeName="cy" values="30;20;40;30" dur="4s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.7;1;0.7" dur="4s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="400" cy="30" r="2" fill="#00D4FF">
+    <circle cx="400" cy="30" r="2" fill="#ef4444">
       <animate attributeName="cy" values="30;35;25;30" dur="3.5s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="800" cy="30" r="2.5" fill="#7C4DFF">
+    <circle cx="800" cy="30" r="2.5" fill="#f87171">
       <animate attributeName="cy" values="30;22;38;30" dur="4.5s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.6;1;0.6" dur="4.5s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="1000" cy="30" r="1.5" fill="#FF6B6B">
+    <circle cx="1000" cy="30" r="1.5" fill="#991b1b">
       <animate attributeName="cy" values="30;28;32;30" dur="3s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
     </circle>
   </g>
-  
+
   <!-- Side accent bars -->
   <g fill="url(#dividerGradient)">
     <rect x="50" y="25" width="3" height="10" rx="1.5">
