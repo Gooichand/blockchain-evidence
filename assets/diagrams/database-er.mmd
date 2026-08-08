@@ -152,12 +152,11 @@ erDiagram
         timestamp created_at
     }
     
-    EVIDENCE_TAGS {
-        int evidence_id FK
-        int tag_id FK
+EVIDENCE_TAGS {
+        int evidence_id PK
+        int tag_id PK
         varchar tagged_by FK
         timestamp tagged_at
-        PK(evidence_id, tag_id)
     }
     
     CASE_STATUSES {
