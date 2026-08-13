@@ -38,7 +38,7 @@ const verifySignature = (req, res, next) => {
     // SECURITY FIX: A valid Bearer JWT establishes a verified identity for
     // email-based sessions (which have no wallet signature). Trust the signed
     // token and skip the wallet-signature requirement for these requests.
-    const authHeader = req.headers['authorization'] || '';
+    const authHeader = (req.headers && req.headers['authorization']) || '';
     if (authHeader.startsWith('Bearer ') && JWT_SECRET) {
       try {
         const payload = jwt.verify(authHeader.slice(7).trim(), JWT_SECRET);
@@ -50,6 +50,25 @@ const verifySignature = (req, res, next) => {
         }
       } catch (_) {
         // Invalid/expired JWT — fall through to wallet-signature checks.
+      }
+    }
+
+    // A valid httpOnly session cookie also establishes a verified identity for
+    // email-based sessions. Trust it and skip the wallet-signature requirement
+    // so email sessions work even when only the cookie (not a Bearer header) is sent.
+    const cookieHeader = (req.headers && req.headers.cookie) || '';
+    const cookieMatch = /(?:^|;\s*)evid_token=([^;]+)/.exec(cookieHeader);
+    if (cookieMatch && JWT_SECRET) {
+      try {
+        const payload = jwt.verify(decodeURIComponent(cookieMatch[1]), JWT_SECRET);
+        if (payload && payload.userId) {
+          req.authenticatedWallet =
+            (payload.walletAddress || payload.wallet_address || '').toLowerCase() || undefined;
+          req.jwtUser = payload;
+          return next();
+        }
+      } catch (_) {
+        // Invalid/expired cookie — fall through to wallet-signature checks.
       }
     }
 
@@ -74,11 +93,11 @@ const verifySignature = (req, res, next) => {
       return next();
     }
 
-    // Only treat a properly-formatted 0x address as a wallet claim. Email-based
-    // sessions set x-user-wallet to a non-address value; we must NOT reject those
-    // (they are already covered by the Bearer JWT path above), so ignore them.
+    // A wallet claim must be a properly-formatted 0x address. Anything else is
+    // malformed: reject it (no valid Bearer/cookie identity was established above,
+    // so this is not a legitimate email session).
     if (typeof claimedWallet !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(claimedWallet)) {
-      return next();
+      return res.status(400).json({ success: false, error: 'Invalid wallet address format' });
     }
 
     const { signature, message } = req.headers;

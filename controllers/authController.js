@@ -34,12 +34,17 @@ function parseUserAgent(ua = '') {
 /** Record a server-side session row for the signed-in user. */
 async function createUserSession(user, req) {
   try {
-    const { device, browser } = parseUserAgent(req.headers['user-agent']);
+    const headers = (req && req.headers) || {};
+    const ua = headers['user-agent'] || '';
+    const { device, browser } = parseUserAgent(ua);
     await supabase.from('user_sessions').insert({
       user_id: user.id,
       wallet_address: user.wallet_address || null,
-      ip_address: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || null,
-      user_agent: req.headers['user-agent'] || null,
+      ip_address:
+        (headers['x-forwarded-for'] && headers['x-forwarded-for'].split(',')[0].trim()) ||
+        (req && req.socket && req.socket.remoteAddress) ||
+        null,
+      user_agent: ua || null,
       device,
       browser,
       location: 'Unknown',
@@ -64,7 +69,14 @@ const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24h
  * directly by the static layer) and is used by the page guard.
  */
 function setSessionCookie(res, token, req) {
-  const secure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  if (!res || typeof res.cookie !== 'function') return;
+  const headers = (req && req.headers) || {};
+  const proto = headers['x-forwarded-proto'];
+  const secure = Boolean(
+    (req && req.secure) ||
+      proto === 'https' ||
+      (typeof proto === 'string' && proto.split(',').map((s) => s.trim()).includes('https')),
+  );
   res.cookie(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
@@ -75,7 +87,7 @@ function setSessionCookie(res, token, req) {
 }
 
 function clearSessionCookie(res) {
-  res.clearCookie(SESSION_COOKIE, { path: '/' });
+  if (res && typeof res.clearCookie === 'function') res.clearCookie(SESSION_COOKIE, { path: '/' });
 }
 
 // Clean up expired nonces every 5 minutes
