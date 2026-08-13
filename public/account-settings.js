@@ -351,6 +351,10 @@ function saveNotificationSettings() {
 }
 
 function logout() {
+    const token = localStorage.getItem("authToken");
+    if (token && typeof window.apiClient !== 'undefined') {
+        window.apiClient.post("/auth/logout", {}).catch(() => {});
+    }
     localStorage.clear();
     window.location.href = '/';
 }

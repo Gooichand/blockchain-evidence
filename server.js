@@ -102,6 +102,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 2. STATIC FILES - BEFORE API ROUTES
+//    Server-side page guard runs BEFORE static so privileged dashboard/tool
+//    pages are authorized (401/403 or safe redirect) before any HTML is served.
+const { protectPage } = require('./middleware/authorization');
+app.use(protectPage);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 3. General rate limiter - applied to all API routes

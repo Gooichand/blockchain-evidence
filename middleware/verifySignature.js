@@ -1,4 +1,7 @@
 const { ethers } = require('ethers');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // In-memory store for used nonces to prevent replay attacks
 const usedNonces = new Map();
@@ -32,6 +35,24 @@ const verifySignature = (req, res, next) => {
       return next();
     }
 
+    // SECURITY FIX: A valid Bearer JWT establishes a verified identity for
+    // email-based sessions (which have no wallet signature). Trust the signed
+    // token and skip the wallet-signature requirement for these requests.
+    const authHeader = req.headers['authorization'] || '';
+    if (authHeader.startsWith('Bearer ') && JWT_SECRET) {
+      try {
+        const payload = jwt.verify(authHeader.slice(7).trim(), JWT_SECRET);
+        if (payload && payload.userId) {
+          req.authenticatedWallet =
+            (payload.walletAddress || payload.wallet_address || '').toLowerCase() || undefined;
+          req.jwtUser = payload;
+          return next();
+        }
+      } catch (_) {
+        // Invalid/expired JWT — fall through to wallet-signature checks.
+      }
+    }
+
     // SECURITY FIX: Standardized list of possible wallet identity fields
     const body = req.body || {};
     const query = req.query || {};
@@ -45,7 +66,7 @@ const verifySignature = (req, res, next) => {
       query.wallet;
 
     /**
-     * If no wallet is claimed, we proceed. 
+     * If no wallet is claimed, we proceed.
      * Protected controllers MUST check for req.authenticatedWallet.
      * This allows public routes (like health checks) to function.
      */
@@ -53,9 +74,11 @@ const verifySignature = (req, res, next) => {
       return next();
     }
 
+    // Only treat a properly-formatted 0x address as a wallet claim. Email-based
+    // sessions set x-user-wallet to a non-address value; we must NOT reject those
+    // (they are already covered by the Bearer JWT path above), so ignore them.
     if (typeof claimedWallet !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(claimedWallet)) {
-      // If they claimed a wallet but it's garbage, reject.
-      return res.status(400).json({ success: false, error: 'Invalid wallet address format' });
+      return next();
     }
 
     const { signature, message } = req.headers;

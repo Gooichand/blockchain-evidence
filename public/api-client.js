@@ -206,6 +206,22 @@ class APIClient {
             data = await response.text();
         }
 
+        // Centralized auth-state handling. Server is the source of truth for
+        // authorization, so a 401 means the session is gone and a 403 means the
+        // role lacks permission. This is a UX layer only — enforcement is server-side.
+        if (response.status === 401 && localStorage.getItem('authToken')) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            if (!window.__evidAuthRedirected) {
+                window.__evidAuthRedirected = true;
+                window.location.href = '/?auth=expired';
+            }
+        } else if (response.status === 403) {
+            if (typeof window.showAlert === 'function') {
+                window.showAlert('Access denied. You do not have permission to view this.', 'error');
+            }
+        }
+
         if (!response.ok || (data && typeof data === 'object' && data.success === false)) {
             const error = new Error((data && data.error) || `HTTP error ${response.status}`);
             error.status = response.status;

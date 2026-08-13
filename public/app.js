@@ -570,6 +570,10 @@ async function handleEmailLogin(event) {
   event.preventDefault();
   console.log("Handling email login...");
 
+  // Prevent duplicate submissions (double-click / rapid retry)
+  if (window.__emailLoginInProgress) return;
+  window.__emailLoginInProgress = true;
+
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
   const submitBtn = document.getElementById("loginEmailSubmit");
@@ -577,6 +581,7 @@ async function handleEmailLogin(event) {
   if (!emailInput || !passwordInput) {
     console.error("Email or password input elements not found");
     showAlert("Login form not loaded correctly. Please refresh the page.", "error");
+    window.__emailLoginInProgress = false;
     return;
   }
 
@@ -585,6 +590,7 @@ async function handleEmailLogin(event) {
 
   if (!email || !password) {
     showAlert("Please enter both email and password.", "error");
+    window.__emailLoginInProgress = false;
     return;
   }
 
@@ -651,6 +657,7 @@ async function handleEmailLogin(event) {
     showAlert(message, "error");
   } finally {
     showLoading(false);
+    window.__emailLoginInProgress = false;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Sign In';
@@ -1319,6 +1326,15 @@ function goToAdminDashboard() {
 }
 
 function logout() {
+  const token = localStorage.getItem("authToken");
+  if (token && typeof window.apiClient !== 'undefined') {
+    // Invalidate the server-side session; fire-and-forget so logout is instant.
+    // The stored token is still present here, so apiClient sends it for revocation.
+    window.apiClient
+      .post("/auth/logout", {})
+      .catch(() => {});
+  }
+
   // Capture session id BEFORE clearing storage
   const walletAddr = localStorage.getItem("currentUser");
   const sessionId = localStorage.getItem('sessionId');
