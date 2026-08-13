@@ -1,170 +1,95 @@
-﻿<div align="center">
+﻿# EVID-DGC
 
-<img src="assets/hero-banner.svg" alt="EVID-DGC blockchain evidence platform" width="100%">
+## Blockchain Evidence and Digital Chain of Custody
 
-# EVID-DGC
+EVID-DGC is an evidence-management prototype for recording digital-evidence metadata, generating file hashes, tracking custody events, and supporting public integrity verification.
 
-### Evidence integrity, custody visibility, and verifiable digital records.
+> **Current status:** Experimental Polygon Amoy testnet prototype. Do not use this system for real legal evidence, production chain-of-custody records, or sensitive investigations until the security and operational controls have been independently verified.
 
-<p>
-  <a href="https://blockchain-evidence.onrender.com"><img src="https://img.shields.io/badge/LIVE_DEMO-OPEN-DC2626?style=for-the-badge&logo=render&logoColor=white" alt="Open live demo"></a>
-  <a href="public/api-reference.html"><img src="https://img.shields.io/badge/API-REFERENCE-2563EB?style=for-the-badge&logo=swagger&logoColor=white" alt="API reference"></a>
-  <a href="docs/DEPLOYMENT.md"><img src="https://img.shields.io/badge/DEPLOY-RENDER-111827?style=for-the-badge&logo=render&logoColor=white" alt="Deployment guide"></a>
-</p>
+[Live demo](https://blockchain-evidence.onrender.com) · [API reference](public/api-reference.html) · [Security policy](SECURITY.md) · [Deployment guide](docs/DEPLOYMENT.md)
 
-<p>
-  <img src="https://img.shields.io/badge/STATUS-TESTNET_PROTOTYPE-F59E0B?style=flat-square" alt="Testnet prototype">
-  <img src="https://img.shields.io/badge/CHAIN-POLYGON_AMOY-8247E5?style=flat-square&logo=polygon&logoColor=white" alt="Polygon Amoy">
-  <img src="https://img.shields.io/badge/BACKEND-NODE_%2B_EXPRESS-16A34A?style=flat-square&logo=node.js&logoColor=white" alt="Node and Express">
-  <img src="https://img.shields.io/badge/DATA-SUPABASE-3ECF8E?style=flat-square&logo=supabase&logoColor=111827" alt="Supabase">
-  <img src="https://img.shields.io/badge/STORAGE-IPFS_/_PINATA-7C3AED?style=flat-square&logo=ipfs&logoColor=white" alt="IPFS and Pinata">
-</p>
+## What the project does
 
-</div>
-
-> [!WARNING]
-> **This is an experimental Polygon Amoy testnet prototype.** Do not use it for real legal evidence, production chain-of-custody records, or sensitive investigations until the authorization, audit, backup, and operational controls have been independently verified.
-
-<div align="center">
-
-[Product overview](#-the-product) · [Workflow](#-the-3d-evidence-flow) · [Quick start](#-quick-start) · [Security](#-security-first) · [Documentation](#-documentation)
-
-</div>
-
-## ◈ The product
-
-EVID-DGC is a digital evidence-management prototype that connects file hashing, case metadata, custody events, optional IPFS storage, and Polygon Amoy anchoring into one traceable workflow.
-
-The goal is simple: make it easier to answer **what was captured, who handled it, whether it changed, and which record was verified**.
-
-### What it brings together
-
-<table>
-<tr>
-<td width="25%" valign="top">
-<h3>01 · Capture</h3>
-Register evidence with case metadata, descriptions, actors, and collection context.
-</td>
-<td width="25%" valign="top">
-<h3>02 · Fingerprint</h3>
-Generate and compare file hashes to detect unexpected changes.
-</td>
-<td width="25%" valign="top">
-<h3>03 · Anchor</h3>
-Associate integrity metadata with a Polygon Amoy transaction when blockchain integration is enabled.
-</td>
-<td width="25%" valign="top">
-<h3>04 · Verify</h3>
-Review evidence integrity, custody history, and audit information through role-specific workflows.
-</td>
-</tr>
-</table>
-
-## ◈ The 3D evidence flow
-
-The interface is designed around a layered chain-of-custody journey. Each stage adds context without replacing the original evidence or its audit trail.
+The application is designed around an evidence lifecycle:
 
 ```text
-                         ┌──────────────────────────┐
-                         │  06  VERIFY              │
-                         │  Independent comparison  │
-                         └────────────┬─────────────┘
-                                      │
-                   ┌──────────────────▼──────────────────┐
-                   │  05  AUDIT                           │
-                   │  Custody events · actors · timestamps│
-                   └──────────────────┬──────────────────┘
-                                      │
-          ┌───────────────────────────▼───────────────────────────┐
-          │  04  ANCHOR                                            │
-          │  Polygon Amoy transaction · evidence integrity record  │
-          └───────────────────────────┬───────────────────────────┘
-                                      │
-                ┌─────────────────────▼─────────────────────┐
-                │  03  STORE                                │
-                │  Database metadata · optional IPFS pin    │
-                └─────────────────────┬─────────────────────┘
-                                      │
-      ┌───────────────────────────────▼───────────────────────────────┐
-      │  02  FINGERPRINT                                               │
-      │  Canonical file hash · metadata normalization · comparison      │
-      └───────────────────────────────┬───────────────────────────────┘
-                                      │
-                         ┌────────────▼────────────┐
-                         │  01  CAPTURE             │
-                         │  File + case context    │
-                         └─────────────────────────┘
+Capture → Register → Hash → Store → Anchor → Verify → Transfer → Audit
 ```
 
-A production implementation must define one canonical hashing pipeline and test it end to end. The selected algorithm, encoding, timestamp, metadata, and verification rules must remain consistent between browser, server, database, storage, and chain.
+The current prototype combines a Node.js and Express backend, static browser dashboards, Supabase/PostgreSQL data storage, optional Pinata IPFS pinning, Polygon Amoy blockchain anchoring, and Socket.IO notifications.
 
-## ◈ Current status
+## Current status
 
-<table>
-<tr>
-<td width="33%" valign="top">
-<h3><font color="#16A34A">AVAILABLE</font></h3>
+| Area | Status | Notes |
+|---|---|---|
+| Public evidence verification | Prototype available | Public users can verify supported evidence identifiers and hashes. |
+| Email authentication | Available for development/testing | Role-specific access requires further security hardening. |
+| Wallet authentication | Available where configured | Requires a compatible wallet and Polygon Amoy configuration. |
+| Evidence lifecycle | Prototype available | Upload, metadata, verification, custody, and audit workflows are under active development. |
+| Blockchain anchoring | Polygon Amoy testnet | The deployed contract is not a production/mainnet deployment. |
+| IPFS storage | Optional integration | Availability depends on Pinata configuration and pin retention. |
+| Forensic analysis | Prototype / development | Hash analysis and related tools are not a substitute for a validated forensic workflow. |
+| 3D evidence viewer | Prototype | The viewer currently demonstrates an included STL asset. |
+| AI-assisted analysis | Research / planned | Not a production capability. |
+| Mainnet deployment | Planned | Mainnet use requires a separate security, legal, operational, and smart-contract review. |
 
-Public verification flows, static dashboards, email authentication, case and evidence prototypes, audit views, and development tooling.
-</td>
-<td width="33%" valign="top">
-<h3><font color="#F59E0B">IN DEVELOPMENT</font></h3>
+## Important limitations
 
-Forensic analysis, 3D evidence viewing, advanced custody workflows, operational reliability, and stronger authorization coverage.
-</td>
-<td width="33%" valign="top">
-<h3><font color="#7C3AED">PLANNED</font></h3>
+The project currently uses the Polygon Amoy testnet. Testnet records are not production evidence records and must not be treated as legally authoritative.
 
-AI-assisted analysis, validated forensic reporting, mainnet deployment, recovery operations, and production compliance work.
-</td>
-</tr>
-</table>
+IPFS pinning does not automatically guarantee permanent availability. A production deployment would need verified pin retention, independent backups, recovery procedures, access controls, and an operational owner for the storage account.
 
-| Capability | Current state |
+The authorization model is under active hardening. Frontend navigation controls must not be treated as a security boundary. Every protected page, API endpoint, and evidence object must enforce authentication, role permissions, and object-level access on the server.
+
+## Technology
+
+| Layer | Technology |
 |---|---|
-| Public evidence verification | Prototype available |
-| Email and wallet authentication | Available where configured |
-| Evidence lifecycle | Prototype / active development |
-| Blockchain anchoring | Polygon Amoy testnet |
-| IPFS storage | Optional Pinata integration |
-| Forensic analysis | Prototype / development |
-| 3D evidence viewer | Prototype |
-| AI-assisted analysis | Research / planned |
-| Mainnet deployment | Planned |
+| Backend | Node.js, Express.js |
+| Frontend | HTML, CSS, and browser JavaScript |
+| Database | Supabase/PostgreSQL |
+| Authentication | Email authentication and optional wallet authentication |
+| Blockchain | Solidity, ethers.js, Polygon Amoy |
+| Storage | Optional Pinata IPFS integration |
+| Realtime updates | Socket.IO |
+| Testing | Jest, SuperTest, Hardhat tooling |
+| Deployment | Render-compatible Node.js service |
 
-## ◈ Technology stack
+## Roles and permissions
 
-<table>
-<tr>
-<td><strong>Backend</strong><br>Node.js · Express.js</td>
-<td><strong>Frontend</strong><br>HTML · CSS · Browser JavaScript</td>
-<td><strong>Data</strong><br>Supabase · PostgreSQL</td>
-</tr>
-<tr>
-<td><strong>Chain</strong><br>Solidity · ethers.js · Polygon Amoy</td>
-<td><strong>Storage</strong><br>Pinata · IPFS integration</td>
-<td><strong>Realtime</strong><br>Socket.IO</td>
-</tr>
-</table>
-
-## ◈ Roles and access model
-
-The backend permission matrix is the authority for access decisions. Frontend navigation is only a usability layer and must never be treated as security.
+The application contains role-specific workflows. The exact role names and permissions must remain synchronized across the database, authentication tokens, backend middleware, frontend routes, seed data, and documentation.
 
 | Role | Intended responsibility |
 |---|---|
-| **Public Viewer** | Verify publicly available integrity information. |
-| **Investigator / Officer** | Capture cases, register evidence, and work with assigned case data. |
-| **Forensic Analyst** | Perform forensic and hash analysis on permitted evidence. |
-| **Legal Professional** | Review legal materials and prepare legal opinions or filings. |
-| **Court Official** | Review court-related evidence and court workflows. |
-| **Evidence Manager** | Manage intake, inventory, retention, custody, and disposal workflows. |
-| **Auditor** | Review audit trails, compliance information, and system integrity indicators. |
-| **Administrator** | Manage users, roles, system configuration, and privileged operations. |
+| Public Viewer | Verify publicly available evidence integrity information. |
+| Investigator / Officer | Capture cases, register evidence, and work with assigned case data. |
+| Forensic Analyst | Perform forensic and hash analysis on permitted evidence. |
+| Legal Professional | Review legal materials and prepare legal opinions or filings. |
+| Court Official | Review court-related evidence and court workflows. |
+| Evidence Manager | Manage intake, inventory, retention, custody, and disposal workflows. |
+| Auditor | Review audit trails, compliance information, and system integrity indicators. |
+| Administrator | Manage users, roles, system configuration, and privileged operations. |
 
-Role names and permissions must remain synchronized across database records, authentication tokens, server middleware, frontend routes, seed data, tests, and documentation.
+These descriptions are intended to explain the product model. The backend permission matrix is the authoritative source of access decisions.
 
-## ◈ Quick start
+## Evidence integrity model
+
+The system can associate an evidence record with a file hash, metadata, storage reference, custody events, and blockchain transaction information.
+
+A production implementation must define one canonical hash pipeline and test it end to end:
+
+```text
+Original file
+  → browser or server hash generation
+  → stored file hash
+  → optional IPFS content reference
+  → blockchain anchor
+  → independent verification
+```
+
+The selected hashing algorithms, encoding rules, timestamp rules, and canonical metadata format must be documented in the API and security documentation. A testnet transaction or hash comparison alone does not establish legal admissibility.
+
+## Local development
 
 ### Prerequisites
 
@@ -180,20 +105,33 @@ Role names and permissions must remain synchronized across database records, aut
 git clone https://github.com/Gooichand/blockchain-evidence.git
 cd blockchain-evidence
 npm install
+```
+
+### Configure environment variables
+
+Copy the environment template and provide only the values required for the features you intend to run:
+
+```bash
 cp .env.example .env
 ```
 
-Configure only the services you intend to use. Never commit `.env`, private keys, JWT secrets, SMTP passwords, Pinata credentials, or production database credentials.
+At minimum, configure the database and server values. Blockchain, IPFS, SMTP, Redis, and encryption settings are optional only when the related features are disabled.
 
-### Start locally
+Never commit `.env`, private keys, JWT secrets, SMTP passwords, Pinata credentials, or production database credentials.
+
+### Initialize the database
+
+Use the SQL setup and migration files appropriate to your environment. Review them before applying them to a production database. Local seed users must never be reused in production.
+
+### Start the application
 
 ```bash
 npm run dev
 ```
 
-The development server is expected at `http://localhost:10000` when `PORT=10000` is configured. Check the configured port if the server starts elsewhere.
+The default development server is expected at `http://localhost:10000` when the configured port is 10000. Check the configured `PORT` value if the server starts on another port.
 
-### Check health
+### Health check
 
 ```bash
 npm run health
@@ -201,7 +139,7 @@ npm run health
 
 You can also open `/api/health` directly after the server starts.
 
-## ◈ Available commands
+## Available commands
 
 | Command | Purpose |
 |---|---|
@@ -210,47 +148,43 @@ You can also open `/api/health` directly after the server starts.
 | `npm test` | Run the Jest test suite. |
 | `npm run test:integration` | Run the repository integration test script. |
 | `npm run lint` | Run ESLint. |
+| `npm run lint:fix` | Apply ESLint fixes where safe. |
 | `npm run format:check` | Check Prettier formatting. |
-| `npm run compile` | Compile Solidity contracts with Hardhat. |
+| `npm run compile` | Compile the Solidity contracts with Hardhat. |
 | `npm run health` | Check the local health endpoint. |
 
-## ◈ Security first
+Only commands defined in `package.json` should be added to this table. Add an end-to-end test command only after the test runner and configuration are committed and verified.
 
-The security boundary is the backend. Protected pages, APIs, and evidence objects must enforce authentication, role permissions, and object-level access on the server.
+## Security expectations
 
-A protected operation should:
+The security boundary is the backend, not the browser interface. Protected operations must:
 
-1. Verify a valid session or token.
+1. Authenticate the request using a verified session or token.
 2. Resolve the current user and role from trusted server-side data.
-3. Check the required permission.
-4. Check case, evidence, ownership, assignment, or team context where applicable.
+3. Check the required permission for the requested operation.
+4. Check object-level ownership, case membership, or assignment where applicable.
 5. Return `401 Unauthorized` for missing or invalid authentication.
 6. Return `403 Forbidden` for authenticated users without permission.
-7. Avoid exposing privileged data in error responses.
-8. Record security-sensitive activity in an auditable log.
+7. Avoid returning privileged data in error responses.
+8. Record security-sensitive actions in an auditable log.
 
-Read the [security policy](SECURITY.md) before reporting a vulnerability. Do not use the public demo for unauthorized testing or real evidence.
+Review [SECURITY.md](SECURITY.md) before reporting a vulnerability. Do not use the public demo for unauthorized testing or real evidence.
 
-## ◈ Documentation
+## Documentation
 
-<table>
-<tr>
-<td><a href="docs/DEPLOYMENT.md"><strong>Deployment</strong></a><br>Render, database, environment, and operations.</td>
-<td><a href="docs/DEVELOPER_GUIDE.md"><strong>Developer guide</strong></a><br>Repository structure and development notes.</td>
-<td><a href="docs/USER_GUIDE.md"><strong>User guide</strong></a><br>Application workflows and role usage.</td>
-</tr>
-<tr>
-<td><a href="docs/SECURITY.md"><strong>Security</strong></a><br>Scope, reporting, and security expectations.</td>
-<td><a href="public/api-reference.html"><strong>API reference</strong></a><br>Interactive endpoint documentation.</td>
-<td><a href="PHASES.md"><strong>Project phases</strong></a><br>Roadmap and implementation status.</td>
-</tr>
-</table>
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [Developer guide](docs/DEVELOPER_GUIDE.md)
+- [User guide](docs/USER_GUIDE.md)
+- [Maintenance guide](docs/MAINTENANCE.md)
+- [Security policy](docs/SECURITY.md)
+- [API reference](public/api-reference.html)
+- [Project phases](PHASES.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
 
-Additional project guidance is available in [MAINTENANCE.md](docs/MAINTENANCE.md), [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [LICENSE](LICENSE).
+## Contributing
 
-## ◈ Contributing
-
-Before opening a pull request, run the checks that are defined in `package.json`:
+Before opening a pull request:
 
 ```bash
 npm test
@@ -260,16 +194,10 @@ npm run format:check
 
 Security-sensitive changes should include negative authorization tests for every affected role and endpoint. Do not include credentials, private keys, production data, or generated build artifacts in commits.
 
-## ◈ License
+## License
 
 This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
 
-<div align="center">
+## Contact
 
-<img src="assets/section-divider.svg" alt="EVID-DGC section divider" width="82%">
-
-### EVID-DGC · Trace the record. Verify the evidence. Respect the chain.
-
-<a href="https://github.com/Gooichand/blockchain-evidence">GitHub</a> · <a href="https://blockchain-evidence.onrender.com">Live demo</a> · <a href="SECURITY.md">Security policy</a>
-
-</div>
+For security issues, follow the responsible-disclosure process in [SECURITY.md](SECURITY.md). For general project questions, use the repository issue tracker or the project contact channel.
