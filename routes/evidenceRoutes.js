@@ -24,6 +24,7 @@ const {
 const {
   getEvidenceExpiry,
   setLegalHold,
+  updateAdmissionStatus,
   bulkRetentionPolicy,
   checkExpiry,
   getEvidenceExpiring,
@@ -70,5 +71,6 @@ router.get('/evidence/:id/download-history', requireAuth, getDownloadHistory);
 router.get('/evidence/:id/verify', requireAuth, verificationLimiter, verifyEvidenceHash);
 router.get('/evidence/:id/blockchain-proof', getBlockchainProof);
 router.put('/evidence/:id/legal-hold', requireAuth, setLegalHold);
+router.post('/evidence/:id/admission', requireAuth, updateAdmissionStatus);
 
 module.exports = router;

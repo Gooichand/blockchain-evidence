@@ -5,20 +5,57 @@
 class APIClient {
     constructor() {
         this.baseUrl = window.config?.API_BASE_URL || '/api';
+        // Cache the connected MetaMask address so we don't query the wallet on
+        // every request. Refreshed automatically when the wallet emits
+        // accountsChanged (account switch, disconnect, or reconnect).
+        this._connectedWallet = null;
+        if (window.ethereum && typeof window.ethereum.on === 'function') {
+            try {
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    this._connectedWallet = (accounts && accounts[0]) ? accounts[0] : null;
+                });
+            } catch (_) { /* ignore */ }
+        }
+    }
+
+    /**
+     * Resolves the connected MetaMask address.
+     * Uses a cached value refreshed via the accountsChanged event, falling back
+     * to a silent eth_accounts query (no popup) on first use.
+     * @returns {string|null}
+     */
+    async getActiveWalletAddress() {
+        if (!window.ethereum) return null;
+        if (this._connectedWallet) return this._connectedWallet;
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            this._connectedWallet = (accounts && accounts[0]) ? accounts[0] : null;
+            return this._connectedWallet;
+        } catch (_) {
+            return null;
+        }
     }
 
     /**
      * Generates wallet-signing headers for requests that need on-chain identity proof.
      * Returns empty object if MetaMask is not available or no accounts connected.
+     *
+     * SECURITY FIX: When a JWT session already exists (authToken present), the
+     * server trusts the signed JWT — verifySignature middleware skips the
+     * wallet-signature requirement for valid Bearer tokens and derives the wallet
+     * identity from the JWT claims. Signing here would only re-open the MetaMask
+     * confirmation popup on every request. A signature is therefore only produced
+     * when no session exists yet (pre-auth login/registration flows).
      */
     async getWalletAuthHeaders(method, path) {
         try {
-            if (!window.ethereum) return {};
+            const walletAddress = await this.getActiveWalletAddress();
+            if (!walletAddress) return {};
 
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length === 0) return {};
-
-            const walletAddress = accounts[0];
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                return { 'x-user-wallet': walletAddress };
+            }
 
             // Only sign if ethers is available (not always needed for JWT-authed endpoints)
             if (typeof ethers === 'undefined') return { 'x-user-wallet': walletAddress };
