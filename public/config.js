@@ -74,7 +74,8 @@ const config = {
     
     // Development settings
     DEBUG: false,
-    LOG_LEVEL: 'error'
+    LOG_LEVEL: 'error',
+    DEV_FORCE_DESKTOP: true
 };
 
 // Export for use in other modules

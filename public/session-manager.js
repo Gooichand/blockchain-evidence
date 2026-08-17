@@ -155,10 +155,18 @@ class AuthenticationManager {
 
     completeLogin(email, userData, isAdmin) {
         this.sessionManager.clearAttempts(email);
-        localStorage.setItem('currentUser', JSON.stringify({ type: 'email', user: userData }));
+        const storageKey = (userData.wallet_address || userData.walletAddress || email).toLowerCase();
+        const userToStore = {
+          ...userData,
+          walletAddress: storageKey,
+          wallet_address: storageKey,
+        };
+        localStorage.setItem('currentUser', storageKey);
+        localStorage.setItem('evidUser_' + storageKey, JSON.stringify(userToStore));
+        localStorage.setItem('evidUser_' + email.toLowerCase(), JSON.stringify(userToStore));
         
         const sessionId = this.sessionManager.createSession(
-            userData.wallet_address || email,
+            storageKey,
             { loginType: 'email' }
         );
 

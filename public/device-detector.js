@@ -26,6 +26,7 @@
   var RECOMMENDED_WIDTH = 1024;
   var FORCE_DESKTOP_PARAM = 'forceDesktop';
   var RETURN_KEY = 'evidDgcReturn';
+  var NOTICE_PATH = '/desktop-only.html';
 
   /**
    * Effective viewport width. clientWidth excludes the scrollbar and
@@ -39,7 +40,9 @@
   }
 
   function isForcedDesktop() {
-    return window.location.search.indexOf(FORCE_DESKTOP_PARAM + '=true') !== -1;
+    // forceDesktop only works in development (window.config?.DEV_FORCE_DESKTOP === true)
+    var devOverride = window.config && window.config.DEV_FORCE_DESKTOP === true;
+    return devOverride && window.location.search.indexOf(FORCE_DESKTOP_PARAM + '=true') !== -1;
   }
 
   function mqMatches(query) {
@@ -121,7 +124,11 @@
 
   function rememberReturnUrl() {
     try {
-      sessionStorage.setItem(RETURN_KEY, window.location.pathname + window.location.search);
+      var returnUrl = window.location.pathname + window.location.search;
+      // Sanitize: same-origin only, not the notice page itself
+      if (returnUrl.indexOf(NOTICE_PATH) === -1 && returnUrl.indexOf('://') === -1) {
+        sessionStorage.setItem(RETURN_KEY, returnUrl);
+      }
     } catch (e) { /* sessionStorage unavailable — restriction screen falls back to home */ }
   }
 
@@ -148,7 +155,7 @@
       timer = setTimeout(function () {
         if (getViewportWidth() < MIN_WIDTH) {
           rememberReturnUrl();
-          window.location.replace('desktop-only.html');
+          window.location.replace(NOTICE_PATH);
         }
       }, 150);
     }
@@ -221,6 +228,7 @@
     RECOMMENDED_WIDTH: RECOMMENDED_WIDTH,
     FORCE_DESKTOP_PARAM: FORCE_DESKTOP_PARAM,
     RETURN_KEY: RETURN_KEY,
+    NOTICE_PATH: NOTICE_PATH,
     getViewportWidth: getViewportWidth,
     getDeviceInfo: getDeviceInfo,
     isDesktopAllowed: isAllowed,

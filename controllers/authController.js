@@ -294,6 +294,21 @@ const logout = async (req, res) => {
   }
 };
 
+// Get current authenticated user (for server-side auth verification)
+const getCurrentUser = async (req, res) => {
+  try {
+    const { verifyRequestIdentity } = require('../middleware/authorization');
+    const { user, error } = verifyRequestIdentity(req);
+    if (!user || error) {
+      return res.status(401).json({ success: false, error: error || 'Not authenticated' });
+    }
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error('getCurrentUser error:', err);
+    return res.status(500).json({ success: false, error: 'Internal error' });
+  }
+};
+
 // Email registration
 const emailRegister = async (req, res) => {
   try {
@@ -864,4 +879,5 @@ module.exports = {
   changePassword,
   getSessions,
   logout,
+  getCurrentUser,
 };

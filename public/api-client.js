@@ -5,6 +5,7 @@
 class APIClient {
     constructor() {
         this.baseUrl = window.config?.API_BASE_URL || '/api';
+        this.defaultTimeout = 12000; // 12 seconds
         // Cache the connected MetaMask address so we don't query the wallet on
         // every request. Refreshed automatically when the wallet emits
         // accountsChanged (account switch, disconnect, or reconnect).
@@ -15,6 +16,31 @@ class APIClient {
                     this._connectedWallet = (accounts && accounts[0]) ? accounts[0] : null;
                 });
             } catch (_) { /* ignore */ }
+        }
+    }
+
+    /**
+     * Creates a fetch request with timeout using AbortController.
+     * @param {string} url - Full URL to fetch
+     * @param {RequestInit} init - Fetch init options
+     * @param {number} timeoutMs - Timeout in milliseconds
+     * @returns {Promise<Response>}
+     */
+    async fetchWithTimeout(url, init, timeoutMs = this.defaultTimeout) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, { ...init, signal: controller.signal });
+            return response;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                const error = new Error('Request timeout');
+                error.status = 'TIMEOUT';
+                throw error;
+            }
+            throw err;
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 
@@ -127,6 +153,21 @@ class APIClient {
     }
 
     /**
+     * Fetches the current user from the server for authoritative auth verification.
+     * Uses the /api/auth/me endpoint with timeout. Returns user object or null.
+     * @returns {Promise<object|null>}
+     */
+    async getServerCurrentUser() {
+        try {
+            const data = await this.get('/auth/me', { skipAuth: false, timeout: this.defaultTimeout });
+            return data && data.success ? data.user : null;
+        } catch (err) {
+            // Don't throw — caller decides how to handle auth failure
+            return null;
+        }
+    }
+
+    /**
      * Returns the connected MetaMask address, if any.
      * @returns {string|null}
      */
@@ -231,7 +272,8 @@ class APIClient {
             requestInit.body = bodyToSend;
         }
 
-        const response = await fetch(url, requestInit);
+        const timeoutMs = typeof options.timeout === 'number' ? options.timeout : this.defaultTimeout;
+        const response = await this.fetchWithTimeout(url, requestInit, timeoutMs);
 
         let data = null;
         const contentType = response.headers.get('content-type') || '';

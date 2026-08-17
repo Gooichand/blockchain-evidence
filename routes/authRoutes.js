@@ -15,6 +15,7 @@ const {
   changePassword,
   getSessions,
   logout,
+  getCurrentUser,
 } = require('../controllers/authController');
 
 // SECURITY FIX: Nonce endpoint for wallet ECDSA challenge (must be before registration)
@@ -31,6 +32,7 @@ router.post('/auth/reset-password', authLimiter, resetPassword);
 router.post('/auth/update-profile', requireAuth, updateProfile);
 router.post('/auth/change-password', requireAuth, changePassword);
 router.get('/auth/sessions', requireAuth, getSessions);
+router.get('/auth/me', requireAuth, getCurrentUser);
 router.post('/auth/logout', logout);
 
 module.exports = router;

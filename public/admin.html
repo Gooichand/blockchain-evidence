@@ -22,6 +22,9 @@
     <script src="fixed-navbar.js"></script>
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
+    <style>
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
 </head>
 
 <body>
@@ -664,15 +667,154 @@
             'auditor': 'auditor', 'admin': 'admin'
         };
 
+        // ===================== AUTH UTILITIES =====================
+
+        /**
+         * Clears only auth-related state without wiping all localStorage.
+         * Preserves user preferences, theme, etc.
+         */
+        function clearAuthState() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('wasConnected');
+            sessionStorage.removeItem('evidDgcReturn');
+        }
+
+        /**
+         * Performs a redirect exactly once per page load to prevent loops.
+         * @param {string} url - Target URL (absolute path preferred)
+         * @param {string} reason - Diagnostic reason for dev tools
+         */
+        function redirectOnce(url, reason) {
+            if (window.__evidRedirecting) return;
+            window.__evidRedirecting = true;
+            console.log('[EVID-DGC redirect] ' + reason + ' -> ' + url);
+            window.location.replace(url);
+        }
+
+        // ===================== BOOT WATCHDOG =====================
+
+        var bootWatchdogTimer = null;
+        var bootStartTime = Date.now();
+
+        function startBootWatchdog() {
+            bootWatchdogTimer = setTimeout(showBootError, 15000); // 15s max boot
+        }
+
+        function cancelBootWatchdog() {
+            if (bootWatchdogTimer) {
+                clearTimeout(bootWatchdogTimer);
+                bootWatchdogTimer = null;
+            }
+        }
+
+        function showBootError(message) {
+            cancelBootWatchdog();
+            var container = document.getElementById('bootErrorContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'bootErrorContainer';
+                container.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(10,10,15,0.98);display:flex;align-items:center;justify-content:center;padding:24px;color:#e0e0e0;font-family:system-ui,sans-serif;';
+                document.body.appendChild(container);
+            }
+            var elapsed = Math.round((Date.now() - bootStartTime) / 1000);
+            var details = 'Boot timeout after ' + elapsed + 's. URL: ' + window.location.href + '\nViewport: ' + window.innerWidth + 'x' + window.innerHeight + '\nUserAgent: ' + navigator.userAgent.slice(0, 120);
+            container.innerHTML = ''
+                + '<div style="max-width:560px;text-align:center;">'
+                + '  <div style="width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:16px;display:flex;align-items:center;justify-content:center;">'
+                + '    <svg viewBox="0 0 24 24" width="32" height="32" stroke="#fff" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'
+                + '  </div>'
+                + '  <h2 style="margin:0 0 8px;color:#fff;">EVID-DGC could not connect to the workspace.</h2>'
+                + '  <p style="margin:0 0 16px;color:#9e9eb0;">' + (message || 'The application failed to initialize within the expected time. This may be due to network issues, server unavailability, or a configuration problem.') + '</p>'
+                + '  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">'
+                + '    <button onclick="location.reload()" style="background:#dc2626;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;">Retry</button>'
+                + '    <button onclick="window.location.href=\'index.html\'" style="background:transparent;color:#e0e0e0;border:1px solid #3a3a4a;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;">Return to Home</button>'
+                + '  </div>'
+                + '  <details style="text-align:left;background:#1a1a22;border:1px solid #2a2a3a;border-radius:8px;padding:12px;max-height:200px;overflow:auto;">'
+                + '    <summary style="cursor:pointer;color:#9e9eb0;font-size:13px;">Technical Details</summary>'
+                + '    <pre style="margin:8px 0 0;color:#7a7a8a;font-size:11px;white-space:pre-wrap;word-break:break-word;">' + details + '</pre>'
+                + '  </details>'
+                + '</div>';
+        }
+
         document.addEventListener('DOMContentLoaded', async function () {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            startBootWatchdog();
+            initDevDiagnostics();
             await checkAdminAuth();
             initTabs();
             initEvents();
             activateTab('command');
             refreshTimestamp();
             initHeaderEvents();
+            cancelBootWatchdog();
         });
+
+        // ===================== DEV DIAGNOSTICS =====================
+
+        function initDevDiagnostics() {
+            var debugMode = window.location.search.indexOf('debug=1') !== -1 || localStorage.getItem('evidDebug') === 'true';
+            if (!debugMode) return;
+            var panel = document.createElement('div');
+            panel.id = 'devDiagnosticsPanel';
+            panel.style.cssText = 'position:fixed;bottom:0;right:0;z-index:99998;background:#0f0f12;border:1px solid #2a2a3a;border-radius:8px 0 0 0;padding:12px;max-width:420px;max-height:60vh;overflow:auto;font-family:ui-monospace,monospace;font-size:11px;color:#c0c0c8;box-shadow:0 -4px 24px rgba(0,0,0,0.6);';
+            document.body.appendChild(panel);
+            var apiCalls = [];
+            var origFetch = window.fetch;
+            window.fetch = function(url, opts) {
+                var start = performance.now();
+                return origFetch.apply(this, arguments).then(function(resp) {
+                    var dur = Math.round(performance.now() - start);
+                    apiCalls.push({ url: String(url).replace(/^.*\/api/, '/api'), status: resp.status, duration: dur + 'ms', time: new Date().toISOString() });
+                    if (apiCalls.length > 20) apiCalls.shift();
+                    return resp;
+                }).catch(function(err) {
+                    var dur = Math.round(performance.now() - start);
+                    apiCalls.push({ url: String(url).replace(/^.*\/api/, '/api'), status: 'ERR', duration: dur + 'ms', error: err.message, time: new Date().toISOString() });
+                    if (apiCalls.length > 20) apiCalls.shift();
+                    throw err;
+                });
+            };
+            function render() {
+                var info = DeviceDetector ? DeviceDetector.getDeviceInfo() : { width: window.innerWidth, classification: 'unknown' };
+                var auth = { token: !!localStorage.getItem('authToken'), user: !!localStorage.getItem('currentUser'), returnUrl: sessionStorage.getItem('evidDgcReturn') };
+                panel.innerHTML = ''
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+                    + '  <strong style="color:#dc2626;">EVID-DGC Dev Diagnostics</strong>'
+                    + '  <button onclick="this.parentElement.parentElement.remove();localStorage.removeItem(\'evidDebug\');" style="background:none;border:none;color:#7a7a8a;cursor:pointer;font-size:14px;">✕</button>'
+                    + '</div>'
+                    + '<table style="width:100%;border-collapse:collapse;">'
+                    + '  <tr><td style="color:#7a7a8a;">URL</td><td style="text-align:right;word-break:break-all;">' + window.location.href + '</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">Viewport</td><td style="text-align:right;">' + info.width + 'px × ' + window.innerHeight + 'px</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">Guard</td><td style="text-align:right;">' + info.classification + ' (' + (info.isPhone ? 'blocked' : 'allowed') + ')</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">Auth Token</td><td style="text-align:right;">' + (auth.token ? 'present' : 'missing') + '</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">CurrentUser</td><td style="text-align:right;">' + (auth.user ? 'present' : 'missing') + '</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">Return URL</td><td style="text-align:right;word-break:break-all;">' + (auth.returnUrl || 'none') + '</td></tr>'
+                    + '  <tr><td style="color:#7a7a8a;">Redirect Flag</td><td style="text-align:right;">' + (window.__evidRedirecting ? 'set' : 'clear') + '</td></tr>'
+                    + '</table>'
+                    + '<details style="margin-top:8px;">'
+                    + '  <summary style="cursor:pointer;color:#9e9eb0;">Recent API Calls (' + apiCalls.length + ')</summary>'
+                    + '  <div style="max-height:200px;overflow:auto;margin-top:4px;">'
+                    + apiCalls.slice().reverse().map(function(c) {
+                        return '<div style="padding:4px 0;border-bottom:1px solid #1a1a22;font-size:10px;">'
+                            + '<span style="color:' + (c.status === 'ERR' ? '#dc2626' : (c.status >= 400 ? '#f59e0b' : '#22c55e')) + ';">' + c.status + '</span> '
+                            + '<span style="color:#7a7a8a;">' + c.duration + '</span> '
+                            + '<span style="word-break:break-all;">' + c.url + '</span>'
+                            + (c.error ? '<br><span style="color:#dc2626;">' + c.error + '</span>' : '')
+                            + '</div>';
+                    }).join('') || '<div style="color:#7a7a8a;">No API calls recorded yet.</div>'
+                    + '  </div>'
+                    + '</details>';
+            }
+            var timer = setInterval(render, 1000);
+            render();
+            window.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    localStorage.setItem('evidDebug', localStorage.getItem('evidDebug') === 'true' ? 'false' : 'true');
+                    location.reload();
+                }
+            });
+        }
 
         // ===================== HEADER =====================
 
@@ -777,17 +919,53 @@
 
         async function checkAdminAuth() {
             try {
-                const user = await window.apiClient.getCurrentUser();
-                if (!user) { window.location.href = 'index.html'; return; }
+                const user = await window.apiClient.getServerCurrentUser();
+                if (!user) {
+                    clearAuthState();
+                    redirectOnce('/?auth=required', 'no server session');
+                    return;
+                }
                 if (user.role !== 'admin') {
-                    alert('Access denied. Administrator privileges required.');
-                    window.location.href = 'index.html';
+                    clearAuthState();
+                    redirectOnce('/?auth=denied', 'wrong role: ' + user.role);
                     return;
                 }
                 currentAdmin = user;
             } catch (error) {
                 console.error('Admin auth error:', error);
-                window.location.href = 'index.html';
+                clearAuthState();
+                redirectOnce('/?auth=required', 'auth error');
+            }
+        }
+
+        // ===================== PANEL STATE HELPER =====================
+
+        /**
+         * Sets the visual state of a panel/container.
+         * @param {string} containerId - Element ID
+         * @param {'loading'|'loaded'|'empty'|'unavailable'|'error'} state
+         * @param {object} [opts] - { message, retryAction, retryLabel }
+         */
+        function setPanelState(containerId, state, opts) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const isLoading = state === 'loading';
+            const isError = state === 'error';
+            const isUnavailable = state === 'unavailable';
+            const isEmpty = state === 'empty';
+            if (isLoading) {
+                el.innerHTML = '<div class="panel-loading" style="display:flex;align-items:center;justify-content:center;padding:40px;color:#7a7a8a;"><div class="spinner" style="width:28px;height:28px;border:3px solid #2a2a3a;border-top-color:#dc2626;border-radius:50%;animation:spin 1s linear infinite;"></div><span style="margin-left:12px;">Loading&hellip;</span></div>';
+            } else if (isUnavailable) {
+                el.innerHTML = '<div class="panel-unavailable" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:#7a7a8a;"><i data-lucide="server" style="width:36px;height:36px;margin-bottom:12px;opacity:0.6;"></i><p style="margin:0 0 8px;">Service Unavailable</p><p style="margin:0;font-size:13px;">Integration requires deployment. Data will appear when the backend service is configured.</p></div>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else if (isEmpty) {
+                el.innerHTML = '<div class="panel-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:#7a7a8a;"><i data-lucide="inbox" style="width:36px;height:36px;margin-bottom:12px;opacity:0.6;"></i><p style="margin:0 0 8px;">No Data</p><p style="margin:0;font-size:13px;">' + (opts?.message || 'There are no records to display.') + '</p></div>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else if (isError) {
+                el.innerHTML = '<div class="panel-error" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;color:#e0e0e0;"><i data-lucide="alert-triangle" style="width:36px;height:36px;margin-bottom:12px;color:#dc2626;"></i><p style="margin:0 0 8px;">Failed to Load</p><p style="margin:0 0 12px;font-size:13px;color:#9e9eb0;">' + (opts?.message || 'An unexpected error occurred.') + '</p>' + (opts?.retryAction ? '<button onclick="' + opts.retryAction + '" style="background:#dc2626;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;">' + (opts.retryLabel || 'Retry') + '</button>' : '') + '</div>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else {
+                // 'loaded' — content already rendered by caller
             }
         }
 
@@ -795,18 +973,25 @@
 
         async function loadCommandCenter() {
             const grid = document.getElementById('ccMetricsGrid');
-            grid.innerHTML = Array(6).fill('<div class="skeleton-card"></div>').join('');
+            setPanelState('ccMetricsGrid', 'loading');
             try {
                 const res = await window.apiClient.get('/admin/dashboard/metrics');
                 if (res.success && res.data) {
                     renderKpis(res.data);
+                    setPanelState('ccMetricsGrid', 'loaded');
                 } else {
                     throw new Error('Unexpected metrics payload');
                 }
             } catch (e) {
-                // Aggregate RPC unavailable (migration not applied) -> compose from real endpoints
+                const isTimeout = e && e.status === 'TIMEOUT';
                 console.warn('Aggregate dashboard metrics unavailable:', e.message);
-                loadMetricsFallback();
+                if (isTimeout) {
+                    setPanelState('ccMetricsGrid', 'error', { message: 'Request timed out. The metrics service did not respond in time.', retryAction: 'loadCommandCenter()', retryLabel: 'Retry' });
+                } else {
+                    // Fallback to real endpoints
+                    loadMetricsFallback();
+                    setPanelState('ccMetricsGrid', 'loaded');
+                }
             }
             loadAlerts();
             loadActivityTimeline();
@@ -1247,27 +1432,32 @@
 
         async function loadCases() {
             const body = document.getElementById('casesTableBody');
-            body.innerHTML = '<tr><td colspan="4" class="text-center">Loading cases...</td></tr>';
-            const [listRes, statsRes] = await Promise.allSettled([
-                window.apiClient.get('/cases'),
-                window.apiClient.get('/cases/statistics')
-            ]);
+            setPanelState('casesTableBody', 'loading');
+            try {
+                const [listRes, statsRes] = await Promise.allSettled([
+                    window.apiClient.get('/cases'),
+                    window.apiClient.get('/cases/statistics')
+                ]);
 
-            if (statsRes.status === 'fulfilled' && statsRes.value.success) {
-                const byStatus = statsRes.value.data.by_status || [];
-                const grid = document.getElementById('caseStatsGrid');
-                grid.innerHTML = byStatus.slice(0, 6).map(s => `
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3>${s.count || 0}</h3>
-                            <p>${escapeHtml(s.status_name || s.status_code || 'status')}</p>
-                        </div>
-                    </div>`).join('') || '<div class="empty-state small"><p>No case statistics available.</p></div>';
+                if (statsRes.status === 'fulfilled' && statsRes.value.success) {
+                    const byStatus = statsRes.value.data.by_status || [];
+                    const grid = document.getElementById('caseStatsGrid');
+                    grid.innerHTML = byStatus.slice(0, 6).map(s => `
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3>${s.count || 0}</h3>
+                                <p>${escapeHtml(s.status_name || s.status_code || 'status')}</p>
+                            </div>
+                        </div>`).join('') || '<div class="empty-state small"><p>No case statistics available.</p></div>';
+                }
+
+                caseList = (listRes.status === 'fulfilled' && listRes.value.success)
+                    ? (listRes.value.data || listRes.value.cases || []) : [];
+                renderCasesTable();
+                setPanelState('casesTableBody', caseList.length ? 'loaded' : 'empty', { message: 'No cases found. Create a new case to get started.' });
+            } catch (e) {
+                setPanelState('casesTableBody', 'error', { message: e.message || 'Failed to load cases.', retryAction: 'loadCases()', retryLabel: 'Retry' });
             }
-
-            caseList = (listRes.status === 'fulfilled' && listRes.value.success)
-                ? (listRes.value.data || listRes.value.cases || []) : [];
-            renderCasesTable();
         }
 
         function renderCasesTable() {
@@ -1289,13 +1479,14 @@
 
         async function loadEvidence() {
             const body = document.getElementById('evidenceTableBody');
-            body.innerHTML = '<tr><td colspan="9" class="text-center">Loading evidence...</td></tr>';
+            setPanelState('evidenceTableBody', 'loading');
             try {
                 const res = await window.apiClient.get('/evidence', { params: { limit: 100 } });
                 evidenceList = (res && res.data) ? res.data : [];
+                setPanelState('evidenceTableBody', evidenceList.length ? 'loaded' : 'empty', { message: 'No evidence items found.' });
             } catch (e) {
                 evidenceList = [];
-                body.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading evidence: ' + escapeHtml(e.message || e) + '</td></tr>';
+                setPanelState('evidenceTableBody', 'error', { message: e.message || 'Failed to load evidence.', retryAction: 'loadEvidence()', retryLabel: 'Retry' });
             }
             populateCustodySelect();
             renderEvidenceTable();
@@ -1459,21 +1650,31 @@
             const sel = document.getElementById('custodyEvidenceSelect');
             const id = sel.value;
             const container = document.getElementById('custodyContent');
-            if (!id) { container.innerHTML = '<div class="empty-state"><i data-lucide="link-2"></i><h3>No evidence selected</h3><p>Select an evidence item above to view its custody trail.</p></div>'; if (typeof lucide !== 'undefined') lucide.createIcons(); return; }
-            container.innerHTML = '<div class="skeleton-text long"></div><div class="skeleton-text long"></div>';
-            const [detailRes, proofRes, dlRes, logsRes] = await Promise.allSettled([
-                window.apiClient.get('/evidence/' + id),
-                window.apiClient.get('/evidence/' + id + '/blockchain-proof'),
-                window.apiClient.get('/evidence/' + id + '/download-history'),
-                window.apiClient.get('/admin/activity-logs', { params: { userWallet: '' } })
-            ]);
-            const evidence = detailRes.status === 'fulfilled' && detailRes.value.success ? detailRes.value.data : {};
-            const proof = proofRes.status === 'fulfilled' ? proofRes.value : null;
-            const dlPayload = dlRes.status === 'fulfilled' ? dlRes.value : null;
-            const downloads = Array.isArray(dlPayload && dlPayload.data) ? dlPayload.data
-                : (Array.isArray(dlPayload && dlPayload.history) ? dlPayload.history
-                    : (Array.isArray(dlPayload && dlPayload.data && dlPayload.data.download_history) ? dlPayload.data.download_history : []));
-            const timeline = buildCustodyTimeline(evidence, proof, downloads);
+            if (!id) { 
+                container.innerHTML = '<div class="empty-state"><i data-lucide="link-2"></i><h3>No evidence selected</h3><p>Select an evidence item above to view its custody trail.</p></div>'; 
+                if (typeof lucide !== 'undefined') lucide.createIcons(); 
+                return; 
+            }
+            setPanelState('custodyContent', 'loading');
+            try {
+                const [detailRes, proofRes, dlRes, logsRes] = await Promise.allSettled([
+                    window.apiClient.get('/evidence/' + id),
+                    window.apiClient.get('/evidence/' + id + '/blockchain-proof'),
+                    window.apiClient.get('/evidence/' + id + '/download-history'),
+                    window.apiClient.get('/admin/activity-logs', { params: { userWallet: '' } })
+                ]);
+                const evidence = detailRes.status === 'fulfilled' && detailRes.value.success ? detailRes.value.data : {};
+                const proof = proofRes.status === 'fulfilled' ? proofRes.value : null;
+                const dlPayload = dlRes.status === 'fulfilled' ? dlRes.value : null;
+                const downloads = Array.isArray(dlPayload && dlPayload.data) ? dlPayload.data
+                    : (Array.isArray(dlPayload && dlPayload.history) ? dlPayload.history
+                        : (Array.isArray(dlPayload && dlPayload.data && dlPayload.data.download_history) ? dlPayload.data.download_history : []));
+                const timeline = buildCustodyTimeline(evidence, proof, downloads);
+                setPanelState('custodyContent', 'loaded');
+            } catch (e) {
+                setPanelState('custodyContent', 'error', { message: e.message || 'Failed to load custody trail.', retryAction: 'loadCustody()', retryLabel: 'Retry' });
+            }
+        }
 
             let proofHtml = '';
             if (proof && proof.success) {
@@ -1506,7 +1707,7 @@
         async function loadUsers() {
             const body = document.getElementById('usersTableBody');
             const count = document.getElementById('userCount');
-            body.innerHTML = '<tr><td colspan="6" class="text-center">Loading users...</td></tr>';
+            setPanelState('usersTableBody', 'loading');
             count.textContent = 'Loading...';
             const roleFilter = document.getElementById('userRoleFilter') ? document.getElementById('userRoleFilter').value : '';
             const statusFilter = document.getElementById('userStatusFilter') ? document.getElementById('userStatusFilter').value : 'true';
@@ -1521,8 +1722,9 @@
                 populateUserFilterOptions();
                 renderUsersTable();
                 renderUserPagination(total);
+                setPanelState('usersTableBody', rows.length ? 'loaded' : 'empty', { message: 'No users match the current filters.' });
             } catch (e) {
-                body.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading users: ' + escapeHtml(e.message || e) + '</td></tr>';
+                setPanelState('usersTableBody', 'error', { message: e.message || 'Failed to load users.', retryAction: 'loadUsers()', retryLabel: 'Retry' });
             }
         }
 
@@ -1844,7 +2046,7 @@
         async function loadAuditLogs() {
             const body = document.getElementById('auditTableBody');
             const count = document.getElementById('auditCount');
-            body.innerHTML = '<tr><td colspan="4" class="text-center">Loading audit log...</td></tr>';
+            setPanelState('auditTableBody', 'loading');
             count.textContent = 'Loading...';
             const params = {};
             const action = document.getElementById('auditActionFilter').value.trim();
@@ -1860,8 +2062,9 @@
                 const logs = (res && res.logs) || [];
                 count.textContent = logs.length + ' audit record(s)';
                 renderAuditTable(logs);
+                setPanelState('auditTableBody', logs.length ? 'loaded' : 'empty', { message: 'No audit records match the current filters.' });
             } catch (e) {
-                body.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading audit log: ' + escapeHtml(e.message || e) + '</td></tr>';
+                setPanelState('auditTableBody', 'error', { message: e.message || 'Failed to load audit log.', retryAction: 'loadAuditLogs()', retryLabel: 'Retry' });
             }
         }
 
@@ -1925,32 +2128,38 @@
 
         async function loadBlockchain() {
             const grid = document.getElementById('bcStatusGrid');
-            grid.innerHTML = Array(4).fill('<div class="skeleton-card"></div>').join('');
-            const [statusRes, statsRes, healthRes, ipfsRes] = await Promise.allSettled([
-                window.apiClient.get('/blockchain/status'),
-                window.apiClient.get('/blockchain/stats'),
-                window.apiClient.get('/blockchain/health'),
-                window.apiClient.get('/blockchain/ipfs/stats')
-            ]);
-            const s = statusRes.status === 'fulfilled' ? statusRes.value : null;
-            const st = statsRes.status === 'fulfilled' ? statsRes.value : null;
-            const h = healthRes.status === 'fulfilled' ? healthRes.value : null;
-            const ip = ipfsRes.status === 'fulfilled' ? ipfsRes.value : null;
-            const bcNet = s && s.status && s.status.blockchain ? s.status.blockchain : null;
-            const bcHealthState = h && h.health && h.health.blockchain ? h.health.blockchain.status : null;
-            const items = [
-                { icon: 'blocks', label: 'Network Status', value: bcNet && bcNet.network && bcNet.network.name ? String(bcNet.network.name) : (s && s.status && s.status.blockchain ? 'Connected' : 'Unavailable') },
-                { icon: 'file-check', label: 'Evidence On Chain', value: st && st.stats && st.stats.totalEvidenceOnChain !== undefined ? String(st.stats.totalEvidenceOnChain) : 'Unavailable' },
-                { icon: 'activity', label: 'Blockchain API Health', value: bcHealthState ? (bcHealthState === 'healthy' ? 'Healthy' : String(bcHealthState)) : 'Unavailable' },
-                { icon: 'database', label: 'IPFS Files', value: ip && ip.stats && ip.stats.totalFilesOnIPFS !== undefined ? String(ip.stats.totalFilesOnIPFS) : 'Unavailable' }
-            ];
-            grid.innerHTML = items.map(it => `
-                <button type="button" class="cc-metric-card">
-                    <div class="cc-metric-icon"><i data-lucide="${it.icon}"></i></div>
-                    <div class="cc-metric-value">${it.value}</div>
-                    <div class="cc-metric-label">${it.label}</div>
-                </button>`).join('');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setPanelState('bcStatusGrid', 'loading');
+            try {
+                const [statusRes, statsRes, healthRes, ipfsRes] = await Promise.allSettled([
+                    window.apiClient.get('/blockchain/status'),
+                    window.apiClient.get('/blockchain/stats'),
+                    window.apiClient.get('/blockchain/health'),
+                    window.apiClient.get('/blockchain/ipfs/stats')
+                ]);
+                const s = statusRes.status === 'fulfilled' ? statusRes.value : null;
+                const st = statsRes.status === 'fulfilled' ? statsRes.value : null;
+                const h = healthRes.status === 'fulfilled' ? healthRes.value : null;
+                const ip = ipfsRes.status === 'fulfilled' ? ipfsRes.value : null;
+                const bcNet = s && s.status && s.status.blockchain ? s.status.blockchain : null;
+                const bcHealthState = h && h.health && h.health.blockchain ? h.health.blockchain.status : null;
+                const items = [
+                    { icon: 'blocks', label: 'Network Status', value: bcNet && bcNet.network && bcNet.network.name ? String(bcNet.network.name) : (s && s.status && s.status.blockchain ? 'Connected' : 'Unavailable') },
+                    { icon: 'file-check', label: 'Evidence On Chain', value: st && st.stats && st.stats.totalEvidenceOnChain !== undefined ? String(st.stats.totalEvidenceOnChain) : 'Unavailable' },
+                    { icon: 'activity', label: 'Blockchain API Health', value: bcHealthState ? (bcHealthState === 'healthy' ? 'Healthy' : String(bcHealthState)) : 'Unavailable' },
+                    { icon: 'database', label: 'IPFS Files', value: ip && ip.stats && ip.stats.totalFilesOnIPFS !== undefined ? String(ip.stats.totalFilesOnIPFS) : 'Unavailable' }
+                ];
+                grid.innerHTML = items.map(it => `
+                    <button type="button" class="cc-metric-card">
+                        <div class="cc-metric-icon"><i data-lucide="${it.icon}"></i></div>
+                        <div class="cc-metric-value">${it.value}</div>
+                        <div class="cc-metric-label">${it.label}</div>
+                    </button>`).join('');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setPanelState('bcStatusGrid', 'loaded');
+            } catch (e) {
+                setPanelState('bcStatusGrid', 'error', { message: e.message || 'Failed to load blockchain status.', retryAction: 'loadBlockchain()', retryLabel: 'Retry' });
+            }
+        }
             loadTransactions();
             loadIPFSPins();
         }
@@ -2031,13 +2240,12 @@
         async function loadSecurity() {
             loadAlerts();
             const body = document.getElementById('sessionsBody');
-            body.innerHTML = '<div class="skeleton-text long"></div>';
+            setPanelState('sessionsBody', 'loading');
             try {
                 const res = await window.apiClient.get('/auth/sessions');
                 const sessions = (res && res.sessions) || [];
                 if (!sessions.length) {
-                    body.innerHTML = '<div class="empty-state small"><i data-lucide="user-check"></i><p>No active sessions recorded for this identity.</p></div>';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    setPanelState('sessionsBody', 'empty', { message: 'No active sessions recorded for this identity.' });
                     return;
                 }
                 body.innerHTML = `
@@ -2090,17 +2298,23 @@
 
         async function loadSettings() {
             const grid = document.getElementById('settingsHealthGrid');
-            const [healthRes, bcHealthRes] = await Promise.allSettled([
-                window.apiClient.get('/health'),
-                window.apiClient.get('/blockchain/health')
-            ]);
-            const h = healthRes.status === 'fulfilled' ? healthRes.value : null;
-            const b = bcHealthRes.status === 'fulfilled' ? bcHealthRes.value : null;
-            const bcState = b && b.health && b.health.blockchain ? b.health.blockchain.status : null;
-            grid.innerHTML = `
-                <div class="cc-metric-card"><div class="cc-metric-icon"><i data-lucide="heart-pulse"></i></div><div class="cc-metric-value">${h && h.status ? escapeHtml(String(h.status)) : 'Unavailable'}</div><div class="cc-metric-label">Application Health</div></div>
-                <div class="cc-metric-card"><div class="cc-metric-icon"><i data-lucide="blocks"></i></div><div class="cc-metric-value">${bcState === 'healthy' ? 'Healthy' : (bcState ? escapeHtml(String(bcState)) : 'Unavailable')}</div><div class="cc-metric-label">Blockchain Service</div></div>`;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setPanelState('settingsHealthGrid', 'loading');
+            try {
+                const [healthRes, bcHealthRes] = await Promise.allSettled([
+                    window.apiClient.get('/health'),
+                    window.apiClient.get('/blockchain/health')
+                ]);
+                const h = healthRes.status === 'fulfilled' ? healthRes.value : null;
+                const b = bcHealthRes.status === 'fulfilled' ? bcHealthRes.value : null;
+                const bcState = b && b.health && b.health.blockchain ? b.health.blockchain.status : null;
+                grid.innerHTML = `
+                    <div class="cc-metric-card"><div class="cc-metric-icon"><i data-lucide="heart-pulse"></i></div><div class="cc-metric-value">${h && h.status ? escapeHtml(String(h.status)) : 'Unavailable'}</div><div class="cc-metric-label">Application Health</div></div>
+                    <div class="cc-metric-card"><div class="cc-metric-icon"><i data-lucide="blocks"></i></div><div class="cc-metric-value">${bcState === 'healthy' ? 'Healthy' : (bcState ? escapeHtml(String(bcState)) : 'Unavailable')}</div><div class="cc-metric-label">Blockchain Service</div></div>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setPanelState('settingsHealthGrid', 'loaded');
+            } catch (e) {
+                setPanelState('settingsHealthGrid', 'error', { message: e.message || 'Failed to load settings.', retryAction: 'loadSettings()', retryLabel: 'Retry' });
+            }
         }
 
         // ===================== NAVIGATION HELPERS =====================
@@ -2215,12 +2429,15 @@
             document.getElementById('createUserForm').reset();
         }
 
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.clear();
-                showAlert('Logging out...', 'success');
-                setTimeout(() => window.location.replace('index.html'), 1000);
-            }
+        async function logout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            // Notify server to revoke token and clear cookie
+            try {
+                await window.apiClient.post('/auth/logout');
+            } catch (_) { /* ignore network errors */ }
+            clearAuthState();
+            showAlert('Logged out successfully.', 'success');
+            setTimeout(() => window.location.replace('index.html'), 800);
         }
     </script>
     <script src="footer.js"></script>

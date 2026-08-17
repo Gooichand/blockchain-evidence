@@ -320,7 +320,10 @@
                 var stored = sessionStorage.getItem(DeviceDetector.RETURN_KEY);
                 if (stored) returnUrl = decodeURIComponent(stored);
             } catch (e) { /* noop */ }
-            if (!returnUrl || returnUrl.indexOf('desktop-only') !== -1) returnUrl = './';
+            // Validate: same-origin, not the notice page, not a protected page that would bounce
+            if (!returnUrl || returnUrl.indexOf(DeviceDetector.NOTICE_PATH) !== -1 || returnUrl.indexOf('://') !== -1) {
+                returnUrl = './';
+            }
 
             var announcer = document.getElementById('statusAnnouncer');
             var tryAgainBtn = document.getElementById('tryAgainBtn');
@@ -333,9 +336,12 @@
             function renderDebug() {
                 if (!debugInfo) return;
                 debugInfo.hidden = false;
+                var vp = DeviceDetector.getViewportWidth();
                 debugInfo.textContent =
-                    'Device debug — effective viewport width: ' + DeviceDetector.getViewportWidth() +
-                    'px (minimum required: ' + DeviceDetector.MIN_WIDTH + 'px)';
+                    'Device debug — effective viewport width: ' + vp +
+                    'px (minimum required: ' + DeviceDetector.MIN_WIDTH + 'px)' +
+                    ' | returnUrl: ' + returnUrl +
+                    ' | guard: ' + (vp < DeviceDetector.MIN_WIDTH ? 'blocked' : 'allowed');
             }
 
             function returnToApp() {

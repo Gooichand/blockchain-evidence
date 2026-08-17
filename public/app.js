@@ -91,6 +91,34 @@ function initializeApp() {
       }
     }
 
+    // ── Auth Status Messages ──
+    // Handle server-side auth redirects with user-friendly messages
+    (function handleAuthStatus() {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get('auth');
+      const messages = {
+        required: { title: 'Authentication Required', text: 'Please log in to access the requested page.', variant: 'info' },
+        expired: { title: 'Session Expired', text: 'Your session has expired. Please log in again.', variant: 'warning' },
+        denied: { title: 'Access Denied', text: 'You do not have permission to view that page.', variant: 'error' },
+        disabled: { title: 'Account Disabled', text: 'Your account has been disabled. Contact an administrator.', variant: 'error' }
+      };
+      if (authParam && messages[authParam]) {
+        const msg = messages[authParam];
+        // Clear stale auth state that could cause redirect loops
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('evidDgcReturn');
+        // Show message after a brief delay to allow page render
+        setTimeout(() => {
+          if (typeof showAlert === 'function') {
+            showAlert(msg.text, msg.variant);
+          }
+        }, 300);
+        // Clean URL without reload
+        try { window.history.replaceState({}, '', window.location.pathname); } catch (_) {}
+      }
+    })();
+
     // Initialize components
     initializeNavigation();
     initializeScrollUp();
