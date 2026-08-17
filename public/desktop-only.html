@@ -209,6 +209,20 @@
 
         .footer-note b { color: var(--text); font-weight: 600; }
 
+        /* ---- Debug diagnostic (only visible with ?debug=1) ---- */
+        .debug-info {
+            margin-top: 22px;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: var(--brand-dark);
+            background: var(--pale);
+            border: 1px solid var(--pale-strong);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: inline-block;
+            max-width: 440px;
+        }
+
         /* ---- Focus visibility ---- */
         .brand:focus-visible,
         .btn-try-again:focus-visible,
@@ -273,6 +287,9 @@
             Server-side authorization, authentication, and session security remain enforced on every request.
         </p>
 
+        <!-- Debug diagnostic: visible only with ?debug=1 -->
+        <p id="debugInfo" class="debug-info" hidden></p>
+
         <!-- Screen-reader-friendly status -->
         <p id="statusAnnouncer" class="sr-only" role="status" aria-live="polite">Access restricted: a larger screen is required.</p>
     </main>
@@ -295,6 +312,9 @@
         (function () {
             'use strict';
 
+            var params = new URLSearchParams(window.location.search);
+            var debugMode = params.get('debug') === '1';
+
             var returnUrl = null;
             try {
                 var stored = sessionStorage.getItem(DeviceDetector.RETURN_KEY);
@@ -304,9 +324,18 @@
 
             var announcer = document.getElementById('statusAnnouncer');
             var tryAgainBtn = document.getElementById('tryAgainBtn');
+            var debugInfo = document.getElementById('debugInfo');
 
             function announce(text) {
                 if (announcer) announcer.textContent = text;
+            }
+
+            function renderDebug() {
+                if (!debugInfo) return;
+                debugInfo.hidden = false;
+                debugInfo.textContent =
+                    'Device debug — effective viewport width: ' + DeviceDetector.getViewportWidth() +
+                    'px (minimum required: ' + DeviceDetector.MIN_WIDTH + 'px)';
             }
 
             function returnToApp() {
@@ -319,6 +348,15 @@
 
             // "Try Again" — re-evaluates the current viewport.
             if (tryAgainBtn) tryAgainBtn.addEventListener('click', returnToApp);
+
+            if (debugMode) {
+                // Diagnostic mode: show the measured viewport width and never
+                // auto-redirect, so the value can be read on any device.
+                renderDebug();
+                window.addEventListener('resize', renderDebug);
+                window.addEventListener('orientationchange', renderDebug);
+                return;
+            }
 
             // Recheck on resize and orientation changes — return automatically
             // as soon as the viewport becomes supported.
