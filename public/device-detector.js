@@ -2,22 +2,45 @@
   'use strict';
 
   /**
-   * EVID-DGC Device Policy
-   * ----------------------
-   * ALLOWED:  Desktops, laptops (Windows / macOS / Linux / Chromebook),
-   *           iPads, Android tablets, Surface tablets, large foldables in tablet mode.
-   * BLOCKED:  Android phones, iPhones, small foldables in phone mode.
+   * EVID-DGC Screen-Size Policy
+   * ----------------------------
+   * Protected application workspaces (admin, evidence management, case
+   * management, audit center, forensic review, blockchain monitoring, ...)
+   * are restricted on phone-sized viewports.
    *
-   * No single heuristic decides:
-   *   - User-Agent + platform signals
-   *   - Positive tablet signatures (iPad / Android tablet tokens)
-   *   - Interaction capability (maxTouchPoints / pointer media queries)
-   *   - Layout geometry (compact = phone; tablets never lose on resize)
+   * Decision is based on the EFFECTIVE VIEWPORT WIDTH — a responsive
+   * capability check — not on the browser user-agent string:
+   *   - Blocked:  effective viewport width below 768px (phones).
+   *   - Allowed:  laptops, desktops, and tablets at or above 768px,
+   *               including tablet portrait and landscape.
+   *
+   * The restriction is a UX guard only. Server-side authorization,
+   * authentication and session handling are never bypassed by this file.
+   *
+   * When a protected page is blocked, the original application URL is
+   * stored in sessionStorage (key below) so the restriction screen can
+   * return the user to the same place once the viewport is supported.
    */
 
   var MIN_WIDTH = 768;
   var RECOMMENDED_WIDTH = 1024;
   var FORCE_DESKTOP_PARAM = 'forceDesktop';
+  var RETURN_KEY = 'evidDgcReturn';
+
+  /**
+   * Effective viewport width. clientWidth excludes the scrollbar and
+   * matches CSS media query evaluation; innerWidth is the fallback.
+   */
+  function getViewportWidth() {
+    var doc = document.documentElement;
+    var w = doc && doc.clientWidth;
+    if (w === undefined || w === null || w === 0) w = window.innerWidth;
+    return w || 0;
+  }
+
+  function isForcedDesktop() {
+    return window.location.search.indexOf(FORCE_DESKTOP_PARAM + '=true') !== -1;
+  }
 
   function mqMatches(query) {
     if (typeof window.matchMedia !== 'function') return false;
@@ -35,109 +58,57 @@
   }
 
   function getDeviceInfo() {
-    var width = window.innerWidth || document.documentElement.clientWidth;
-    var height = window.innerHeight || document.documentElement.clientHeight;
+    var width = getViewportWidth();
+    var height = window.innerHeight || document.documentElement.clientHeight || 0;
     var outerWidth = window.outerWidth || width;
     var userAgent = navigator.userAgent || '';
-    var ua = userAgent.toLowerCase();
-    var platform = navigator.platform || '';
     var caps = detectCapabilities();
     var uaData = navigator.userAgentData || null;
 
-    // ---- Agent-level hints ---------------------------------------------------
-    var isMobileUA =
-      /mobi|android|iphone|ipod|blackberry|iemobile|opera mini|windows phone/i.test(userAgent);
+    // ---- Capability hints (informational; the width check decides) ----
+    var ua = userAgent.toLowerCase();
+    var isMobileUA = /mobi|android|iphone|ipod|blackberry|iemobile|opera mini|windows phone/i.test(userAgent);
+    var isTouchDevice = caps.touch || caps.coarse;
+    var isCoarsePointer = caps.coarse;
 
-    // Positive tablet signatures (never produced by phones on their own).
-    var tabletTokens =
-      /ipad|tablet|kindle|silk|playbook|nexus ?7|nexus ?9|sm-t|gt-p|konawith|hp-tablet/i;
-    var isTabletToken = tabletTokens.test(userAgent);
-    var isAndroidTabletToken =
-      /android/i.test(userAgent) && !/mobile|phablet/i.test(userAgent);
-
-    // iPadOS 13+ ships a desktop-looking UA ("Macintosh; Mac OS X"), but actual
-    // iPads still expose touch capability and are identified by platform.
-    var uaDataPlatform = (uaData && uaData.platform) || '';
-
-    // iPhones / iPods are never tablets — block unconditionally.
-    var isIPhoneOrPod =
-      /iphone|ipod/i.test(userAgent) || /iphone|ipod/i.test(uaDataPlatform);
-
-    // iPadOS 13+ ships a desktop-looking UA ("Macintosh; Mac OS X"), but actual
-    // iPads still expose touch capability and are identified by platform + UA.
-    var looksLikeIpad =
-      !isIPhoneOrPod &&
-      (/ipad/i.test(userAgent) ||
-       /ipad/i.test(uaDataPlatform) ||
-       (/macintosh|mac os x/i.test(userAgent) && caps.touch && caps.coarse));
-
-    var isSurfaceWindowsTablet =
-      /windows nt/i.test(userAgent) && /surface|tablet pc|windows nt.*(arm|touch)/i.test(userAgent);
-
-    // Desktop OS token: laptops/desktops are never blocked by width alone.
-    var isDesktopAgent =
-      /windows nt|mac os x|crxos|crostini|x11|linux/.test(userAgent) &&
-      !isTabletToken &&
-      !looksLikeIpad &&
-      !isSurfaceWindowsTablet;
-
-    // ---- Geometry ------------------------------------------------------------
-    // A compact layout only *confirms* a phone once the agent already says so.
-    // "Tablet mode" requires BOTH dimensions to be large: an unfolded foldable
-    // is wide AND tall, while a phone in landscape only grows its width.
-    var isCompactViewport = Math.min(width, height) < 600;
-
-    // ---- Classification (order matters) --------------------------------------
+    // ---- Classification (viewport width is authoritative) --------------
+    var blocked = width < MIN_WIDTH;
     var classification;
     var reasons = [];
 
-    if (isIPhoneOrPod) {
-      classification = 'phone';
-      reasons.push('iPhone / iPod detected');
-    } else if (isTabletToken || isAndroidTabletToken || looksLikeIpad || isSurfaceWindowsTablet) {
-      classification = 'tablet';
-      reasons.push('Tablet-form-factor device identified');
-    } else if (isDesktopAgent) {
+    if (isForcedDesktop()) {
       classification = 'desktop';
-      reasons.push('Desktop / laptop operating system identified');
-    } else if (isMobileUA) {
-      // Optimistic reassignmen: a large coarsely-touched screen with a mobile
-      // agent is treated as a tablet (big Android tablets, expanded foldables).
-      if ((caps.coarse || caps.touch) && !isCompactViewport) {
-        classification = 'tablet';
-        reasons.push('Large touchscreen in tablet mode');
-      } else {
-        classification = 'phone';
-        reasons.push('Compact phone-sized device detected');
-      }
-    } else if (caps.touch && caps.coarse) {
-      classification = isCompactViewport ? 'phone' : 'tablet';
+      reasons.push('Access forced via ' + FORCE_DESKTOP_PARAM + ' parameter');
+    } else if (blocked) {
+      classification = 'phone';
+      reasons.push('Effective viewport width ' + width + 'px is below the ' + MIN_WIDTH + 'px minimum');
+    } else if (isCoarsePointer) {
+      classification = 'tablet';
+      reasons.push('Viewport width ' + width + 'px is supported (touchscreen)');
     } else {
       classification = 'desktop';
+      reasons.push('Viewport width ' + width + 'px is supported');
     }
-
-    var isPhone = classification === 'phone';
-    var isTablet = classification === 'tablet';
-    var isDesktop = classification === 'desktop';
 
     return {
       classification: classification,
-      isPhone: isPhone,
-      isTablet: isTablet,
-      isDesktop: isDesktop,
+      isPhone: blocked,
+      isTablet: !blocked && isCoarsePointer,
+      isDesktop: !blocked && !isCoarsePointer,
 
-      isMobileClass: isPhone || isTablet,
-      isTabletLike: isTablet,
+      isMobileClass: blocked,
+      isTabletLike: !blocked && isCoarsePointer,
 
       width: width,
       height: height,
       outerWidth: outerWidth,
       userAgent: userAgent,
-      platform: platform,
+      platform: navigator.platform || '',
       maxTouchPoints: navigator.maxTouchPoints || (navigator.msMaxTouchPoints || 0),
       uaDataAvailable: !!uaData,
-      isTouchDevice: caps.touch,
-      isCoarsePointer: caps.coarse,
+      isMobileUA: isMobileUA,
+      isTouchDevice: isTouchDevice,
+      isCoarsePointer: isCoarsePointer,
       isFinePointer: caps.fine,
       isHover: caps.hover,
 
@@ -148,15 +119,57 @@
     };
   }
 
-  function isAllowed() {
-    if (window.location.search.indexOf(FORCE_DESKTOP_PARAM + '=true') !== -1) {
-      return true;
+  function rememberReturnUrl() {
+    try {
+      sessionStorage.setItem(RETURN_KEY, window.location.pathname + window.location.search);
+    } catch (e) { /* sessionStorage unavailable — restriction screen falls back to home */ }
+  }
+
+  function forgetReturnUrl() {
+    try {
+      sessionStorage.removeItem(RETURN_KEY);
+    } catch (e) { /* noop */ }
+  }
+
+  /**
+   * Live guard: once a protected page passes the initial check, watch
+   * resize/orientation changes so the restriction updates in real time —
+   * if the viewport drops below the minimum, redirect to the restriction
+   * screen immediately (the return URL is remembered for the way back).
+   */
+  var liveGuardInstalled = false;
+
+  function installLiveGuard() {
+    if (liveGuardInstalled) return;
+    liveGuardInstalled = true;
+    var timer = null;
+    function recheck() {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (getViewportWidth() < MIN_WIDTH) {
+          rememberReturnUrl();
+          window.location.replace('desktop-only.html');
+        }
+      }, 150);
     }
-    return getDeviceInfo().isPhone !== true;
+    window.addEventListener('resize', recheck);
+    window.addEventListener('orientationchange', recheck);
+  }
+
+  function isAllowed() {
+    if (isForcedDesktop()) return true;
+    var allowed = getViewportWidth() >= MIN_WIDTH;
+    if (allowed) {
+      forgetReturnUrl();
+      installLiveGuard();
+    } else {
+      rememberReturnUrl();
+    }
+    return allowed;
   }
 
   function DeviceGuard(options) {
-    this.minWidth = null; // desktops are never blocked by width
+    this.minWidth = MIN_WIDTH;
     this.onBlockedCallback = (options && options.onBlocked) || null;
     this.onAllowedCallback = (options && options.onAllowed) || null;
     this.resizeDebounceMs = (options && options.resizeDebounceMs) || 300;
@@ -168,7 +181,7 @@
 
   DeviceGuard.prototype.check = function () {
     var info = getDeviceInfo();
-    var allowed = info.isPhone !== true;
+    var allowed = !info.isPhone;
     if (!allowed && this.onBlockedCallback) {
       this.onBlockedCallback(info);
     } else if (allowed && this.onAllowedCallback) {
@@ -207,8 +220,12 @@
     MIN_WIDTH: MIN_WIDTH,
     RECOMMENDED_WIDTH: RECOMMENDED_WIDTH,
     FORCE_DESKTOP_PARAM: FORCE_DESKTOP_PARAM,
+    RETURN_KEY: RETURN_KEY,
+    getViewportWidth: getViewportWidth,
     getDeviceInfo: getDeviceInfo,
     isDesktopAllowed: isAllowed,
+    rememberReturnUrl: rememberReturnUrl,
+    forgetReturnUrl: forgetReturnUrl,
     DeviceGuard: DeviceGuard
   };
 

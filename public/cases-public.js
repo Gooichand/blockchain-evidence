@@ -163,6 +163,7 @@
     // ----------------------------------------------------------------
     function renderPagination() {
         var nav = document.getElementById('pvPagination');
+        if (!nav) return;
         nav.innerHTML = '';
         var pages = Math.max(Math.ceil(state.total / state.limit), 1);
         if (pages <= 1 && state.page === 1) return;

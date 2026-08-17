@@ -4,817 +4,335 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#DC2626">
-    <title>EVID-DGC | Desktop &amp; Tablet Access</title>
-    <meta name="description" content="EVID-DGC — Evidence Digital Guardian Controller. Blockchain-based digital evidence management and digital forensics platform. Optimized for desktop and tablet devices.">
+    <title>A Larger Screen Is Required | EVID-DGC</title>
+    <meta name="description" content="EVID-DGC secure evidence workspace is optimized for laptops, desktops, and tablets. Please open this application on a larger screen.">
     <meta name="robots" content="noindex, nofollow">
-    <style>html{background:#fff}</style>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="favicon.png">
     <script src="device-detector.js"></script>
     <style>
-        /* ============ EVID-DGC Restriction Screen — Enterprise Design ============ */
+        /* ============ EVID-DGC — Large-Screen Access Notice ============
+           White & pale-red theme. Calm, premium, accessible.            */
 
         :root {
-            --pd: #DC2626;
-            --pd-dark: #B91C1C;
-            --pd-soft: rgba(220, 38, 38, 0.08);
-            --pd-glow: rgba(220, 38, 38, 0.18);
+            --brand: #DC2626;
+            --brand-dark: #B91C1C;
+            --ink: #8B0000;
+            --text: #4B5563;
+            --muted: #9CA3AF;
+            --pale: rgba(220, 38, 38, 0.08);
+            --pale-strong: rgba(220, 38, 38, 0.14);
             --white: #FFFFFF;
-            --light-gray: #F8FAFC;
-            --medium-gray: #CBD5E1;
-            --dark-gray: #1E293B;
-            --black: #0F172A;
-            --grad-brand: linear-gradient(120deg, #DC2626 0%, #B91C1C 100%);
+            --grad-brand: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
             --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --radius-lg: 24px;
-            --radius-md: 16px;
-            --radius-sm: 10px;
-            --safe-top: env(safe-area-inset-top, 0px);
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --shadow-soft: 0 20px 50px -12px rgba(15, 23, 42, 0.12);
-            --shadow-glow: 0 24px 80px -20px rgba(220, 38, 38, 0.35);
+            --radius-lg: 22px;
+            --radius-sm: 12px;
         }
 
-        /* ---- Base ---- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; overflow-x: clip; }
+        html { -webkit-text-size-adjust: 100%; }
 
         body {
             font-family: var(--font);
-            color: var(--dark-gray);
+            color: var(--text);
             background-color: var(--white);
-            overflow-x: hidden;
-            overflow-x: clip;
             line-height: 1.6;
-            padding-top: var(--safe-top);
-            padding-bottom: var(--safe-bottom);
-            position: relative;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ---- Forensic SVG background layers (subtle) ---- */
-        .bg-fx {
-            position: fixed;
-            inset: 0;
-            z-index: -2;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 12% 8%, rgba(220, 38, 38, 0.07) 0%, transparent 42%),
-                radial-gradient(circle at 88% 28%, rgba(220, 38, 38, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 20% 92%, rgba(220, 38, 38, 0.06) 0%, transparent 38%),
-                radial-gradient(circle at 78% 86%, rgba(220, 38, 38, 0.05) 0%, transparent 42%);
-        }
-        .bg-fx::before,
-        .bg-fx::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-        }
-        .bg-fx::before {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M24 2 46 14 46 34 24 46 2 34 2 14Z' fill='none' stroke='%23DC2626' stroke-width='0.6' stroke-opacity='0.05'/%3E%3C/svg%3E");
-            background-size: 48px 48px;
-            mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 78%);
-            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 78%);
-        }
-        .bg-fx::after {
-            background-image:
-                linear-gradient(rgba(220, 38, 38, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(220, 38, 38, 0.035) 1px, transparent 1px);
-            background-size: 46px 46px;
-            mask-image: radial-gradient(ellipse at 50% 30%, #000 10%, transparent 70%);
-            -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 10%, transparent 70%);
-        }
-
-        /* Circuit + nodes accent draws (fixed, faint) */
-        .circuit-line {
-            position: fixed;
-            z-index: -1;
-            pointer-events: none;
-            opacity: 0.35;
-            animation: circuitShimmer 6s ease-in-out infinite;
-        }
-        @keyframes circuitShimmer {
-            0%, 100% { opacity: 0.22; }
-            50% { opacity: 0.5; }
-        }
-        .fingerprint-bg {
-            position: fixed;
-            right: -120px;
-            top: 12%;
-            width: 340px;
-            height: 340px;
-            opacity: 0.45;
-            z-index: -1;
-            animation: fingerprintGlow 5s ease-in-out infinite;
-        }
-        @keyframes fingerprintGlow {
-            0%, 100% { opacity: 0.25; }
-            50% { opacity: 0.6; }
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: var(--safe-top) 24px var(--safe-bottom);
-        }
-
-        /* ---- Animation utilities ---- */
-        .reveal {
-            opacity: 0;
-            transform: translateY(26px);
-            transition: opacity 0.8s cubic-bezier(0.2, 0.65, 0.3, 1), transform 0.8s cubic-bezier(0.2, 0.65, 0.3, 1);
-            will-change: opacity, transform;
-        }
-        .reveal.in-view { opacity: 1; transform: none; }
-
-        @media (prefers-reduced-motion: reduce) {
-            html { scroll-behavior: auto; }
-            .reveal, .reveal.is-view { opacity: 1; transform: none; transition: none; }
-            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
-        }
-
-        /* ============ HEADER ============ */
-        .site-header {
-            text-align: center;
-            padding: clamp(40px, 8vw, 76px) 16px clamp(20px, 3vw, 36px);
-            position: relative;
-        }
-        .logo-badge {
-            width: clamp(84px, 12vw, 116px);
-            height: clamp(84px, 12vw, 116px);
-            margin: 0 auto;
-            border-radius: 28px;
-            background: var(--grad-brand);
-            display: grid;
-            place-items: center;
-            box-shadow: var(--shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-            position: relative;
-            animation: shieldPulse 3.5s ease-in-out infinite;
-        }
-        @keyframes shieldPulse {
-            0%, 100% { box-shadow: var(--shadow-glow), 0 0 0 0 rgba(220, 38, 38, 0.25); }
-            50% { box-shadow: var(--shadow-glow), 0 0 0 14px rgba(220, 38, 38, 0); }
-        }
-        .logo-badge svg {
-            width: 52%;
-            height: 52%;
-            color: var(--white);
-        }
-        .brand-name {
-            margin-top: 20px;
-            font-size: clamp(1.9rem, 5vw, 2.9rem);
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: var(--black);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35em;
-        }
-        .brand-name span { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .brand-sub {
-            margin-top: 6px;
-            font-size: clamp(0.95rem, 2.2vw, 1.15rem);
-            color: var(--dark-gray);
-            font-weight: 500;
-        }
-        .brand-tag {
-            margin-top: 4px;
-            font-size: clamp(0.8rem, 1.8vw, 0.92rem);
-            color: var(--medium-gray);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-        }
-
-        /* ============ HERO WORKSTATION ============ */
-        .hero-stage {
-            position: relative;
-            max-width: 880px;
-            margin: clamp(8px, 2vw, 20px) auto 0;
-            min-height: 260px;
-        }
-        @media (min-width: 560px) and (max-width: 880px) {
-            .hero-stage { min-height: 320px; }
-        }
-        @media (min-width: 881px) {
-            .hero-stage { min-height: 400px; }
-        }
-        .hero-ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1.5px dashed rgba(220, 38, 38, 0.28);
-            animation: spinSlow 38s linear infinite;
-            pointer-events: none;
-        }
-        .hero-ring.r1 { inset: -4%; }
-        .hero-ring.r2 { inset: 6%; animation-direction: reverse; animation-duration: 52s; border-color: rgba(220, 38, 38, 0.16); }
-        @keyframes spinSlow { to { transform: rotate(360deg); } }
-
-        .hero-scene {
-            width: 100%;
-            display: block;
-            animation: floatScene 5s ease-in-out infinite;
-        }
-        @keyframes floatScene {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
-        }
-
-        /* ---- Floating security badges ---- */
-        .float-badge {
-            position: absolute;
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
-            gap: 9px;
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(203, 213, 225, 0.6);
-            border-radius: 999px;
-            padding: 8px 15px 8px 9px;
-            box-shadow: 0 12px 34px -12px rgba(15, 23, 42, 0.22);
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--dark-gray);
-            white-space: nowrap;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: default;
-            z-index: 3;
+            justify-content: center;
+            padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow-x: hidden;
         }
-        .float-badge:hover {
-            transform: translateY(-4px) scale(1.04);
-            box-shadow: 0 18px 46px -14px rgba(220, 38, 38, 0.4);
+
+        /* Very subtle pale-red background glow */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(420px 320px at 50% -6%, rgba(220, 38, 38, 0.07) 0%, transparent 70%),
+                radial-gradient(520px 420px at 85% 110%, rgba(220, 38, 38, 0.05) 0%, transparent 70%),
+                radial-gradient(460px 360px at 8% 100%, rgba(220, 38, 38, 0.04) 0%, transparent 70%);
         }
-        .float-badge .b-icon {
+
+        .notice {
+            width: 100%;
+            max-width: 560px;
+            text-align: center;
+            animation: noticeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes noticeIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- Logo + wordmark ---- */
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            text-decoration: none;
+            margin-bottom: 34px;
+        }
+
+        .brand svg {
             width: 30px;
             height: 30px;
-            flex: 0 0 30px;
-            border-radius: 50%;
-            background: var(--grad-brand);
-            display: grid;
-            place-items: center;
-            color: var(--white);
-        }
-        .float-badge .b-icon svg { width: 16px; height: 16px; }
-        .float-badge small {
-            display: block;
-            font-size: 10.5px;
-            font-weight: 700;
-            color: var(--pd);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .float-badge::before {
-            content: "";
-            position: absolute;
-            width: 34px;
-            height: 34px;
-            border: 1.4px solid rgba(220, 38, 38, 0.35);
-            border-top-color: transparent;
-            border-right-color: transparent;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .badge-tl { top: 7%; left: 4%; animation: bobA 5s ease-in-out infinite; }
-        .badge-tl::before { top: -14px; left: 8px; transform: rotate(-20deg); }
-        .badge-tr { top: 12%; right: 3%; animation: bobB 6s ease-in-out infinite; }
-        .badge-tr::before { top: -14px; right: 8px; transform: rotate(200deg); }
-        .badge-ml { top: 42%; left: -1%; animation: bobB 7s ease-in-out infinite; }
-        .badge-ml::before { top: 10px; left: -18px; transform: rotate(-90deg); }
-        .badge-mr { top: 46%; right: -1%; animation: bobA 6.5s ease-in-out infinite; }
-        .badge-mr::before { top: 10px; right: -18px; transform: rotate(90deg); }
-        .badge-bl { bottom: 2%; left: 7%; animation: bobB 5.5s ease-in-out infinite; }
-        .badge-bl::before { top: -16px; left: 16px; transform: rotate(-160deg); }
-        .badge-br { bottom: -1%; right: 6%; animation: bobA 6s ease-in-out infinite; }
-        .badge-br::before { top: -16px; right: 16px; transform: rotate(20deg); }
-        @keyframes bobA { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-        @keyframes bobB { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
-
-        .connector {
-            position: absolute;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.35), transparent);
-            transform-origin: left center;
-            z-index: 1;
-            opacity: 0.7;
-            pointer-events: none;
+            color: var(--brand);
         }
 
-        /* ============ MAIN COPY ============ */
-        .main-copy { text-align: center; margin-top: clamp(30px, 5vw, 56px); }
-        .main-title {
-            font-size: clamp(1.75rem, 5.4vw, 3.1rem);
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            color: var(--black);
-            line-height: 1.12;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .main-title em {
-            font-style: normal;
+        .brand span {
             background: var(--grad-brand);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
-        .lead {
-            max-width: 780px;
-            margin: 22px auto 0;
-            font-size: clamp(0.98rem, 2.4vw, 1.13rem);
-            color: var(--dark-gray);
-            opacity: 0.9;
-        }
-        .lead p + p { margin-top: 12px; }
 
-        /* ============ GLASS CARDS ============ */
-        .section-title {
-            text-align: center;
-            margin: clamp(56px, 8vw, 90px) 0 clamp(26px, 4vw, 42px);
-            font-size: clamp(1.5rem, 4.4vw, 2.2rem);
-            font-weight: 800;
-            color: var(--black);
-            letter-spacing: -0.01em;
-        }
-        .section-title .accent { color: var(--pd); }
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: clamp(16px, 2.4vw, 26px);
-        }
-        @media (max-width: 1180px) { .grid-cards { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 640px) { .grid-cards { grid-template-columns: 1fr; } }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.72);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(203, 213, 225, 0.55);
-            border-radius: var(--radius-lg);
-            padding: clamp(22px, 2.6vw, 30px);
-            box-shadow: var(--shadow-soft);
-            transition: transform 0.35s cubic-bezier(0.2, 0.65, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .glass-card::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 30% 0%, rgba(220, 38, 38, 0.10), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(220, 38, 38, 0.35);
-            box-shadow: 0 30px 70px -22px rgba(220, 38, 38, 0.35);
-        }
-        .glass-card:hover::after { opacity: 1; }
-        .card-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 15px;
-            background: var(--grad-brand);
-            display: grid;
-            place-items: center;
-            color: var(--white);
-            box-shadow: 0 12px 26px -10px rgba(220, 38, 38, 0.55);
-            margin-bottom: 18px;
-        }
-        .card-icon svg { width: 24px; height: 24px; }
-        .glass-card h3 {
-            font-size: 1.06rem;
-            font-weight: 700;
-            color: var(--black);
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
-        }
-        .glass-card ul {
-            list-style: none;
-            position: relative;
-            z-index: 1;
-        }
-        .glass-card li {
-            font-size: 0.9rem;
-            color: var(--dark-gray);
-            opacity: 0.85;
-            padding: 5px 0 5px 18px;
-            position: relative;
-        }
-        .glass-card li::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 13px;
-            width: 7px;
-            height: 7px;
+        /* ---- Icon in pale-red circle ---- */
+        .icon-circle {
+            width: 148px;
+            height: 148px;
+            margin: 0 auto 30px;
             border-radius: 50%;
-            background: var(--grad-brand);
-            opacity: 0.8;
-        }
-
-        /* ============ RECOMMENDED ENVIRONMENT ============ */
-        .env-panel {
-            margin-top: clamp(20px, 3vw, 34px);
-            background: linear-gradient(160deg, #ffffff 0%, #F8FAFC 100%);
-            border: 1px solid rgba(203, 213, 225, 0.7);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-soft);
-            padding: clamp(24px, 4vw, 42px);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: clamp(20px, 3vw, 32px);
-        }
-        .env-col h4 {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.09em;
-            color: var(--pd);
-            margin-bottom: 14px;
+            background: var(--pale);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px var(--pale-strong), 0 18px 44px -18px rgba(220, 38, 38, 0.28);
         }
-        .env-col h4 svg { width: 17px; height: 17px; }
-        .chip-list { display: flex; flex-wrap: wrap; gap: 9px; }
-        .chip {
-            background: #ffffff;
-            border: 1px solid rgba(203, 213, 225, 0.85);
-            border-radius: 999px;
-            padding: 7px 14px;
-            font-size: 0.84rem;
+
+        .icon-circle svg {
+            width: 74px;
+            height: 74px;
+            color: var(--brand);
+        }
+
+        /* ---- Copy ---- */
+        h1 {
+            font-size: clamp(1.7rem, 6vw, 2.3rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text);
+            max-width: 440px;
+            margin: 0 auto 22px;
+        }
+
+        .devices {
+            font-size: 0.86rem;
             font-weight: 600;
-            color: var(--dark-gray);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 36px;
+        }
+
+        .devices b { color: var(--brand-dark); font-weight: 700; }
+
+        /* ---- Actions ---- */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .btn-try-again {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.1);
-        }
-        .chip b { color: var(--pd); font-weight: 700; }
-        .chip svg { width: 14px; height: 14px; color: var(--pd); }
-
-        /* ============ SECURITY BANNER ============ */
-        .security-banner {
-            position: relative;
-            margin-top: clamp(30px, 5vw, 48px);
+            gap: 10px;
             background: var(--grad-brand);
-            border-radius: var(--radius-lg);
-            padding: clamp(28px, 5vw, 52px) clamp(24px, 4vw, 56px);
-            display: flex;
-            align-items: center;
-            gap: clamp(22px, 4vw, 40px);
-            overflow: hidden;
-            color: #fff;
-            box-shadow: var(--shadow-glow);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 15px 38px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 14px 30px -12px rgba(220, 38, 38, 0.55);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
-        .security-banner::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(circle at 18% 120%, rgba(255, 255, 255, 0.16), transparent 50%),
-                radial-gradient(circle at 90% -20%, rgba(255, 255, 255, 0.12), transparent 45%);
-        }
-        .shield-glow {
-            flex: 0 0 auto;
-            width: 84px;
-            height: 84px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.16);
-            backdrop-filter: blur(6px);
-            display: grid;
-            place-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            animation: shieldPulseLight 3.2s ease-in-out infinite;
-            position: relative;
-        }
-        @keyframes shieldPulseLight {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35); }
-            50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
-        }
-        .shield-glow svg { width: 42px; height: 42px; }
-        .security-txt { position: relative; z-index: 1; }
-        .security-txt h3 { font-size: clamp(1.25rem, 3.4vw, 1.7rem); font-weight: 800; margin-bottom: 8px; }
-        .security-txt p { font-size: clamp(0.92rem, 2.2vw, 1rem); opacity: 0.94; max-width: 760px; }
-        @media (max-width: 640px) { .security-banner { flex-direction: column; text-align: center; } }
 
-        .security-banner { margin-bottom: clamp(40px, 8vw, 80px); }
+        .btn-try-again:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -14px rgba(220, 38, 38, 0.6);
+            filter: brightness(1.04);
+        }
+
+        .btn-try-again:active { transform: translateY(0); }
+
+        .btn-try-again svg { width: 18px; height: 18px; }
+
+        .home-link {
+            color: var(--brand);
+            font-size: 0.92rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            padding-bottom: 2px;
+            transition: border-color 0.2s ease;
+        }
+
+        .home-link:hover { border-color: var(--brand); }
+
+        /* ---- Footer statement ---- */
+        .footer-note {
+            margin-top: 44px;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: var(--muted);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .footer-note b { color: var(--text); font-weight: 600; }
+
+        /* ---- Focus visibility ---- */
+        .brand:focus-visible,
+        .btn-try-again:focus-visible,
+        .home-link:focus-visible {
+            outline: 3px solid var(--brand);
+            outline-offset: 3px;
+            border-radius: 6px;
+        }
+
+        /* ---- Reduced motion ---- */
+        @media (prefers-reduced-motion: reduce) {
+            .notice { animation: none; }
+            .btn-try-again, .btn-try-again:hover { transition: none; transform: none; }
+        }
     </style>
 </head>
 <body>
-    <a class="skip-link" href="#main" style="position:absolute;left:-9999px;top:0;background:var(--pd);color:#fff;padding:10px 18px;border-radius:0 0 12px 0;z-index:2000;font-weight:700;" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to content</a>
+    <main class="notice">
+        <!-- Brand -->
+        <a class="brand" href="./" aria-label="EVID-DGC home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2 20 5.5v5.2c0 4.8-3.4 9.3-8 10.3-4.6-1-8-5.5-8-10.3V5.5L12 2Z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+            EVID<span>-DGC</span>
+        </a>
 
-    <!-- Forensic background layers -->
-    <div class="bg-fx" aria-hidden="true"></div>
+        <!-- Icon -->
+        <div class="icon-circle" role="img" aria-label="A larger screen is required">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2.5" y="4" width="19" height="12.5" rx="2.2"/>
+                <path d="M8 20.5h8"/>
+                <path d="M12 16.5v4"/>
+                <path d="m9.5 9.5 1.6 1.6 3.4-3.4"/>
+            </svg>
+        </div>
 
-    <!-- Circuit accent (decorative) -->
-    <svg class="circuit-line" aria-hidden="true" width="360" height="220" viewBox="0 0 360 220" fill="none" xmlns="http://www.w3.org/2000/svg" style="top:8%; left:-40px;">
-        <path d="M8 118h90l30-30 30 30" stroke="#DC2626" stroke-width="1.4" stroke-opacity="0.5"/>
-        <circle cx="8" cy="118" r="3" fill="#DC2626"/>
-        <circle cx="158" cy="88" r="3" fill="#DC2626"/>
-        <path d="M168 88h80l22-12 22 12h30" stroke="#DC2626" stroke-width="1.4" stroke-opacity="0.5"/>
-        <circle cx="322" cy="88" r="3" fill="#DC2626"/>
-        <circle cx="278" cy="52" r="2.5" fill="#DC2626"/>
-    </svg>
+        <!-- Copy -->
+        <h1>A larger screen is required</h1>
+        <p class="message">
+            EVID-DGC's secure evidence workspace is optimized for laptops, desktops,
+            and tablets. Please open this application on a larger screen to review
+            evidence, manage cases, and access administrator tools safely.
+        </p>
+        <p class="devices">Laptop &middot; Desktop &middot; Tablet</p>
 
-    <!-- Fingerprint pattern (decorative) -->
-    <svg class="fingerprint-bg" aria-hidden="true" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <g fill="none" stroke="#DC2626" stroke-opacity="0.28" stroke-width="0.8">
-            <path d="M50 78c-9 0-16-7-16-16 0-11 9-20 20-20 10 0 18 8 18 19 0 9-7 16-16 16"/>
-            <path d="M50 70c-5 0-9-4-9-9 0-6 5-11 11-11 6 0 10 5 10 11 0 5-4 9-9 9"/>
-            <path d="M45 54c-3-1-5-4-4-7 1-3 4-5 7-4 3 1 5 4 4 7"/>
-            <path d="M50 60c3 0 6-2 6-6s-3-6-6-6-6 2-6 6"/>
-            <path d="M31 72c5 6 12 10 19 10"/>
-            <path d="M23 66c7 10 16 15 27 15"/>
-            <path d="M77 72c-5 6-12 10-19 10"/>
-            <path d="M85 66c-7 10-16 15-27 15"/>
-        </g>
-    </svg>
-
-    <!-- Network nodes pattern (decorative, left side) -->
-    <svg class="circuit-line" aria-hidden="true" width="300" height="260" viewBox="0 0 300 260" fill="none" xmlns="http://www.w3.org/2000/svg" style="bottom:10%; left:-30px; animation-duration:9s;">
-        <circle cx="30" cy="40" r="4" fill="#DC2626" fill-opacity="0.5"/>
-        <circle cx="120" cy="90" r="3" fill="#DC2626" fill-opacity="0.4"/>
-        <circle cx="60" cy="180" r="3.5" fill="#DC2626" fill-opacity="0.45"/>
-        <path d="M30 40 120 90" stroke="#DC2626" stroke-opacity="0.25"/>
-        <path d="M120 90 60 180" stroke="#DC2626" stroke-opacity="0.25"/>
-        <path d="M30 40 60 180" stroke="#DC2626" stroke-opacity="0.16"/>
-    </svg>
-
-    <div class="container">
-        <main id="main">
-            <!-- ============ HEADER ============ -->
-            <header class="site-header">
-                <div class="logo-badge" role="img" aria-label="EVID-DGC fingerprint shield logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 2 20 5.5v5.2c0 4.8-3.4 9.3-8 10.3-4.6-1-8-5.5-8-10.3V5.5L12 2Z"/>
-                        <path d="M12 7.5a4.5 4.5 0 0 0-4.5 4.5c0 2.2 1.5 4 3.6 4.5M12 7.5a4.5 4.5 0 0 1 4.5 4.5c0 2.2-1.5 4-3.6 4.5M9.5 12c0 1.4.9 2.5 2.1 3M14.5 12c0 1.4-.9 2.5-2.1 3"/>
-                        <path d="M12 12.6c.5.3.9.8 1.1 1.4" stroke-width="1.2"/>
-                    </svg>
-                </div>
-                <h1 class="brand-name">EVID<span>-DGC</span></h1>
-                <p class="brand-sub">Evidence Digital Guardian Controller</p>
-                <p class="brand-tag">Professional Digital Forensics Platform</p>
-            </header>
-
-            <!-- ============ HERO WORKSTATION ============ -->
-            <section class="hero-stage" aria-label="Forensic workstation illustration">
-                <div class="hero-ring r1" aria-hidden="true"></div>
-                <div class="hero-ring r2" aria-hidden="true"></div>
-
-                <svg class="hero-scene" viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Professional forensic workstation with monitor, keyboard and PC tower, surrounded by security rings">
-                    <defs>
-                        <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#0F172A"/>
-                            <stop offset="1" stop-color="#1E293B"/>
-                        </linearGradient>
-                        <linearGradient id="redGlow" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0" stop-color="#DC2626" stop-opacity="0.5"/>
-                            <stop offset="1" stop-color="#B91C1C" stop-opacity="0.25"/>
-                        </linearGradient>
-                        <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
-                            <feGaussianBlur stdDeviation="10" result="b"/>
-                            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
-                    </defs>
-
-                    <!-- ambient red glow -->
-                    <ellipse cx="380" cy="400" rx="330" ry="40" fill="url(#redGlow)" opacity="0.35"/>
-
-                    <!-- monitor -->
-                    <rect x="210" y="70" width="340" height="215" rx="14" fill="#0B1220" stroke="#334155" stroke-width="2"/>
-                    <rect x="224" y="84" width="312" height="180" rx="8" fill="url(#screenGrad)"/>
-                    <!-- dashboard on screen -->
-                    <rect x="244" y="104" width="120" height="12" rx="6" fill="#DC2626" opacity="0.85"/>
-                    <rect x="244" y="128" width="272" height="8" rx="4" fill="#334155"/>
-                    <rect x="244" y="146" width="272" height="8" rx="4" fill="#334155" opacity="0.7"/>
-                    <rect x="244" y="164" width="150" height="8" rx="4" fill="#334155" opacity="0.5"/>
-                    <rect x="244" y="128" width="8" height="60" rx="4" fill="#DC2626" opacity="0.4"/>
-                    <path d="M300 210 h120 l-14 -26 h-92 Z" fill="#DC2626" opacity="0.75"/>
-                    <circle cx="380" cy="212" r="5" fill="#fff" opacity="0.9"/>
-                    <circle cx="380" cy="212" r="11" fill="none" stroke="#DC2626" stroke-opacity="0.5"/>
-                    <!-- stand -->
-                    <path d="M345 285 h70 l-12 26 h-46 Z" fill="#0B1220"/>
-                    <rect x="330" y="311" width="100" height="8" rx="4" fill="#0B1220"/>
-
-                    <!-- keyboard -->
-                    <rect x="230" y="345" width="300" height="34" rx="8" fill="#0B1220" stroke="#334155" stroke-width="1.5"/>
-                    <g fill="#334155" opacity="0.9">
-                        <rect x="246" y="353" width="16" height="8" rx="2"/><rect x="268" y="353" width="16" height="8" rx="2"/>
-                        <rect x="290" y="353" width="16" height="8" rx="2"/><rect x="312" y="353" width="16" height="8" rx="2"/>
-                        <rect x="334" y="353" width="16" height="8" rx="2"/><rect x="356" y="353" width="16" height="8" rx="2"/>
-                        <rect x="378" y="353" width="16" height="8" rx="2"/><rect x="400" y="353" width="16" height="8" rx="2"/>
-                        <rect x="422" y="353" width="16" height="8" rx="2"/><rect x="444" y="353" width="16" height="8" rx="2"/>
-                        <rect x="466" y="353" width="30" height="8" rx="2" fill="#DC2626" opacity="0.7"/>
-                    </g>
-
-                    <!-- mouse -->
-                    <path d="M580 348 a14 14 0 0 1 0 28 a14 14 0 0 1 0 -28 Z" fill="#0B1220" stroke="#334155" stroke-width="1.5"/>
-                    <line x1="587" y1="350" x2="587" y2="374" stroke="#DC2626" stroke-opacity="0.6"/>
-
-                    <!-- PC tower -->
-                    <rect x="600" y="180" width="90" height="180" rx="12" fill="#0B1220" stroke="#334155" stroke-width="2"/>
-                    <circle cx="645" cy="206" r="9" fill="none" stroke="#DC2626" stroke-opacity="0.7" filter="url(#softGlow)"/>
-                    <circle cx="645" cy="206" r="3" fill="#DC2626"/>
-                    <g fill="#1E293B">
-                        <rect x="616" y="232" width="58" height="6" rx="3"/><rect x="616" y="246" width="58" height="6" rx="3"/>
-                        <rect x="616" y="260" width="58" height="6" rx="3"/><rect x="616" y="274" width="58" height="6" rx="3"/>
-                    </g>
-                    <rect x="616" y="296" width="30" height="40" rx="5" fill="#DC2626" opacity="0.15" stroke="#DC2626" stroke-opacity="0.4"/>
-
-                    <!-- floating security rings -->
-                    <circle cx="380" cy="215" r="150" fill="none" stroke="#DC2626" stroke-opacity="0.16" stroke-dasharray="8 10"/>
-                    <circle cx="380" cy="215" r="188" fill="none" stroke="#DC2626" stroke-opacity="0.10" stroke-dasharray="3 14"/>
-
-                    <!-- chain link decorations -->
-                    <g fill="none" stroke="#DC2626" stroke-opacity="0.4" stroke-width="2">
-                        <path d="M96 200 q18 -12 36 0 q18 12 0 24 q-18 12 -36 0" stroke-linecap="round"/>
-                        <circle cx="130" cy="212" r="3" fill="#DC2626" fill-opacity="0.5"/>
-                    </g>
+        <!-- Actions -->
+        <div class="actions">
+            <button type="button" class="btn-try-again" id="tryAgainBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+                    <path d="M21 3v6h-6"/>
                 </svg>
+                Try Again
+            </button>
+            <a class="home-link" href="./">Return to EVID-DGC Home</a>
+        </div>
 
-                <!-- ============ FLOATING SECURITY BADGES ============ -->
-                <div class="float-badge badge-tl" role="tooltip" aria-label="Secure">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 20 5.5v5.2c0 4.8-3.4 9.3-8 10.3-4.6-1-8-5.5-8-10.3V5.5L12 2Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-                    <span><small>Security</small>Secure</span>
-                </div>
-                <div class="float-badge badge-tr" role="tooltip" aria-label="Blockchain verified">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="m5.6 7 1.7 1"/><path d="m16.7 16 1.7 1"/><path d="m5.6 17 1.7-1"/><path d="m16.7 8 1.7-1"/><path d="M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg></span>
-                    <span><small>Blockchain</small>Blockchain Verified</span>
-                </div>
-                <div class="float-badge badge-ml" role="tooltip" aria-label="Immutable evidence">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg></span>
-                    <span><small>Ledger</small>Immutable</span>
-                </div>
-                <div class="float-badge badge-mr" role="tooltip" aria-label="Evidence integrity">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v5c0 4.6 3.4 8.9 8 10 4.6-1.1 8-5.4 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-                    <span><small>Verification</small>Evidence Integrity</span>
-                </div>
-                <div class="float-badge badge-bl" role="tooltip" aria-label="SHA-256 hash">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/><rect x="15" y="14" width="6" height="6" rx="1.5"/><path d="m17 17 1 1 2-2"/></svg></span>
-                    <span><small>Hashing</small>SHA-256</span>
-                </div>
-                <div class="float-badge badge-br" role="tooltip" aria-label="Chain of custody">
-                    <span class="b-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12h6"/><path d="M8 6a3 3 0 1 1-3 3"/><path d="M16 6a3 3 0 1 1 3 3"/><path d="M8 18a3 3 0 1 1 3 3"/><path d="M16 18a3 3 0 1 1-3 3"/></svg></span>
-                    <span><small>Audit</small>Chain of Custody</span>
-                </div>
-            </section>
+        <!-- Footer security statement -->
+        <p class="footer-note">
+            <b>EVID-DGC restricts access on small screens to protect sensitive evidence data.</b>
+            Server-side authorization, authentication, and session security remain enforced on every request.
+        </p>
 
-            <!-- ============ MAIN COPY ============ -->
-            <section class="main-copy" aria-labelledby="main-title">
-                <h2 class="main-title" id="main-title">Desktop &amp; <em>Tablet</em> Access Supported</h2>
-                <div class="lead">
-                    <p>EVID-DGC is optimized for desktop and tablet environments where investigators perform secure blockchain operations, digital evidence analysis, forensic processing, and professional investigation workflows.</p>
-                    <p>Smartphones are intentionally restricted because their limited workspace cannot provide the secure multi-panel environment required for digital forensic investigations.</p>
-                </div>
-            </section>
+        <!-- Screen-reader-friendly status -->
+        <p id="statusAnnouncer" class="sr-only" role="status" aria-live="polite">Access restricted: a larger screen is required.</p>
+    </main>
 
-            <!-- ============ WHY CARDS ============ -->
-            <section aria-labelledby="why-title">
-                <h2 class="section-title" id="why-title">Why Smartphones Are <span class="accent">Not Supported</span></h2>
-                <div class="grid-cards">
-                    <article class="glass-card reveal">
-                        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 9h4v3H7z"/><path d="M13 9h4v3h-4z"/></svg></div>
-                        <h3>Advanced Investigation Workspace</h3>
-                        <ul>
-                            <li>Large multi-panel forensic layouts</li>
-                            <li>Evidence comparison</li>
-                            <li>Timeline analysis</li>
-                            <li>Metadata viewer</li>
-                        </ul>
-                    </article>
-                    <article class="glass-card reveal">
-                        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v5c0 4.6 3.4 8.9 8 10 4.6-1.1 8-5.4 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
-                        <h3>Enterprise Security</h3>
-                        <ul>
-                            <li>Blockchain verification</li>
-                            <li>Evidence integrity</li>
-                            <li>Role-based access</li>
-                            <li>Secure browser environment</li>
-                        </ul>
-                    </article>
-                    <article class="glass-card reveal">
-                        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
-                        <h3>High Performance</h3>
-                        <ul>
-                            <li>Hash verification</li>
-                            <li>Metadata extraction</li>
-                            <li>Image enhancement</li>
-                            <li>Evidence indexing &amp; processing</li>
-                        </ul>
-                    </article>
-                    <article class="glass-card reveal">
-                        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="m5.6 7 1.7 1"/><path d="m16.7 16 1.7 1"/><path d="m5.6 17 1.7-1"/><path d="m16.7 8 1.7-1"/><path d="M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg></div>
-                        <h3>Blockchain Operations</h3>
-                        <ul>
-                            <li>Wallet support</li>
-                            <li>Evidence verification</li>
-                            <li>Chain of Custody</li>
-                            <li>Immutable storage, IPFS &amp; smart contracts</li>
-                        </ul>
-                    </article>
-                </div>
-            </section>
-
-            <!-- ============ RECOMMENDED ENVIRONMENT ============ -->
-            <section aria-labelledby="env-title">
-                <h2 class="section-title" id="env-title">Recommended <span class="accent">Environment</span></h2>
-                <div class="env-panel">
-                    <div class="env-col">
-                        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>Supported Devices</h4>
-                        <div class="chip-list">
-                            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 10 2 2 4-4"/><path d="M12 3 4 6v5c0 4.6 3.4 8.9 8 10 4.6-1.1 8-5.4 8-10V6l-8-3Z"/></svg>Desktop</span>
-                            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>Laptop</span>
-                            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="3"/><path d="M8 22h8"/></svg>Tablet</span>
-                        </div>
-                    </div>
-                    <div class="env-col">
-                        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></svg>Recommended Browsers</h4>
-                        <div class="chip-list">
-                            <span class="chip">Chrome</span><span class="chip">Edge</span><span class="chip">Firefox</span><span class="chip">Safari</span><span class="chip">Brave</span>
-                        </div>
-                    </div>
-                    <div class="env-col">
-                        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13"/><path d="M2 19h20"/></svg>Operating Systems</h4>
-                        <div class="chip-list">
-                            <span class="chip">Windows</span><span class="chip">Linux</span><span class="chip">macOS</span><span class="chip">iPadOS</span><span class="chip">Android Tablet</span>
-                        </div>
-                    </div>
-                    <div class="env-col">
-                        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c2-5 5-8 10-8s8 3 10 8c-2 5-5 8-10 8s-8-3-10-8Z"/><circle cx="12" cy="12" r="3"/></svg>Screen Width</h4>
-                        <div class="chip-list">
-                            <span class="chip">Minimum <b>768px</b></span>
-                            <span class="chip">Recommended <b>1024px+</b></span>
-                        </div>
-                    </div>
-                    <div class="env-col">
-                        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="m5.6 7 1.7 1"/><path d="m16.7 16 1.7 1"/><path d="m5.6 17 1.7-1"/><path d="m16.7 8 1.7-1"/><path d="M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg>Blockchain</h4>
-                        <div class="chip-list">
-                            <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 20 5.5v5.2c0 4.8-3.4 9.3-8 10.3-4.6-1-8-5.5-8-10.3V5.5L12 2Z"/></svg>MetaMask <b>privileged roles</b></span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============ SECURITY BANNER ============ -->
-            <section class="security-banner reveal" aria-labelledby="security-title">
-                <div class="shield-glow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2 20 5.5v5.2c0 4.8-3.4 9.3-8 10.3-4.6-1-8-5.5-8-10.3V5.5L12 2Z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                    </svg>
-                </div>
-                <div class="security-txt">
-                    <h3 id="security-title">Your Security Is Our Priority</h3>
-                    <p>Professional forensic workflows, blockchain verification, digital evidence integrity, and secure investigations require larger workspaces available on desktop and tablet devices.</p>
-                </div>
-            </section>
-
-            
-
-            
-        </main>
-    </div>
-
-    
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
 
     <script>
         (function () {
             'use strict';
 
-            // ---- Tablet hint (informational, non-blocking) ----
+            var returnUrl = null;
             try {
-                if (window.DeviceDetector && window.DeviceDetector.getDeviceInfo) {
-                    var info = window.DeviceDetector.getDeviceInfo();
-                    if (info && info.isTablet) {
-                        var hint = document.createElement('div');
-                        hint.style.cssText = 'max-width:320px;margin:14px auto 0;padding:10px 16px;border-radius:12px;border:1px solid rgba(220,38,38,.25);background:rgba(220,38,38,.05);font-size:.85rem;font-weight:600;color:#B91C1C;text-align:center;';
-                        hint.textContent = 'Tablet detected — you may continue to the full EVID-DGC application.';
-                        var copy = document.querySelector('.main-copy .lead');
-                        if (copy) copy.parentNode.insertBefore(hint, copy.nextSibling);
-                    }
-                }
+                var stored = sessionStorage.getItem(DeviceDetector.RETURN_KEY);
+                if (stored) returnUrl = decodeURIComponent(stored);
             } catch (e) { /* noop */ }
+            if (!returnUrl || returnUrl.indexOf('desktop-only') !== -1) returnUrl = './';
 
-            // ---- Intersection Observer reveals ----
-            var revealEls = document.querySelectorAll('.reveal');
-            if ('IntersectionObserver' in window) {
-                var io = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('in-view');
-                            io.unobserve(entry.target);
-                        }
-                    });
-                }, { threshold: 0.12 });
-                revealEls.forEach(function (el) { io.observe(el); });
-            } else {
-                revealEls.forEach(function (el) { el.classList.add('in-view'); });
+            var announcer = document.getElementById('statusAnnouncer');
+            var tryAgainBtn = document.getElementById('tryAgainBtn');
+
+            function announce(text) {
+                if (announcer) announcer.textContent = text;
             }
+
+            function returnToApp() {
+                if (DeviceDetector.isDesktopAllowed()) {
+                    window.location.href = returnUrl;
+                } else {
+                    announce('Still restricted: the screen is smaller than the supported width. Resize or rotate your device, then try again.');
+                }
+            }
+
+            // "Try Again" — re-evaluates the current viewport.
+            if (tryAgainBtn) tryAgainBtn.addEventListener('click', returnToApp);
+
+            // Recheck on resize and orientation changes — return automatically
+            // as soon as the viewport becomes supported.
+            var resizeTimer = null;
+            function recheck() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function () {
+                    if (DeviceDetector.isDesktopAllowed()) {
+                        window.location.href = returnUrl;
+                    }
+                }, 200);
+            }
+            window.addEventListener('resize', recheck);
+            window.addEventListener('orientationchange', recheck);
         })();
     </script>
 </body>
