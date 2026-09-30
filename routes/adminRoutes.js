@@ -61,6 +61,6 @@ router.get('/admin/activity-logs/export', adminLimiter, requireAuth, exportAdmin
 router.post('/admin-actions/log', logAdminActionEndpoint);
 
 // Catch-all for unauthorized admin operations - MUST be last
-router.post('/admin/:path(*)', blockUnauthorizedAdmin);
+router.post('/admin/*', blockUnauthorizedAdmin);
 
 module.exports = router;
