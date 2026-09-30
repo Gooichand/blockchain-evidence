@@ -22,3 +22,12 @@ describe('404 Handler', () => {
     expect(res.body).toHaveProperty('error', 'Endpoint not found');
   });
 });
+
+describe('Admin fallback', () => {
+  it('blocks an unmatched admin POST route', async () => {
+    const res = await request(app).post('/api/admin/unknown-operation');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('success', false);
+  });
+});

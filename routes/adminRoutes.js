@@ -61,6 +61,7 @@ router.get('/admin/activity-logs/export', adminLimiter, requireAuth, exportAdmin
 router.post('/admin-actions/log', logAdminActionEndpoint);
 
 // Catch-all for unauthorized admin operations - MUST be last
-router.post('/admin/*', blockUnauthorizedAdmin);
+// Express 5 requires named wildcards ("*name"), not the bare Express 4 form ("*").
+router.post('/admin/*path', blockUnauthorizedAdmin);
 
 module.exports = router;
