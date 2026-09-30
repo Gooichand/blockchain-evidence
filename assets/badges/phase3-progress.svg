@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" width="220" height="40">
+  <defs>
+    <linearGradient id="badgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1a"/>
+      <stop offset="100%" style="stop-color:#1a1f2e"/>
+    </linearGradient>
+    <linearGradient id="badgeText" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFB800"/>
+      <stop offset="100%" style="stop-color:#FF6B6B"/>
+    </linearGradient>
+    <filter id="badgeGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <rect width="220" height="40" rx="20" fill="url(#badgeBg)" stroke="#FFB800" stroke-width="1.5" stroke-opacity="0.5"/>
+  <rect width="220" height="40" rx="20" fill="none" stroke="url(#badgeText)" stroke-width="1" stroke-opacity="0.8">
+    <animate attributeName="stroke-dasharray" values="10,10;20,5;10,10" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-dashoffset" values="0;50;0" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <text x="110" y="26" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="url(#badgeText)" filter="url(#badgeGlow)">Phase 3: In Progress</text>
+</svg>

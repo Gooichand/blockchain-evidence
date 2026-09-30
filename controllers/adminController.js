@@ -671,6 +671,193 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+// Get admin dashboard metrics (Command Center)
+const getDashboardMetrics = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { data, error } = (await supabase.rpc('get_admin_dashboard_metrics')) || {};
+    if (error) throw error;
+
+    await logAdminAction(adminWallet, 'view_dashboard', null, { action: 'view_command_center' });
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Get dashboard metrics error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get dashboard metrics' });
+  }
+};
+
+// Get Action Center alerts
+const getActionCenterAlerts = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { limit = 50, offset = 0, severity, status } = req.query;
+    const { data, error } = (await supabase.rpc('get_admin_action_center_alerts', {
+      p_limit: parseInt(limit),
+      p_offset: parseInt(offset),
+      p_severity: severity || null,
+      p_status: status || null,
+    })) || {};
+
+    if (error) throw error;
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Get action center alerts error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get alerts' });
+  }
+};
+
+// Acknowledge/resolve/escalate security alert
+const updateAlertStatus = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { alertId, action, reason, assignedTo } = req.body;
+    if (!alertId || !action) {
+      return res.status(400).json({ success: false, error: 'alertId and action are required' });
+    }
+
+    const { data, error } = (await supabase.rpc('resolve_security_alert', {
+      p_alert_id: alertId,
+      p_admin_wallet: adminWallet,
+      p_action: action,
+      p_reason: reason || null,
+      p_assigned_to: assignedTo || null,
+    })) || {};
+
+    if (error) throw error;
+
+    await logAdminAction(adminWallet, `alert_${action}`, String(alertId), {
+      action,
+      reason,
+      assigned_to: assignedTo,
+    });
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Update alert status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update alert status' });
+  }
+};
+
+// Get blockchain transaction monitoring
+const getBlockchainMonitoring = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { limit = 50, offset = 0, status } = req.query;
+    const { data, error } = (await supabase.rpc('get_admin_blockchain_monitoring', {
+      p_limit: parseInt(limit),
+      p_offset: parseInt(offset),
+      p_status: status || null,
+    })) || {};
+
+    if (error) throw error;
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Get blockchain monitoring error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get blockchain monitoring' });
+  }
+};
+
+// Retry failed blockchain transaction
+const retryBlockchainTransaction = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { txId } = req.body;
+    if (!txId) {
+      return res.status(400).json({ success: false, error: 'txId is required' });
+    }
+
+    const { data, error } = (await supabase.rpc('retry_blockchain_transaction', {
+      p_tx_id: txId,
+      p_admin_wallet: adminWallet,
+    })) || {};
+
+    if (error) throw error;
+
+    await logAdminAction(adminWallet, 'retry_blockchain_tx', String(txId), { tx_id: txId });
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Retry blockchain transaction error:', error);
+    res.status(500).json({ success: false, error: 'Failed to retry transaction' });
+  }
+};
+
+// Get IPFS pin monitoring
+const getIPFSMonitoring = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { limit = 50, offset = 0, status } = req.query;
+    const { data, error } = (await supabase.rpc('get_admin_ipfs_monitoring', {
+      p_limit: parseInt(limit),
+      p_offset: parseInt(offset),
+      p_status: status || null,
+    })) || {};
+
+    if (error) throw error;
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Get IPFS monitoring error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get IPFS monitoring' });
+  }
+};
+
+// Retry failed IPFS pin
+const retryIPFSPin = async (req, res) => {
+  try {
+    const adminWallet = getAdminWallet(req);
+    if (!adminWallet) {
+      return res.status(403).json({ success: false, error: 'Admin verification required' });
+    }
+
+    const { pinId } = req.body;
+    if (!pinId) {
+      return res.status(400).json({ success: false, error: 'pinId is required' });
+    }
+
+    const { data, error } = (await supabase.rpc('retry_ipfs_pin', {
+      p_pin_id: pinId,
+      p_admin_wallet: adminWallet,
+    })) || {};
+
+    if (error) throw error;
+
+    await logAdminAction(adminWallet, 'retry_ipfs_pin', String(pinId), { pin_id: pinId });
+
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Retry IPFS pin error:', error);
+    res.status(500).json({ success: false, error: 'Failed to retry IPFS pin' });
+  }
+};
+
 // Block unauthorized admin operations (catch-all)
 const blockUnauthorizedAdmin = (req, res) => {
   res.status(403).json({
@@ -690,6 +877,13 @@ module.exports = {
   rejectRoleChange,
   updateUserStatus,
   updateUserRole,
+  getDashboardMetrics,
+  getActionCenterAlerts,
+  updateAlertStatus,
+  getBlockchainMonitoring,
+  retryBlockchainTransaction,
+  getIPFSMonitoring,
+  retryIPFSPin,
   blockUnauthorizedAdmin,
   logAdminActionEndpoint,
 };

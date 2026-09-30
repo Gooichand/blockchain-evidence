@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireOptionalAuth } = require('../middleware/requireOptionalAuth');
+const { requireRole } = require('../middleware/authorization');
 const {
   getRetentionPolicies,
   createRetentionPolicy,
@@ -9,10 +9,11 @@ const {
   deleteRetentionPolicy,
 } = require('../controllers/retentionController');
 
-router.get('/retention-policies', requireOptionalAuth, getRetentionPolicies);
-router.post('/retention-policies', requireOptionalAuth, createRetentionPolicy);
-router.put('/retention-policies/:id', requireOptionalAuth, updateRetentionPolicy);
-router.delete('/retention-policies/:id', requireOptionalAuth, deleteRetentionPolicy);
-router.post('/timeline/export-pdf', requireOptionalAuth, exportTimelinePdf);
+const retentionGuard = requireRole('evidence_manager', 'admin');
+router.get('/retention-policies', retentionGuard, getRetentionPolicies);
+router.post('/retention-policies', retentionGuard, createRetentionPolicy);
+router.put('/retention-policies/:id', retentionGuard, updateRetentionPolicy);
+router.delete('/retention-policies/:id', retentionGuard, deleteRetentionPolicy);
+router.post('/timeline/export-pdf', retentionGuard, exportTimelinePdf);
 
 module.exports = router;

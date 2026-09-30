@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 50" width="1200" height="50">
+  <defs>
+    <linearGradient id="techBadgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1a"/>
+      <stop offset="100%" style="stop-color:#1a1f2e"/>
+    </linearGradient>
+    <linearGradient id="techBadgeAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#36BCF7"/>
+      <stop offset="50%" style="stop-color:#00D4FF"/>
+      <stop offset="100%" style="stop-color:#7C4DFF"/>
+    </linearGradient>
+    <filter id="techBadgeGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <g font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600">
+    <!-- Backend -->
+    <g transform="translate(10, 5)">
+      <rect width="140" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#36BCF7" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="70" y="26" text-anchor="middle" fill="url(#techBadgeAccent)" filter="url(#techBadgeGlow)">Node.js 20.19+</text>
+    </g>
+    
+    <!-- Express -->
+    <g transform="translate(160, 5)">
+      <rect width="100" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#00D4FF" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="50" y="26" text-anchor="middle" fill="#00D4FF" filter="url(#techBadgeGlow)">Express</text>
+    </g>
+    
+    <!-- Supabase -->
+    <g transform="translate(270, 5)">
+      <rect width="110" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#3ECF8E" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="55" y="26" text-anchor="middle" fill="#3ECF8E" filter="url(#techBadgeGlow)">Supabase</text>
+    </g>
+    
+    <!-- PostgreSQL -->
+    <g transform="translate(390, 5)">
+      <rect width="120" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#4169E1" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="60" y="26" text-anchor="middle" fill="#4169E1" filter="url(#techBadgeGlow)">PostgreSQL</text>
+    </g>
+    
+    <!-- Polygon -->
+    <g transform="translate(520, 5)">
+      <rect width="100" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#8247E5" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="50" y="26" text-anchor="middle" fill="#8247E5" filter="url(#techBadgeGlow)">Polygon</text>
+    </g>
+    
+    <!-- Solidity -->
+    <g transform="translate(630, 5)">
+      <rect width="100" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#363636" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="50" y="26" text-anchor="middle" fill="#363636" filter="url(#techBadgeGlow)">Solidity</text>
+    </g>
+    
+    <!-- IPFS -->
+    <g transform="translate(740, 5)">
+      <rect width="80" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#65C2CB" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="40" y="26" text-anchor="middle" fill="#65C2CB" filter="url(#techBadgeGlow)">IPFS</text>
+    </g>
+    
+    <!-- Pinata -->
+    <g transform="translate(830, 5)">
+      <rect width="90" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#F7931A" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="45" y="26" text-anchor="middle" fill="#F7931A" filter="url(#techBadgeGlow)">Pinata</text>
+    </g>
+    
+    <!-- Socket.IO -->
+    <g transform="translate(930, 5)">
+      <rect width="110" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#010101" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="55" y="26" text-anchor="middle" fill="#010101" filter="url(#techBadgeGlow)">Socket.IO</text>
+    </g>
+    
+    <!-- JWT -->
+    <g transform="translate(1050, 5)">
+      <rect width="90" height="40" rx="8" fill="url(#techBadgeBg)" stroke="#000000" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="45" y="26" text-anchor="middle" fill="#000000" filter="url(#techBadgeGlow)">JWT</text>
+    </g>
+  </g>
+</svg>

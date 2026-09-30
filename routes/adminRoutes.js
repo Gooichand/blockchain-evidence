@@ -14,6 +14,13 @@ const {
   rejectRoleChange,
   updateUserStatus,
   updateUserRole,
+  getDashboardMetrics,
+  getActionCenterAlerts,
+  updateAlertStatus,
+  getBlockchainMonitoring,
+  retryBlockchainTransaction,
+  getIPFSMonitoring,
+  retryIPFSPin,
   blockUnauthorizedAdmin,
   logAdminActionEndpoint,
 } = require('../controllers/adminController');
@@ -34,6 +41,17 @@ router.post('/admin/role-change-approve', adminLimiter, requireAuth, verifyAdmin
 router.post('/admin/role-change-reject', adminLimiter, requireAuth, verifyAdmin, rejectRoleChange);
 router.put('/admin/users/:id/status', adminLimiter, requireAuth, verifyAdmin, updateUserStatus);
 router.put('/admin/users/:id/role', adminLimiter, requireAuth, verifyAdmin, updateUserRole);
+
+// Command Center endpoints
+router.get('/admin/dashboard/metrics', adminLimiter, requireAuth, verifyAdmin, getDashboardMetrics);
+router.get('/admin/dashboard/alerts', adminLimiter, requireAuth, verifyAdmin, getActionCenterAlerts);
+router.post('/admin/dashboard/alerts/:alertId', adminLimiter, requireAuth, verifyAdmin, updateAlertStatus);
+
+// Blockchain & IPFS monitoring
+router.get('/admin/blockchain/transactions', adminLimiter, requireAuth, verifyAdmin, getBlockchainMonitoring);
+router.post('/admin/blockchain/retry', adminLimiter, requireAuth, verifyAdmin, retryBlockchainTransaction);
+router.get('/admin/ipfs/pins', adminLimiter, requireAuth, verifyAdmin, getIPFSMonitoring);
+router.post('/admin/ipfs/retry', adminLimiter, requireAuth, verifyAdmin, retryIPFSPin);
 
 // Audit activity feed (JWT-friendly; controllers enforce role scoping)
 router.get('/admin/activity-logs', adminLimiter, requireAuth, getAdminActivityLogs);

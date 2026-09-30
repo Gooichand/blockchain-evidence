@@ -5,20 +5,83 @@
 class APIClient {
     constructor() {
         this.baseUrl = window.config?.API_BASE_URL || '/api';
+        this.defaultTimeout = 12000; // 12 seconds
+        // Cache the connected MetaMask address so we don't query the wallet on
+        // every request. Refreshed automatically when the wallet emits
+        // accountsChanged (account switch, disconnect, or reconnect).
+        this._connectedWallet = null;
+        if (window.ethereum && typeof window.ethereum.on === 'function') {
+            try {
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    this._connectedWallet = (accounts && accounts[0]) ? accounts[0] : null;
+                });
+            } catch (_) { /* ignore */ }
+        }
+    }
+
+    /**
+     * Creates a fetch request with timeout using AbortController.
+     * @param {string} url - Full URL to fetch
+     * @param {RequestInit} init - Fetch init options
+     * @param {number} timeoutMs - Timeout in milliseconds
+     * @returns {Promise<Response>}
+     */
+    async fetchWithTimeout(url, init, timeoutMs = this.defaultTimeout) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, { ...init, signal: controller.signal });
+            return response;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                const error = new Error('Request timeout');
+                error.status = 'TIMEOUT';
+                throw error;
+            }
+            throw err;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
+    /**
+     * Resolves the connected MetaMask address.
+     * Uses a cached value refreshed via the accountsChanged event, falling back
+     * to a silent eth_accounts query (no popup) on first use.
+     * @returns {string|null}
+     */
+    async getActiveWalletAddress() {
+        if (!window.ethereum) return null;
+        if (this._connectedWallet) return this._connectedWallet;
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            this._connectedWallet = (accounts && accounts[0]) ? accounts[0] : null;
+            return this._connectedWallet;
+        } catch (_) {
+            return null;
+        }
     }
 
     /**
      * Generates wallet-signing headers for requests that need on-chain identity proof.
      * Returns empty object if MetaMask is not available or no accounts connected.
+     *
+     * SECURITY FIX: When a JWT session already exists (authToken present), the
+     * server trusts the signed JWT — verifySignature middleware skips the
+     * wallet-signature requirement for valid Bearer tokens and derives the wallet
+     * identity from the JWT claims. Signing here would only re-open the MetaMask
+     * confirmation popup on every request. A signature is therefore only produced
+     * when no session exists yet (pre-auth login/registration flows).
      */
     async getWalletAuthHeaders(method, path) {
         try {
-            if (!window.ethereum) return {};
+            const walletAddress = await this.getActiveWalletAddress();
+            if (!walletAddress) return {};
 
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length === 0) return {};
-
-            const walletAddress = accounts[0];
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                return { 'x-user-wallet': walletAddress };
+            }
 
             // Only sign if ethers is available (not always needed for JWT-authed endpoints)
             if (typeof ethers === 'undefined') return { 'x-user-wallet': walletAddress };
@@ -87,6 +150,21 @@ class APIClient {
         }
 
         return null;
+    }
+
+    /**
+     * Fetches the current user from the server for authoritative auth verification.
+     * Uses the /api/auth/me endpoint with timeout. Returns user object or null.
+     * @returns {Promise<object|null>}
+     */
+    async getServerCurrentUser() {
+        try {
+            const data = await this.get('/auth/me', { skipAuth: false, timeout: this.defaultTimeout });
+            return data && data.success ? data.user : null;
+        } catch (err) {
+            // Don't throw — caller decides how to handle auth failure
+            return null;
+        }
     }
 
     /**
@@ -194,7 +272,8 @@ class APIClient {
             requestInit.body = bodyToSend;
         }
 
-        const response = await fetch(url, requestInit);
+        const timeoutMs = typeof options.timeout === 'number' ? options.timeout : this.defaultTimeout;
+        const response = await this.fetchWithTimeout(url, requestInit, timeoutMs);
 
         let data = null;
         const contentType = response.headers.get('content-type') || '';
@@ -204,6 +283,22 @@ class APIClient {
             data = await response.json();
         } else {
             data = await response.text();
+        }
+
+        // Centralized auth-state handling. Server is the source of truth for
+        // authorization, so a 401 means the session is gone and a 403 means the
+        // role lacks permission. This is a UX layer only — enforcement is server-side.
+        if (response.status === 401 && localStorage.getItem('authToken')) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            if (!window.__evidAuthRedirected) {
+                window.__evidAuthRedirected = true;
+                window.location.href = '/?auth=expired';
+            }
+        } else if (response.status === 403) {
+            if (typeof window.showAlert === 'function') {
+                window.showAlert('Access denied. You do not have permission to view this.', 'error');
+            }
         }
 
         if (!response.ok || (data && typeof data === 'object' && data.success === false)) {

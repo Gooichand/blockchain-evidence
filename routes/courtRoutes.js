@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/requireAuth');
+const { requireRole } = require('../middleware/authorization');
 const { issueCourtOrder } = require('../controllers/courtController');
 
-router.post('/court/order', requireAuth, issueCourtOrder);
+router.post('/court/order', requireRole('court_official'), issueCourtOrder);
 
 module.exports = router;

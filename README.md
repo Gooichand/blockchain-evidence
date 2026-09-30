@@ -1,774 +1,416 @@
-# 🔐 EVID-DGC - Blockchain Evidence Management System
+﻿<div align="center">
 
-**Secure admin-controlled evidence management system with role-based access control.**
-## 🚀 PROJECT STATUS
+![EVID-DGC Banner](assets/hero-banner.svg)
 
-For detailed information about all development phases, milestones, and feature roadmap, see our **[📊 Development Phases](PHASES.md)** documentation.
+# EVID-DGC — Blockchain Evidence & Digital Chain of Custody
 
-**Quick Status:**
-- ✅ **Phase 1** (Core System) - Complete & Production Ready
-- ✅ **Phase 2** (Blockchain & IPFS) - Complete & Production Ready
-- 🔄 **Phase 3** (Advanced Forensics) - In Active Development
-  - 🧠 AI-Powered Deepfake Detection
-  - 🔍 Advanced Metadata Forensics
-  - 🤖 Automated Evidence Verification Pipeline
-  - ⭐ Evidence Quality Scoring System
-  - ⚖️ Legal Compliance Automation Tools
-  - 🏛️ Court Integration & E-Discovery
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=DC2626&center=true&vCenter=true&width=600&lines=Blockchain+Evidence+Management;Immutable+Hashes+on+Polygon+Amoy;IPFS+Permanent+Storage;Digital+Chain+of+Custody;8+Roles+RBAC%2BABAC;Live+Demo+on+Render)](https://github.com/Gooichand/blockchain-evidence)
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Backend-Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express-v4-000000?style=flat-square&logo=express" alt="Express">
+  <img src="https://img.shields.io/badge/Blockchain-Solidity-363636?style=flat-square&logo=solidity&logoColor=white" alt="Solidity">
+  <img src="https://img.shields.io/badge/Chain-Polygon%20Amoy-8247E5?style=flat-square&logo=polygon&logoColor=white" alt="Polygon Amoy">
+  <img src="https://img.shields.io/badge/IPFS-Pinata-9B30FF?style=flat-square&logo=ipfs&logoColor=white" alt="IPFS">
+  <img src="https://img.shields.io/badge/Realtime-Socket.IO-010101?style=flat-square&logo=socketdotio" alt="Socket.IO">
+  <img src="https://img.shields.io/badge/Ethers-v6-1D315B?style=flat-square&logo=ethereum&logoColor=white" alt="Ethers.js">
+</p>
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.19.0-brightgreen)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791)](https://www.postgresql.org/)
-[![Deployment](https://img.shields.io/badge/Deploy-Render-blue)](https://render.com/)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11669/badge)](https://www.bestpractices.dev/projects/11669)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://blockchain-evidence.onrender.com)
+<p align="center">
+  <a href="https://blockchain-evidence.onrender.com"><img src="https://img.shields.io/badge/LIVE_DEMO-Click_here-EF4444?style=for-the-badge" alt="Live Demo"></a>
+  <a href="public/api-reference.html"><img src="https://img.shields.io/badge/API-Docs-3B82F6?style=for-the-badge" alt="API Docs"></a>
+  <a href="docs/DEPLOYMENT.md"><img src="https://img.shields.io/badge/Deploy-Render-0B0E14?style=for-the-badge&logo=render&logoColor=white" alt="Deploy on Render"></a>
+</p>
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
-</div>
+<img src="assets/badges/status-badges.svg" alt="Project status badges">
 
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=25&pause=1000&color=36BCF7&center=true&vCenter=true&width=600&lines=Welcome+to+EVID-DGC;Secure+Blockchain+Evidence+Management;Role-Based+Access+Control;Immutable+Audit+Logs" alt="Typing SVG" />
 </div>
 
 ---
 
-## ❓ Problem & Solution
+## 📊 Live Repository Statistics
 
-### Problem Statement
+<div align="center">
 
-Digital evidence management often faces challenges like data tampering, lack of a verifiable chain of custody, and inconsistent access control. Traditional systems can be opaque, making it difficult for judicial and investigative bodies to trust the integrity of digital artifacts.
+[![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Gooichand&show_icons=true&theme=radical&bg_color=0B0E14&title_color=DC2626&icon_color=EF4444&text_color=F5F5F5&border_color=DC2626)](https://github.com/Gooichand/blockchain-evidence)
 
-### Solution Overview
+[![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Gooichand&layout=compact&theme=radical&bg_color=0B0E14&title_color=DC2626&text_color=F5F5F5&border_color=DC2626)](https://github.com/Gooichand/blockchain-evidence)
 
-**EVID-DGC** addresses these issues by leveraging blockchain-inspired principles and robust role-based access control. By utilizing a secure Supabase backend and providing immutable audit logs, the system ensures that every action—from evidence upload to court review—is tracked and verifiable, maintaining the highest standards of digital forensic integrity.
-
----
-
-## ✨ Working Features
-
-### Core System (Production Ready)
-
-- ✅ **8-Role RBAC** - Complete role-based access control
-- ✅ **Dual Authentication** - MetaMask wallet + Email/Password
-- ✅ **Admin Dashboard** - Full user management interface
-- ✅ **Evidence Upload** - Multi-format file support (PDF, images, videos, audio)
-- ✅ **Database Security** - Supabase PostgreSQL with Row Level Security
-- ✅ **Real-time Notifications** - Socket.IO WebSocket integration
-- ✅ **Audit Logging** - Complete activity tracking
-- ✅ **File Processing** - Watermarking and compression
-- ✅ **Case Management** - Full case lifecycle with status tracking
-- ✅ **Export System** - Evidence download with watermarks
-
-### Phase 2 Features
-
-- ✅ **TRUE BLOCKCHAIN INTEGRATION** - Complete blockchain integration
-  - Smart Contract deployed to Polygon Amoy: `0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3`
-  - Real on-chain transactions with TX hash recording
-  - Gas usage tracking and optimization
-  - Block number recording
-  - Explorer links (Polygonscan)
-  - Hash verification against blockchain
-- ✅ **IPFS DECENTRALIZED STORAGE** - Fully operational IPFS integration
-  - Pinata API integration
-  - Content Identifier (CID) generation
-  - Decentralized file storage and retrieval
-  - Gateway URLs for file access
-  - Pin management system
-- ✅ **ADVANCED SECURITY** - Multi-layer security implementation
-  - Rate limiting (Blockchain: 10/min, Upload: 50/hr, Verification: 30/min)
-  - Transaction validation
-  - CID validation
-  - File validation
-  - Enhanced API protection
-- ✅ **SYSTEM MONITORING** - Real-time monitoring and alerting
-  - Real-time health checks
-  - Blockchain metrics dashboard
-  - IPFS statistics tracking
-  - Automated alerts system
-  - Performance tracking
-- ✅ **PERFORMANCE OPTIMIZATION** - Production-ready optimization
-  - Database indexing for blockchain data
-  - Efficient query patterns
-  - Rate-limited operations
-  - Connection pooling
+</div>
 
 ---
 
-## 🛠️ Technical Info
+## 📌 Current Status — August 2026
 
-<img width="4799" height="8336" alt="NotebookLM Mind Map" src="https://github.com/user-attachments/assets/9c579802-18bb-40c0-854c-88a21a36e555" />
+| Component | Status |
+|---|---|
+| **Core Platform (Phase 1)** | ✅ Live — [demo](https://blockchain-evidence.onrender.com) |
+| **Blockchain Integration (Phase 2)** | ✅ Live on **Polygon Amoy testnet** |
+| **IPFS Storage (Phase 2)** | ✅ Live via **Pinata** |
+| **Forensic Lab (Phase 3)** | 🔶 In development — foundation shipped |
+| **3D Evidence Viewer (Phase 3)** | 🔶 Viewer live (STL asset shipped), advanced controls planned |
+| **AI-Assisted Analysis (Phase 3)** | 🔬 Research phase |
+| **Mainnet Deployment (Phase 4)** | 🔴 Planned — currently Amoy only |
 
----
-
-### Tech Stack (Currently Implemented)
-
-| Category            | Technologies                                      | Status     |
-| ------------------- | ------------------------------------------------- | ---------- |
-| **Frontend**        | HTML5, CSS3, Vanilla JavaScript, Socket.IO Client | ✅ Working |
-| **Backend**         | Node.js v20.19+, Express.js, Socket.IO (Real-time)   | ✅ Working |
-| **Database**        | Supabase (PostgreSQL with Row Level Security)     | ✅ Working |
-| **Authentication**  | MetaMask/Web3, Email/Password                     | ✅ Working |
-| **File Processing** | Multer, Sharp, PDF-Lib                            | ✅ Working |
-| **Icons & UI**      | Lucide Icons, Custom CSS                          | ✅ Working |
-| **Hosting**         | Render, Vercel, Netlify Compatible                | ✅ Working |
-| **Smart Contracts** | Solidity (Deployed on Polygon Amoy)               | ✅ Phase 2 |
-| **Storage**         | IPFS via Pinata API                               | ✅ Phase 2 |
-| **Blockchain**      | Polygon Amoy Testnet (Production Ready)           | ✅ Phase 2 |
-
-### User Roles
-
-The system implements 8 distinct roles to ensure strict access control:
-
-1. **Public Viewer**: Browse public case information.
-2. **Investigator**: Handle case creation and evidence uploads.
-3. **Forensic Analyst**: Perform technical analysis and generate reports.
-4. **Legal Professional**: Conduct legal reviews of cases and evidence.
-5. **Court Official**: Manage judicial proceedings and scheduling.
-6. **Evidence Manager**: Maintain the chain of custody and storage integrity.
-7. **Auditor**: Oversee system compliance and review audit logs.
-8. **Administrator**: Full system oversight, user management, and configuration.
+> [!IMPORTANT]
+> **All blockchain records are on the Polygon Amoy testnet.** Production/mainnet
+> anchoring is the Phase 4 target, not yet available.
 
 ---
 
-## 📁 Folder Structure
+## 🚨 The Problem
 
-```text
-blockchain-evidence/
-├── contracts/                          # Smart contract files
-│   └── EvidenceStorage.sol            # Main evidence storage contract
-├── docs/                              # Complete documentation
-│   ├── USER_GUIDE.md                 # User manual for all roles
-│   ├── DEVELOPER_GUIDE.md             # Development setup and workflow
-│   ├── SECURITY.md                   # Security practices and policies
-│   ├── DEPLOYMENT.md                 # Production deployment guide
-│   ├── MAINTENANCE.md                # System maintenance procedures
-│   └── swagger.js                    # API documentation (OpenAPI)
-├── public/                            # Frontend application (80+ files)
-│   │
-│   ├── 🏠 Core Landing & Pages
-│   │   ├── index.html                # Main landing page with login options
-│   │   ├── app.js                    # Core frontend application logic
-│   │   ├── config.js                 # Global configuration settings
-│   │   ├── styles.css                # Global stylesheet
-│   │   ├── quickstart.html           # Quick start guide page
-│   │   ├── privacy.html              # Privacy policy page
-│   │   ├── favicon.ico               # Site favicon
-│   │   └── logo-32x32.png            # Application logo
-│   │
-│   ├── 🔐 Authentication & Security (15 files)
-│   │   ├── forgot-password.js        # Password reset functionality
-│   │   ├── reset-password.html       # Password reset page
-│   │   ├── password-security.css     # Password security styling
-│   │   ├── password-security.js      # Password policy enforcement
-│   │   ├── password-strength.js      # Password strength validator
-│   │   ├── password-policy-admin.js  # Admin password policy config
-│   │   ├── two-factor-auth.css       # 2FA styling
-│   │   ├── two-factor-auth.js        # Two-factor authentication logic
-│   │   ├── two-factor-integration.js # 2FA system integration
-│   │   ├── session-manager.js        # User session management
-│   │   ├── session-timeout.css       # Session timeout styling
-│   │   ├── session-timeout.js        # Auto-logout functionality
-│   │   ├── session-timeout-admin.js  # Admin session timeout config
-│   │   ├── comprehensive-registration.js  # Enhanced registration system
-│   │   └── storage.js                # Local storage utilities
-│   │
-│   ├── 👤 Account & User Management (5 files)
-│   │   ├── account-settings.html     # User account settings page
-│   │   ├── account-settings.js       # Account settings logic
-│   │   ├── account-settings-styles.css  # Account settings styling
-│   │   ├── profile.html              # User profile page
-│   │   └── user-roles.html           # User role information page
-│   │
-│   ├── 📊 Dashboards - Role Based (9 files)
-│   │   ├── dashboard.html            # Main dashboard (role redirect)
-│   │   ├── dashboard-navigator.js    # Dashboard navigation logic
-│   │   ├── dashboard-public.html     # Public viewer dashboard
-│   │   ├── dashboard-investigator.html  # Investigator dashboard
-│   │   ├── dashboard-analyst.html    # Forensic analyst dashboard
-│   │   ├── dashboard-legal.html      # Legal professional dashboard
-│   │   ├── dashboard-court.html      # Court official dashboard
-│   │   ├── dashboard-manager.html    # Evidence manager dashboard
-│   │   ├── dashboard-auditor.html    # Auditor dashboard
-│   │   └── admin.html                # Administrator dashboard
-│   │
-│   ├── 🗂️ Case Management (7 files)
-│   │   ├── case-management.html      # Case creation and management
-│   │   ├── cases.html                # Case listing and search
-│   │   ├── case-status-manager.js    # Case status workflow
-│   │   ├── case-status-styles.css    # Case status styling
-│   │   ├── case-timeline.html        # Case timeline visualization
-│   │   ├── case-hash-manifest.js     # Case hash tracking
-│   │   └── case-summary-exporter.js  # Case summary export
-│   │
-│   ├── 📁 Evidence Management (16 files)
-│   │   ├── evidence-manager.html     # Main evidence management
-│   │   ├── enhanced-evidence-upload.js  # Advanced upload features
-│   │   ├── enhanced-upload-styles.css   # Upload UI styling
-│   │   ├── evidence-display.css      # Evidence display styling
-│   │   ├── evidence-display.js       # Evidence display logic
-│   │   ├── evidence-preview.css      # Preview modal styling
-│   │   ├── evidence-preview.js       # Evidence preview system
-│   │   ├── evidence-preview-styles.css  # Additional preview styles
-│   │   ├── evidence-preview-system.js   # Preview system core
-│   │   ├── evidence-viewers.js       # Multi-format file viewers
-│   │   ├── evidence-comparison.css   # Comparison view styling
-│   │   ├── evidence-comparison.html  # Evidence comparison tool
-│   │   ├── evidence-comparison.js    # Comparison logic
-│   │   ├── evidence-export.html      # Evidence export page
-│   │   ├── evidence-exporter.js      # Export functionality
-│   │   ├── evidence-tagging.html     # Evidence tagging system
-│   │   ├── evidence-tagging.js       # Tag management logic
-│   │   ├── evidence-verification.html   # Evidence verification page
-│   │   ├── evidence-verification.js  # Blockchain verification
-│   │   └── tag-manager.js            # Tag CRUD operations
-│   │
-│   ├── 📜 Policy & Compliance (8 files)
-│   │   ├── retention-policy.html     # Retention policy management
-│   │   ├── retention-policy.js       # Retention policy logic
-│   │   ├── retention-policy-manager.js  # Policy enforcement
-│   │   ├── retention-policy-styles.css  # Retention policy styling
-│   │   ├── legal-hold-management.html   # Legal hold system
-│   │   ├── data-protection.html      # Data protection policies
-│   │   ├── audit-trail.html          # System audit trail viewer
-│   │   └── activity-feed-widget.js   # Activity feed component
-│   │
-│   ├── 👥 Role Management (7 files)
-│   │   ├── role-manager.js           # Role assignment logic
-│   │   ├── role-wizard.js            # Role selection wizard
-│   │   ├── role-wizard-styles.css    # Role wizard styling
-│   │   ├── role-selection-wizard.js  # Role onboarding wizard
-│   │   ├── role-landing-system.js    # Role-based landing pages
-│   │   ├── role-change-approval.js   # Role change workflow
-│   │   └── settings.html             # Role & system settings
-│   │
-│   ├── 🎨 UI/UX & Accessibility (6 files)
-│   │   ├── responsive-improvements.css  # Mobile responsive fixes
-│   │   ├── accessibility-fixes.css   # WCAG compliance fixes
-│   │   ├── accessibility-manager.js  # Accessibility features
-│   │   ├── loading-screen.css        # Loading screen styling
-│   │   ├── loading-screen.js         # Loading screen component
-│   │   ├── fixed-navbar.js           # Sticky navigation bar
-│   │   ├── navbar.js                 # Navigation logic
-│   │   ├── stability-fixes.css       # UI stability patches
-│   │   └── empty-states-system.js    # Empty state components
-│   │
-│   ├── ℹ️ Help & Support (3 files)
-│   │   ├── help-center.html          # Help center main page
-│   │   ├── help-center.js            # Help center logic
-│   │   ├── help-center-styles.css    # Help center styling
-│   │   ├── troubleshooting.html      # Troubleshooting guide
-│   │   └── api-reference.html        # API documentation page
-│   │
-│   ├── 📈 System Monitoring (3 files)
-│   │   ├── system-health.html        # System health dashboard
-│   │   ├── timeline-visualization.html  # Activity timeline view
-│   │   ├── timeline-visualization.js    # Timeline rendering
-│   │   └── notifications.js          # Real-time notifications
-│   │
-│   └── 🛠️ System Utilities (4 files)
-│       ├── enhanced-error-handling.js   # Global error handling
-│       ├── enhanced-stability.js     # Stability improvements
-│       ├── blockchain-feedback.js    # Blockchain operation feedback
-│       └── css/                      # Additional stylesheets
-│
-├── server.js                          # Express.js backend server
-├── complete-database-setup-fixed.sql  # Complete database schema
-├── package.json                       # Dependencies and scripts
-├── render.yaml                        # Render.com deployment config
-├── .env.example                       # Environment variables template
-├── .gitignore                         # Git ignore rules
-├── LICENSE                            # Apache 2.0 license
-├── SECURITY.md                        # Security policy
-├── CODE_OF_CONDUCT.md                 # Community guidelines
-├── CONTRIBUTING.md                    # Contribution guidelines
-└── README.md                          # Project documentation
-```
+- **Broken chain of custody** in traditional evidence room handling
+- **No public auditability** — evidence integrity only checkable by the court
+- **Missing multi-hash verification** (MD5, SHA-1, SHA-256)
+- **No immutability** — files can be silently modified
 
-### 📝 Key File Descriptions
+## 💡 Our Solution
 
-#### Core System Files
-
-- **server.js** - Express backend with Socket.IO, handles all API endpoints, authentication, file uploads, and database operations
-- **complete-database-setup-fixed.sql** - Complete PostgreSQL schema with 17+ tables, Row Level Security policies, triggers, and stored functions
-- **package.json** - Node.js dependencies (321 packages) and npm scripts for development and deployment
-
-#### Configuration & Environment
-
-- **.env.example** - Template for environment variables (Supabase URL, API keys, JWT secrets)
-- **render.yaml** - Render.com deployment configuration with build and start commands
-- **public/config.js** - Frontend configuration for API endpoints, file size limits, supported formats
-
-#### Documentation (docs/)
-
-- **USER_GUIDE.md** - Complete user manual with role-specific instructions and workflows
-- **DEVELOPER_GUIDE.md** - Development setup, architecture overview, API reference, and contribution guide
-- **SECURITY.md** - Security implementation details, best practices, and vulnerability reporting
-- **DEPLOYMENT.md** - Production deployment instructions for Render, Vercel, and Netlify
-- **MAINTENANCE.md** - System maintenance procedures, backup strategies, and troubleshooting
+- **8-role RBAC + ABAC enforcement** applies to every action
+- **Blockchain anchoring on Polygon Amoy** — write the evidence hash, immutably
+- **IPFS pinning via Pinata** — full file, permanent storage
+- **Forensic Lab** — generates multiple hashes per evidence, highlights tamper
+- **3D evidence model** — an STL digital twin of the evidence document
 
 ---
 
-## 📚 Documentation
+## 📦 Core Features
 
-### Quick Links
+### Phase 1 — Core System ✅ Deployed
+- 8 roles: Admin, Officer, Investigator, Analyst, Evidence Manager, Reviewer, Judge, Public
+- Evidence create → register → store → transfer → verify lifecycle
+- Audit logging of all custody events
+- Real-time dashboard via **Socket.IO**
+- Subordinate re-upload anti-tamper via **multi-hash comparison**
 
-- 🚀 [Quick Start](#-how-to-run-locally)
-- 📖 [User Guide](docs/USER_GUIDE.md)
-- 💻 [Developer Guide](docs/DEVELOPER_GUIDE.md)
-- 📡 [API Documentation](docs/swagger.js)
-- 🔒 [Security Guide](docs/SECURITY.md)
-- 🚀 [Deployment Guide](docs/DEPLOYMENT.md)
-- 🔧 [Maintenance Guide](docs/MAINTENANCE.md)
+### Phase 2 — Blockchain & IPFS ✅ Deployed (Amoy)
+- `EVID-DGC.sol` — `anchorEvidence`, `verifyEvidence`, `getEvidenceHistory`
+- Won the chain (deployed address in [Deployment section](#deployment))
+- Files pinned to **Pinata IPFS**, hash recorded on-chain
 
-### Complete Documentation
-
-| Topic                 | Description                                      | Link                                          |
-| --------------------- | ------------------------------------------------ | --------------------------------------------- |
-| **User Guide**        | Role-specific guides and common tasks            | [👤 User Guide](docs/USER_GUIDE.md)           |
-| **Developer Guide**   | Setup, architecture, and development workflow    | [💻 Developer Guide](docs/DEVELOPER_GUIDE.md) |
-| **API Documentation** | Complete API reference with examples             | [📡 API Docs](docs/swagger.js)                |
-| **Security Guide**    | Security practices and vulnerability mitigations | [🔒 Security Guide](docs/SECURITY.md)         |
-| **Deployment Guide**  | Deploy to Render, Vercel, or Netlify             | [🚀 Deployment](docs/DEPLOYMENT.md)           |
-| **Maintenance Guide** | Regular maintenance and troubleshooting          | [🔧 Maintenance](docs/MAINTENANCE.md)         |
+### Phase 3 — Forensic Lab & 3D Evidence 🔶 In Progress
+- Forensic analyzer: **MD5 / SHA-1 / SHA-256**, entropy, file-type detection
+- **3D Evidence Viewer** — STL model rendered in-app (asset: `assets/evidence-cube.stl`)
+- Forensic report generator — planned
+- AI-based evidence triage — research
 
 ---
 
-## 🚀 How to Run Locally
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Node.js** (v20.19 or higher) - [Download](https://nodejs.org/)
-- **npm** (comes with Node.js) or **yarn**
-- **Git** - [Download](https://git-scm.com/)
-- **MetaMask** browser extension - [Install](https://metamask.io/)
-- **Supabase** account - [Sign up](https://supabase.com/)
-- **Code Editor** (VS Code recommended)
-
-### 1. Clone Repository
-
-```bash
-# Clone the repository
-git clone <repository-url>
-
-# Navigate to project directory
-cd blockchain-evidence
-```
-
-### 2. Install Dependencies & Setup
-
-```bash
-# Install all required packages and run setup
-npm install
-
-# Or run setup manually
-npm run setup
-```
-
-### 3. Environment Configuration
-
-The setup script creates a `.env` file automatically. Update it with your Supabase credentials:
-
-```env
-# Update these values in .env
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_anon_key
-```
-
-### 4. Database Setup
-
-1. Log in to your [Supabase Dashboard](https://app.supabase.com/)
-2. Create a new project or select existing one
-3. Navigate to SQL Editor
-4. Execute the following SQL files in order:
-
-```sql
--- Step 1: Core database structure
--- Copy and run: complete-database-setup-fixed.sql
-```
-
-### 5. Start Development Server
-
-```bash
-# Start the backend server with auto-reload
-npm run dev
-
-# Or for production mode
-npm start
-```
-
-The server will start on `http://localhost:3000`
-
-### 6. Access the Application
-
-Open your browser and navigate to:
-
-- **Main Application**: http://localhost:3000
-- **Health Check**: http://localhost:3000/api/health
-
-### 7. Test the System
-
-#### Option 1: MetaMask Wallet Login
-
-1. Navigate to the login page
-2. Click "Connect Wallet" button
-3. MetaMask extension will popup automatically
-4. Connect with any wallet address
-5. The system will create test users automatically
-6. Select a role and complete registration
-
-#### Option 2: Email Login
-
-Use these pre-configured test accounts:
-
-| Email                       | Password              | Role               |
-| --------------------------- | --------------------- | ------------------ |
-| `investigator@evid-dgc.com` | `hashed_password_123` | Investigator       |
-| `analyst@evid-dgc.com`      | `hashed_password_456` | Forensic Analyst   |
-| `legal@evid-dgc.com`        | `hashed_password_789` | Legal Professional |
-| `admin@evid-dgc.com`        | `admin_password`      | Administrator      |
-
-**Note**: These are demo credentials for testing. In production, use secure passwords and proper authentication.
-
-### Quick Troubleshooting
-
-**Issue: "Config not defined" error**
-
-- Solution: Ensure `config.js` is loaded before `app.js` in HTML
-
-**Issue: Navigation not working**
-
-- Solution: Check browser console for JavaScript errors
-- Ensure Lucide icons are loading properly
-
-**Issue: Wallet connection fails**
-
-- Solution: Install MetaMask browser extension
-- Check browser console for detailed error messages
-
-**Issue: Server won't start**
-
-- Solution: Check `.env` file exists and has correct format
-- Ensure port 3000 is not in use by another application
-
-### Development Commands
-
-```bash
-# Start development server
-npm start
-
-# Install new dependency
-npm install package-name
-
-# Check server health
-curl http://localhost:3000/api/health
-
-# View logs
-# Check browser console and server terminal
-```
-
----
-
-## 🚀 Production Deployment
-
-### Deployment Options
-
-The application can be deployed on various platforms:
-
-- **Platform**: Render.com, Vercel, or Netlify
-- **Database**: Supabase (PostgreSQL)
-- **File Storage**: IPFS via Pinata
-
-### Deployment Configuration
-
-#### Environment Variables Required
-
-Ensure the following environment variables are set in your production environment:
-
-```env
-# Supabase Configuration
-SUPABASE_URL=your_production_supabase_url
-SUPABASE_KEY=your_production_supabase_key
-
-# Server Configuration
-PORT=3000
-NODE_ENV=production
-
-# IPFS/Pinata Configuration (if using)
-PINATA_API_KEY=your_pinata_api_key
-PINATA_SECRET_KEY=your_pinata_secret_key
-
-# Blockchain Network
-BLOCKCHAIN_NETWORK=polygon
-BLOCKCHAIN_RPC_URL=your_rpc_url
-
-```
-
-### Deploy to Render
-
-#### Using Git Integration (Recommended)
-
-1. **Connect Repository**:
-   - Go to [Render Dashboard](https://dashboard.render.com/)
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-
-2. **Configure Service**:
-
-   ```yaml
-   Name: evid-dgc
-   Environment: Node
-   Build Command: npm install
-   Start Command: npm start
-   ```
-
-3. **Set Environment Variables**:
-   - Add all required environment variables in Render dashboard
-   - Navigate to "Environment" tab
-   - Add each variable from the list above
-
-4. **Deploy**:
-   - Click "Create Web Service"
-   - Render will automatically deploy on every push to main branch
-
-### Deploy to Netlify
-
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
-
-# Login to Netlify
-netlify login
-
-# Deploy
-netlify deploy --prod
-```
-
-Or drag and drop the `public` folder on [Netlify Drop](https://app.netlify.com/drop).
-
-### Continuous Deployment
-
-The project is configured for automatic deployment:
-
-- **Trigger**: Push to `main` branch
-- **Build**: Automatic via `npm install`
-- **Deploy**: Automatic via hosting provider
-- **Rollback**: Available through hosting dashboard
-
-### Monitoring & Logs
-
-- **Application Logs**: Available in Render/Vercel/Netlify dashboard
-- **Database Logs**: Available in Supabase dashboard
-- **Uptime Monitoring**: Consider using services like UptimeRobot
-
-For detailed deployment troubleshooting, see [Deployment Documentation](docs/DEPLOYMENT.md).
+## 🧰 Technology Stack
+
+<!-- shields.io badges -->
+
+<p align="center">
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/Socket.IO-Realtime-010101?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.IO">
+  <img src="https://img.shields.io/badge/Ethers.js-v6-1D315B?style=flat-square&logo=ethereum&logoColor=white" alt="Ethers.js">
+  <img src="https://img.shields.io/badge/Hardhat-Testing-FCC624?style=flat-square&logo=hardhat&logoColor=black" alt="Hardhat">
+  <img src="https://img.shields.io/badge/Pinata-IPFS-9B30FF?style=flat-square&logo=ipfs&logoColor=white" alt="Pinata">
+  <img src="https://img.shields.io/badge/Jest-Testing-C21325?style=flat-square&logo=jest&logoColor=white" alt="Jest">
+  <img src="https://img.shields.io/badge/Render-Deploy-0B0E14?style=flat-square&logo=render&logoColor=white" alt="Render">
+  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+</p>
+
+### Technology Stack Maturity
+
+| Area | Maturity |
+|---|---|
+| Frontend / Backend | ✅ ✅ Mature — full page toolkit |
+| Blockchain + IPFS | ✅ Operational — Amoy testnet |
+| 3D evidence & AI | 🟡 Prototype / roadmap |
+| Mainnet | ❌ Not deployed |
 
 ---
 
 ## 🏗️ Architecture
 
-### System Architecture
-
+```mermaid
+flowchart TD
+    subgraph Client
+        A[Browser] --> B[Dashboard / Public Pages]
+    end
+    subgraph Server
+        C[Express API] --> D[(PostgreSQL / Supabase)]
+        C --> E[Pinata IPFS]
+        C --> F[Polygon Amoy node]
+    end
+    subgraph Contract
+        F --> G[EVID-DGC contract]
+    end
+    B -->|REST + Socket.IO| C
+    B -->|3D viewer| H[THREE.js/STL]
 ```
-┌─────────────────┐
-│   Web Browser   │
-│  (MetaMask +    │
-│   Frontend)     │
-└────────┬────────┘
-         │
-         │ HTTPS
-         ▼
-┌─────────────────────────────────┐
-│     Express.js Backend          │
-│  ┌──────────────────────────┐   │
-│  │  Authentication Layer    │   │
-│  │  (MetaMask/Email)        │   │
-│  └──────────────────────────┘   │
-│  ┌──────────────────────────┐   │
-│  │  Role-Based Access       │   │
-│  │  Control (RBAC)          │   │
-│  └──────────────────────────┘   │
-│  ┌──────────────────────────┐   │
-│  │  Evidence Processing     │   │
-│  │  (Upload/Watermark)      │   │
-│  └──────────────────────────┘   │
-│  ┌──────────────────────────┐   │
-│  │  Real-time Events        │   │
-│  │  (Socket.IO)             │   │
-│  └──────────────────────────┘   │
-└────┬──────────┬─────────┬───────┘
-     │          │         │
-     │          │         │
-     ▼          ▼         ▼
-┌─────────┐ ┌─────────┐ ┌──────────┐
-│Supabase │ │  IPFS   │ │Blockchain│
-│PostgreSQL│ │(Pinata) │ │(Polygon) │
-│   +RLS  │ │ Storage │ │ Network  │
-└─────────┘ └─────────┘ └──────────┘
-```
-
-### Data Flow
-
-**Evidence Upload Flow**:
-
-1. User authenticates via MetaMask or Email
-2. Role verification through RBAC system
-3. Evidence file uploaded to Express backend
-4. File processed (watermark, compression)
-5. File stored in IPFS via Pinata
-6. Metadata and IPFS hash stored in Supabase
-7. Transaction recorded on Polygon blockchain
-8. Audit log created in database
-9. Real-time notification sent via Socket.IO
-
-**Access Control Flow**:
-
-1. User login → JWT token generated
-2. Each request validated against user role
-3. Supabase RLS policies enforce database security
-4. Audit trail logged for compliance
-
-### Key Components
-
-| Component          | Technology             | Purpose                         |
-| ------------------ | ---------------------- | ------------------------------- |
-| **Frontend**       | HTML/CSS/JS            | User interface and interactions |
-| **API Server**     | Express.js             | REST API and business logic     |
-| **WebSocket**      | Socket.IO              | Real-time notifications         |
-| **Database**       | Supabase (PostgreSQL)  | Structured data storage         |
-| **File Storage**   | IPFS/Pinata            | Decentralized evidence storage  |
-| **Blockchain**     | Polygon                | Immutable audit trail           |
-| **Authentication** | MetaMask/Supabase Auth | User authentication             |
-| **Authorization**  | Custom RBAC            | Role-based permissions          |
-
-For detailed architecture documentation, see [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md).
 
 ---
 
-## ⭐ Support & Star
+## 🧑‍⚖️ Role-Based Access Control (RBAC)
 
-If you find this project helpful, please consider giving it a **Star**! It helps others discover the project and keeps the maintainers motivated.
+| Role | Permissions |
+|---|---|
+| **Admin** | Full system control, user/role management |
+| **Officer** | Capture & register new evidence, upload files |
+| **Investigator** | Access case data, annotate evidence |
+| **Analyst** | Run forensic analysis on evidence |
+| **Evidence Manager** | Manage evidence lifecycle & retention |
+| **Reviewer** | Verify chain of custody, approve evidence |
+| **Judge** | Review finalized reports, certify for trial |
+| **Public** | Verify evidence integrity (public dashboard) |
+
+ABAC rules enforce context: only the owning investigator/team may transfer
+evidence; Public role is restricted to verification endpoints.
 
 ---
 
-## 💬 Suggestions & Feedback
+## ⛓️ Blockchain & Evidence Integrity
 
-We value your feedback! If you have suggestions for new features or have found a bug, please open an issue or start a discussion in your repository.
+```solidity
+// contracts/EVID_DGC.sol (simplified)
+contract EVID_DGC {
+    mapping(bytes32 => EvidenceRecord) public records;
+
+    function anchorEvidence(
+        string memory evidenceId,
+        bytes32 evidenceHash,
+        address officer
+    ) external returns (bytes32) {
+        record.evidenceHash = evidenceHash;  // SHA-256 of file
+        emit EvidenceAnchored(evidenceId, evidenceHash, block.timestamp);
+        return recordHash;
+    }
+}
+```
+
+**Deployed Address (Polygon Amoy):**
+
+```
+EVID-DGC: 0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3
+Explorer : https://amoy.polygonscan.com/address/0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3
+```
+
+> [!caution]
+> This is a **testnet** contract. Do not use for production evidence until Phase 4 mainnet deploy.
+
+### On-Chain Evidence Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant O as Officer
+    participant S as Server
+    participant C as EVID-DGC (Amoy)
+    participant I as Pinata IPFS
+    O->>S: Upload file + metadata
+    S->>I: Pin file → CID
+    S->>C: anchorEvidence(evidenceId, keccak(file))
+    C-->>S: emit EvidenceAnchored { block }
+    S-->>O: Evidence ID + tx hash
+```
+
+---
+
+## 📁 IPFS Storage
+
+- Files **pinned on Pinata IPFS** at upload time — permanent & deduplicated
+- CID stored in PostgreSQL, hash stored on-chain
+- Public-dashboard verification compares **stored file hash vs. on-chain hash**
+
+---
+
+## 🗄️ Database Schema (PostgreSQL via Supabase)
+
+```mermaid
+erDiagram
+    USERS ||--o{ EVIDENCE : submits
+    USERS ||--o{ AUDIT_LOG : performs
+    EVIDENCE {
+        uuid id PK
+        string case_number
+        string description
+        string file_hash "SHA-256"
+        string ipfs_cid
+        string onchain_tx
+        string custody_actor
+    }
+    AUDIT_LOG {
+        uuid id PK
+        uuid evidence_id FK
+        uuid actor_id FK
+        string action
+        timestamp time
+    }
+```
+
+Full schema: `complete-database-setup-fixed.sql` (repo root).
+
+---
+
+## 🔬 Evidence Workflow — Digital Chain of Custody
+
+```mermaid
+flowchart LR
+    C[Evidence Capture] --> R[Registration]
+    R --> L[Lab Analysis]
+    L --> A[Anchoring on Amoy]
+    A --> V[Verification by Reviewer]
+    V --> T[Transfer / Trial]
+    T --> D[Disposal or Archive]
+```
+
+| Step | Actor | Output |
+|---|---|---|
+| Capture | Officer | File + metadata |
+| Register | Evidence Manager | Evidence ID |
+| Analyze | Analyst | Forensic report |
+| Anchor | System | Hash 0x + txid |
+| Verify | Reviewer / Public | Certified copy |
+
+---
+
+## 🧊 3D Evidence Viewer (Phase 3, in progress)
+
+A genuine 3D model asset is included: [`assets/evidence-cube.stl`](assets/evidence-cube.stl).
+The interactive viewer (`view-evidence3d.html`) renders it with notes/rotation;
+miniature interactive application elements (e.g., adjustable lighting) are **planned**.
+
+---
+
+## 🧪 Testing
+
+### Unit / Integration (Jest, Phase 1-2)
+
+```bash
+npm test          # unit + integration
+npm run test:e2e  # Playwright E2E (planned configuration in progress)
+```
+
+### What's covered
+
+- Evidence CRUD multi-hash detection
+- Auth + RBAC role gating
+- IPFS & chain mocks
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+
+- Node.js 18+, npm
+- Supabase project (or `docker run postgres`)
+- (Optional) Pinata account + JWT
+
+### 2. Clone & install
+
+```bash
+git clone https://github.com/Gooichand/blockchain-evidence.git
+cd blockchain-evidence
+npm install
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Example |
+|---|---|
+| `SUPABASE_URL` | `https://xyz.supabase.co` |
+| `SUPABASE_ANON_KEY` | `eyJ...` |
+| `JWT_SECRET` | any (use pwgen) |
+| `POLYGON_RPC_URL` | `https://rpc-amoy.polygon.technology` |
+| `PRIVATE_KEY` | wallet key (Amoy test faucet) |
+| `CONTRACT_ADDRESS` | `0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3` |
+| `PINATA_JWT` | your Pinata JWT |
+
+### 4. Run locally
+
+```bash
+npm run dev
+# http://localhost:3000
+```
+
+Seed the DB first with `complete-database-setup-fixed.sql` (creates 8 roles &
+demo users).
+
+---
+
+## 🌐 Public Evidence Verification (No Login)
+
+Anyone can enter an **Evidence ID, SHA-256 hash, or on-chain tx hash** on the
+[**Public Dashboard**](https://blockchain-evidence.onrender.com/dashboard-public.html)
+and receive **VERIFIED ✅ / TAMPERED ❌** instantly — cross-checked against
+PostgreSQL, the Amoy ledger, and IPFS.
+
+---
+
+## 📚 Documentation
+
+- [`docs/API.md`](docs/API.md) – REST endpoints
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) – Render + PostgreSQL setup
+- [`docs/SECURITY.md`](docs/SECURITY.md) – security model & checklist
+- [`PHASES.md`](PHASES.md) – phases, roadmap, status
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) – how to contribute
+
+---
+
+## 📄 Deployment — Render One-Click
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Gooichand/blockchain-evidence)
+
+`render.yaml` provisions the web service + managed PostgreSQL.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from developers, security researchers, legal professionals, and anyone passionate about improving digital evidence management!
-
-### 🚀 Quick Start for Contributors
-
-1. **Fork the repository** and clone it locally
-2. **Read our [Contributing Guide](CONTRIBUTING.md)** for detailed instructions
-3. **Check out [open issues](https://github.com/Gooichand/blockchain-evidence/issues)** for ways to help
-4. **Join the discussion** in GitHub Discussions
-
-### 🎯 Ways to Contribute
-
-- 🐛 **Bug Reports**: Found an issue? Let us know!
-- 💡 **Feature Requests**: Have ideas for improvements?
-- 🔧 **Code Contributions**: Fix bugs or add new features
-- 📚 **Documentation**: Help improve our guides and docs
-- 🎨 **Design & UX**: Enhance the user interface
-- 🧪 **Testing**: Help us test new features
-- 🌐 **Localization**: Translate the app to other languages
-
-### 📋 Contribution Process
-
-1. **Choose an issue** or propose a new feature
-2. **Fork and create a branch** for your changes
-3. **Make your changes** following our coding standards
-4. **Test thoroughly** and add documentation
-5. **Submit a pull request** with a clear description
-
-For detailed guidelines, see our **[Contributing Guide](CONTRIBUTING.md)**.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) — issues welcomed, PRs reviewed.
+Help wanted tags: `3d-viewer`, `ai-analysis`, `mainnet`.
 
 ---
 
-## 👥 Contributors
+## 📝 License
 
-Thanks to all the amazing people who have contributed to EVID-DGC! 🎉
-
-### 🏆 Core Team
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/Gooichand">
-        <img src="https://github.com/Gooichand.png" width="100px;" alt="Gooichand"/><br />
-        <sub><b>Gooichand</b></sub>
-      </a><br />
-      <sub>🚀 Project Lead & Core Developer</sub>
-    </td>
-  </tr>
-</table>
-
-### 🌟 All Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-**Want to see your name here?** Check out our [Contributing Guide](CONTRIBUTING.md) and start contributing today!
-
-### 🎖️ Recognition
-
-We recognize contributors in multiple ways:
-
-- **README Contributors Section** (above)
-- **Release Notes** for significant contributions
-- **GitHub Contributors Page** automatic recognition
-- **Special Mentions** in project updates and social media
-
-### 💝 How to Get Involved
-
-- **Star the repository** ⭐ to show your support
-- **Watch the repository** 👀 to stay updated
-- **Fork and contribute** 🍴 to help improve the project
-- **Share with others** 📢 who might be interested
-- **Join discussions** 💬 in GitHub Issues and Discussions
+**MIT** — see [`LICENSE`](LICENSE). © 2025-2026 **EVID-DGC**.
 
 ---
 
-## 📄 License
+## 🙌 Acknowledgments
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-```
-Copyright 2025 EVID-DGC Blockchain Evidence Management System
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+- [Pinata](https://www.pinata.cloud) for IPFS pinning
+- [Polygon](https://polygon.technology) Amoy testnet
+- [Render](https://render.com) hosting
+- [Supabase](https://supabase.com) PostgreSQL + Auth
+- GitHub Actions for CI status badge
 
 ---
 
-## 📜 Code of Conduct
+<div align="center">
 
-We are committed to providing a friendly, safe, and welcoming environment. Please review our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+  <img src="assets/section-divider.svg" alt="section divider" width="80%">
 
----
+  <br>
 
-<p align="right"><a href="#-evid-dgc---blockchain-evidence-management-system">Back to Top ↑</a></p>
+  <h3>⚖️ EVID-DGC — Immutably anchored. Forever provable.</h3>
+
+  <p>
+    <a href="https://github.com/Gooichand/blockchain-evidence"><img src="https://img.shields.io/badge/GitHub-Gooichand/blockchain--evidence-000000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+    <a href="https://blockchain-evidence.onrender.com"><img src="https://img.shields.io/badge/Live-Demo-EF4444?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo"></a>
+    <a href="mailto:gc67766@gmail.com"><img src="https://img.shields.io/badge/Contact-Email-3B82F6?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"></a>
+  </p>
+
+  <p>
+    <a href="#blockchain-evidence--digital-chain-of-custody"><img src="https://img.shields.io/badge/Back_to_Top-%E2%96%B2-0B0E14?style=for-the-badge" alt="Back to top"></a>
+  </p>
+
+  <p>⭐ If you find this project useful, **give it a star**!</p>
+
+  <sub>© 2025-2026 EVID-DGC · Immutably anchored. Forever provable. ⚖️</sub>
+
+</div>

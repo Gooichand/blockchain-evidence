@@ -103,7 +103,7 @@
     toPublicReference,
   };
 
-  global.EVIDPublic = api;
+  globalScope.EVIDPublic = api;
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

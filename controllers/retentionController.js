@@ -212,6 +212,77 @@ const setLegalHold = async (req, res) => {
   }
 };
 
+// Update evidence admission status (admin evidence review workflow)
+// decision ∈ { approved, rejected, needs_correction, on_hold, escalate }
+const updateAdmissionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision, reason } = req.body;
+
+    const ALLOWED = ['approved', 'rejected', 'needs_correction', 'on_hold', 'escalate'];
+    if (!ALLOWED.includes(decision)) {
+      return res.status(400).json({ success: false, error: 'Invalid admission decision' });
+    }
+
+    if ((decision === 'rejected' || decision === 'needs_correction') && !(reason && reason.trim())) {
+      return res.status(400).json({ success: false, error: 'Reason is required for this decision' });
+    }
+
+    const actor = await resolveActor(req);
+    if (!actor) {
+      return res.status(401).json({ success: false, error: 'Valid wallet address or authentication required' });
+    }
+
+    const user = actor.user;
+    if (!user || !user.is_active) {
+      return res.status(403).json({ success: false, error: 'User not found or inactive' });
+    }
+
+    if (!['admin', 'evidence_manager', 'investigator'].includes(user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized: insufficient role for admission review' });
+    }
+
+    const { data: evidence, error: fetchError } = (await supabase
+      .from('evidence')
+      .select('id, title, case_id')
+      .eq('id', id)
+      .single()) || {};
+
+    if (fetchError || !evidence) {
+      return res.status(404).json({ success: false, error: 'Evidence not found' });
+    }
+
+    const mappedStatus = decision === 'escalate' ? 'on_hold' : decision;
+    const { error } = (await supabase
+      .from('evidence')
+      .update({
+        admission_status: mappedStatus,
+        admission_decision_at: new Date().toISOString(),
+        admission_reason: reason || null,
+        admitted_by: actor.wallet,
+      })
+      .eq('id', id)) || {};
+
+    if (error) throw error;
+
+    const auditAction = `evidence_${decision}`;
+    const { error: auditLogError } = (await supabase.from('activity_logs').insert({
+      user_id: actor.wallet,
+      action: auditAction,
+      details: JSON.stringify({ evidence_id: id, case_id: evidence.case_id, reason: reason || null, decision }),
+      timestamp: new Date().toISOString(),
+    })) || {};
+    if (auditLogError) {
+      console.error('Failed to log admission action:', auditLogError);
+    }
+
+    res.json({ success: true, admission_status: mappedStatus });
+  } catch (error) {
+    console.error('Update admission status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update admission status' });
+  }
+};
+
 // Apply retention policy to multiple evidence
 const bulkRetentionPolicy = async (req, res) => {
   try {
@@ -529,6 +600,7 @@ module.exports = {
   exportTimelinePdf,
   getEvidenceExpiry,
   setLegalHold,
+  updateAdmissionStatus,
   bulkRetentionPolicy,
   checkExpiry,
   updateRetentionPolicy,

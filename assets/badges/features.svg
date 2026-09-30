@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" width="800" height="120">
+  <defs>
+    <linearGradient id="featureBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1a"/>
+      <stop offset="100%" style="stop-color:#1a1f2e"/>
+    </linearGradient>
+    <linearGradient id="featureAccent1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#36BCF7"/>
+      <stop offset="100%" style="stop-color:#00D4FF"/>
+    </linearGradient>
+    <linearGradient id="featureAccent2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C4DFF"/>
+      <stop offset="100%" style="stop-color:#36BCF7"/>
+    </linearGradient>
+    <linearGradient id="featureAccent3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00FF88"/>
+      <stop offset="100%" style="stop-color:#36BCF7"/>
+    </linearGradient>
+    <linearGradient id="featureAccent4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFB800"/>
+      <stop offset="100%" style="stop-color:#FF6B6B"/>
+    </linearGradient>
+    <filter id="featureGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <g font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600">
+    <!-- Row 1: Core Features -->
+    <g transform="translate(10, 10)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent1)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent1)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent1)" filter="url(#featureGlow)">8-Role RBAC</text>
+      <text x="20" y="35" fill="#88CCFF" font-size="9">Complete</text>
+    </g>
+    
+    <g transform="translate(200, 10)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent1)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent1)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent1)" filter="url(#featureGlow)">Dual Auth</text>
+      <text x="20" y="35" fill="#88CCFF" font-size="9">Wallet + Email</text>
+    </g>
+    
+    <g transform="translate(390, 10)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent2)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent2)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent2)" filter="url(#featureGlow)">Admin Dashboard</text>
+      <text x="20" y="35" fill="#B8A8FF" font-size="9">Full Control</text>
+    </g>
+    
+    <g transform="translate(580, 10)">
+      <rect width="210" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent3)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent3)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent3)" filter="url(#featureGlow)">Real-time WS</text>
+      <text x="20" y="35" fill="#A8FFA8" font-size="9">Socket.IO</text>
+    </g>
+    
+    <!-- Row 2: Phase 2 Features -->
+    <g transform="translate(10, 65)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent1)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent1)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent1)" filter="url(#featureGlow)">Blockchain</text>
+      <text x="20" y="35" fill="#88CCFF" font-size="9">Polygon Amoy</text>
+    </g>
+    
+    <g transform="translate(200, 65)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent2)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent2)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent2)" filter="url(#featureGlow)">IPFS Storage</text>
+      <text x="20" y="35" fill="#B8A8FF" font-size="9">Pinata API</text>
+    </g>
+    
+    <g transform="translate(390, 65)">
+      <rect width="180" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent3)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent3)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent3)" filter="url(#featureGlow)">Hash Verify</text>
+      <text x="20" y="35" fill="#A8FFA8" font-size="9">On-Chain</text>
+    </g>
+    
+    <g transform="translate(580, 65)">
+      <rect width="210" height="45" rx="8" fill="url(#featureBg)" stroke="url(#featureAccent4)" stroke-width="1" stroke-opacity="0.4"/>
+      <circle cx="20" cy="15" r="6" fill="url(#featureAccent4)" opacity="0.8"/>
+      <text x="35" y="18" fill="url(#featureAccent4)" filter="url(#featureGlow)">Rate Limited</text>
+      <text x="20" y="35" fill="#FFE8A8" font-size="9">Multi-Tier</text>
+    </g>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireOptionalAuth } = require('../middleware/requireOptionalAuth');
+const { requireRole } = require('../middleware/authorization');
 const {
   getLegalHolds,
   createLegalHold,
@@ -9,10 +9,11 @@ const {
   getLegalHoldStats,
 } = require('../controllers/legalHoldController');
 
-router.get('/legal-holds', requireOptionalAuth, getLegalHolds);
-router.get('/legal-holds/stats', requireOptionalAuth, getLegalHoldStats);
-router.post('/legal-holds', requireOptionalAuth, createLegalHold);
-router.put('/legal-holds/:id', requireOptionalAuth, updateLegalHold);
-router.post('/legal-holds/:id/release', requireOptionalAuth, releaseLegalHold);
+const legalHoldGuard = requireRole('legal_professional', 'evidence_manager', 'court_official', 'admin');
+router.get('/legal-holds', legalHoldGuard, getLegalHolds);
+router.get('/legal-holds/stats', legalHoldGuard, getLegalHoldStats);
+router.post('/legal-holds', legalHoldGuard, createLegalHold);
+router.put('/legal-holds/:id', legalHoldGuard, updateLegalHold);
+router.post('/legal-holds/:id/release', legalHoldGuard, releaseLegalHold);
 
 module.exports = router;

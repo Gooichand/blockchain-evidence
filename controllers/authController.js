@@ -34,12 +34,17 @@ function parseUserAgent(ua = '') {
 /** Record a server-side session row for the signed-in user. */
 async function createUserSession(user, req) {
   try {
-    const { device, browser } = parseUserAgent(req.headers['user-agent']);
+    const headers = (req && req.headers) || {};
+    const ua = headers['user-agent'] || '';
+    const { device, browser } = parseUserAgent(ua);
     await supabase.from('user_sessions').insert({
       user_id: user.id,
       wallet_address: user.wallet_address || null,
-      ip_address: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || null,
-      user_agent: req.headers['user-agent'] || null,
+      ip_address:
+        (headers['x-forwarded-for'] && headers['x-forwarded-for'].split(',')[0].trim()) ||
+        (req && req.socket && req.socket.remoteAddress) ||
+        null,
+      user_agent: ua || null,
       device,
       browser,
       location: 'Unknown',
@@ -53,6 +58,37 @@ async function createUserSession(user, req) {
 // SECURITY FIX: In-memory nonce store for wallet ownership proof
 // Key: lowercased wallet address, Value: { nonce, message, expiresAt }
 const walletNonces = new Map();
+
+const SESSION_COOKIE = 'evid_token';
+const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24h
+
+/**
+ * Set the server-side session cookie. The same JWT is also returned in the
+ * JSON body for the frontend's Bearer auth. The cookie is HttpOnly so it
+ * cannot be read by client JS (protects privileged dashboard pages served
+ * directly by the static layer) and is used by the page guard.
+ */
+function setSessionCookie(res, token, req) {
+  if (!res || typeof res.cookie !== 'function') return;
+  const headers = (req && req.headers) || {};
+  const proto = headers['x-forwarded-proto'];
+  const secure = Boolean(
+    (req && req.secure) ||
+      proto === 'https' ||
+      (typeof proto === 'string' && proto.split(',').map((s) => s.trim()).includes('https')),
+  );
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: Boolean(secure),
+    path: '/',
+    maxAge: SESSION_MAX_AGE,
+  });
+}
+
+function clearSessionCookie(res) {
+  if (res && typeof res.clearCookie === 'function') res.clearCookie(SESSION_COOKIE, { path: '/' });
+}
 
 // Clean up expired nonces every 5 minutes
 setInterval(() => {
@@ -128,10 +164,12 @@ const walletLogin = async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { userId: user.id, walletAddress: user.wallet_address, role: user.role },
+      { userId: user.id, walletAddress: user.wallet_address, role: user.role, jti: crypto.randomUUID() },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
+
+    setSessionCookie(res, token, req);
 
     res.json({
       success: true,
@@ -197,10 +235,12 @@ const emailLogin = async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { userId: user.id, email: user.email, role: user.role, jti: crypto.randomUUID() },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
+
+    setSessionCookie(res, token, req);
 
     res.json({
       success: true,
@@ -218,6 +258,54 @@ const emailLogin = async (req, res) => {
   } catch (error) {
     console.error('Email login error:', error);
     res.status(500).json({ error: 'Login failed' });
+  }
+};
+
+// Server-side logout: revoke the active token and clear the session cookie.
+const logout = async (req, res) => {
+  try {
+    const token =
+      (req.headers.cookie || '')
+        .split(';')
+        .map((p) => p.trim())
+        .find((p) => p.startsWith('evid_token='))
+        ?.split('=')
+        .slice(1)
+        .join('=') ||
+      (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '');
+
+    if (token) {
+      try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        if (payload && payload.jti) {
+          const { revokeToken } = require('../middleware/authorization');
+          revokeToken(payload.jti);
+        }
+      } catch (_) {
+        // Already invalid/expired token — nothing to revoke.
+      }
+    }
+
+    clearSessionCookie(res);
+    return res.json({ success: true, message: 'Logged out' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return res.status(500).json({ success: false, error: 'Logout failed' });
+  }
+};
+
+// Get current authenticated user (for server-side auth verification)
+const getCurrentUser = async (req, res) => {
+  try {
+    const { verifyRequestIdentity } = require('../middleware/authorization');
+    const { user, error } = verifyRequestIdentity(req);
+    if (!user || error) {
+      return res.status(401).json({ success: false, error: error || 'Not authenticated' });
+    }
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error('getCurrentUser error:', err);
+    return res.status(500).json({ success: false, error: 'Internal error' });
   }
 };
 
@@ -790,4 +878,6 @@ module.exports = {
   updateProfile,
   changePassword,
   getSessions,
+  logout,
+  getCurrentUser,
 };
