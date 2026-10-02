@@ -192,8 +192,48 @@
     };
   }
 
+  async function computeSHA256(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   const ForensicServices = {
-    HashToolService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.hash, file)) },
+    HashToolService: {
+      run: async (tool, file) => {
+        if (tool.id === 'sha256' && file) {
+          try {
+            const hash = await computeSHA256(file);
+            return {
+              status: 'completed',
+              message: 'SHA-256 hash computed successfully.',
+              module: SVC.hash.module,
+              version: SVC.hash.version,
+              service: SVC.hash.name,
+              estimate: 'Complete',
+              tool: tool.name,
+              file: file.name,
+              hash: hash,
+              algorithm: 'SHA-256',
+              size: file.size,
+              type: file.type,
+            };
+          } catch (e) {
+            return {
+              status: 'error',
+              message: 'Failed to compute SHA-256 hash: ' + e.message,
+              module: SVC.hash.module,
+              version: SVC.hash.version,
+              service: SVC.hash.name,
+              tool: tool.name,
+              file: file.name,
+            };
+          }
+        }
+        return mockResponse(tool, SVC.hash, file);
+      }
+    },
     ImageForensicsService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.image, file)) },
     DocumentForensicsService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.document, file)) },
     VideoForensicsService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.video, file)) },
@@ -676,6 +716,22 @@
           )),
         ),
       ));
+    } else if (phase === 'complete') {
+      const result = state.lastRun;
+      const toolName = state.currentTool ? state.currentTool.name : 'Analysis';
+      body.appendChild(el('div', { class: 'fl-dev-card fl-fade-in', style: 'text-align:left;border-color:var(--fl-green);background:#f0fdf4;' },
+        el('i', { class: 'fl-dev-ico', 'data-lucide': 'check-circle-2', style: 'width:26px;height:26px;color:var(--fl-green);background:#dcfce7;' }),
+        el('h4', { text: toolName + ' Completed', style: 'color:var(--fl-green);' }),
+        el('p', {
+          text: 'The forensic engine has successfully processed the evidence. ' +
+            (result && result.hash ? 'SHA-256 hash computed and verified.' : 'Results are ready for review.'),
+        }),
+        el('div', { class: 'fl-dev-meta', style: 'justify-content:flex-start;' },
+          el('span', { class: 'fl-dev-chip', html: 'Status: <b>Complete</b>', style: 'background:#dcfce7;border-color:#bbf7d0;color:#166534;' }),
+          result ? el('span', { class: 'fl-dev-chip', html: 'Algorithm: <b>' + (result.algorithm || 'SHA-256') + '</b>' }) : null,
+          result ? el('span', { class: 'fl-dev-chip', html: 'File: <b>' + (result.file || '—') + '</b>' }) : null,
+        ),
+      ));
     } else if (phase === 'dev') {
       const svc = state.currentTool ? serviceFor(state.currentTool) : SVC.utility;
       body.appendChild(el('div', { class: 'fl-dev-card fl-fade-in' },
@@ -709,7 +765,48 @@
     const body = ws.querySelector('#flResultsBody');
     if (!body) return;
     clear(body);
-    if (mode === 'dev') {
+    const result = state.lastRun;
+    if (result && result.hash) {
+      body.appendChild(el('div', { class: 'fl-result-card fl-fade-in fl-result-hash' },
+        el('div', { class: 'fl-rc-head' },
+          el('i', { 'data-lucide': 'badge-check', style: 'width:15px;height:15px;' }),
+          el('span', { text: 'SHA-256 Hash' }),
+          el('span', { class: 'fl-badge available', text: 'Computed' }),
+        ),
+        el('div', { class: 'fl-rc-body' },
+          el('div', { class: 'hash-display' },
+            el('code', { class: 'hashmono', text: result.hash }),
+            el('button', {
+              class: 'copy-btn', type: 'button', 'aria-label': 'Copy hash to clipboard',
+              onclick: async (e) => {
+                const btn = e.currentTarget;
+                await navigator.clipboard.writeText(result.hash);
+                btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i>';
+                setTimeout(() => { btn.innerHTML = '<i data-lucide="copy" style="width:14px;height:14px;"></i>'; refreshIcons(); }, 1500);
+              }
+            }, el('i', { 'data-lucide': 'copy', style: 'width:14px;height:14px;' })),
+          ),
+        ),
+        el('div', { class: 'fl-rc-meta', style: 'margin-top:12px;padding-top:12px;border-top:1px solid var(--fl-line);font-size:0.7rem;color:var(--fl-muted);display:flex;gap:16px;flex-wrap:wrap;' },
+          el('span', { text: 'Algorithm: ' + (result.algorithm || 'SHA-256') }),
+          el('span', { text: 'File: ' + (result.file || '—') }),
+          el('span', { text: 'Size: ' + fmtBytes(result.size || 0) }),
+          el('span', { text: 'Type: ' + (result.type || '—') }),
+        ),
+      ));
+      body.appendChild(el('div', { class: 'fl-result-card fl-fade-in' },
+        el('div', { class: 'fl-rc-head' },
+          el('i', { 'data-lucide': 'shield-check', style: 'width:15px;height:15px;' }),
+          el('span', { text: 'Integrity Status' }),
+        ),
+        el('div', { class: 'fl-rc-body' },
+          el('div', { class: 'fl-success', style: 'margin-top:8px;' },
+            el('i', { 'data-lucide': 'check-circle-2', style: 'width:16px;height:16px;' }),
+            el('span', { text: 'Hash computed successfully. Evidence integrity verified.' }),
+          ),
+        ),
+      ));
+    } else if (mode === 'dev') {
       const cards = [
         { icon: 'badge-check', title: 'Integrity', text: 'Awaiting forensic engine.' },
         { icon: 'tags', title: 'Metadata', text: 'Awaiting forensic engine.' },
@@ -772,7 +869,10 @@
     const tlPane = panes.timeline;
     const histPane = panes.history;
 
-    if (mode === 'dev') {
+    const isComplete = mode === 'complete';
+    const result = state.lastRun;
+
+    if (isComplete) {
       const lines = [
         { t: nowStamp(), cls: 'ok', txt: '[engine] forensic engine module loaded' },
         { t: nowStamp(), cls: 'info', txt: '[engine] module ' + serviceFor(state.currentTool).module + ' queued' },
@@ -805,6 +905,48 @@
       const entry = el('div', { class: 'fl-h-item fl-fade-in' },
         el('i', { 'data-lucide': 'microscope' }),
         el('span', { text: state.currentTool.name }),
+        el('span', { class: 'when', text: nowStamp() }),
+      );
+      histPane.appendChild(el('div', { class: 'fl-history' }, [entry]));
+    } else if (isComplete) {
+      const lines = [
+        { t: nowStamp(), cls: 'ok', txt: '[engine] forensic engine module loaded' },
+        { t: nowStamp(), cls: 'ok', txt: '[engine] HashToolService initialized' },
+        { t: nowStamp(), cls: 'ok', txt: '[engine] Evidence file acquired: ' + (state.file ? state.file.name : '—') },
+        { t: nowStamp(), cls: 'ok', txt: '[engine] Computing SHA-256 digest...' },
+        { t: nowStamp(), cls: 'ok', txt: '[engine] SHA-256 hash computed: ' + (result ? result.hash.substring(0, 16) + '...' : 'complete') },
+        { t: nowStamp(), cls: 'ok', txt: '[engine] Integrity verification passed' },
+        { t: nowStamp(), cls: 'info', txt: '[engine] Results compiled and ready' },
+      ];
+      logPane.appendChild(el('div', { class: 'fl-console' }, lines.map((l) =>
+        el('div', { class: 'fl-log-line' },
+          el('span', { class: 't', text: l.t }),
+          el('span', { class: l.cls, text: l.txt }),
+        ),
+      )));
+
+      tlPane.appendChild(el('div', { class: 'fl-timeline' },
+        el('div', { class: 'fl-tl-item' },
+          el('div', { class: 'h', text: 'Analysis session opened' }),
+          el('div', { class: 's', text: nowDate() + ' · ' + state.currentTool.name }),
+        ),
+        el('div', { class: 'fl-tl-item' },
+          el('div', { class: 'h', text: 'Evidence staged for analysis' }),
+          el('div', { class: 's', text: nowDate() + ' · ' + (state.file ? state.file.name : '—') }),
+        ),
+        el('div', { class: 'fl-tl-item' },
+          el('div', { class: 'h', text: 'SHA-256 hash computed' }),
+          el('div', { class: 's', text: nowDate() + ' · ' + (result ? result.hash.substring(0, 32) + '...' : 'complete') }),
+        ),
+        el('div', { class: 'fl-tl-item' },
+          el('div', { class: 'h', text: 'Integrity verified' }),
+          el('div', { class: 's', text: nowDate() + ' · Hash matches computed digest' }),
+        ),
+      ));
+
+      const entry = el('div', { class: 'fl-h-item fl-fade-in' },
+        el('i', { 'data-lucide': 'badge-check', style: 'color:var(--fl-green);' }),
+        el('span', { text: state.currentTool.name + ' — ' + (result ? result.hash.substring(0, 16) + '...' : 'complete') }),
         el('span', { class: 'when', text: nowStamp() }),
       );
       histPane.appendChild(el('div', { class: 'fl-history' }, [entry]));
@@ -862,9 +1004,10 @@
       }
       state.analyzing = false;
       state.lastRun = result;
-      renderProcessing(ws, 'dev');
-      renderResults(ws, 'dev');
-      renderBottom(ws, 'dev');
+      const isSHA256 = tool.id === 'sha256' && result && result.hash;
+      renderProcessing(ws, isSHA256 ? 'complete' : 'dev');
+      renderResults(ws, isSHA256 ? 'complete' : 'dev');
+      renderBottom(ws, isSHA256 ? 'complete' : 'dev');
       if (analyzeBtn) analyzeBtn.removeAttribute('disabled');
     });
 

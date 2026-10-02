@@ -1071,6 +1071,53 @@
   color: var(--fl-faint);
 }
 
+/* SHA-256 hash result card */
+.fl-result-hash .hash-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--fl-ink);
+  border-radius: var(--fl-radius-sm);
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+
+.fl-result-hash .hash-display code.hashmono {
+  flex: 1;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+  background: none;
+  padding: 0;
+}
+
+.fl-result-hash .hash-display .copy-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex: 0 0 32px;
+}
+
+.fl-result-hash .hash-display .copy-btn:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+
+.fl-result-hash .fl-rc-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* risk pill */
 .fl-risk {
   display: inline-flex;
