@@ -16,6 +16,7 @@
     metadata: { name: 'MetadataService', label: 'Metadata Extraction Engine', module: 'METADATA-MODULE', version: 'v2.0.0' },
     timeline: { name: 'TimelineService', label: 'Timeline Reconstruction Engine', module: 'TIMELINE-MODULE', version: 'v1.3.0' },
     utility: { name: 'UtilityService', label: 'Utility Engine', module: 'UTILITY-MODULE', version: 'v1.0.0' },
+    network: { name: 'NetworkForensicsService', label: 'Network Forensics Engine', module: 'NETWORK-FORENSICS-MODULE', version: 'v1.0.0' },
     ai: { name: 'AIService', label: 'AI Analysis Engine', module: 'AI-ANALYSIS-MODULE', version: 'v0.9.0' },
   };
 
@@ -146,6 +147,21 @@
       ],
     },
     {
+      id: 'network', icon: 'wifi', name: 'Networking Tools',
+      desc: 'Network forensic analysis and protocol investigation.',
+      formats: ['PCAP', 'PCAPNG', 'LOG', 'TXT', 'JSON', 'CSV'],
+      tools: [
+        { id: 'packet-capture', name: 'PCAP Analyzer', icon: 'download-cloud', status: 'available', desc: 'Capture, parse and analyze network packet captures.' },
+        { id: 'port-scanner', name: 'Port Scanner', icon: 'scan-line', status: 'available', desc: 'Discover open ports and services on target hosts.' },
+        { id: 'dns-lookup', name: 'DNS / WHOIS Lookup', icon: 'search', status: 'available', desc: 'Resolve domains, reverse DNS and WHOIS records.' },
+        { id: 'traceroute', name: 'Traceroute / Path Analysis', icon: 'route', status: 'available', desc: 'Trace network paths and identify routing anomalies.' },
+        { id: 'netstat', name: 'Connection Monitor', icon: 'activity', status: 'beta', desc: 'Monitor active connections and socket states.' },
+        { id: 'ssl-inspect', name: 'SSL/TLS Inspector', icon: 'shield-check', status: 'beta', desc: 'Analyze certificate chains and TLS configurations.' },
+        { id: 'traffic-analysis', name: 'Traffic Flow Analysis', icon: 'git-branch', status: 'coming-soon', desc: 'Flow correlation and anomaly detection in captures.' },
+        { id: 'protocol-decode', name: 'Protocol Decoder', icon: 'code', status: 'coming-soon', desc: 'Decode and dissect custom and standard protocols.' },
+      ],
+    },
+    {
       id: 'ai', icon: 'sparkles', name: 'AI Assistant',
       desc: 'AI-assisted analysis and reporting.',
       formats: ['TXT', 'PDF', 'DOCX', 'JSON'],
@@ -187,6 +203,7 @@
     MetadataService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.metadata, file)) },
     TimelineService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.timeline, file)) },
     UtilityService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.utility, file)) },
+    NetworkForensicsService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.network, file)) },
     AIService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.ai, file)) },
   };
   if (typeof window !== 'undefined') window.ForensicServices = ForensicServices;
