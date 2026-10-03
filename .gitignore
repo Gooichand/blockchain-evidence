@@ -64,5 +64,15 @@ temp/
 *.key
 *.crt
 
+# Never commit credential documents. "Login Pass.pdf" was staged once by
+# GitHub Desktop and survives in a stash entry; there is no reason for a
+# password or credential PDF to ever be tracked.
+*Login Pass*.pdf
+*login*pass*.pdf
+*password*.pdf
+*credential*.pdf
+*passwd*.pdf
+*.secret.pdf
+
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
