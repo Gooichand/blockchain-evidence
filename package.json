@@ -50,7 +50,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "archiver": "^6.0.1",
-    "axios": "^1.6.0",
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "bull": "^4.12.2",
     "color-hash": "^2.0.2",
