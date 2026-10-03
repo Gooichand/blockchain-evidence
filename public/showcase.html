@@ -405,7 +405,8 @@ footer{padding:52px 0 40px;border-top:1px solid var(--hair)}
     <thead><tr><th>Capability</th><th>State</th><th>Notes</th></tr></thead>
     <tbody>
       <tr><td>8-role RBAC + page guards</td><td><span class="badge b-ok">SHIPPED</span></td><td>Server-enforced, role-scoped routers</td></tr>
-      <tr><td>On-chain anchoring (ethers v6)</td><td><span class="badge b-ok">SHIPPED</span></td><td><code>EvidenceStorage.sol</code> on Amoy</td></tr>
+      <tr><td>Evidence upload endpoint</td><td><span class="badge b-ok">SHIPPED</span></td><td>Hash → IPFS pin → DB row, 200 with real CID</td></tr>
+      <tr><td>On-chain anchoring (ethers v6)</td><td><span class="badge b-part">PARTIAL</span></td><td>Reverts until signer is in <code>authorizedUsers</code></td></tr>
       <tr><td>IPFS pinning via Pinata</td><td><span class="badge b-ok">SHIPPED</span></td><td>Content-addressed at upload</td></tr>
       <tr><td>Watermarked export (PDF/image)</td><td><span class="badge b-ok">SHIPPED</span></td><td><code>sharp</code> + <code>pdf-lib</code></td></tr>
       <tr><td>Legal holds, retention, tags</td><td><span class="badge b-ok">SHIPPED</span></td><td>Full CRUD with policy evaluation</td></tr>
@@ -413,7 +414,6 @@ footer{padding:52px 0 40px;border-top:1px solid var(--hair)}
       <tr><td>Forensic Lab, other 11 engines</td><td><span class="badge b-part">STUB</span></td><td>Return "under development"</td></tr>
       <tr><td>Public hash verification</td><td><span class="badge b-part">PARTIAL</span></td><td>Database lookup only; no ledger check</td></tr>
       <tr><td>Socket.IO notifications</td><td><span class="badge b-part">PARTIAL</span></td><td>Server rooms, no browser client</td></tr>
-      <tr><td>Evidence upload endpoint</td><td><span class="badge b-no">BROKEN</span></td><td>Unhandled reference error → HTTP 500</td></tr>
       <tr><td>3D evidence viewer</td><td><span class="badge b-no">ABSENT</span></td><td>Never implemented</td></tr>
       <tr><td>Two-factor authentication</td><td><span class="badge b-no">ABSENT</span></td><td>Client-only, no server endpoint</td></tr>
       <tr><td>Mainnet deployment</td><td><span class="badge b-no">PLANNED</span></td><td>Amoy testnet only</td></tr>

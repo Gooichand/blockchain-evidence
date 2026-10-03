@@ -26,10 +26,12 @@
 
 > [!WARNING]
 > **This is a testnet build, and it is honest about it.** All anchoring targets
-> **Polygon Amoy** (chainId `80002`) — not economically final. The contract is
-> unaudited. `POST /api/evidence/upload` currently returns `500`. Nothing here is
-> fit for production evidence yet. See [What actually works](#what-actually-works)
-> before you rely on anything.
+> **Polygon Amoy** (chainId `80002`) — not economically final, and the contract
+> is unaudited. On-chain anchoring additionally requires the configured signer
+> to be authorised in the contract's `authorizedUsers` map; until it is, anchor
+> transactions revert and uploads are stored with a warning rather than being
+> anchored. Nothing here is fit for production evidence yet. See
+> [What actually works](#what-actually-works).
 
 <div align="center">
   <img src="assets/badges/stat-strip.svg" alt="128 REST endpoints, 8 access roles, 17 automated tests, 1 anchored digest" width="100%">
@@ -96,7 +98,7 @@ one.
 | Realtime notifications | **Partial** | Socket.IO rooms exist server-side; the browser client does not |
 | MFA / 2FA | **Absent** | Columns exist in the schema, no code path uses them |
 | 3D evidence viewer | **Absent** | Never implemented. `assets/evidence-cube.stl` is a placeholder cube referenced by nothing |
-| `POST /api/evidence/upload` | **Broken** | Returns `500` — undeclared variable at `controllers/EvidenceUploadController.js:40` |
+| Evidence upload | **Shipped** | Hash → IPFS pin → on-chain anchor → DB row, via `integratedEvidenceService` |
 | Mainnet deployment | **Planned** | Amoy testnet only |
 
 The full ledger of defects, with file and line, is in
@@ -292,7 +294,7 @@ Every item below was confirmed by reading the source. None are speculative.
 
 | Issue | Location |
 |---|---|
-| Evidence upload returns `500` — `userError` and `user` are referenced but never declared | `controllers/EvidenceUploadController.js:40` |
+| Chain anchoring reverts `"Not authorized"` until the signer is authorised on-chain via `authorizeUser` | deployment, not code |
 | `retention_policies` is queried five times but no SQL in this repo creates the table | `controllers/retentionController.js` |
 | `security_alerts` is never written by any code path, so the admin Action Center is always empty | `add-admin-control-center.sql:428` |
 | `bull` and `node-cron` are installed and never imported — **there is no job queue and no scheduler** | `package.json` |
