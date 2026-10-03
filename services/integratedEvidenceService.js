@@ -48,7 +48,23 @@ class IntegratedEvidenceService {
           .from('evidence')
           .insert({
             case_id: metadata.caseId,
+            title: fileName,
             name: fileName,
+            file_name: fileName,
+            type: metadata.type,
+            // title, type, file_data, file_name and file_size are all NOT NULL in
+            // the evidence schema; the insert previously omitted four of them, so
+            // every upload died on a constraint violation.
+            //
+            // file_data is consumed as a locator, not as raw bytes: the UI does
+            // `<img src="${evidence.file_data}">`, `<iframe src=...>` and
+            // `link.href = evidence.file_data`. So it points at the IPFS gateway
+            // rather than duplicating the payload into Postgres, which is also
+            // what the architecture intends. If the pin failed we fall back to an
+            // inline data URI so the row stays valid and viewable in that case.
+            file_data: results.ipfs?.cid
+              ? ipfsStorageService.getGatewayUrl(results.ipfs.cid)
+              : `data:${metadata.mimeType || 'application/octet-stream'};base64,${fileBuffer.toString('base64')}`,
             file_type: metadata.mimeType,
             file_size: fileBuffer.length,
             hash: results.hash,
