@@ -98,7 +98,7 @@ one.
 | Realtime notifications | **Partial** | Socket.IO rooms exist server-side; the browser client does not |
 | MFA / 2FA | **Absent** | Columns exist in the schema, no code path uses them |
 | 3D evidence viewer | **Absent** | Never implemented. `assets/evidence-cube.stl` is a placeholder cube referenced by nothing |
-| Evidence upload | **Shipped** | Hash → IPFS pin → on-chain anchor → DB row, via `integratedEvidenceService` |
+| Evidence upload | **Shipped** | Hash → IPFS pin → DB row, via `integratedEvidenceService`; chain anchor is best-effort |
 | Mainnet deployment | **Planned** | Amoy testnet only |
 
 The full ledger of defects, with file and line, is in
