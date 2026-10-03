@@ -1,142 +1,120 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 138" width="1200" height="138" role="img" aria-label="Evidence custody pipeline">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 210" width="1200" height="210" role="img" aria-label="Evidence custody pipeline">
 <title>Evidence custody pipeline</title>
 <defs>
-  <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%"   stop-color="#08090b"/>
-    <stop offset="60%"  stop-color="#0c0d11"/>
-    <stop offset="100%" stop-color="#08090b"/>
-  </linearGradient>
-  <linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%"   stop-color="#e5484d" stop-opacity="0"/>
-    <stop offset="45%"  stop-color="#e5484d" stop-opacity=".55"/>
-    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  <linearGradient id="stage" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0%"   stop-color="#070910"/>
+    <stop offset="55%"  stop-color="#0d1220"/>
+    <stop offset="100%" stop-color="#070910"/>
   </linearGradient>
   <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".10"/>
-    <stop offset="50%"  stop-color="#ffffff" stop-opacity=".02"/>
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".14"/>
+    <stop offset="45%"  stop-color="#ffffff" stop-opacity=".03"/>
     <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
   </linearGradient>
-  <radialGradient id="halo">
-    <stop offset="0%"   stop-color="#e5484d" stop-opacity=".26"/>
-    <stop offset="55%"  stop-color="#e5484d" stop-opacity=".05"/>
-    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  <radialGradient id="vignette" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".055"/>
+    <stop offset="60%"  stop-color="#ffffff" stop-opacity=".012"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity=".38"/>
   </radialGradient>
-  <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
-    <feGaussianBlur stdDeviation="10"/>
+  <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="14"/>
   </filter>
-  <filter id="softer" x="-90%" y="-90%" width="280%" height="280%">
-    <feGaussianBlur stdDeviation="26"/>
+  <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
   
 </defs>
-<rect width="1200" height="138" fill="#08090b"/>
-  <text x="600" y="20" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" fill="#5b6069"
-        text-anchor="middle" letter-spacing="4">DIGITAL CHAIN OF CUSTODY</text>
-  
-  <g>
-    <rect x="14" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".02"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="100" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#f2f3f5" text-anchor="middle">Capture</text>
-    <text x="100" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">file + metadata</text>
-    <text x="28" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">01</text>
+
+  <rect width="1200" height="210" fill="#070910"/>
+  <text x="600" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="5">DIGITAL CHAIN OF CUSTODY</text>
+  <g opacity="1">
+    <polygon points="110.70999999999998,182 600,192 600,204 110.70999999999998,194"  fill="none"  stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,192 1089.29,182 1089.29,194 600,204" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,172 1089.29,182 600,192 110.70999999999998,182"    fill="#ffffff"    stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
   </g>
-  <line x1="191" y1="67" x2="203" y2="67"
-        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
-    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
-  </line>
-  <circle r="2.2" fill="#e5484d">
-    <animateMotion dur="2.2s" begin="0s" repeatCount="indefinite"
-      path="M190 67 L205 67"/>
-  </circle>
   <g>
-    <rect x="214" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".02"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="300" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#f2f3f5" text-anchor="middle">Register</text>
-    <text x="300" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">evidence id</text>
-    <text x="228" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">02</text>
+      <g opacity="1">
+    <polygon points="98.72,103.5 168,119 168,159 98.72,143.5"  fill="rgba(96,165,250,0.1)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="168,119 237.28,103.5 237.28,143.5 168,159" fill="rgba(96,165,250,0.05)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="168,88 237.28,103.5 168,119 98.72,103.5"    fill="rgba(96,165,250,0.22)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
   </g>
-  <line x1="391" y1="67" x2="403" y2="67"
-        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
-    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
-  </line>
-  <circle r="2.2" fill="#e5484d">
-    <animateMotion dur="2.2s" begin="0.3s" repeatCount="indefinite"
-      path="M390 67 L405 67"/>
-  </circle>
-  <g>
-    <rect x="414" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".02"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="500" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#f2f3f5" text-anchor="middle">Analyse</text>
-    <text x="500" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">sha-256 digest</text>
-    <text x="428" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">03</text>
+      <text x="168" y="120" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Capture</text>
+      <text x="168" y="144" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+            fill="rgba(96,165,250,0.95)" text-anchor="middle" letter-spacing="1.2">bytes in</text>
+      <text x="84" y="74" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#5f6b85" opacity=".85">01</text>
+    </g><line x1="252" y1="110" x2="276" y2="110"
+              stroke="#ffffff" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="3 5"/>
+      <circle r="2.6" fill="#a78bfa" filter="url(#glow)">
+        <animateMotion dur="1.9s" begin="0.00s" repeatCount="indefinite"
+          path="M251 110 L278 110"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="314.72,103.5 384,119 384,159 314.72,143.5"  fill="rgba(167,139,250,0.1)"  stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="384,119 453.28,103.5 453.28,143.5 384,159" fill="rgba(167,139,250,0.05)" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="384,88 453.28,103.5 384,119 314.72,103.5"    fill="rgba(167,139,250,0.22)"    stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
   </g>
-  <line x1="591" y1="67" x2="603" y2="67"
-        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
-    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
-  </line>
-  <circle r="2.2" fill="#e5484d">
-    <animateMotion dur="2.2s" begin="0.6s" repeatCount="indefinite"
-      path="M590 67 L605 67"/>
-  </circle>
-  <g>
-    <rect x="614" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".02"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="700" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#f2f3f5" text-anchor="middle">Anchor</text>
-    <text x="700" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">ipfs + chain</text>
-    <text x="628" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">04</text>
+      <text x="384" y="120" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Hash</text>
+      <text x="384" y="144" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+            fill="rgba(167,139,250,0.95)" text-anchor="middle" letter-spacing="1.2">sha-256</text>
+      <text x="300" y="74" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#5f6b85" opacity=".85">02</text>
+    </g><line x1="468" y1="110" x2="492" y2="110"
+              stroke="#ffffff" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="3 5"/>
+      <circle r="2.6" fill="#2dd4bf" filter="url(#glow)">
+        <animateMotion dur="1.9s" begin="0.25s" repeatCount="indefinite"
+          path="M467 110 L494 110"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="530.72,103.5 600,119 600,159 530.72,143.5"  fill="rgba(45,212,191,0.1)"  stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,119 669.28,103.5 669.28,143.5 600,159" fill="rgba(45,212,191,0.05)" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,88 669.28,103.5 600,119 530.72,103.5"    fill="rgba(45,212,191,0.22)"    stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
   </g>
-  <line x1="791" y1="67" x2="803" y2="67"
-        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
-    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
-  </line>
-  <circle r="2.2" fill="#e5484d">
-    <animateMotion dur="2.2s" begin="0.8999999999999999s" repeatCount="indefinite"
-      path="M790 67 L805 67"/>
-  </circle>
-  <g>
-    <rect x="814" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".02"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="900" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#f2f3f5" text-anchor="middle">Verify</text>
-    <text x="900" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">certificate</text>
-    <text x="828" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">05</text>
+      <text x="600" y="120" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Pin</text>
+      <text x="600" y="144" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+            fill="rgba(45,212,191,0.95)" text-anchor="middle" letter-spacing="1.2">ipfs cid</text>
+      <text x="516" y="74" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#5f6b85" opacity=".85">03</text>
+    </g><line x1="684" y1="110" x2="708" y2="110"
+              stroke="#ffffff" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="3 5"/>
+      <circle r="2.6" fill="#f0a04b" filter="url(#glow)">
+        <animateMotion dur="1.9s" begin="0.50s" repeatCount="indefinite"
+          path="M683 110 L710 110"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="746.72,103.5 816,119 816,159 746.72,143.5"  fill="rgba(240,160,75,0.1)"  stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="816,119 885.28,103.5 885.28,143.5 816,159" fill="rgba(240,160,75,0.05)" stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="816,88 885.28,103.5 816,119 746.72,103.5"    fill="rgba(240,160,75,0.22)"    stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
   </g>
-  <line x1="991" y1="67" x2="1003" y2="67"
-        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
-    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
-  </line>
-  <circle r="2.2" fill="#e5484d">
-    <animateMotion dur="2.2s" begin="1.2s" repeatCount="indefinite"
-      path="M990 67 L1005 67"/>
-  </circle>
-  <g>
-    <rect x="1014" y="34" width="172" height="66" rx="10"
-          fill="#ffffff" fill-opacity=".05"
-          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
-    <text x="1100" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
-          font-weight="700" fill="#e5484d" text-anchor="middle">Admit</text>
-    <text x="1100" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
-          fill="#5b6069" text-anchor="middle">trial / archive</text>
-    <text x="1028" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
-          fill="#5b6069" opacity=".8">06</text>
+      <text x="816" y="120" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Anchor</text>
+      <text x="816" y="144" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+            fill="rgba(240,160,75,0.95)" text-anchor="middle" letter-spacing="1.2">amoy</text>
+      <text x="732" y="74" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#5f6b85" opacity=".85">04</text>
+    </g><line x1="900" y1="110" x2="924" y2="110"
+              stroke="#ffffff" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="3 5"/>
+      <circle r="2.6" fill="#34d399" filter="url(#glow)">
+        <animateMotion dur="1.9s" begin="0.75s" repeatCount="indefinite"
+          path="M899 110 L926 110"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="962.72,103.5 1032,119 1032,159 962.72,143.5"  fill="rgba(52,211,153,0.1)"  stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1032,119 1101.28,103.5 1101.28,143.5 1032,159" fill="rgba(52,211,153,0.05)" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1032,88 1101.28,103.5 1032,119 962.72,103.5"    fill="rgba(52,211,153,0.22)"    stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
   </g>
+      <text x="1032" y="120" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Verify</text>
+      <text x="1032" y="144" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+            fill="rgba(52,211,153,0.95)" text-anchor="middle" letter-spacing="1.2">re-hash</text>
+      <text x="948" y="74" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#5f6b85" opacity=".85">05</text>
+    </g>
+  <text x="600" y="196" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8"
+        text-anchor="middle">An IPFS or chain failure is recorded as a warning — the record still saves.</text>
 </svg>

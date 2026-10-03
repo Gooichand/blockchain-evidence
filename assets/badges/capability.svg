@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 330" width="1200" height="330" role="img" aria-label="Capability status: 8 shipped, 3 partial, 2 absent, 1 planned">
+<title>Capability status: 8 shipped, 3 partial, 2 absent, 1 planned</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0%"   stop-color="#070910"/>
+    <stop offset="55%"  stop-color="#0d1220"/>
+    <stop offset="100%" stop-color="#070910"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".14"/>
+    <stop offset="45%"  stop-color="#ffffff" stop-opacity=".03"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="vignette" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".055"/>
+    <stop offset="60%"  stop-color="#ffffff" stop-opacity=".012"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity=".38"/>
+  </radialGradient>
+  <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="14"/>
+  </filter>
+  <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  
+</defs>
+
+  <rect width="1200" height="330" fill="#070910"/>
+  <text x="600" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="5">14 CAPABILITIES, GRADED AGAINST THE SOURCE</text>
+  <g opacity="1">
+    <polygon points="270.92,252.5 600,261 600,271 270.92,262.5"  fill="none"  stroke="#ffffff" stroke-opacity="0.12" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,261 929.0799999999999,252.5 929.0799999999999,262.5 600,271" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,244 929.0799999999999,252.5 600,261 270.92,252.5"    fill="#ffffff"    stroke="#ffffff" stroke-opacity="0.12" stroke-width="1" stroke-linejoin="round"/>
+  </g>
+  <g>
+      <g opacity="1">
+    <polygon points="104.576,124.66666666666667 160,138.66666666666669 160,256 104.576,242"  fill="rgba(52,211,153,0.15)"  stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="160,138.66666666666669 215.424,124.66666666666667 215.424,242 160,256" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="160,110.66666666666667 215.424,124.66666666666667 160,138.66666666666669 104.576,124.66666666666667"    fill="rgba(52,211,153,0.3)"    stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="160" y="96.66666666666667" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="27" font-weight="700"
+            fill="#34d399" text-anchor="middle" letter-spacing="-1">8</text>
+      <text x="160" y="262" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Shipped</text>
+      <text x="160" y="280" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="10.5"
+            fill="#5f6b85" text-anchor="middle">working as described</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="306.576,198 362,212 362,256 306.576,242"  fill="rgba(251,191,36,0.15)"  stroke="#fbbf24" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="362,212 417.424,198 417.424,242 362,256" fill="rgba(251,191,36,0.08)" stroke="#fbbf24" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="362,184 417.424,198 362,212 306.576,198"    fill="rgba(251,191,36,0.3)"    stroke="#fbbf24" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="362" y="170" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="27" font-weight="700"
+            fill="#fbbf24" text-anchor="middle" letter-spacing="-1">3</text>
+      <text x="362" y="262" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Partial</text>
+      <text x="362" y="280" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="10.5"
+            fill="#5f6b85" text-anchor="middle">real path, incomplete</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="508.576,212.66666666666666 564,226.66666666666666 564,256 508.576,242"  fill="rgba(251,113,133,0.15)"  stroke="#fb7185" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="564,226.66666666666666 619.424,212.66666666666666 619.424,242 564,256" fill="rgba(251,113,133,0.08)" stroke="#fb7185" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="564,198.66666666666666 619.424,212.66666666666666 564,226.66666666666666 508.576,212.66666666666666"    fill="rgba(251,113,133,0.3)"    stroke="#fb7185" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="564" y="184.66666666666666" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="27" font-weight="700"
+            fill="#fb7185" text-anchor="middle" letter-spacing="-1">2</text>
+      <text x="564" y="262" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Absent</text>
+      <text x="564" y="280" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="10.5"
+            fill="#5f6b85" text-anchor="middle">never implemented</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="710.576,227.33333333333334 766,241.33333333333334 766,256 710.576,242"  fill="rgba(96,165,250,0.15)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="766,241.33333333333334 821.424,227.33333333333334 821.424,242 766,256" fill="rgba(96,165,250,0.08)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="766,213.33333333333334 821.424,227.33333333333334 766,241.33333333333334 710.576,227.33333333333334"    fill="rgba(96,165,250,0.3)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="766" y="199.33333333333334" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="27" font-weight="700"
+            fill="#60a5fa" text-anchor="middle" letter-spacing="-1">1</text>
+      <text x="766" y="262" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">Planned</text>
+      <text x="766" y="280" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="10.5"
+            fill="#5f6b85" text-anchor="middle">testnet only</text>
+    </g>
+  <text x="1160" y="34" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11" fill="#98a2b8"
+        text-anchor="end">A forensic tool that overstates itself is worse than none.</text>
+</svg>

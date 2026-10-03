@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Endpoint distribution across the API surface: 128 routes">
+<title>Endpoint distribution across the API surface: 128 routes</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0%"   stop-color="#070910"/>
+    <stop offset="55%"  stop-color="#0d1220"/>
+    <stop offset="100%" stop-color="#070910"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".14"/>
+    <stop offset="45%"  stop-color="#ffffff" stop-opacity=".03"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="vignette" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".055"/>
+    <stop offset="60%"  stop-color="#ffffff" stop-opacity=".012"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity=".38"/>
+  </radialGradient>
+  <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="14"/>
+  </filter>
+  <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  
+</defs>
+
+  <rect width="1200" height="300" fill="#070910"/>
+  <text x="600" y="32" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="5">128 ROUTES · 65 GET · 51 POST · 10 PUT · 2 DELETE</text>
+  <g opacity="1">
+    <polygon points="132.36,220.5 600,227 600,235 132.36,228.5"  fill="none"  stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,227 1067.6399999999999,220.5 1067.6399999999999,228.5 600,235" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+    <polygon points="600,214 1067.6399999999999,220.5 600,227 132.36,220.5"    fill="#ffffff"    stroke="#ffffff" stroke-opacity="0.1" stroke-width="1" stroke-linejoin="round"/>
+  </g>
+  <g>
+      <g opacity="1">
+    <polygon points="74.958,94 107,104 107,222 74.958,212"  fill="rgba(52,211,153,0.12)"  stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="107,104 139.042,94 139.042,212 107,222" fill="rgba(52,211,153,0.06)" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="107,84 139.042,94 107,104 74.958,94"    fill="rgba(52,211,153,0.26)"    stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="107" y="72" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">27</text>
+      <text x="107" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">evidence</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="178.958,124.5925925925926 211,134.5925925925926 211,222 178.958,212"  fill="rgba(167,139,250,0.12)"  stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="211,134.5925925925926 243.042,124.5925925925926 243.042,212 211,222" fill="rgba(167,139,250,0.06)" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="211,114.5925925925926 243.042,124.5925925925926 211,134.5925925925926 178.958,124.5925925925926"    fill="rgba(167,139,250,0.26)"    stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="211" y="102.5925925925926" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">20</text>
+      <text x="211" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">admin</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="282.95799999999997,155.1851851851852 315,165.1851851851852 315,222 282.95799999999997,212"  fill="rgba(96,165,250,0.12)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="315,165.1851851851852 347.04200000000003,155.1851851851852 347.04200000000003,212 315,222" fill="rgba(96,165,250,0.06)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="315,145.1851851851852 347.04200000000003,155.1851851851852 315,165.1851851851852 282.95799999999997,155.1851851851852"    fill="rgba(96,165,250,0.26)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="315" y="133.1851851851852" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">13</text>
+      <text x="315" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">auth</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="386.95799999999997,155.1851851851852 419,165.1851851851852 419,222 386.95799999999997,212"  fill="rgba(45,212,191,0.12)"  stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="419,165.1851851851852 451.04200000000003,155.1851851851852 451.04200000000003,212 419,222" fill="rgba(45,212,191,0.06)" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="419,145.1851851851852 451.04200000000003,155.1851851851852 419,165.1851851851852 386.95799999999997,155.1851851851852"    fill="rgba(45,212,191,0.26)"    stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="419" y="133.1851851851852" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">13</text>
+      <text x="419" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">analyst</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="490.95799999999997,172.66666666666669 523,182.66666666666669 523,222 490.95799999999997,212"  fill="rgba(240,160,75,0.12)"  stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="523,182.66666666666669 555.042,172.66666666666669 555.042,212 523,222" fill="rgba(240,160,75,0.06)" stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="523,162.66666666666669 555.042,172.66666666666669 523,182.66666666666669 490.95799999999997,172.66666666666669"    fill="rgba(240,160,75,0.26)"    stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="523" y="150.66666666666669" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">9</text>
+      <text x="523" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">cases</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="594.958,185.77777777777777 627,195.77777777777777 627,222 594.958,212"  fill="rgba(52,211,153,0.12)"  stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="627,195.77777777777777 659.042,185.77777777777777 659.042,212 627,222" fill="rgba(52,211,153,0.06)" stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="627,175.77777777777777 659.042,185.77777777777777 627,195.77777777777777 594.958,185.77777777777777"    fill="rgba(52,211,153,0.26)"    stroke="#34d399" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="627" y="163.77777777777777" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">6</text>
+      <text x="627" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">public</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="698.958,190.14814814814815 731,200.14814814814815 731,222 698.958,212"  fill="rgba(96,165,250,0.12)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="731,200.14814814814815 763.042,190.14814814814815 763.042,212 731,222" fill="rgba(96,165,250,0.06)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="731,180.14814814814815 763.042,190.14814814814815 731,200.14814814814815 698.958,190.14814814814815"    fill="rgba(96,165,250,0.26)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="731" y="168.14814814814815" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">5</text>
+      <text x="731" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">notifica…</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="802.958,190.14814814814815 835,200.14814814814815 835,222 802.958,212"  fill="rgba(167,139,250,0.12)"  stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="835,200.14814814814815 867.042,190.14814814814815 867.042,212 835,222" fill="rgba(167,139,250,0.06)" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="835,180.14814814814815 867.042,190.14814814814815 835,200.14814814814815 802.958,190.14814814814815"    fill="rgba(167,139,250,0.26)"    stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="835" y="168.14814814814815" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">5</text>
+      <text x="835" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">legal-ho…</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="906.958,194.51851851851853 939,204.51851851851853 939,222 906.958,212"  fill="rgba(45,212,191,0.12)"  stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="939,204.51851851851853 971.042,194.51851851851853 971.042,212 939,222" fill="rgba(45,212,191,0.06)" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="939,184.51851851851853 971.042,194.51851851851853 939,204.51851851851853 906.958,194.51851851851853"    fill="rgba(45,212,191,0.26)"    stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="939" y="172.51851851851853" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">4</text>
+      <text x="939" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">retention</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="1010.958,198.88888888888889 1043,208.88888888888889 1043,222 1010.958,212"  fill="rgba(96,165,250,0.12)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1043,208.88888888888889 1075.042,198.88888888888889 1075.042,212 1043,222" fill="rgba(96,165,250,0.06)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1043,188.88888888888889 1075.042,198.88888888888889 1043,208.88888888888889 1010.958,198.88888888888889"    fill="rgba(96,165,250,0.26)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="1043" y="176.88888888888889" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">3</text>
+      <text x="1043" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">tags</text>
+    </g><g>
+      <g opacity="1">
+    <polygon points="1114.958,111.48148148148148 1147,121.48148148148148 1147,222 1114.958,212"  fill="rgba(95,107,133,0.12)"  stroke="#5f6b85" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1147,121.48148148148148 1179.042,111.48148148148148 1179.042,212 1147,222" fill="rgba(95,107,133,0.06)" stroke="#5f6b85" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="1147,101.48148148148148 1179.042,111.48148148148148 1147,121.48148148148148 1114.958,111.48148148148148"    fill="rgba(95,107,133,0.26)"    stroke="#5f6b85" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="1147" y="89.48148148148148" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700"
+            fill="#f4f6fb" text-anchor="middle">23</text>
+      <text x="1147" y="232" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+            fill="#98a2b8" text-anchor="middle">other 21</text>
+    </g>
+  <text x="600" y="286" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8"
+        text-anchor="middle">Counted from the mounted Express router stack, not from the source by hand.</text>
+</svg>

@@ -23,7 +23,9 @@
     "blockchain:status": "curl http://localhost:10000/api/blockchain/status",
     "blockchain:health": "curl http://localhost:10000/api/blockchain/health",
     "migrate:blockchain": "node scripts/migrate-to-blockchain.js",
-    "assets:readme": "node scripts/generate-readme-assets.js"
+    "assets:readme": "node scripts/generate-readme-assets.js",
+    "verify:readme": "node scripts/verify-readme-facts.js",
+    "check:svg": "node scripts/check-svg.js && node scripts/check-geometry.js"
   },
   "keywords": [
     "blockchain",

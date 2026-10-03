@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 396" width="1200" height="396" role="img" aria-label="Trust layers from transport to integrity, alongside known security limits">
+<title>Trust layers from transport to integrity, alongside known security limits</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0%"   stop-color="#070910"/>
+    <stop offset="55%"  stop-color="#0d1220"/>
+    <stop offset="100%" stop-color="#070910"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".14"/>
+    <stop offset="45%"  stop-color="#ffffff" stop-opacity=".03"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="vignette" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".055"/>
+    <stop offset="60%"  stop-color="#ffffff" stop-opacity=".012"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity=".38"/>
+  </radialGradient>
+  <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="14"/>
+  </filter>
+  <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  
+</defs>
+
+  <rect width="1200" height="396" fill="url(#stage)"/>
+  <text x="236" y="44" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="3.5">DEFENCE IN DEPTH</text>
+  <line x1="768" y1="54" x2="768" y2="360"
+    stroke="#ffffff" stroke-opacity=".08" stroke-width="1"/>
+  <g opacity="0.94">
+      <circle cx="236" cy="208" r="150" fill="rgba(96,165,250,0.05)"
+              stroke="#60a5fa" stroke-opacity="0.42" stroke-width="1.1"
+              stroke-dasharray="5 7">
+        
+      </circle>
+      <circle cx="386" cy="208" r="2.6" fill="#60a5fa"/>
+      <polyline points="386,208 436,109 446,109"
+                fill="none" stroke="#60a5fa" stroke-opacity=".3" stroke-width="1"/>
+      <rect x="446" y="98" width="4" height="32" rx="2" fill="#60a5fa"/>
+      <text x="464" y="113" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13"
+            font-weight="700" fill="#60a5fa">Transport</text>
+      <text x="464" y="128" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10"
+            fill="#98a2b8">helmet · cors allowlist</text>
+    </g><g opacity="0.94">
+      <circle cx="236" cy="208" r="116" fill="rgba(167,139,250,0.05)"
+              stroke="#a78bfa" stroke-opacity="0.42" stroke-width="1.1"
+              stroke-dasharray="5 7">
+        
+      </circle>
+      <circle cx="352" cy="208" r="2.6" fill="#a78bfa"/>
+      <polyline points="352,208 436,173 446,173"
+                fill="none" stroke="#a78bfa" stroke-opacity=".3" stroke-width="1"/>
+      <rect x="446" y="162" width="4" height="32" rx="2" fill="#a78bfa"/>
+      <text x="464" y="177" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13"
+            font-weight="700" fill="#a78bfa">Identity</text>
+      <text x="464" y="192" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10"
+            fill="#98a2b8">eip-191 · nonce · ±5min</text>
+    </g><g opacity="0.94">
+      <circle cx="236" cy="208" r="82" fill="rgba(45,212,191,0.05)"
+              stroke="#2dd4bf" stroke-opacity="0.42" stroke-width="1.1"
+              stroke-dasharray="5 7">
+        
+      </circle>
+      <circle cx="318" cy="208" r="2.6" fill="#2dd4bf"/>
+      <polyline points="318,208 436,237 446,237"
+                fill="none" stroke="#2dd4bf" stroke-opacity=".3" stroke-width="1"/>
+      <rect x="446" y="226" width="4" height="32" rx="2" fill="#2dd4bf"/>
+      <text x="464" y="241" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13"
+            font-weight="700" fill="#2dd4bf">Authorisation</text>
+      <text x="464" y="256" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10"
+            fill="#98a2b8">8 roles · re-read per request</text>
+    </g><g opacity="1">
+      <circle cx="236" cy="208" r="48" fill="rgba(52,211,153,0.16)"
+              stroke="#34d399" stroke-opacity="0.85" stroke-width="1.6"
+              stroke-dasharray="none">
+        <animate attributeName="stroke-opacity" values=".6;1;.6" dur="4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="284" cy="208" r="2.6" fill="#34d399"/>
+      <polyline points="284,208 436,301 446,301"
+                fill="none" stroke="#34d399" stroke-opacity=".3" stroke-width="1"/>
+      <rect x="446" y="290" width="4" height="32" rx="2" fill="#34d399"/>
+      <text x="464" y="305" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="13"
+            font-weight="700" fill="#34d399">Integrity</text>
+      <text x="464" y="320" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10"
+            fill="#98a2b8">sha-256 · ipfs · chain</text>
+    </g><circle cx="236" cy="208" r="15" fill="#34d399" opacity=".9" filter="url(#glow)">
+    <animate attributeName="r" values="14;17;14" dur="3.4s" repeatCount="indefinite"/>
+  </circle>
+  <text x="236" y="40" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="2">PROOF AT THE CORE</text>
+  <text x="796" y="60" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" fill="#5f6b85"
+        letter-spacing="3.5">AND WHAT IS NOT ENFORCED</text><g>
+      <rect x="796" y="80" width="368" height="42" rx="8" fill="rgba(251,113,133,0.07)"
+            stroke="#fb7185" stroke-opacity=".26" stroke-width="1"/>
+      <rect x="796" y="80" width="3.5" height="42" rx="1.75" fill="#fb7185"/>
+      <text x="812" y="98" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#f4f6fb">Base RLS is permissive</text>
+      <text x="812" y="112" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85">run security-hardening.sql</text>
+    </g><g>
+      <rect x="796" y="132" width="368" height="42" rx="8" fill="rgba(251,191,36,0.07)"
+            stroke="#fbbf24" stroke-opacity=".26" stroke-width="1"/>
+      <rect x="796" y="132" width="3.5" height="42" rx="1.75" fill="#fbbf24"/>
+      <text x="812" y="150" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#f4f6fb">CSP allows unsafe-inline</text>
+      <text x="812" y="164" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85">scripts and attributes</text>
+    </g><g>
+      <rect x="796" y="184" width="368" height="42" rx="8" fill="rgba(251,191,36,0.07)"
+            stroke="#fbbf24" stroke-opacity=".26" stroke-width="1"/>
+      <rect x="796" y="184" width="3.5" height="42" rx="1.75" fill="#fbbf24"/>
+      <text x="812" y="202" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#f4f6fb">Failed logins skip the quota</text>
+      <text x="812" y="216" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85">skipFailedRequests: true</text>
+    </g><g>
+      <rect x="796" y="236" width="368" height="42" rx="8" fill="rgba(251,113,133,0.07)"
+            stroke="#fb7185" stroke-opacity=".26" stroke-width="1"/>
+      <rect x="796" y="236" width="3.5" height="42" rx="1.75" fill="#fb7185"/>
+      <text x="812" y="254" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#f4f6fb">Private key in-process</text>
+      <text x="812" y="268" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85">no KMS, no rotation</text>
+    </g><g>
+      <rect x="796" y="288" width="368" height="42" rx="8" fill="rgba(251,191,36,0.07)"
+            stroke="#fbbf24" stroke-opacity=".26" stroke-width="1"/>
+      <rect x="796" y="288" width="3.5" height="42" rx="1.75" fill="#fbbf24"/>
+      <text x="812" y="306" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#f4f6fb">Replay cache is in memory</text>
+      <text x="812" y="320" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5" fill="#5f6b85">lost on restart</text>
+    </g>
+</svg>

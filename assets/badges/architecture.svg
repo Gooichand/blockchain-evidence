@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Four-tier architecture: client, Express, services, contracts and storage">
+<title>Four-tier architecture: client, Express, services, contracts and storage</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0%"   stop-color="#070910"/>
+    <stop offset="55%"  stop-color="#0d1220"/>
+    <stop offset="100%" stop-color="#070910"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".14"/>
+    <stop offset="45%"  stop-color="#ffffff" stop-opacity=".03"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="vignette" cx="50%" cy="42%" r="72%">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".055"/>
+    <stop offset="60%"  stop-color="#ffffff" stop-opacity=".012"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity=".38"/>
+  </radialGradient>
+  <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="14"/>
+  </filter>
+  <filter id="glow" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  
+</defs>
+
+  <rect width="1200" height="420" fill="url(#stage)"/>
+  <text x="600" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5" fill="#5f6b85"
+        text-anchor="middle" letter-spacing="5">REQUEST PATH, TOP TO BOTTOM</text>
+  <g>
+      <g opacity="1">
+    <polygon points="288.24,110.5 600,129 600,191 288.24,172.5"  fill="rgba(96,165,250,0.09)"  stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,129 911.76,110.5 911.76,172.5 600,191" fill="rgba(96,165,250,0.045)" stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,92 911.76,110.5 600,129 288.24,110.5"    fill="rgba(96,165,250,0.2)"    stroke="#60a5fa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="268" y="137" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+            font-weight="700" fill="#f4f6fb">Client</text>
+      <line x1="264" y1="145" x2="374" y2="145"
+            stroke="#60a5fa" stroke-opacity=".65" stroke-width="1.4"/>
+      <line x1="390" y1="118" x2="390" y2="148"
+            stroke="#ffffff" stroke-opacity=".1" stroke-width="1"/>
+      <text x="539.5" y="137"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">45 static pages</text><text x="802.5" y="137"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">8 role dashboards</text>
+    </g><line x1="600" y1="160" x2="600" y2="172"
+        stroke="#60a5fa" stroke-opacity=".4" stroke-width="1.2" stroke-dasharray="3 4">
+        <animate attributeName="stroke-dashoffset" values="14;0" dur="1.5s" repeatCount="indefinite"/>
+      </line>
+      <circle cx="600" r="2.4" fill="#60a5fa" filter="url(#glow)">
+        <animateMotion dur="1.5s" repeatCount="indefinite" path="M600 160 L600 172"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="302.962,202.5 600,221 600,283 302.962,264.5"  fill="rgba(167,139,250,0.09)"  stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,221 897.038,202.5 897.038,264.5 600,283" fill="rgba(167,139,250,0.045)" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,184 897.038,202.5 600,221 302.962,202.5"    fill="rgba(167,139,250,0.2)"    stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="285" y="229" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+            font-weight="700" fill="#f4f6fb">Express 5</text>
+      <line x1="281" y1="237" x2="391" y2="237"
+            stroke="#a78bfa" stroke-opacity=".65" stroke-width="1.4"/>
+      <line x1="407" y1="210" x2="407" y2="240"
+            stroke="#ffffff" stroke-opacity=".1" stroke-width="1"/>
+      <text x="507.0" y="229"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">19 routers</text><text x="671.0" y="229"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">helmet · cors</text><text x="835.0" y="229"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">page guards</text>
+    </g><line x1="600" y1="252" x2="600" y2="264"
+        stroke="#a78bfa" stroke-opacity=".4" stroke-width="1.2" stroke-dasharray="3 4">
+        <animate attributeName="stroke-dashoffset" values="14;0" dur="1.5s" repeatCount="indefinite"/>
+      </line>
+      <circle cx="600" r="2.4" fill="#a78bfa" filter="url(#glow)">
+        <animateMotion dur="1.5s" repeatCount="indefinite" path="M600 252 L600 264"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="317.684,294.5 600,313 600,375 317.684,356.5"  fill="rgba(45,212,191,0.09)"  stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,313 882.316,294.5 882.316,356.5 600,375" fill="rgba(45,212,191,0.045)" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,276 882.316,294.5 600,313 317.684,294.5"    fill="rgba(45,212,191,0.2)"    stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="302" y="321" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+            font-weight="700" fill="#f4f6fb">Services</text>
+      <line x1="298" y1="329" x2="408" y2="329"
+            stroke="#2dd4bf" stroke-opacity=".65" stroke-width="1.4"/>
+      <line x1="424" y1="302" x2="424" y2="332"
+            stroke="#ffffff" stroke-opacity=".1" stroke-width="1"/>
+      <text x="518.3" y="321"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">integrated evidence</text><text x="671.0" y="321"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">blockchain · ipfs</text><text x="823.7" y="321"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">watermark · notify</text>
+    </g><line x1="600" y1="344" x2="600" y2="356"
+        stroke="#2dd4bf" stroke-opacity=".4" stroke-width="1.2" stroke-dasharray="3 4">
+        <animate attributeName="stroke-dashoffset" values="14;0" dur="1.5s" repeatCount="indefinite"/>
+      </line>
+      <circle cx="600" r="2.4" fill="#2dd4bf" filter="url(#glow)">
+        <animateMotion dur="1.5s" repeatCount="indefinite" path="M600 344 L600 356"/>
+      </circle><g>
+      <g opacity="1">
+    <polygon points="332.406,386.5 600,405 600,467 332.406,448.5"  fill="rgba(240,160,75,0.09)"  stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,405 867.594,386.5 867.594,448.5 600,467" fill="rgba(240,160,75,0.045)" stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+    <polygon points="600,368 867.594,386.5 600,405 332.406,386.5"    fill="rgba(240,160,75,0.2)"    stroke="#f0a04b" stroke-opacity="0.5" stroke-width="1.1" stroke-linejoin="round"/>
+  </g>
+      <text x="319" y="413" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+            font-weight="700" fill="#f4f6fb">Contracts &amp; store</text>
+      <line x1="315" y1="421" x2="425" y2="421"
+            stroke="#f0a04b" stroke-opacity=".65" stroke-width="1.4"/>
+      <line x1="441" y1="394" x2="441" y2="424"
+            stroke="#ffffff" stroke-opacity=".1" stroke-width="1"/>
+      <text x="529.7" y="413"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">EvidenceStorage.sol</text><text x="671.0" y="413"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">IPFS via Pinata</text><text x="812.3" y="413"
+             font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="11.5" fill="#98a2b8" text-anchor="middle">Supabase · 16 tables</text>
+    </g>
+</svg>
