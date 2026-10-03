@@ -1,416 +1,350 @@
 ﻿<div align="center">
+  <img src="assets/hero.svg" alt="Isometric evidence blocks receding into depth" width="100%">
 
-![EVID-DGC Banner](assets/hero-banner.svg)
+  <h1>EVID-DGC</h1>
+  <p><strong>Tamper-evident digital evidence management.</strong></p>
+  <p>Hash on ingest &rarr; pin to IPFS &rarr; anchor the digest on-chain &rarr; let anyone prove the file is byte-for-byte what it was at collection.</p>
 
-# EVID-DGC — Blockchain Evidence & Digital Chain of Custody
+  <p>
+    <a href="#quick-start"><strong>Quick start</strong></a> &nbsp;&middot;&nbsp;
+    <a href="#how-it-works">How it works</a> &nbsp;&middot;&nbsp;
+    <a href="#what-actually-works">What actually works</a> &nbsp;&middot;&nbsp;
+    <a href="#architecture">Architecture</a> &nbsp;&middot;&nbsp;
+    <a href="#security">Security</a> &nbsp;&middot;&nbsp;
+    <a href="#known-gaps">Known gaps</a>
+  </p>
 
-[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=DC2626&center=true&vCenter=true&width=600&lines=Blockchain+Evidence+Management;Immutable+Hashes+on+Polygon+Amoy;IPFS+Permanent+Storage;Digital+Chain+of+Custody;8+Roles+RBAC%2BABAC;Live+Demo+on+Render)](https://github.com/Gooichand/blockchain-evidence)
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Language-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/Backend-Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/Express-v4-000000?style=flat-square&logo=express" alt="Express">
-  <img src="https://img.shields.io/badge/Blockchain-Solidity-363636?style=flat-square&logo=solidity&logoColor=white" alt="Solidity">
-  <img src="https://img.shields.io/badge/Chain-Polygon%20Amoy-8247E5?style=flat-square&logo=polygon&logoColor=white" alt="Polygon Amoy">
-  <img src="https://img.shields.io/badge/IPFS-Pinata-9B30FF?style=flat-square&logo=ipfs&logoColor=white" alt="IPFS">
-  <img src="https://img.shields.io/badge/Realtime-Socket.IO-010101?style=flat-square&logo=socketdotio" alt="Socket.IO">
-  <img src="https://img.shields.io/badge/Ethers-v6-1D315B?style=flat-square&logo=ethereum&logoColor=white" alt="Ethers.js">
-</p>
-
-<p align="center">
-  <a href="https://blockchain-evidence.onrender.com"><img src="https://img.shields.io/badge/LIVE_DEMO-Click_here-EF4444?style=for-the-badge" alt="Live Demo"></a>
-  <a href="public/api-reference.html"><img src="https://img.shields.io/badge/API-Docs-3B82F6?style=for-the-badge" alt="API Docs"></a>
-  <a href="docs/DEPLOYMENT.md"><img src="https://img.shields.io/badge/Deploy-Render-0B0E14?style=for-the-badge&logo=render&logoColor=white" alt="Deploy on Render"></a>
-</p>
-
-<img src="assets/badges/status-badges.svg" alt="Project status badges">
-
+  <p>
+    <a href="https://github.com/Gooichand/blockchain-evidence/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Gooichand/blockchain-evidence/actions/workflows/ci.yml/badge.svg"></a>
+    <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+    <img alt="Node >=20.19" src="https://img.shields.io/badge/node-%5E20.19%20%7C%7C%20%3E%3D22-3c873f.svg">
+    <img alt="Express 5" src="https://img.shields.io/badge/express-5.2.1-444.svg">
+  </p>
 </div>
 
----
+<br>
 
-## 📊 Live Repository Statistics
+> [!WARNING]
+> **This is a testnet build, and it is honest about it.** All anchoring targets
+> **Polygon Amoy** (chainId `80002`) — not economically final. The contract is
+> unaudited. `POST /api/evidence/upload` currently returns `500`. Nothing here is
+> fit for production evidence yet. See [What actually works](#what-actually-works)
+> before you rely on anything.
 
 <div align="center">
-
-[![GitHub Stats](https://github-readme-stats.vercel.app/api?username=Gooichand&show_icons=true&theme=radical&bg_color=0B0E14&title_color=DC2626&icon_color=EF4444&text_color=F5F5F5&border_color=DC2626)](https://github.com/Gooichand/blockchain-evidence)
-
-[![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=Gooichand&layout=compact&theme=radical&bg_color=0B0E14&title_color=DC2626&text_color=F5F5F5&border_color=DC2626)](https://github.com/Gooichand/blockchain-evidence)
-
+  <img src="assets/badges/stat-strip.svg" alt="128 REST endpoints, 8 access roles, 17 automated tests, 1 anchored digest" width="100%">
 </div>
 
 ---
 
-## 📌 Current Status — August 2026
+## The problem
 
-| Component | Status |
-|---|---|
-| **Core Platform (Phase 1)** | ✅ Live — [demo](https://blockchain-evidence.onrender.com) |
-| **Blockchain Integration (Phase 2)** | ✅ Live on **Polygon Amoy testnet** |
-| **IPFS Storage (Phase 2)** | ✅ Live via **Pinata** |
-| **Forensic Lab (Phase 3)** | 🔶 In development — foundation shipped |
-| **3D Evidence Viewer (Phase 3)** | 🔶 Viewer live (STL asset shipped), advanced controls planned |
-| **AI-Assisted Analysis (Phase 3)** | 🔬 Research phase |
-| **Mainnet Deployment (Phase 4)** | 🔴 Planned — currently Amoy only |
+Evidence handling is a trust problem before it is a technology problem. A
+custody log in a database is only as trustworthy as whoever can write to that
+database — which, in most deployments, includes the people you are trying to
+audit.
 
-> [!IMPORTANT]
-> **All blockchain records are on the Polygon Amoy testnet.** Production/mainnet
-> anchoring is the Phase 4 target, not yet available.
+EVID-DGC removes the trust requirement from one specific claim: **the bytes of
+this file have not changed since the moment they were collected.** It does that
+by pushing a SHA-256 digest onto a public ledger, where altering it would
+require rewriting a block that thousands of unrelated parties already hold.
 
----
+Everything else in this repository — roles, cases, legal holds, retention,
+forensics — is conventional application work sitting on top of that one
+guarantee.
 
-## 🚨 The Problem
+## How it works
 
-- **Broken chain of custody** in traditional evidence room handling
-- **No public auditability** — evidence integrity only checkable by the court
-- **Missing multi-hash verification** (MD5, SHA-1, SHA-256)
-- **No immutability** — files can be silently modified
+<div align="center">
+  <img src="assets/badges/pipeline.svg" alt="Capture, register, hash, anchor, verify, admit" width="100%">
+</div>
 
-## 💡 Our Solution
+The real orchestration lives in
+[`services/integratedEvidenceService.js`](services/integratedEvidenceService.js):
 
-- **8-role RBAC + ABAC enforcement** applies to every action
-- **Blockchain anchoring on Polygon Amoy** — write the evidence hash, immutably
-- **IPFS pinning via Pinata** — full file, permanent storage
-- **Forensic Lab** — generates multiple hashes per evidence, highlights tamper
-- **3D evidence model** — an STL digital twin of the evidence document
+1. **Hash** the uploaded buffer with SHA-256.
+2. **Pin** the file to IPFS via Pinata — content-addressed, so the CID *is* a
+   content commitment. Retried three times with linear backoff.
+3. **Anchor** the digest on-chain via `EvidenceStorage.storeEvidence`, waiting
+   for 2 confirmations.
+4. **Record** the row plus an `activity_logs` audit entry.
 
----
+Worth knowing: steps 2 and 3 are wrapped so that **an IPFS or chain failure does
+not fail the upload** — the error is recorded in `results.errors` and the record
+still saves. For a forensic system you should decide deliberately whether that
+is the policy you want.
 
-## 📦 Core Features
+Verification is the mirror image: re-fetch from IPFS, recompute SHA-256, compare.
 
-### Phase 1 — Core System ✅ Deployed
-- 8 roles: Admin, Officer, Investigator, Analyst, Evidence Manager, Reviewer, Judge, Public
-- Evidence create → register → store → transfer → verify lifecycle
-- Audit logging of all custody events
-- Real-time dashboard via **Socket.IO**
-- Subordinate re-upload anti-tamper via **multi-hash comparison**
+## What actually works
 
-### Phase 2 — Blockchain & IPFS ✅ Deployed (Amoy)
-- `EVID-DGC.sol` — `anchorEvidence`, `verifyEvidence`, `getEvidenceHistory`
-- Won the chain (deployed address in [Deployment section](#deployment))
-- Files pinned to **Pinata IPFS**, hash recorded on-chain
+Verified against source, not against a roadmap. A forensic tool that overstates
+its own capability is worse than no tool at all, so this table is the honest
+one.
 
-### Phase 3 — Forensic Lab & 3D Evidence 🔶 In Progress
-- Forensic analyzer: **MD5 / SHA-1 / SHA-256**, entropy, file-type detection
-- **3D Evidence Viewer** — STL model rendered in-app (asset: `assets/evidence-cube.stl`)
-- Forensic report generator — planned
-- AI-based evidence triage — research
-
----
-
-## 🧰 Technology Stack
-
-<!-- shields.io badges -->
-
-<p align="center">
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
-  <img src="https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white" alt="Express">
-  <img src="https://img.shields.io/badge/Socket.IO-Realtime-010101?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.IO">
-  <img src="https://img.shields.io/badge/Ethers.js-v6-1D315B?style=flat-square&logo=ethereum&logoColor=white" alt="Ethers.js">
-  <img src="https://img.shields.io/badge/Hardhat-Testing-FCC624?style=flat-square&logo=hardhat&logoColor=black" alt="Hardhat">
-  <img src="https://img.shields.io/badge/Pinata-IPFS-9B30FF?style=flat-square&logo=ipfs&logoColor=white" alt="Pinata">
-  <img src="https://img.shields.io/badge/Jest-Testing-C21325?style=flat-square&logo=jest&logoColor=white" alt="Jest">
-  <img src="https://img.shields.io/badge/Render-Deploy-0B0E14?style=flat-square&logo=render&logoColor=white" alt="Render">
-  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-</p>
-
-### Technology Stack Maturity
-
-| Area | Maturity |
-|---|---|
-| Frontend / Backend | ✅ ✅ Mature — full page toolkit |
-| Blockchain + IPFS | ✅ Operational — Amoy testnet |
-| 3D evidence & AI | 🟡 Prototype / roadmap |
-| Mainnet | ❌ Not deployed |
-
----
-
-## 🏗️ Architecture
-
-```mermaid
-flowchart TD
-    subgraph Client
-        A[Browser] --> B[Dashboard / Public Pages]
-    end
-    subgraph Server
-        C[Express API] --> D[(PostgreSQL / Supabase)]
-        C --> E[Pinata IPFS]
-        C --> F[Polygon Amoy node]
-    end
-    subgraph Contract
-        F --> G[EVID-DGC contract]
-    end
-    B -->|REST + Socket.IO| C
-    B -->|3D viewer| H[THREE.js/STL]
-```
-
----
-
-## 🧑‍⚖️ Role-Based Access Control (RBAC)
-
-| Role | Permissions |
-|---|---|
-| **Admin** | Full system control, user/role management |
-| **Officer** | Capture & register new evidence, upload files |
-| **Investigator** | Access case data, annotate evidence |
-| **Analyst** | Run forensic analysis on evidence |
-| **Evidence Manager** | Manage evidence lifecycle & retention |
-| **Reviewer** | Verify chain of custody, approve evidence |
-| **Judge** | Review finalized reports, certify for trial |
-| **Public** | Verify evidence integrity (public dashboard) |
-
-ABAC rules enforce context: only the owning investigator/team may transfer
-evidence; Public role is restricted to verification endpoints.
-
----
-
-## ⛓️ Blockchain & Evidence Integrity
-
-```solidity
-// contracts/EVID_DGC.sol (simplified)
-contract EVID_DGC {
-    mapping(bytes32 => EvidenceRecord) public records;
-
-    function anchorEvidence(
-        string memory evidenceId,
-        bytes32 evidenceHash,
-        address officer
-    ) external returns (bytes32) {
-        record.evidenceHash = evidenceHash;  // SHA-256 of file
-        emit EvidenceAnchored(evidenceId, evidenceHash, block.timestamp);
-        return recordHash;
-    }
-}
-```
-
-**Deployed Address (Polygon Amoy):**
-
-```
-EVID-DGC: 0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3
-Explorer : https://amoy.polygonscan.com/address/0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3
-```
-
-> [!caution]
-> This is a **testnet** contract. Do not use for production evidence until Phase 4 mainnet deploy.
-
-### On-Chain Evidence Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant O as Officer
-    participant S as Server
-    participant C as EVID-DGC (Amoy)
-    participant I as Pinata IPFS
-    O->>S: Upload file + metadata
-    S->>I: Pin file → CID
-    S->>C: anchorEvidence(evidenceId, keccak(file))
-    C-->>S: emit EvidenceAnchored { block }
-    S-->>O: Evidence ID + tx hash
-```
-
----
-
-## 📁 IPFS Storage
-
-- Files **pinned on Pinata IPFS** at upload time — permanent & deduplicated
-- CID stored in PostgreSQL, hash stored on-chain
-- Public-dashboard verification compares **stored file hash vs. on-chain hash**
-
----
-
-## 🗄️ Database Schema (PostgreSQL via Supabase)
-
-```mermaid
-erDiagram
-    USERS ||--o{ EVIDENCE : submits
-    USERS ||--o{ AUDIT_LOG : performs
-    EVIDENCE {
-        uuid id PK
-        string case_number
-        string description
-        string file_hash "SHA-256"
-        string ipfs_cid
-        string onchain_tx
-        string custody_actor
-    }
-    AUDIT_LOG {
-        uuid id PK
-        uuid evidence_id FK
-        uuid actor_id FK
-        string action
-        timestamp time
-    }
-```
-
-Full schema: `complete-database-setup-fixed.sql` (repo root).
-
----
-
-## 🔬 Evidence Workflow — Digital Chain of Custody
-
-```mermaid
-flowchart LR
-    C[Evidence Capture] --> R[Registration]
-    R --> L[Lab Analysis]
-    L --> A[Anchoring on Amoy]
-    A --> V[Verification by Reviewer]
-    V --> T[Transfer / Trial]
-    T --> D[Disposal or Archive]
-```
-
-| Step | Actor | Output |
+| Capability | State | Detail |
 |---|---|---|
-| Capture | Officer | File + metadata |
-| Register | Evidence Manager | Evidence ID |
-| Analyze | Analyst | Forensic report |
-| Anchor | System | Hash 0x + txid |
-| Verify | Reviewer / Public | Certified copy |
+| Role-based access control | **Shipped** | 8 roles; page guards enforced *before* `express.static`; role-scoped routers |
+| On-chain anchoring | **Shipped** | [`contracts/EvidenceStorage.sol`](contracts/EvidenceStorage.sol) on Amoy via ethers v6 |
+| IPFS pinning | **Shipped** | Pinata, pinned at upload, with retry and CID validation |
+| SHA-256 verification | **Shipped** | Real digest; integrity re-check path re-downloads from IPFS |
+| Watermarked export | **Shipped** | `sharp` + `pdf-lib` for images and PDFs, plus ZIP bulk export |
+| Legal holds & retention | **Shipped** | Full CRUD, per-item hold, admission status, policy timeline |
+| EIP-191 request signing | **Shipped** | Nonce + ±5 min timestamp + method/path binding + replay cache |
+| Forensic workbench | **Partial** | 12-tool UI; **only the SHA-256 engine is real** — 11 return `"under development"` |
+| Public hash verification | **Partial** | Database lookup only; does not re-check the ledger yet |
+| Realtime notifications | **Partial** | Socket.IO rooms exist server-side; the browser client does not |
+| MFA / 2FA | **Absent** | Columns exist in the schema, no code path uses them |
+| 3D evidence viewer | **Absent** | Never implemented. `assets/evidence-cube.stl` is a placeholder cube referenced by nothing |
+| `POST /api/evidence/upload` | **Broken** | Returns `500` — undeclared variable at `controllers/EvidenceUploadController.js:40` |
+| Mainnet deployment | **Planned** | Amoy testnet only |
 
----
+The full ledger of defects, with file and line, is in
+[Known gaps](#known-gaps).
 
-## 🧊 3D Evidence Viewer (Phase 3, in progress)
-
-A genuine 3D model asset is included: [`assets/evidence-cube.stl`](assets/evidence-cube.stl).
-The interactive viewer (`view-evidence3d.html`) renders it with notes/rotation;
-miniature interactive application elements (e.g., adjustable lighting) are **planned**.
-
----
-
-## 🧪 Testing
-
-### Unit / Integration (Jest, Phase 1-2)
-
-```bash
-npm test          # unit + integration
-npm run test:e2e  # Playwright E2E (planned configuration in progress)
-```
-
-### What's covered
-
-- Evidence CRUD multi-hash detection
-- Auth + RBAC role gating
-- IPFS & chain mocks
-
----
-
-## 🚀 Quick Start
-
-### 1. Prerequisites
-
-- Node.js 18+, npm
-- Supabase project (or `docker run postgres`)
-- (Optional) Pinata account + JWT
-
-### 2. Clone & install
+## Quick start
 
 ```bash
 git clone https://github.com/Gooichand/blockchain-evidence.git
 cd blockchain-evidence
 npm install
+cp .env.example .env      # then fill it in — see Configuration
+npm start                 # http://localhost:3000
 ```
 
-### 3. Configure environment
+Requires **Node `^20.19.0 || >=22.0.0`** — the Express 5 / Hardhat toolchain will
+not run on Node 18 or 16.
+
+`npm run dev` starts the same server under `nodemon`.
+
+### Database
+
+The backend talks to **Supabase (Postgres)**. There is no bundled database.
+
+> [!CAUTION]
+> [`complete-database-setup-fixed.sql`](complete-database-setup-fixed.sql) issues
+> `DROP TABLE … CASCADE` against all 16 base tables. It is meant to be run
+> **once**, on an empty project. Never point it at a database you care about.
 
 ```bash
-cp .env.example .env
+# 1. In the Supabase SQL editor — base schema, roles, RLS, seed reference data
+# 2. Then apply the additive migrations, in order:
+migrations/add-blockchain-columns.sql
+migrations/add-admin-control-center.sql
+migrations/add-analysis-module.sql
+migrations/add-production-features.sql
+migrations/add-public-portal-columns.sql
+migrations/add-users-email-verification-columns.sql
+migrations/fix-case-id-types.sql
+migrations/fix-session-columns.sql
+# 3. Strongly recommended — replaces the permissive base RLS policies
+security-hardening.sql
 ```
 
-| Variable | Example |
+The base script seeds `case_statuses` and `tags`, and creates demo users — but
+**their `password_hash` values are not bcrypt hashes, so none of them can log
+in.** Create your first real account through the registration flow instead.
+`admin` is deliberately blocked from self-registration.
+
+## Configuration
+
+`.env.example` is a starting point, not a specification. Eight of the variables
+in it are **never read by any code** — `BLOCKCHAIN_NETWORK`,
+`ENABLE_BLOCKCHAIN`, `ENCRYPTION_KEY`, `MAX_FILE_SIZE`, `UPLOAD_PATH`,
+`LOG_LEVEL`, `LOG_FILE`, `TARGET_CHAIN_ID`. Setting them does nothing.
+
+These are the ones that matter:
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `SUPABASE_URL` | yes | Supabase project URL. The process exits without it |
+| `SUPABASE_KEY` | yes | Supabase **anon** key — note the name is `SUPABASE_KEY`, not `SUPABASE_ANON_KEY` |
+| `JWT_SECRET` | yes | Signs session tokens |
+| `POLYGON_RPC_URL` | for chain | JSON-RPC endpoint used by ethers v6 and Hardhat |
+| `PRIVATE_KEY` | for chain | Signing key for anchor transactions |
+| `CONTRACT_ADDRESS` | for chain | Deployed `EvidenceStorage` address |
+| `PINATA_JWT` | for IPFS | The only Pinata credential actually used; `PINATA_API_KEY` / `PINATA_SECRET_KEY` are read but unused |
+| `PORT` | no | Defaults to `3000` |
+| `REDIS_URL` | no | Falls back to an in-memory cache with a 60 s TTL |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | no | Contact form only; the endpoint returns `503` when unset |
+| `ALLOWED_ORIGINS` | no | Comma-separated extra CORS origins |
+| `RATE_LIMIT_*_WINDOW_MS` / `RATE_LIMIT_*_MAX` | no | Twelve rate-limit knobs that exist in code but are missing from `.env.example` |
+
+Chain config lives in [`hardhat.config.js`](hardhat.config.js) and supports
+`sepolia`, `polygonAmoy`, and `polygon`. Deployment of the contract is
+`npm run deploy:amoy` / `npm run deploy:polygon`.
+
+## Architecture
+
+```
+server.js                  Express 5 app, Socket.IO, helmet/CORS, page guards
+routes/                    19 routers · 128 endpoints
+controllers/               Request handling and business rules
+services/
+  integratedEvidenceService.js   hash → IPFS → chain → DB orchestration
+  blockchain/blockchainService.js ethers v6 + contract ABI
+  storage/ipfsStorageService.js  Pinata pin / fetch / CID validation
+  evidenceHelpers.js             watermarking (sharp, pdf-lib)
+  notificationService.js         DB rows + Socket.IO emit
+  publicSchema.js                feature-detects optional migrations
+  monitoringService.js           read-only metrics and thresholds
+  web3Service.js, ipfsService.js legacy duplicates, used only by a migration script
+middleware/
+  authorization.js         8 roles, PROTECTED_PAGES, token revocation
+  verifySignature.js       EIP-191 verification with replay protection
+  requireAuth.js           JWT / x-user-wallet, re-reads the user row
+  rateLimiters.js          10 limiters (6 are actually wired to routes)
+contracts/                 EvidenceStorage.sol + ABI
+migrations/                8 additive SQL migrations
+public/                    46 static pages
+tests/                     3 Jest suites · 17 tests
+```
+
+**Roles.** Eight, defined in `middleware/authorization.js`:
+`admin`, `public_viewer`, `investigator`, `forensic_analyst`,
+`legal_professional`, `court_official`, `evidence_manager`, `auditor`.
+Each is served its own dashboard and scoped routers. Roles are re-read from the
+database on every request — never trusted from the client.
+
+**Contract.** `EvidenceStorage` stores `(fileHash, metadata, uploadedBy,
+timestamp, isSealed)` with a reverse `hash → id` index, a duplicate-hash guard,
+and an `onlyAuthorized` modifier. Records are **write-once**: there is no update
+or delete function. The hash is a `string`, not `bytes32`.
+
+## Security
+
+Genuinely implemented:
+
+- **Helmet** with a hand-written CSP, and a CORS allowlist with credentials
+- **bcrypt** password hashing; **JWT** in an `HttpOnly`, `SameSite=Lax` cookie
+  with a server-side revocation list
+- **EIP-191 request signing** — nonce, ±5 minute timestamp window, method and
+  path binding, and an in-memory replay cache
+- **Server-side page guards** that run *before* static file serving, so an
+  unauthorised request never receives the HTML
+- **`verifyAdmin`** on all 18 admin routes, which re-checks the role against the
+  database instead of trusting `req.body`
+- Rate limiting on auth, admin, upload, verification, analyst and global API
+  routes; 50 MB body caps; a 17-entry MIME allowlist and 100 MB size cap on
+  uploads; audit logging on auth, download, custody and admin events
+- Immutability by construction on-chain
+
+Known limits, stated plainly:
+
+- The **base RLS is permissive** — `evidence` and `cases` are
+  `SELECT USING (true)`, and `users` has `INSERT WITH CHECK (true)`. Anyone
+  holding the anon key can read all evidence until you run
+  `security-hardening.sql`.
+- The CSP allows `'unsafe-inline'` for scripts and attributes.
+- The auth rate limiter sets `skipFailedRequests: true`, so **failed logins do
+  not consume the quota**, and its default is 100 requests / 15 minutes.
+- A raw `PRIVATE_KEY` lives in the server process and signs transactions.
+  No KMS, no rotation.
+- Nonce, revocation and connected-user state are held **in process memory** —
+  they do not survive a restart and are not shared across instances.
+- `POST /api/evidence/archive` trusts an `archivedBy` value from the request
+  body under optional auth.
+
+See [`docs/SECURITY.md`](docs/SECURITY.md) for the longer version.
+
+## Testing
+
+```bash
+npm test                  # 3 suites · 17 tests — fully offline
+npm run lint              # eslint
+npm run test:integration  # live HTTP against a running server
+```
+
+The Jest suite is offline by design: Supabase is mocked in `auth.test.js`, and
+`health.test.js` drives the imported Express app through supertest without
+binding a port. It covers auth flows, health/404/catch-all behaviour, and
+signature verification.
+
+`test:integration` is different — it needs a running server, a funded wallet and
+a valid Pinata JWT, because it performs a real upload and asserts a real
+transaction hash.
+
+There is **no end-to-end or browser suite**, and no Solidity tests.
+
+## Deployment
+
+[`render.yaml`](render.yaml) declares a single Node web service (free tier,
+Oregon, 1–2 instances) with a `/api/health` check. There is no database
+resource — Postgres is Supabase and must be provisioned separately.
+
+The blueprint sets only `NODE_ENV`, `PORT`, `SUPABASE_URL`, `SUPABASE_KEY` and
+`ALLOWED_ORIGINS`. `JWT_SECRET`, `PINATA_JWT`, `POLYGON_RPC_URL`, `PRIVATE_KEY`
+and `CONTRACT_ADDRESS` must be added by hand, so **on-chain and IPFS features
+will be inert on a fresh Render deploy until you do.**
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on Node 20 for
+pushes and pull requests to `main`, and gates on `npm run lint` and `npm test`.
+Note that ESLint is configured with `no-unused-vars` and `prettier/prettier` as
+warnings, so the lint gate is advisory — it will not fail on style. The contract
+is not compiled and no coverage is collected.
+
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) is the detailed guide. It instructs
+`Node 16.x`, which is wrong and will not work.
+
+## Known gaps
+
+Every item below was confirmed by reading the source. None are speculative.
+
+| Issue | Location |
 |---|---|
-| `SUPABASE_URL` | `https://xyz.supabase.co` |
-| `SUPABASE_ANON_KEY` | `eyJ...` |
-| `JWT_SECRET` | any (use pwgen) |
-| `POLYGON_RPC_URL` | `https://rpc-amoy.polygon.technology` |
-| `PRIVATE_KEY` | wallet key (Amoy test faucet) |
-| `CONTRACT_ADDRESS` | `0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3` |
-| `PINATA_JWT` | your Pinata JWT |
+| Evidence upload returns `500` — `userError` and `user` are referenced but never declared | `controllers/EvidenceUploadController.js:40` |
+| `retention_policies` is queried five times but no SQL in this repo creates the table | `controllers/retentionController.js` |
+| `security_alerts` is never written by any code path, so the admin Action Center is always empty | `add-admin-control-center.sql:428` |
+| `bull` and `node-cron` are installed and never imported — **there is no job queue and no scheduler** | `package.json` |
+| 4 of 10 rate limiters are defined but applied to zero routes | `middleware/rateLimiters.js` |
+| `EvidenceStorage.abi.json` omits `sealEvidence` and `deauthorizeUser`, so no server code can call them | `contracts/` |
+| `evidence.case_id` is `TEXT` holding a case *number*, with no foreign key to `cases` | `complete-database-setup-fixed.sql` |
+| `npm run health`, `blockchain:status` and `blockchain:health` probe port `10000`, but the server defaults to `3000` | `package.json` |
+| `POST /api/evidence/archive` takes `archivedBy` from the request body | `controllers/retentionController.js:497` |
+| Public verification returns `verified: true` without consulting the ledger | `controllers/EvidenceVerificationController.js:330` |
+| `generateMockIPFSHash` / `generateMockTxHash` fabricate plausible CIDs and tx hashes | `services/evidenceHelpers.js:66` |
+| 20 orphaned scripts in `public/` are loaded by no page, including both 2FA modules | `public/` |
+| `forensic-lab.html` is listed in `PROTECTED_PAGES` but the file does not exist | `middleware/authorization.js:84` |
+| `docs/swagger.js` requires `swagger-jsdoc` and `swagger-ui-express`, neither of which is installed | `docs/swagger.js` |
 
-### 4. Run locally
+Contributions that close these are very welcome — see
+[`docs/MAINTENANCE.md`](docs/MAINTENANCE.md).
+
+## Documentation
+
+| Document | |
+|---|---|
+| [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) | Using the application |
+| [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) | Architecture and API conventions |
+| [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) | Routine upkeep |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Deployment |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Security model |
+| `public/api-reference.html` | Served at `/api-reference.html`. Hand-written and not fully synced with the routers — prefer `routes/` as the source of truth |
+
+There is also an interactive, zero-dependency 3D showcase at
+`public/showcase.html`, served at `/showcase.html` when the app is running.
+
+To regenerate the artwork in this README:
 
 ```bash
-npm run dev
-# http://localhost:3000
+npm run assets:readme
 ```
 
-Seed the DB first with `complete-database-setup-fixed.sql` (creates 8 roles &
-demo users).
+The generator is seeded, so output is byte-identical between runs.
 
----
+## Interactive showcase
 
-## 🌐 Public Evidence Verification (No Login)
+`public/showcase.html` is a self-contained page — no framework, no CDN, no build
+step — with a draggable CSS-3D evidence block and a live status matrix that
+mirrors the table above.
 
-Anyone can enter an **Evidence ID, SHA-256 hash, or on-chain tx hash** on the
-[**Public Dashboard**](https://blockchain-evidence.onrender.com/dashboard-public.html)
-and receive **VERIFIED ✅ / TAMPERED ❌** instantly — cross-checked against
-PostgreSQL, the Amoy ledger, and IPFS.
+```bash
+npm start
+# then open http://localhost:3000/showcase.html
+```
 
----
+## License
 
-## 📚 Documentation
+Apache-2.0 — see [`LICENSE`](LICENSE).
 
-- [`docs/API.md`](docs/API.md) – REST endpoints
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) – Render + PostgreSQL setup
-- [`docs/SECURITY.md`](docs/SECURITY.md) – security model & checklist
-- [`PHASES.md`](PHASES.md) – phases, roadmap, status
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) – how to contribute
-
----
-
-## 📄 Deployment — Render One-Click
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Gooichand/blockchain-evidence)
-
-`render.yaml` provisions the web service + managed PostgreSQL.
-
----
-
-## 🤝 Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) — issues welcomed, PRs reviewed.
-Help wanted tags: `3d-viewer`, `ai-analysis`, `mainnet`.
-
----
-
-## 📝 License
-
-**MIT** — see [`LICENSE`](LICENSE). © 2025-2026 **EVID-DGC**.
-
----
-
-## 🙌 Acknowledgments
-
-- [Pinata](https://www.pinata.cloud) for IPFS pinning
-- [Polygon](https://polygon.technology) Amoy testnet
-- [Render](https://render.com) hosting
-- [Supabase](https://supabase.com) PostgreSQL + Auth
-- GitHub Actions for CI status badge
-
----
-
-<div align="center">
-
-  <img src="assets/section-divider.svg" alt="section divider" width="80%">
-
-  <br>
-
-  <h3>⚖️ EVID-DGC — Immutably anchored. Forever provable.</h3>
-
-  <p>
-    <a href="https://github.com/Gooichand/blockchain-evidence"><img src="https://img.shields.io/badge/GitHub-Gooichand/blockchain--evidence-000000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
-    <a href="https://blockchain-evidence.onrender.com"><img src="https://img.shields.io/badge/Live-Demo-EF4444?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo"></a>
-    <a href="mailto:gc67766@gmail.com"><img src="https://img.shields.io/badge/Contact-Email-3B82F6?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"></a>
-  </p>
-
-  <p>
-    <a href="#blockchain-evidence--digital-chain-of-custody"><img src="https://img.shields.io/badge/Back_to_Top-%E2%96%B2-0B0E14?style=for-the-badge" alt="Back to top"></a>
-  </p>
-
-  <p>⭐ If you find this project useful, **give it a star**!</p>
-
-  <sub>© 2025-2026 EVID-DGC · Immutably anchored. Forever provable. ⚖️</sub>
-
-</div>
+`contracts/EvidenceStorage.sol` is MIT licensed, as declared in its SPDX header.

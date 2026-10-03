@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 138" width="1200" height="138" role="img" aria-label="Evidence custody pipeline">
+<title>Evidence custody pipeline</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#08090b"/>
+    <stop offset="60%"  stop-color="#0c0d11"/>
+    <stop offset="100%" stop-color="#08090b"/>
+  </linearGradient>
+  <linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"   stop-color="#e5484d" stop-opacity="0"/>
+    <stop offset="45%"  stop-color="#e5484d" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".10"/>
+    <stop offset="50%"  stop-color="#ffffff" stop-opacity=".02"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="halo">
+    <stop offset="0%"   stop-color="#e5484d" stop-opacity=".26"/>
+    <stop offset="55%"  stop-color="#e5484d" stop-opacity=".05"/>
+    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="10"/>
+  </filter>
+  <filter id="softer" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="26"/>
+  </filter>
+  
+</defs>
+<rect width="1200" height="138" fill="#08090b"/>
+  <text x="600" y="20" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10" fill="#5b6069"
+        text-anchor="middle" letter-spacing="4">DIGITAL CHAIN OF CUSTODY</text>
+  
+  <g>
+    <rect x="14" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".02"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="100" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#f2f3f5" text-anchor="middle">Capture</text>
+    <text x="100" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">file + metadata</text>
+    <text x="28" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">01</text>
+  </g>
+  <line x1="191" y1="67" x2="203" y2="67"
+        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
+  </line>
+  <circle r="2.2" fill="#e5484d">
+    <animateMotion dur="2.2s" begin="0s" repeatCount="indefinite"
+      path="M190 67 L205 67"/>
+  </circle>
+  <g>
+    <rect x="214" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".02"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="300" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#f2f3f5" text-anchor="middle">Register</text>
+    <text x="300" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">evidence id</text>
+    <text x="228" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">02</text>
+  </g>
+  <line x1="391" y1="67" x2="403" y2="67"
+        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
+  </line>
+  <circle r="2.2" fill="#e5484d">
+    <animateMotion dur="2.2s" begin="0.3s" repeatCount="indefinite"
+      path="M390 67 L405 67"/>
+  </circle>
+  <g>
+    <rect x="414" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".02"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="500" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#f2f3f5" text-anchor="middle">Analyse</text>
+    <text x="500" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">sha-256 digest</text>
+    <text x="428" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">03</text>
+  </g>
+  <line x1="591" y1="67" x2="603" y2="67"
+        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
+  </line>
+  <circle r="2.2" fill="#e5484d">
+    <animateMotion dur="2.2s" begin="0.6s" repeatCount="indefinite"
+      path="M590 67 L605 67"/>
+  </circle>
+  <g>
+    <rect x="614" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".02"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="700" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#f2f3f5" text-anchor="middle">Anchor</text>
+    <text x="700" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">ipfs + chain</text>
+    <text x="628" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">04</text>
+  </g>
+  <line x1="791" y1="67" x2="803" y2="67"
+        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
+  </line>
+  <circle r="2.2" fill="#e5484d">
+    <animateMotion dur="2.2s" begin="0.8999999999999999s" repeatCount="indefinite"
+      path="M790 67 L805 67"/>
+  </circle>
+  <g>
+    <rect x="814" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".02"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="900" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#f2f3f5" text-anchor="middle">Verify</text>
+    <text x="900" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">certificate</text>
+    <text x="828" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">05</text>
+  </g>
+  <line x1="991" y1="67" x2="1003" y2="67"
+        stroke="#ffffff" stroke-opacity=".26" stroke-width="1" stroke-dasharray="3 4">
+    <animate attributeName="stroke-dashoffset" values="14;0" dur="1.6s" repeatCount="indefinite"/>
+  </line>
+  <circle r="2.2" fill="#e5484d">
+    <animateMotion dur="2.2s" begin="1.2s" repeatCount="indefinite"
+      path="M990 67 L1005 67"/>
+  </circle>
+  <g>
+    <rect x="1014" y="34" width="172" height="66" rx="10"
+          fill="#ffffff" fill-opacity=".05"
+          stroke="#ffffff" stroke-opacity=".16" stroke-width="1"/>
+    <text x="1100" y="61" font-family="'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif" font-size="14.5"
+          font-weight="700" fill="#e5484d" text-anchor="middle">Admit</text>
+    <text x="1100" y="81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="10.5"
+          fill="#5b6069" text-anchor="middle">trial / archive</text>
+    <text x="1028" y="51" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="9.5"
+          fill="#5b6069" opacity=".8">06</text>
+  </g>
+</svg>
