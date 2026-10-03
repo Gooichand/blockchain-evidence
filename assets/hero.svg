@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="Isometric evidence blocks receding into depth">
+<title>Isometric evidence blocks receding into depth</title>
+<defs>
+  <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#08090b"/>
+    <stop offset="60%"  stop-color="#0c0d11"/>
+    <stop offset="100%" stop-color="#08090b"/>
+  </linearGradient>
+  <linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"   stop-color="#e5484d" stop-opacity="0"/>
+    <stop offset="45%"  stop-color="#e5484d" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#ffffff" stop-opacity=".10"/>
+    <stop offset="50%"  stop-color="#ffffff" stop-opacity=".02"/>
+    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="halo">
+    <stop offset="0%"   stop-color="#e5484d" stop-opacity=".26"/>
+    <stop offset="55%"  stop-color="#e5484d" stop-opacity=".05"/>
+    <stop offset="100%" stop-color="#e5484d" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="10"/>
+  </filter>
+  <filter id="softer" x="-90%" y="-90%" width="280%" height="280%">
+    <feGaussianBlur stdDeviation="26"/>
+  </filter>
+  
+  <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#ffffff" opacity=".085"/>
+  </pattern>
+  <linearGradient id="dotFadeGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#000" stop-opacity="0"/>
+    <stop offset="30%"  stop-color="#fff" stop-opacity="1"/>
+    <stop offset="78%"  stop-color="#fff" stop-opacity=".45"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+  </linearGradient>
+  <mask id="dotFade">
+    <rect x="0" y="0" width="1200" height="400" fill="url(#dotFadeGrad)"/>
+  </mask>
+</defs>
+
+  <rect width="1200" height="400" fill="url(#stage)"/>
+  <g><rect width="1200" height="400" fill="url(#dots)" mask="url(#dotFade)"/></g>
+
+  <ellipse cx="600" cy="204" rx="330" ry="210" fill="url(#halo)" filter="url(#softer)"/>
+
+  
+    <ellipse cx="600" cy="196" rx="268" ry="84" fill="none"
+             stroke="#ffffff" stroke-opacity=".13" stroke-width="1" stroke-dasharray="3 10">
+      <animateTransform attributeName="transform" type="rotate"
+        from="0 600 196" to="360 600 196" dur="46s" repeatCount="indefinite"/>
+    </ellipse>
+  
+    <ellipse cx="600" cy="196" rx="210" ry="58" fill="none"
+             stroke="#ffffff" stroke-opacity=".18" stroke-width="1" stroke-dasharray="3 10">
+      <animateTransform attributeName="transform" type="rotate"
+        from="0 600 196" to="360 600 196" dur="32s" repeatCount="indefinite"/>
+    </ellipse>
+  <path id="orbit" d="M 390,196 a 210,58 0 1,0 420,0 a 210,58 0 1,0 -420,0" fill="none"/>
+  <circle r="2.6" fill="#e5484d" opacity=".9">
+    <animateMotion dur="32s" repeatCount="indefinite">
+      <mpath xlink:href="#orbit"/>
+    </animateMotion>
+  </circle>
+
+  <!-- stack receding into depth: far → near -->
+  <g transform="translate(104,-52)"><g opacity=".26">
+  <g opacity="1">
+    
+    <polygon points="600,171.16 642.32,196 600,220.84 557.68,196" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width="1.1"/>
+    <polyline points="557.68,196 600,220.84 600,261.32 557.68,236.48000000000002" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,220.84 642.32,196 642.32,236.48000000000002 600,261.32" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,171.16 642.32,196 642.32,236.48000000000002" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <polyline points="600,171.16 557.68,196 557.68,236.48000000000002" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <circle cx="642.32" cy="196" r="2.4" fill="#e5484d"/>
+    <circle cx="557.68" cy="196" r="2.4" fill="#e5484d" opacity=".7"/>
+    <circle cx="600" cy="220.84" r="2.4" fill="#e5484d" opacity=".7"/>
+  </g></g></g>
+  <g transform="translate(56,-28)"><g opacity=".46">
+  <g opacity="1">
+    
+    <polygon points="600,158.2 664.4,196 600,233.8 535.6,196" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width="1.1"/>
+    <polyline points="535.6,196 600,233.8 600,295.4 535.6,257.6" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,233.8 664.4,196 664.4,257.6 600,295.4" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,158.2 664.4,196 664.4,257.6" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <polyline points="600,158.2 535.6,196 535.6,257.6" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <circle cx="664.4" cy="196" r="2.4" fill="#e5484d"/>
+    <circle cx="535.6" cy="196" r="2.4" fill="#e5484d" opacity=".7"/>
+    <circle cx="600" cy="233.8" r="2.4" fill="#e5484d" opacity=".7"/>
+  </g></g></g>
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0;0,-7;0,0" dur="9s" repeatCount="indefinite"/>
+    
+  <g opacity="1">
+    <polygon points="600,142 692,196 600,250 508,196" fill="url(#sheen)"/>
+    <polygon points="600,142 692,196 600,250 508,196" fill="none" stroke="#ffffff" stroke-opacity=".34" stroke-width="1.1"/>
+    <polyline points="508,196 600,250 600,338 508,284" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,250 692,196 692,284 600,338" fill="none" stroke="#ffffff" stroke-opacity=".20" stroke-width="1"/>
+    <polyline points="600,142 692,196 692,284" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <polyline points="600,142 508,196 508,284" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="1"/>
+    <circle cx="692" cy="196" r="2.4" fill="#e5484d"/>
+    <circle cx="508" cy="196" r="2.4" fill="#e5484d" opacity=".7"/>
+    <circle cx="600" cy="250" r="2.4" fill="#e5484d" opacity=".7"/>
+  </g>
+  </g>
+
+  <!-- single hairline horizon -->
+  <line x1="0" y1="330" x2="1200" y2="330" stroke="#e5484d" stroke-opacity=".22" stroke-width="1"/>
+  <line x1="410" y1="330" x2="790" y2="330" stroke="#e5484d" stroke-opacity=".5" stroke-width="1">
+    <animate attributeName="opacity" values=".25;.7;.25" dur="7s" repeatCount="indefinite"/>
+  </line>
+</svg>
