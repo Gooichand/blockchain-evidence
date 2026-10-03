@@ -323,9 +323,6 @@ Contributions that close these are very welcome — see
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Security model |
 | `public/api-reference.html` | Served at `/api-reference.html`. Hand-written and not fully synced with the routers — prefer `routes/` as the source of truth |
 
-There is also an interactive, zero-dependency 3D showcase at
-`public/showcase.html`, served at `/showcase.html` when the app is running.
-
 To regenerate the artwork in this README:
 
 ```bash
@@ -333,17 +330,6 @@ npm run assets:readme
 ```
 
 The generator is seeded, so output is byte-identical between runs.
-
-## Interactive showcase
-
-`public/showcase.html` is a self-contained page — no framework, no CDN, no build
-step — with a draggable CSS-3D evidence block and a live status matrix that
-mirrors the table above.
-
-```bash
-npm start
-# then open http://localhost:3000/showcase.html
-```
 
 ## License
 
