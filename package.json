@@ -22,7 +22,8 @@
     "verify:contract": "npx hardhat verify --network polygonAmoy",
     "blockchain:status": "curl http://localhost:10000/api/blockchain/status",
     "blockchain:health": "curl http://localhost:10000/api/blockchain/health",
-    "migrate:blockchain": "node scripts/migrate-to-blockchain.js"
+    "migrate:blockchain": "node scripts/migrate-to-blockchain.js",
+    "assets:readme": "node scripts/generate-readme-assets.js"
   },
   "keywords": [
     "blockchain",

@@ -30,7 +30,13 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`File type ${file.mimetype} not supported`), false);
+      // A rejected MIME type is a client error. Without an explicit status the
+      // Express error handler defaults to 500, so an unsupported upload was
+      // reported as a server fault instead of a 400.
+      const err = new Error(`File type ${file.mimetype} not supported`);
+      err.status = 400;
+      err.code = 'UNSUPPORTED_FILE_TYPE';
+      cb(err, false);
     }
   },
 });
