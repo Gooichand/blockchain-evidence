@@ -1,4 +1,3 @@
-const { supabase } = require('../config');
 const integratedEvidenceService = require('../services/integratedEvidenceService');
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
@@ -37,9 +36,12 @@ const uploadEvidence = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to upload evidence' });
     }
 
-    if (userError || !user) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access: User not found or inactive' });
-    }
+    // Existence and `is_active` are already guaranteed here: `requireAuth`
+    // (routes/evidenceRoutes.js) rejects unknown and deactivated users with a
+    // 401 before this controller is reached, on both the JWT and wallet paths.
+    // A previous version re-checked via `const { data: user, error: userError }`
+    // and threw a ReferenceError on every request, turning this endpoint into a
+    // guaranteed 500. The redundant query has been removed rather than restored.
 
     if (authUser.role === 'public_viewer') {
       return res.status(403).json({ success: false, error: 'Public viewers cannot upload evidence' });
