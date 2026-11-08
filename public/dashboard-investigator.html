@@ -576,6 +576,30 @@
                                 <label>Upload File</label>
                                 <input type="file" id="evidenceFile" class="form-control" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.mp3,.wav">
                             </div>
+                            <details style="margin-top:10px;">
+                                <summary style="cursor:pointer; font-weight:600;">Forensic intake details (recommended)</summary>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                                    <div class="form-group"><label>Source device</label><input type="text" id="evSourceDevice" class="form-control" placeholder="e.g. Suspect laptop"></div>
+                                    <div class="form-group"><label>Make / model</label><input type="text" id="evDeviceMakeModel" class="form-control" placeholder="e.g. Dell Latitude 5420"></div>
+                                    <div class="form-group"><label>Serial number</label><input type="text" id="evDeviceSerial" class="form-control" placeholder="e.g. SN-8X42F"></div>
+                                    <div class="form-group"><label>Location found</label><input type="text" id="evLocation" class="form-control" placeholder="Where it was collected"></div>
+                                    <div class="form-group"><label>Collected by</label><input type="text" id="evCollectedBy" class="form-control" placeholder="Officer / examiner name"></div>
+                                    <div class="form-group"><label>Collection date & time</label><input type="datetime-local" id="evCollectionDate" class="form-control"></div>
+                                    <div class="form-group"><label>Acquisition method</label>
+                                        <select id="evAcquisitionMethod" class="form-control">
+                                            <option value="">Select method</option>
+                                            <option>Live acquisition</option>
+                                            <option>Dead acquisition (image)</option>
+                                            <option>Logical extraction</option>
+                                            <option>Cloud export</option>
+                                            <option>Seized media copy</option>
+                                            <option>Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group"><label>Reason for collection</label><input type="text" id="evCollectionReason" class="form-control" placeholder="Why this item was seized"></div>
+                                </div>
+                                <div class="form-group"><label>Condition notes</label><textarea id="evConditionNotes" class="form-control" rows="2" placeholder="Physical condition, packaging, seal numbers"></textarea></div>
+                            </details>
                         </form>
                     </div>
                     <div class="modal-actions">
@@ -613,6 +637,26 @@
                 formData.append('type', type);
                 formData.append('caseId', caseId);
                 formData.append('file', file);
+                const forensicMap = {
+                    sourceDevice: 'evSourceDevice',
+                    deviceMakeModel: 'evDeviceMakeModel',
+                    deviceSerial: 'evDeviceSerial',
+                    collectedBy: 'evCollectedBy',
+                    acquisitionMethod: 'evAcquisitionMethod',
+                    collectionReason: 'evCollectionReason',
+                    conditionNotes: 'evConditionNotes',
+                };
+                for (const [field, elId] of Object.entries(forensicMap)) {
+                    const el = document.getElementById(elId);
+                    if (el && el.value.trim()) formData.append(field, el.value.trim());
+                }
+                const locEl = document.getElementById('evLocation');
+                if (locEl && locEl.value.trim()) formData.append('location', locEl.value.trim());
+                const cdEl = document.getElementById('evCollectionDate');
+                if (cdEl && cdEl.value) {
+                    formData.append('collectionDate', new Date(cdEl.value).toISOString());
+                    formData.append('collectionTimezone', Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+                }
 
                 // Use secure apiClient for multipart upload
                 const result = await window.apiClient.upload('/evidence/upload', formData);
@@ -672,6 +716,7 @@
                                 <strong>#${ev.id} ${escapeHtml(ev.title || ev.name || 'Untitled')}</strong> ${badge}<br>
                                 <small style="color:#6b7280;">SHA-256: ${escapeHtml((ev.hash || '').slice(0, 24))}${ev.hash ? '...' : ''}
                                 <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="navigator.clipboard && navigator.clipboard.writeText('${ev.hash || ''}')">Copy</button></small>
+                                ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-outline" onclick="toggleCustody(${ev.id})">Custody</button>
