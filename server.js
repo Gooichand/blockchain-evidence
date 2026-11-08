@@ -12,6 +12,7 @@ const { validateWalletAddress } = require('./middleware/verifyAdmin');
 const { limiter } = require('./middleware/rateLimiters');
 const { setIO: setNotificationIO } = require('./services/notificationService');
 const { setIO: setNotificationControllerIO } = require('./controllers/notificationController');
+const { setIO: setAnalysisIO } = require('./controllers/analysisRequestController');
 
 // -- Shared CORS origins (single source of truth) --
 const allowedOrigins = [
@@ -40,6 +41,7 @@ const io = new Server(server, {
 // Inject the io instance into services that need it
 setNotificationIO(io);
 setNotificationControllerIO(io);
+setAnalysisIO(io);
 
 // -- Security middlewares --
 app.use(
