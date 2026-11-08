@@ -972,11 +972,17 @@
         }
 
         // Client-side mirror of the server rules in EvidenceUploadController - the two must agree
+        // Extensions that usually mean an executable/script. These are let
+        // through to the server, which blocks them unless the investigator
+        // explicitly confirms the upload (S2 dangerous-file confirm flow).
+        const DANGEROUS_EXTENSIONS = ['exe', 'dll', 'com', 'scr', 'msi', 'bat', 'cmd', 'ps1', 'vbs', 'js', 'jar', 'sh', 'bash', 'py', 'pl', 'rb', 'apk', 'elf', 'bin', 'so', 'dylib', 'app'];
+
         function validateEvidenceFile(file) {
             if (file.size === 0) return 'Empty files cannot be uploaded as evidence';
-            const max = UPLOAD_LIMITS[file.type];
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            const max = UPLOAD_LIMITS[file.type] || (DANGEROUS_EXTENSIONS.includes(ext) ? 500 : 0);
             if (!max) return `File type ${file.type || 'unknown'} is not supported`;
-            if (file.size > max * 1024 * 1024) return `Too large: ${file.type} allows up to ${max} MB (this file is ${fmtBytes(file.size)})`;
+            if (file.size > max * 1024 * 1024) return `Too large: ${file.type || ext} allows up to ${max} MB (this file is ${fmtBytes(file.size)})`;
             return null;
         }
 
