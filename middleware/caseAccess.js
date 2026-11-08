@@ -69,11 +69,17 @@ async function canAccessCase(user, caseId) {
  * cases. Wide-view roles get the query back unchanged. A scoped user with no
  * accessible cases gets a query guaranteed to match nothing.
  */
+// NOTE: returns { query } in a wrapper object. A Supabase query builder is a
+// thenable, so `return query` (or Promise.resolve(query)) from an async
+// function would EXECUTE the query and resolve to the response object -
+// callers that then chain .order()/.eq() crashed with "query.order is not a
+// function" (the /cases/enhanced and /cases/search 500s). The wrapper keeps
+// the builder intact; callers must read .query from the result.
 async function scopeCaseQuery(query, user) {
   const ids = await getAccessibleCaseIds(user);
-  if (ids === null) return query;
-  if (ids.length === 0) return query.in('id', [-1]);
-  return query.in('id', ids);
+  if (ids === null) return { query };
+  if (ids.length === 0) return { query: query.in('id', [-1]) };
+  return { query: query.in('id', ids) };
 }
 
 /**
@@ -82,14 +88,15 @@ async function scopeCaseQuery(query, user) {
  * (evidence.case_id is TEXT in the schema, so ids are compared as strings.)
  */
 async function scopeEvidenceQuery(query, user) {
-  if (!isScopedRole(user.role)) return query;
+  if (!isScopedRole(user.role)) return { query };
   const sid = stableUserId(user);
   const ids = await getAccessibleCaseIds(user);
   const clauses = [`submitted_by.eq.${sid}`];
   if (ids && ids.length > 0) {
     clauses.push(`case_id.in.(${ids.map(String).join(',')})`);
   }
-  return query.or(clauses.join(','));
+  // Wrapped for the same thenable reason as scopeCaseQuery above.
+  return { query: query.or(clauses.join(',')) };
 }
 
 /** True when the user may access this evidence row (already fetched). */
