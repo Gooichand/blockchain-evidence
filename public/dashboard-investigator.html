@@ -638,10 +638,10 @@
                                 <h4>${escapeHtml(caseData.title)}</h4>
                                 <p><strong>Description:</strong> ${escapeHtml(caseData.description || 'No description provided')}</p>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-                                    <div><strong>Status:</strong> <span class="status-badge status-${(caseData.status || 'open').toLowerCase()}">${status.status_name}</span></div>
+                                    <div><strong>Status:</strong> <span class="status-badge status-${(caseData.status || 'open').toLowerCase().replace(/[^a-z_]/g, '')}">${escapeHtml(status.status_name || '-')}</span></div>
                                     <div><strong>Priority:</strong> Level ${priority}</div>
-                                    <div><strong>Case Type:</strong> ${caseData.case_type || 'N/A'}</div>
-                                    <div><strong>Jurisdiction:</strong> ${caseData.jurisdiction || 'N/A'}</div>
+                                    <div><strong>Case Type:</strong> ${escapeHtml(caseData.case_type || 'N/A')}</div>
+                                    <div><strong>Jurisdiction:</strong> ${escapeHtml(caseData.jurisdiction || 'N/A')}</div>
                                     <div><strong>Date:</strong> ${new Date(caseData.created_date || Date.now()).toLocaleDateString()}</div>
                                     <div><strong>Evidence Count:</strong> ${caseData.evidence_count || 0}</div>
                                 </div>
@@ -1133,11 +1133,11 @@
                                 ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
                             </div>
                             <div>
-                                <button class="btn btn-sm btn-primary" onclick="previewEvidence(${ev.id}, '${escapeHtml((ev.title || ev.name || '')).replace(/'/g, "\'")}', '${escapeHtml(ev.file_type || '')}')">Preview</button>
+                                <button class="btn btn-sm btn-primary" onclick="previewEvidence(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'), '${escapeHtml(ev.file_type || '')}')">Preview</button>
                                 <button class="btn btn-sm btn-outline" onclick="downloadEvidenceFile(${ev.id})">Download</button>
                                 <button class="btn btn-sm btn-outline" onclick="toggleCustody(${ev.id})">Custody</button>
                                 <button class="btn btn-sm btn-outline" onclick="verifyEvidenceNow(${ev.id}, this)">Verify integrity</button>
-                                <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, '${escapeHtml(ev.title || ev.name || '')}')">Request analysis</button>
+                                <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'))">Request analysis</button>
                             </div>
                         </div>
                         <div id="custody-${ev.id}" style="display:none; margin-top:10px;"></div>
@@ -1298,12 +1298,15 @@
             toast.className = `toast toast-${type}`;
             toast.innerHTML = `
                 <div class="toast-content">
-                    <span>${message}</span>
+                    <span class="toast-message"></span>
                     <button onclick="this.parentElement.parentElement.remove()" class="toast-close">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
             `;
+            // M14: the toast message is text, never HTML - file names and
+            // server error strings reach it and must not inject markup
+            toast.querySelector('.toast-message').textContent = message;
 
             // Add toast styles
             toast.style.cssText = `
