@@ -20,6 +20,7 @@ const legalHoldRoutes = require('./legalHoldRoutes');
 const custodyRoutes = require('./custodyRoutes');
 const notesRoutes = require('./notesRoutes');
 const analysisRoutes = require('./analysisRoutes');
+const reportRoutes = require('./reportRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -44,6 +45,7 @@ function registerRoutes(app) {
   app.use('/api', custodyRoutes);
   app.use('/api', notesRoutes);
   app.use('/api', analysisRoutes);
+  app.use('/api', reportRoutes);
 }
 
 module.exports = registerRoutes;
