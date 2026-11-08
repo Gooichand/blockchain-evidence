@@ -82,6 +82,48 @@ function analysisEvents(row) {
   return events;
 }
 
+function commentEvent(row) {
+  const body = String(row.content || '');
+  return {
+    type: 'comment',
+    ts: row.created_at || null,
+    action: 'comment_added',
+    title: body.length > 90 ? body.slice(0, 90) + '...' : (body || 'Comment'),
+    actor_name: row.author_name || row.author || null,
+    actor_role: row.author_role || null,
+    evidence_id: null,
+    details: (row.mentions && row.mentions.length) ? { mentions: row.mentions.join(', ') } : null,
+  };
+}
+
+function teamEvents(row) {
+  const events = [];
+  const who = row.assigned_to || 'unknown';
+  if (row.assigned_at) {
+    events.push({
+      type: 'team',
+      ts: row.assigned_at,
+      action: 'member_added',
+      title: `${who} joined the case team (${row.role_type || 'member'})`,
+      actor_name: row.assigned_by || null,
+      actor_role: null,
+      evidence_id: null,
+    });
+  }
+  if (row.unassigned_at && row.is_active === false) {
+    events.push({
+      type: 'team',
+      ts: row.unassigned_at,
+      action: 'member_removed',
+      title: `${who} left the case team`,
+      actor_name: null,
+      actor_role: null,
+      evidence_id: null,
+    });
+  }
+  return events;
+}
+
 // GET /api/cases/:id/timeline - merged real event feed for one case
 const getCaseTimeline = async (req, res) => {
   try {
@@ -91,12 +133,14 @@ const getCaseTimeline = async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this case' });
     }
 
-    const [custody, evidence, notes, tasks] = await Promise.all([
+    const [custody, evidence, notes, tasks, comments, assignments] = await Promise.all([
       supabase.from('custody_log').select('*').eq('case_id', cid).order('id', { ascending: true }),
       // evidence.case_id is TEXT in this schema
       supabase.from('evidence').select('*').eq('case_id', String(cid)).order('id', { ascending: true }),
       supabase.from('case_notes').select('*').eq('case_id', cid).order('id', { ascending: true }),
       supabase.from('analysis_tasks').select('*').eq('case_id', cid).order('id', { ascending: true }),
+      supabase.from('case_comments').select('*').eq('case_id', cid).order('id', { ascending: true }),
+      supabase.from('case_assignments').select('*').eq('case_id', cid).order('id', { ascending: true }),
     ]);
 
     const events = [];
@@ -104,6 +148,8 @@ const getCaseTimeline = async (req, res) => {
     if (!evidence.error) events.push(...(evidence.data || []).map(evidenceEvent));
     if (!notes.error) events.push(...(notes.data || []).map(noteEvent));
     if (!tasks.error) events.push(...(tasks.data || []).flatMap(analysisEvents));
+    if (!comments.error) events.push(...(comments.data || []).map(commentEvent));
+    if (!assignments.error) events.push(...(assignments.data || []).flatMap(teamEvents));
 
     events.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
 
