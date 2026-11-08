@@ -66,9 +66,24 @@ function initializeApp() {
 
     // ── Session Restoration ──
     // If user already has a valid auth token, redirect to their dashboard
+    function isTokenExpired(token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return !payload.exp || payload.exp * 1000 <= Date.now();
+      } catch (_) {
+        return true;
+      }
+    }
     const savedUser = localStorage.getItem("currentUser");
     const authToken = localStorage.getItem("authToken");
     if (savedUser && authToken) {
+      if (isTokenExpired(authToken)) {
+        // Stale session: clear it instead of redirecting into a server bounce
+        // (protected page -> /?auth=required -> back here), which looked like a glitch.
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('evidDgcReturn');
+      } else {
       // Try wallet key first, then email key
       let userData = null;
       try {
@@ -88,6 +103,7 @@ function initializeApp() {
           window.location.href = dashboardUrl;
           return;
         }
+      }
       }
     }
 
