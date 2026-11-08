@@ -188,3 +188,83 @@ class AuthenticationManager {
 
 window.authManager = new AuthenticationManager();
 window.logout = () => window.authManager.logout();
+/**
+ * Idle timeout: signs the user out after 30 minutes without activity,
+ * with a warning at 25 minutes. Activity is shared across tabs through
+ * localStorage so work in any tab keeps the session alive.
+ */
+class IdleTimeoutManager {
+    constructor() {
+        this.warnAfterMs = 25 * 60 * 1000;
+        this.logoutAfterMs = 30 * 60 * 1000;
+        this.storageKey = 'evidLastActivity';
+        this.warned = false;
+        this.lastWrite = 0;
+        this.checkTimer = null;
+        this.activityHandler = this.recordActivity.bind(this);
+        this.init();
+    }
+
+    init() {
+        ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach((evt) => {
+            window.addEventListener(evt, this.activityHandler, { passive: true });
+        });
+        window.addEventListener('storage', (event) => {
+            if (event.key === this.storageKey) this.warned = false;
+        });
+        this.recordActivity();
+        this.checkTimer = setInterval(() => this.check(), 30 * 1000);
+    }
+
+    isSignedIn() {
+        return Boolean(localStorage.getItem('authToken'));
+    }
+
+    recordActivity() {
+        const now = Date.now();
+        // Throttle writes to once every 5 seconds.
+        if (now - this.lastWrite < 5000) return;
+        this.lastWrite = now;
+        this.warned = false;
+        localStorage.setItem(this.storageKey, String(now));
+    }
+
+    lastActivity() {
+        const raw = Number(localStorage.getItem(this.storageKey) || 0);
+        return Number.isFinite(raw) && raw > 0 ? raw : Date.now();
+    }
+
+    check() {
+        if (!this.isSignedIn()) return;
+        const idleFor = Date.now() - this.lastActivity();
+
+        if (idleFor >= this.logoutAfterMs) {
+            this.logoutForInactivity();
+            return;
+        }
+
+        if (idleFor >= this.warnAfterMs && !this.warned) {
+            this.warned = true;
+            const minutesLeft = Math.max(1, Math.ceil((this.logoutAfterMs - idleFor) / 60000));
+            const message = `You have been inactive for a while. You will be signed out in about ${minutesLeft} minute(s) for security.`;
+            if (typeof window.showAlert === 'function') {
+                window.showAlert(message, 'warning');
+            } else if (typeof window.showNotification === 'function') {
+                window.showNotification('Session expiring', message, 'warning');
+            }
+        }
+    }
+
+    logoutForInactivity() {
+        clearInterval(this.checkTimer);
+        if (typeof window.apiClient !== 'undefined') {
+            window.apiClient.post('/auth/logout', {}).catch(() => {});
+        }
+        localStorage.clear();
+        const notice = 'You were signed out due to inactivity.';
+        try { sessionStorage.setItem('evidSignOutNotice', notice); } catch (_) {}
+        window.location.href = '/?auth=idle';
+    }
+}
+
+window.idleTimeoutManager = new IdleTimeoutManager();
