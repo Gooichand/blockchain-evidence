@@ -158,6 +158,27 @@ const uploadEvidence = async (req, res) => {
       return res.status(500).json({ success: false, error: 'Upload service failed to return results' });
     }
 
+    // M4: custody ledger entry for the intake of this evidence item
+    try {
+      const { logCustody } = require('./custodyController');
+      const evRow = results?.database || {};
+      await logCustody({
+        evidenceId: evRow.id || null,
+        caseId: parsedCaseId,
+        action: 'uploaded',
+        user: authUser,
+        details: {
+          title: title ? String(title).trim() : '',
+          filename: file.originalname,
+          hash: evRow.hash || null,
+          size: file.size,
+        },
+        req,
+      });
+    } catch (custodyErr) {
+      console.error('custody log for upload failed:', custodyErr);
+    }
+
     // Standardized successful response
     res.json({
       success: true,
