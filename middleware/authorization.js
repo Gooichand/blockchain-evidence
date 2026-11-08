@@ -73,6 +73,8 @@ const PROTECTED_PAGES = {
   'dashboard-manager.html': ['evidence_manager'],
   'dashboard-auditor.html': ['auditor'],
   'evidence-manager.html': ['evidence_manager'],
+  'cases.html': INTERNAL_ROLES,
+  'evidence.html': INTERNAL_ROLES,
   'case-management.html': ['investigator', 'evidence_manager', 'legal_professional', 'court_official', 'admin'],
   'audit-trail.html': ['admin', 'auditor'],
   'legal-hold-management.html': ['legal_professional', 'evidence_manager', 'court_official', 'admin'],
