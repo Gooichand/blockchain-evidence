@@ -4,82 +4,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cases | Blockchain Evidence</title>
+    <title>Cases | EVID-DGC</title>
     <link rel="icon" href="favicon.png" type="image/png">
     <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="config.js"></script>
+    <script src="api-client.js"></script>
     <script src="storage.js"></script>
-    <script src="app.js"></script>
-
+    <script src="session-manager.js"></script>
+    <script src="fixed-navbar.js"></script>
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
+    <style>
+        .cases-filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        @media (max-width: 1100px) {
+            .cases-filters { grid-template-columns: 1fr 1fr; }
+        }
+        .cases-filters label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--primary-red-light);
+            color: var(--primary-red);
+        }
+        .cases-table th {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .cases-table th .sort-ind { color: var(--primary-red); }
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 4px 2px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pagination-bar .page-info { color: #666; font-size: 14px; }
+        .state-box { text-align: center; padding: 40px; color: #666; }
+        .state-box i { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5; }
+        .state-box.error { color: var(--primary-red); }
+    </style>
 </head>
 
 <body>
-    <nav class="header-nav">
-        <div class="navbar-container">
-            <a href="index.html" class="nav-brand">
-                <img src="logo-32x32.png" alt="EVID-DGC Logo" class="brand-logo">
-                <span>EVID-DGC</span>
-            </a>
-            <div class="nav-items">
-                <a href="dashboard.html" class="nav-link">Dashboard</a>
-                <a href="cases.html" class="nav-link" style="color: var(--primary-red);">Cases</a>
-            </div>
-        </div>
-    </nav>
+    <!-- Navbar injected by fixed-navbar.js -->
 
     <div class="container">
         <div class="hero-section" style="margin: 40px 0; text-align: left;">
             <h1>Cases & Investigations</h1>
-            <p class="hero-subtitle">Search and manage evidence cases</p>
+            <p class="hero-subtitle">Search, filter and manage your evidence cases</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-body">
+                <div class="cases-filters">
+                    <div>
+                        <label for="fSearch">Search</label>
+                        <input type="text" id="fSearch" class="form-control" placeholder="Title, case number or description...">
+                    </div>
+                    <div>
+                        <label for="fStatus">Status</label>
+                        <select id="fStatus" class="form-control"><option value="">All statuses</option></select>
+                    </div>
+                    <div>
+                        <label for="fType">Case type</label>
+                        <select id="fType" class="form-control">
+                            <option value="">All types</option>
+                            <option value="criminal">Criminal</option>
+                            <option value="civil">Civil</option>
+                            <option value="corporate">Corporate</option>
+                            <option value="cybercrime">Cybercrime</option>
+                            <option value="fraud">Fraud</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="fFrom">Created from</label>
+                        <input type="date" id="fFrom" class="form-control">
+                    </div>
+                    <div>
+                        <label for="fTo">Created to</label>
+                        <input type="date" id="fTo" class="form-control">
+                    </div>
+                    <div>
+                        <button class="btn btn-outline" id="fReset" type="button">
+                            <i data-lucide="rotate-ccw"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" class="form-control" placeholder="Search cases by ID, name, or status...">
-                    <button class="btn btn-primary">
-                        <i data-lucide="search"></i> Search
-                    </button>
-                    <button class="btn btn-outline">
-                        <i data-lucide="filter"></i> Filter
-                    </button>
-                </div>
-            </div>
             <div class="card-body">
                 <div class="table-container">
-                    <table class="user-table" style="width: 100%;">
+                    <table class="user-table cases-table" style="width: 100%;">
                         <thead>
                             <tr>
-                                <th>Case ID</th>
-                                <th>Title</th>
+                                <th data-sort="case_number">Case Number <span class="sort-ind" data-ind="case_number"></span></th>
+                                <th data-sort="title">Title <span class="sort-ind" data-ind="title"></span></th>
+                                <th>Type</th>
                                 <th>Status</th>
-                                <th>Created Date</th>
+                                <th data-sort="priority_level">Priority <span class="sort-ind" data-ind="priority_level"></span></th>
+                                <th>Evidence</th>
+                                <th data-sort="created_date">Created <span class="sort-ind" data-ind="created_date"></span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                                    <i data-lucide="folder-open"
-                                        style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;"></i>
-                                    <p>No cases found. Start a new investigation from the dashboard.</p>
-                                </td>
-                            </tr>
+                        <tbody id="casesBody">
+                            <tr><td colspan="8" class="state-box"><p>Loading cases...</p></td></tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination-bar">
+                    <span class="page-info" id="pageInfo"></span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-outline" id="prevPage" type="button">Previous</button>
+                        <button class="btn btn-sm btn-outline" id="nextPage" type="button">Next</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        const state = {
+            search: '', status: '', caseType: '', dateFrom: '', dateTo: '',
+            sortBy: 'created_date', sortOrder: 'desc', page: 1, limit: 15,
+        };
+        let searchTimer = null;
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        async function loadStatuses() {
+            try {
+                const r = await window.apiClient.get('/case-statuses', { skipWalletAuth: true });
+                const statuses = r.statuses || r.data || [];
+                const sel = document.getElementById('fStatus');
+                for (const st of statuses) {
+                    const opt = document.createElement('option');
+                    opt.value = st.status_code;
+                    opt.textContent = st.status_name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {
+                console.error('Failed to load statuses:', e);
+            }
+        }
+
+        function renderRows(cases) {
+            const body = document.getElementById('casesBody');
+            if (!cases.length) {
+                body.innerHTML = `<tr><td colspan="8" class="state-box">
+                    <i data-lucide="folder-open"></i>
+                    <p>No cases match these filters.</p></td></tr>`;
+                lucide.createIcons();
+                return;
+            }
+            body.innerHTML = cases.map(c => {
+                const st = c.case_statuses || {};
+                const created = c.created_date ? new Date(c.created_date).toLocaleDateString() : '-';
+                return `<tr>
+                    <td>${escapeHtml(c.case_number || '-')}</td>
+                    <td><strong>${escapeHtml(c.title || 'Untitled')}</strong></td>
+                    <td>${escapeHtml(c.case_type || '-')}</td>
+                    <td><span class="status-badge">${escapeHtml(st.status_name || c.status || '-')}</span></td>
+                    <td>Level ${escapeHtml(c.priority_level ?? '-')}</td>
+                    <td>${c.evidence_count || 0}</td>
+                    <td>${created}</td>
+                    <td><a class="btn btn-sm btn-outline" href="case-management.html">Manage</a></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderPagination(p) {
+            const info = document.getElementById('pageInfo');
+            const total = p.total || 0;
+            const pages = p.pages || 0;
+            info.textContent = total === 0 ? 'No cases' : `Page ${p.page} of ${pages} - ${total} case(s)`;
+            document.getElementById('prevPage').disabled = p.page <= 1;
+            document.getElementById('nextPage').disabled = p.page >= pages;
+        }
+
+        function renderSortIndicators() {
+            document.querySelectorAll('.sort-ind').forEach(el => {
+                el.textContent = el.dataset.ind === state.sortBy ? (state.sortOrder === 'asc' ? '▲' : '▼') : '';
+            });
+        }
+
+        async function loadCases() {
+            const body = document.getElementById('casesBody');
+            body.innerHTML = '<tr><td colspan="8" class="state-box"><p>Loading cases...</p></td></tr>';
+            try {
+                const params = { page: state.page, limit: state.limit, sortBy: state.sortBy, sortOrder: state.sortOrder };
+                if (state.search) params.search = state.search;
+                if (state.status) params.status = state.status;
+                if (state.caseType) params.caseType = state.caseType;
+                if (state.dateFrom) params.dateFrom = state.dateFrom;
+                if (state.dateTo) params.dateTo = state.dateTo;
+                const r = await window.apiClient.get('/cases/enhanced', { params, skipWalletAuth: true });
+                if (!r.success) throw new Error(r.error || 'Failed to load cases');
+                renderRows(r.cases || r.data || []);
+                renderPagination(r.pagination || {});
+                renderSortIndicators();
+            } catch (e) {
+                console.error('loadCases error:', e);
+                body.innerHTML = `<tr><td colspan="8" class="state-box error">
+                    <i data-lucide="alert-triangle"></i>
+                    <p>Could not load cases: ${escapeHtml(e.message || e)}</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadCases()">Retry</button></td></tr>`;
+                lucide.createIcons();
+            }
+        }
+
+        document.getElementById('fSearch').addEventListener('input', (e) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { state.search = e.target.value.trim(); state.page = 1; loadCases(); }, 350);
+        });
+        document.getElementById('fStatus').addEventListener('change', (e) => { state.status = e.target.value; state.page = 1; loadCases(); });
+        document.getElementById('fType').addEventListener('change', (e) => { state.caseType = e.target.value; state.page = 1; loadCases(); });
+        document.getElementById('fFrom').addEventListener('change', (e) => { state.dateFrom = e.target.value; state.page = 1; loadCases(); });
+        document.getElementById('fTo').addEventListener('change', (e) => { state.dateTo = e.target.value; state.page = 1; loadCases(); });
+        document.getElementById('fReset').addEventListener('click', () => {
+            state.search = state.status = state.caseType = state.dateFrom = state.dateTo = '';
+            state.page = 1; state.sortBy = 'created_date'; state.sortOrder = 'desc';
+            document.getElementById('fSearch').value = '';
+            document.getElementById('fStatus').value = '';
+            document.getElementById('fType').value = '';
+            document.getElementById('fFrom').value = '';
+            document.getElementById('fTo').value = '';
+            loadCases();
+        });
+        document.getElementById('prevPage').addEventListener('click', () => { if (state.page > 1) { state.page--; loadCases(); } });
+        document.getElementById('nextPage').addEventListener('click', () => { state.page++; loadCases(); });
+        document.querySelectorAll('.cases-table th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.sort;
+                if (state.sortBy === col) state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+                else { state.sortBy = col; state.sortOrder = 'asc'; }
+                state.page = 1;
+                loadCases();
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            loadStatuses();
+            loadCases();
         });
     </script>
     <script src="footer.js"></script>
