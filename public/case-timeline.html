@@ -43,6 +43,8 @@
         .type-chip.custody { background: #fef3c7; color: #92400e; }
         .type-chip.note { background: #ede9fe; color: #6d28d9; }
         .type-chip.analysis { background: #d1fae5; color: #065f46; }
+        .type-chip.comment { background: #e0f2fe; color: #075985; }
+        .type-chip.team { background: #fce7f3; color: #9d174d; }
         .no-data { padding: 24px; text-align: center; color: #6b7280; }
     </style>
 </head>
@@ -84,6 +86,8 @@
                             <option value="custody">Custody</option>
                             <option value="note">Notes</option>
                             <option value="analysis">Analysis</option>
+                            <option value="comment">Comments</option>
+                            <option value="team">Team</option>
                         </select>
                         <select id="zoomSelect" class="form-control">
                             <option value="day">Zoom: Day</option>
@@ -163,6 +167,9 @@
             if (a.includes('view')) return 'eye';
             if (a.includes('note')) return 'file-text';
             if (a.includes('analysis')) return 'flask-conical';
+            if (a.includes('comment')) return 'message-square';
+            if (a.includes('member_added')) return 'user-plus';
+            if (a.includes('member_removed')) return 'user-minus';
             if (a.includes('integrity')) return 'shield-alert';
             if (a.includes('status') || a.includes('transition')) return 'git-branch';
             if (a.includes('verify') || a.includes('verification')) return 'check-circle';
