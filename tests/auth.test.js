@@ -31,7 +31,9 @@ const mockUserLookup = (singleResult) => {
   const eq2 = jest.fn().mockReturnValue({ single });
   const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
   const select = jest.fn().mockReturnValue({ eq: eq1 });
-  return { from: jest.fn().mockReturnValue({ select }), select, eq1, eq2, single };
+  const updateEq = jest.fn().mockResolvedValue({ error: null });
+  const update = jest.fn().mockReturnValue({ eq: updateEq });
+  return { from: jest.fn().mockReturnValue({ select, update }), select, eq1, eq2, single, update, updateEq };
 };
 
 const mockRes = () => {
@@ -160,6 +162,65 @@ describe('emailLogin', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid email or password' });
+  });
+
+  it('increments the failed attempt counter on a wrong password', async () => {
+    const lookup = mockUserLookup({ data: { ...baseUser, failed_login_attempts: 2 }, error: null });
+    supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : { insert: jest.fn() }));
+
+    const req = { body: { email: 'investigator@evid-dgc.com', password: 'wrongpassword' } };
+    const res = mockRes();
+
+    await emailLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(lookup.update).toHaveBeenCalledWith({ failed_login_attempts: 3 });
+  });
+
+  it('locks the account after 5 failed attempts', async () => {
+    const lookup = mockUserLookup({ data: { ...baseUser, failed_login_attempts: 4 }, error: null });
+    supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : { insert: jest.fn() }));
+
+    const req = { body: { email: 'investigator@evid-dgc.com', password: 'wrongpassword' } };
+    const res = mockRes();
+
+    await emailLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    const updateArg = lookup.update.mock.calls[0][0];
+    expect(updateArg.failed_login_attempts).toBe(0);
+    expect(typeof updateArg.locked_until).toBe('string');
+    expect(new Date(updateArg.locked_until).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('returns 423 while the account is locked', async () => {
+    const lockedUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const lookup = mockUserLookup({ data: { ...baseUser, locked_until: lockedUntil }, error: null });
+    supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : { insert: jest.fn() }));
+
+    const req = { body: { email: 'investigator@evid-dgc.com', password: 'password123' } };
+    const res = mockRes();
+
+    await emailLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(423);
+    expect(res.json.mock.calls[0][0].lockedUntil).toBe(lockedUntil);
+  });
+
+  it('returns requiresTwoFactor when the account has TOTP enabled and no code is supplied', async () => {
+    const lookup = mockUserLookup({ data: { ...baseUser, totp_enabled: true, totp_secret: 'JBSWY3DPEHPK3PXP' }, error: null });
+    supabase.from.mockImplementation((table) => (table === 'users' ? lookup.from() : { insert: jest.fn() }));
+
+    const req = { body: { email: 'investigator@evid-dgc.com', password: 'password123' } };
+    const res = mockRes();
+
+    await emailLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Two-factor authentication code required',
+      requiresTwoFactor: true,
+    });
   });
 
   it('allows login for an account without email verification (verification disabled)', async () => {
