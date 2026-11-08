@@ -20,7 +20,7 @@ const getAdminActivityLogs = async (req, res) => {
 
     let query = supabase
       .from('activity_logs')
-      .select('id, user_id, action, details, timestamp')
+      .select('id, user_id, action, result, ip_address, details, timestamp')
       .order('timestamp', { ascending: false })
       .limit(500);
 
@@ -54,7 +54,9 @@ const getAdminActivityLogs = async (req, res) => {
       try { detail = typeof row.details === 'string' ? JSON.parse(row.details) : row.details; } catch (_) { /* keep raw */ }
       return {
         id: row.id,
-        is_success: true,
+        is_success: (row.result || 'success') === 'success',
+        result: row.result || 'success',
+        ip_address: row.ip_address || null,
         action_type: row.action,
         created_at: row.timestamp,
         user_wallet: resolved.wallet_address || row.user_id,
@@ -88,7 +90,7 @@ const exportAdminActivityLogs = async (req, res) => {
 
     let query = supabase
       .from('activity_logs')
-      .select('user_id, action, details, timestamp')
+      .select('user_id, action, result, ip_address, details, timestamp')
       .order('timestamp', { ascending: false })
       .limit(10000);
 
@@ -105,9 +107,9 @@ const exportAdminActivityLogs = async (req, res) => {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
 
-    const header = ['Timestamp', 'User', 'Action', 'Details'];
+    const header = ['Timestamp', 'User', 'Action', 'Result', 'IP Address', 'Details'];
     const lines = (rows || []).map((r) =>
-      [r.timestamp, r.user_id, r.action, escapeCsv(JSON.stringify(r.details))]
+      [r.timestamp, r.user_id, r.action, r.result || 'success', r.ip_address || '', escapeCsv(JSON.stringify(r.details))]
         .map((v, i) => (i === 3 ? escapeCsv(v) : escapeCsv(v)))
         .join(','),
     );
