@@ -292,6 +292,11 @@
                         <h3>Global Search</h3>
                         <p>Cases, evidence, notes, tags, exhibit # or SHA-256</p>
                     </div>
+                    <div class="action-card" onclick="openTransfersInbox()">
+                        <span class="action-icon">🔁</span>
+                        <h3>Evidence Transfers</h3>
+                        <p>Hand evidence to a colleague - they accept to take custody</p>
+                    </div>
                     <div class="action-card" onclick="generateReport()">
                         <span class="action-icon">📊</span>
                         <h3>Generate Report</h3>
@@ -1348,7 +1353,11 @@
         async function loadCaseWorkspace(caseId) {
             const root = document.getElementById('caseWorkspace');
             if (!root) return;
-            let evidence = [], notes = [], requests = [];
+            let evidence = [], notes = [], requests = [], custodians = {};
+            try {
+                const r = await window.apiClient.get(`/cases/${caseId}/custodians`, { skipWalletAuth: true });
+                custodians = r.custodians || {};
+            } catch (e) { console.error('workspace custodians load failed', e); }
             try {
                 const r = await window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true });
                 evidence = r.data || [];
@@ -1388,6 +1397,7 @@
                                 <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="navigator.clipboard && navigator.clipboard.writeText('${ev.hash || ''}')">Copy</button></small>
                                 ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
                                 ${renderExtractedMeta(ev)}
+                                ${custodians[ev.id] ? '<br><small style="color:#6b7280;">Custodian: ' + escapeHtml(custodians[ev.id].custodian_name || custodians[ev.id].custodian || 'unknown') + (custodians[ev.id].via === 'transfer' ? ' (received by transfer)' : '') + '</small>' : ''}
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-primary" onclick="previewEvidence(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'), '${escapeHtml(ev.file_type || '')}')">Preview</button>
@@ -1397,6 +1407,7 @@
                                 <button class="btn btn-sm btn-outline" onclick="verifyEvidenceNow(${ev.id}, this)">Verify integrity</button>
                                 <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'))">Request analysis</button>
                                 <button class="btn btn-sm btn-outline" onclick="openTagModal(${ev.id})">Tags</button>
+                                <button class="btn btn-sm btn-outline" onclick="openTransferModal(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'))">Transfer</button>
                             </div>
                         </div>
                         <div id="custody-${ev.id}" style="display:none; margin-top:10px;"></div>
@@ -1783,6 +1794,111 @@
             };
             modal.querySelector('#caseSearchGo').onclick = runSearch;
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+        }
+
+        // S6: evidence transfer with acceptance
+        async function openTransferModal(evidenceId, title) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:520px;">
+                    <div class="modal-header">
+                        <h3>🔁 Transfer evidence #${evidenceId}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color:#666;font-size:13px;margin-bottom:12px;">${escapeHtml(title || '')} - the recipient must accept before custody moves. Both sides are recorded in the hash-chained custody log.</p>
+                        <div class="form-group">
+                            <label>Transfer to</label>
+                            <select id="transferTo" class="form-control"><option value="">Loading users...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reason for transfer</label>
+                            <textarea id="transferReason" class="form-control" rows="3" placeholder="e.g. Handover to forensics lab for disk analysis"></textarea></label>
+                        </div>
+                        <button class="btn btn-primary" id="transferSubmit">Send transfer request</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            const sel = modal.querySelector('#transferTo');
+            try {
+                const r = await window.apiClient.get('/transfers/recipients', { skipWalletAuth: true });
+                const users = r.recipients || [];
+                sel.innerHTML = users.length
+                    ? '<option value="">Select recipient...</option>' + users.map(u => `<option value="${escapeHtml(u.user)}">${escapeHtml(u.name || u.user)}${u.role ? ' (' + escapeHtml(u.role.replace(/_/g, ' ')) + ')' : ''}</option>`).join('')
+                    : '<option value="">No eligible users found</option>';
+            } catch (e) {
+                sel.innerHTML = '<option value="">Failed to load users</option>';
+            }
+            modal.querySelector('#transferSubmit').onclick = async () => {
+                const to = sel.value;
+                const reason = modal.querySelector('#transferReason').value.trim();
+                if (!to) { showToast('Choose a recipient', 'warning'); return; }
+                if (!reason) { showToast('A reason is required', 'warning'); return; }
+                try {
+                    await window.apiClient.post(`/evidence/${evidenceId}/transfer`, { to_user: to, reason }, { skipWalletAuth: true });
+                    showToast('Transfer sent - waiting for the recipient to accept', 'success');
+                    modal.remove();
+                } catch (e) {
+                    showToast('Transfer failed: ' + (e.message || e), 'error');
+                }
+            };
+        }
+
+        async function openTransfersInbox() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:640px;">
+                    <div class="modal-header">
+                        <h3>🔁 Evidence Transfers</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body" id="transfersBody"><div class="no-data">Loading transfers...</div></div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            const body = modal.querySelector('#transfersBody');
+            const statusColor = { pending: '#b45309', accepted: '#047857', declined: '#b91c1c', cancelled: '#6b7280' };
+            const row = (t, incoming) => `
+                <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+                    <strong>Evidence #${t.evidence_id}</strong>
+                    <span style="color:${statusColor[t.status] || '#6b7280'};font-weight:600;margin-left:8px;text-transform:capitalize;">${escapeHtml(t.status)}</span><br>
+                    <small style="color:#6b7280;">${incoming ? 'From' : 'To'}: ${escapeHtml((incoming ? t.from_name : t.to_name) || (incoming ? t.from_user : t.to_user) || 'unknown')}
+                    - ${new Date(t.created_at).toLocaleString()}${t.responded_at ? ' - responded ' + new Date(t.responded_at).toLocaleString() : ''}</small>
+                    <div style="margin-top:4px;font-size:13px;">${escapeHtml(t.reason || '')}</div>
+                    ${incoming && t.status === 'pending' ? `
+                        <div style="margin-top:8px;display:flex;gap:8px;">
+                            <button class="btn btn-sm btn-primary" data-accept="${t.id}">Accept custody</button>
+                            <button class="btn btn-sm btn-outline" data-decline="${t.id}">Decline</button>
+                        </div>` : ''}
+                </div>`;
+            async function load() {
+                try {
+                    const r = await window.apiClient.get('/transfers/mine', { skipWalletAuth: true });
+                    const incoming = r.incoming || [], outgoing = r.outgoing || [];
+                    body.innerHTML =
+                        `<h4 style="margin:4px 0 8px;">Incoming (${incoming.length})</h4>` +
+                        (incoming.length ? incoming.map(t => row(t, true)).join('') : '<div class="no-data">No incoming transfers.</div>') +
+                        `<h4 style="margin:16px 0 8px;">Outgoing (${outgoing.length})</h4>` +
+                        (outgoing.length ? outgoing.map(t => row(t, false)).join('') : '<div class="no-data">No outgoing transfers.</div>');
+                    body.querySelectorAll('[data-accept]').forEach(b => b.onclick = () => respond(b.dataset.accept, 'accept'));
+                    body.querySelectorAll('[data-decline]').forEach(b => b.onclick = () => respond(b.dataset.decline, 'decline'));
+                } catch (e) {
+                    body.innerHTML = `<div class="no-data" style="color:#b91c1c;">Failed to load transfers: ${escapeHtml(e.message || String(e))}</div>`;
+                }
+            }
+            async function respond(id, action) {
+                try {
+                    await window.apiClient.post(`/transfers/${id}/${action}`, {}, { skipWalletAuth: true });
+                    showToast(`Transfer ${action}ed`, 'success');
+                    load();
+                } catch (e) {
+                    showToast(`${action} failed: ` + (e.message || e), 'error');
+                }
+            }
+            load();
         }
 
         // M17: one-click signed PDF case report (server-generated, report hash)
