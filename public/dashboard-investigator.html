@@ -289,8 +289,8 @@
                     </div>
                     <div class="action-card" onclick="searchCases()">
                         <span class="action-icon">🔍</span>
-                        <h3>Search Cases</h3>
-                        <p>Find and review existing investigations</p>
+                        <h3>Global Search</h3>
+                        <p>Cases, evidence, notes, tags, exhibit # or SHA-256</p>
                     </div>
                     <div class="action-card" onclick="generateReport()">
                         <span class="action-icon">📊</span>
@@ -1718,14 +1718,14 @@
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width:560px;">
+                <div class="modal-content" style="max-width:640px;">
                     <div class="modal-header">
-                        <h3>🔍 Search Cases</h3>
+                        <h3>\uD83D\uDD0D Global Search</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group" style="display:flex;gap:8px;">
-                            <input type="text" id="caseSearchInput" class="form-control" placeholder="Case title, description, or case number">
+                            <input type="text" id="caseSearchInput" class="form-control" placeholder="Case, evidence, note, tag, exhibit number (EXH-2026-0001) or SHA-256 hash">
                             <button class="btn btn-primary" id="caseSearchGo">Search</button>
                         </div>
                         <div id="caseSearchResults" style="margin-top:12px;"></div>
@@ -1736,22 +1736,46 @@
             const input = modal.querySelector('#caseSearchInput');
             const resultsBox = modal.querySelector('#caseSearchResults');
             input.focus();
+            const closeAnd = (fn) => `this.closest('.modal').remove(); ${fn}`;
             const runSearch = async () => {
                 const term = input.value.trim();
                 if (!term) return;
                 resultsBox.innerHTML = '<div class="no-data">Searching...</div>';
                 try {
-                    const result = await window.apiClient.get('/cases/enhanced', { params: { search: term, limit: 20 } });
-                    const cases = result.cases || result.data || [];
-                    if (!cases.length) {
-                        resultsBox.innerHTML = `<div class="no-data">No cases found matching "${escapeHtml(term)}"</div>`;
+                    const r = await window.apiClient.get(`/search?q=${encodeURIComponent(term)}`, { skipWalletAuth: true });
+                    const d = r.data || {};
+                    const cases = d.cases || [], evidence = d.evidence || [], notes = d.notes || [];
+                    if (!cases.length && !evidence.length && !notes.length) {
+                        resultsBox.innerHTML = `<div class="no-data">Nothing found for "${escapeHtml(term)}"</div>`;
                         return;
                     }
-                    resultsBox.innerHTML = cases.map(c => `
-                        <button class="btn btn-outline" style="display:block;width:100%;text-align:left;margin-bottom:8px;" onclick="this.closest('.modal').remove(); viewCaseDetails('${c.id}')">
-                            <strong>${escapeHtml(c.case_number || ('CASE-' + c.id))}</strong> - ${escapeHtml(c.title || 'Untitled')}
-                            <span class="status-badge status-${(c.status || 'open').toLowerCase().replace(/[^a-z_]/g, '')}" style="margin-left:6px;">${escapeHtml(c.case_statuses?.status_name || c.status || 'OPEN')}</span>
-                        </button>`).join('');
+                    let html = '';
+                    if (d.mode === 'hash') {
+                        html += `<div style="font-size:12px;color:#92400e;background:#fef3c7;border:1px solid #f59e0b55;border-radius:6px;padding:6px 10px;margin-bottom:10px;">SHA-256 lookup - file found by its fingerprint</div>`;
+                    }
+                    if (cases.length) {
+                        html += `<h4 style="margin:10px 0 6px;">Cases (${cases.length})</h4>` + cases.map(c => `
+                            <button class="btn btn-outline" style="display:block;width:100%;text-align:left;margin-bottom:8px;" onclick="${closeAnd(`viewCaseDetails('${c.id}')`)}">
+                                <strong>${escapeHtml(c.case_number || ('CASE-' + c.id))}</strong> - ${escapeHtml(c.title || 'Untitled')}
+                                <span style="color:#6b7280;font-size:12px;"> ${escapeHtml(c.case_type || '')} ${escapeHtml(c.jurisdiction || '')}</span>
+                            </button>`).join('');
+                    }
+                    if (evidence.length) {
+                        html += `<h4 style="margin:10px 0 6px;">Evidence (${evidence.length})</h4>` + evidence.map(ev => `
+                            <button class="btn btn-outline" style="display:block;width:100%;text-align:left;margin-bottom:8px;" onclick="${closeAnd(`viewCaseDetails('${ev.case_id}')`)}">
+                                ${ev.exhibit_id ? `<span class="exhibit-badge">${escapeHtml(ev.exhibit_id)}</span> ` : ''}<strong>#${ev.id} ${escapeHtml(ev.title || 'Untitled')}</strong>
+                                <span style="color:#6b7280;font-size:12px;"> ${escapeHtml(ev.file_name || '')}${ev.matched_via === 'tag' ? ' - matched by tag' : ''}</span><br>
+                                <small style="color:#9ca3af;">SHA-256: ${escapeHtml((ev.hash || '').slice(0, 20))}...</small>
+                            </button>`).join('');
+                    }
+                    if (notes.length) {
+                        html += `<h4 style="margin:10px 0 6px;">Notes (${notes.length})</h4>` + notes.map(n => `
+                            <button class="btn btn-outline" style="display:block;width:100%;text-align:left;margin-bottom:8px;" onclick="${closeAnd(`viewCaseDetails('${n.case_id}')`)}">
+                                ${escapeHtml((n.content || '').slice(0, 120))}${(n.content || '').length > 120 ? '...' : ''}<br>
+                                <small style="color:#6b7280;">${escapeHtml(n.author_name || 'unknown')} - ${new Date(n.created_at).toLocaleString()}${n.evidence_id ? ' - on evidence #' + n.evidence_id : ''}</small>
+                            </button>`).join('');
+                    }
+                    resultsBox.innerHTML = html;
                 } catch (error) {
                     console.error('Search error:', error);
                     resultsBox.innerHTML = `<div class="no-data" style="color:#b91c1c;">Search failed: ${escapeHtml(error.message || String(error))}</div>`;
