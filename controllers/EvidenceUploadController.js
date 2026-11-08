@@ -18,6 +18,30 @@ const uploadEvidence = async (req, res) => {
     }
 
     const { caseId, type, description, location, collectionDate, title } = req.body;
+
+    // M6: forensic intake metadata (all optional, individually validated)
+    const FORENSIC_FIELDS = {
+      sourceDevice: 200,
+      deviceMakeModel: 200,
+      deviceSerial: 120,
+      collectedBy: 200,
+      acquisitionMethod: 120,
+      collectionReason: 500,
+      conditionNotes: 1000,
+      collectionTimezone: 60,
+    };
+    const forensic = {};
+    for (const [field, max] of Object.entries(FORENSIC_FIELDS)) {
+      const v = req.body[field];
+      if (v == null || String(v).trim() === '') continue;
+      if (String(v).length > max) {
+        return res.status(400).json({ success: false, error: `${field} must be ${max} characters or fewer` });
+      }
+      forensic[field] = String(v).trim();
+    }
+    if (collectionDate && isNaN(Date.parse(collectionDate))) {
+      return res.status(400).json({ success: false, error: 'collectionDate must be a valid date/time' });
+    }
     const file = req.file;
 
     if (!file) {
@@ -142,6 +166,7 @@ const uploadEvidence = async (req, res) => {
       location: location || '',
       collectionDate: collectionDate || new Date().toISOString(),
       mimeType: file.mimetype,
+      forensic,
     };
 
     // Use integrated service for DB + Blockchain + IPFS coordination
