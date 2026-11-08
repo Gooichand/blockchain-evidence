@@ -5,6 +5,7 @@ const userRoutes = require('./userRoutes');
 const adminRoutes = require('./adminRoutes');
 const evidenceRoutes = require('./evidenceRoutes');
 const tagRoutes = require('./tagRoutes');
+const savedFiltersRoutes = require('./savedFiltersRoutes');
 const retentionRoutes = require('./retentionRoutes');
 const caseRoutes = require('./caseRoutes');
 const activityRoutes = require('./activityRoutes');
@@ -29,6 +30,7 @@ function registerRoutes(app) {
   app.use('/api', userRoutes);
   app.use('/api', adminRoutes);
   app.use('/api', tagRoutes);
+  app.use('/api', savedFiltersRoutes);
   app.use('/api', evidenceRoutes);
   app.use('/api', retentionRoutes);
   app.use('/api', caseRoutes);
