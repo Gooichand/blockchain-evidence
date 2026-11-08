@@ -1250,6 +1250,15 @@
   letter-spacing: 0.5px;
 }
 
+.metrics-note {
+  margin: 16px auto 0;
+  max-width: 720px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
 /* --- Container override for homepage --- */
 .container#main-content {
   background: transparent !important;

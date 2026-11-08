@@ -7,6 +7,50 @@
     <title>Home | Blockchain Evidence</title>
     <meta name="description"
         content="Professional blockchain evidence management for law enforcement, forensic analysts, and legal professionals.">
+    <link rel="canonical" href="https://blockchain-evidence.onrender.com/">
+    <meta name="theme-color" content="#d32f2f">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EVID-DGC">
+    <meta property="og:title" content="EVID-DGC | Blockchain Evidence Management System">
+    <meta property="og:description" content="Tamper-proof digital evidence with SHA-256 hashing, IPFS storage and a verifiable chain of custody - built for law enforcement, forensic labs and courts.">
+    <meta property="og:url" content="https://blockchain-evidence.onrender.com/">
+    <meta property="og:image" content="https://blockchain-evidence.onrender.com/og-banner.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="EVID-DGC logo and the tagline Blockchain Evidence Management System">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EVID-DGC | Blockchain Evidence Management System">
+    <meta name="twitter:description" content="Tamper-proof digital evidence with SHA-256 hashing, IPFS storage and a verifiable chain of custody.">
+    <meta name="twitter:image" content="https://blockchain-evidence.onrender.com/og-banner.jpg">
+    <meta name="twitter:image:alt" content="EVID-DGC logo and the tagline Blockchain Evidence Management System">
+
+    <!-- Loading screen (inline so it paints before any other asset) -->
+    <style>
+        #evid-loader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+            background:linear-gradient(135deg,#ffffff 0%,#fff1f1 55%,#ffd9d9 100%);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            transition:opacity .45s ease,visibility .45s ease}
+        #evid-loader.is-done{opacity:0;visibility:hidden;pointer-events:none}
+        #evid-loader .evid-loader-ring{width:56px;height:56px;border-radius:50%;border:4px solid #ffcdd2;border-top-color:#d32f2f;animation:evid-spin .9s linear infinite}
+        #evid-loader .evid-loader-brand{font-size:1.5rem;font-weight:800;letter-spacing:-.5px;color:#d32f2f}
+        #evid-loader .evid-loader-text{font-size:.85rem;font-weight:500;color:#8b0000;opacity:.75}
+        @keyframes evid-spin{to{transform:rotate(360deg)}}
+        @media (prefers-reduced-motion:reduce){#evid-loader .evid-loader-ring{animation-duration:2.4s}}
+    </style>
+    <noscript><style>#evid-loader{display:none!important}</style></noscript>
+    <script>
+        (function () {
+            function hide() {
+                var el = document.getElementById('evid-loader');
+                if (!el || el.classList.contains('is-done')) return;
+                el.classList.add('is-done');
+                setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+            }
+            window.addEventListener('load', hide);
+            setTimeout(hide, 8000); /* failsafe: never block the page */
+        })();
+    </script>
+
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="faq-hover-effects.css">
@@ -40,6 +84,11 @@
 </head>
 
 <body>
+    <div id="evid-loader" role="status" aria-live="polite">
+        <div class="evid-loader-ring" aria-hidden="true"></div>
+        <div class="evid-loader-brand">EVID-DGC</div>
+        <div class="evid-loader-text">Loading secure evidence platform&hellip;</div>
+    </div>
 
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -278,34 +327,35 @@
             </div>
         </div>
 
-        <!-- Live Metrics -->
-        <div class="metrics-section">
+        <!-- System Facts (verifiable from the codebase - no simulated usage figures) -->
+        <div class="metrics-section" id="system-facts">
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <div class="metric-number" id="metricEvidence">12,847</div>
-                    <div class="metric-label">Evidence Uploaded</div>
+                    <div class="metric-number">256</div>
+                    <div class="metric-label">SHA-256 Hash Bits per File</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-number" id="metricCases">3,421</div>
-                    <div class="metric-label">Cases Registered</div>
+                    <div class="metric-number">6</div>
+                    <div class="metric-label">Step Chain of Custody</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-number" id="metricVerified">99.97%</div>
-                    <div class="metric-label">Integrity Verified</div>
+                    <div class="metric-number">8</div>
+                    <div class="metric-label">Role-Based Access Levels</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-number" id="metricRecords">48,256</div>
-                    <div class="metric-label">Blockchain Records</div>
+                    <div class="metric-number">8</div>
+                    <div class="metric-label">Role Dashboards</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-number" id="metricUsers">847</div>
-                    <div class="metric-label">Authorized Users</div>
+                    <div class="metric-number">19</div>
+                    <div class="metric-label">API Route Modules</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-number" id="metricRequests">6,193</div>
-                    <div class="metric-label">Verification Requests</div>
+                    <div class="metric-number">Testnet</div>
+                    <div class="metric-label">Polygon Amoy Anchoring</div>
                 </div>
             </div>
+            <p class="metrics-note">Platform facts taken from the open-source codebase. Blockchain anchoring currently runs on the Polygon Amoy test network.</p>
         </div>
 
         <!-- How It Works Section -->
