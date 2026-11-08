@@ -3,7 +3,9 @@ const multer = require('multer');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024,
+    // Hard ceiling only; the per-type limits in EvidenceUploadController
+    // (10MB-500MB by MIME type) are what actually govern each upload.
+    fileSize: 500 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
