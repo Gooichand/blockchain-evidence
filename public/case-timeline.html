@@ -11,7 +11,32 @@
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <style>
+        .timeline-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .timeline-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+        .timeline-filters .form-control { min-width: 170px; }
+        .timeline-actions { display: flex; gap: 10px; }
+        .vertical-timeline { position: relative; padding-left: 28px; }
+        .vertical-timeline::before { content: ''; position: absolute; left: 9px; top: 4px; bottom: 4px; width: 2px; background: #f0d5d5; }
+        .timeline-event { position: relative; margin-bottom: 16px; }
+        .timeline-marker { position: absolute; left: -28px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #b91c1c; display: flex; align-items: center; justify-content: center; }
+        .timeline-marker i { width: 11px; height: 11px; color: #b91c1c; }
+        .timeline-content { background: #fff; border: 1px solid #f3e8e8; border-radius: 10px; padding: 14px 16px; }
+        .timeline-header { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .timeline-header h4 { margin: 0; font-size: 0.98rem; text-transform: capitalize; }
+        .timeline-date { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; }
+        .timeline-meta-line { font-size: 0.83rem; color: #6b7280; margin-top: 6px; word-break: break-all; }
+        .timeline-summary { margin-top: 24px; border-top: 1px solid #f3e8e8; padding-top: 18px; }
+        .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-top: 12px; }
+        .summary-stats .stat-item { text-align: center; padding: 16px; background: #faf7f7; border-radius: 10px; }
+        .summary-stats .stat-item i { color: #b91c1c; }
+        .summary-stats .stat-num { display: block; font-size: 1.4rem; font-weight: 700; margin: 6px 0 2px; }
+        .summary-stats .stat-label { font-size: 0.8rem; color: #6b7280; }
+        .no-data { padding: 24px; text-align: center; color: #6b7280; }
+    </style>
 </head>
 
 <body>
@@ -37,34 +62,25 @@
                     <i data-lucide="clock"></i>
                 </div>
                 <h1>Case Timeline</h1>
-                <p>Chronological view of all case events and activities</p>
+                <p>Real chain-of-custody events, newest first</p>
             </div>
             <div class="card-body">
                 <div class="timeline-controls">
                     <div class="timeline-filters">
-                        <select id="eventTypeFilter" class="form-control">
-                            <option value="all">All Events</option>
-                            <option value="evidence">Evidence Added</option>
-                            <option value="custody">Chain of Custody</option>
-                            <option value="status">Status Changes</option>
-                            <option value="access">Access Logs</option>
-                            <option value="approval">Approvals</option>
+                        <select id="caseSelect" class="form-control">
+                            <option value="">Loading cases...</option>
                         </select>
-                        <select id="roleFilter" class="form-control">
-                            <option value="all">All Roles</option>
-                            <option value="investigator">Investigator</option>
-                            <option value="forensic_analyst">Forensic Analyst</option>
-                            <option value="legal_professional">Legal Professional</option>
-                            <option value="court_official">Court Official</option>
+                        <select id="actionFilter" class="form-control">
+                            <option value="all">All actions</option>
                         </select>
                         <input type="date" id="dateFilter" class="form-control">
                     </div>
                     <div class="timeline-actions">
                         <button onclick="exportTimeline()" class="btn btn-primary">
                             <i data-lucide="download"></i>
-                            Export
+                            Export Report (PDF)
                         </button>
-                        <button onclick="printTimeline()" class="btn btn-outline">
+                        <button onclick="window.print()" class="btn btn-outline">
                             <i data-lucide="printer"></i>
                             Print
                         </button>
@@ -73,118 +89,32 @@
 
                 <div class="timeline-container">
                     <div class="vertical-timeline" id="verticalTimeline">
-                        <div class="timeline-event">
-                            <div class="timeline-marker evidence">
-                                <i data-lucide="upload"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <h3>Evidence Added</h3>
-                                    <div class="timeline-meta">
-                                        <span class="timeline-date">Jan 15, 2024 10:15 AM IST</span>
-                                        <span class="badge badge-forensic">Forensic Analyst</span>
-                                    </div>
-                                </div>
-                                <div class="timeline-body">
-                                    <p><strong>Actor:</strong> Dr. Michael Johnson</p>
-                                    <p>5 suspicious email messages extracted and verified</p>
-                                    <div class="evidence-links">
-                                        <h4>Related Evidence:</h4>
-                                        <ul>
-                                            <li><a href="#">phishing_email_001.eml</a></li>
-                                            <li><a href="#">suspicious_reply_002.eml</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="blockchain-proof">
-                                        <i data-lucide="link"></i>
-                                        <span>Blockchain Tx: 0xb2c3d4e5f6789012345678901234567890abcdef234567</span>
-                                        <button class="btn btn-sm btn-outline">
-                                            <i data-lucide="external-link"></i>
-                                            Verify
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="timeline-event">
-                            <div class="timeline-marker custody">
-                                <i data-lucide="arrow-right-left"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <h3>Chain of Custody Transfer</h3>
-                                    <div class="timeline-meta">
-                                        <span class="timeline-date">Jan 16, 2024 08:00 AM IST</span>
-                                        <span class="badge badge-secondary">System</span>
-                                    </div>
-                                </div>
-                                <div class="timeline-body">
-                                    <p><strong>Actor:</strong> System</p>
-                                    <p>Evidence transferred from Forensic Analyst to Legal Professional</p>
-                                    <div class="blockchain-proof">
-                                        <i data-lucide="link"></i>
-                                        <span>Blockchain Tx: 0xc3d4e5f6789012345678901234567890abcdef345678</span>
-                                        <button class="btn btn-sm btn-outline">
-                                            <i data-lucide="external-link"></i>
-                                            Verify
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="timeline-event">
-                            <div class="timeline-marker approval">
-                                <i data-lucide="check-circle"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="timeline-header">
-                                    <h3>Legal Review Completed</h3>
-                                    <div class="timeline-meta">
-                                        <span class="timeline-date">Jan 18, 2024 11:45 AM IST</span>
-                                        <span class="badge badge-legal">Legal Professional</span>
-                                    </div>
-                                </div>
-                                <div class="timeline-body">
-                                    <p><strong>Actor:</strong> Atty. Jennifer Williams</p>
-                                    <p>All evidence approved for court presentation</p>
-                                    <div class="blockchain-proof">
-                                        <i data-lucide="link"></i>
-                                        <span>Blockchain Tx: 0xf6789012345678901234567890abcdef678901</span>
-                                        <button class="btn btn-sm btn-outline">
-                                            <i data-lucide="external-link"></i>
-                                            Verify
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="no-data">Select a case to load its timeline.</div>
                     </div>
                 </div>
 
-                <div class="timeline-summary">
+                <div class="timeline-summary" id="timelineSummary" style="display:none;">
                     <h3>Timeline Summary</h3>
                     <div class="summary-stats">
                         <div class="stat-item">
                             <i data-lucide="activity"></i>
-                            <span>10</span>
-                            <span>Total Events</span>
+                            <span class="stat-num" id="sumEvents">0</span>
+                            <span class="stat-label">Total Events</span>
                         </div>
                         <div class="stat-item">
                             <i data-lucide="users"></i>
-                            <span>5</span>
-                            <span>Unique Actors</span>
+                            <span class="stat-num" id="sumActors">0</span>
+                            <span class="stat-label">Unique Actors</span>
                         </div>
                         <div class="stat-item">
                             <i data-lucide="calendar"></i>
-                            <span>8</span>
-                            <span>Days Active</span>
+                            <span class="stat-num" id="sumDays">0</span>
+                            <span class="stat-label">Days Active</span>
                         </div>
                         <div class="stat-item">
                             <i data-lucide="file"></i>
-                            <span>22</span>
-                            <span>Evidence Items</span>
+                            <span class="stat-num" id="sumEvidence">0</span>
+                            <span class="stat-label">Evidence Items</span>
                         </div>
                     </div>
                 </div>
@@ -193,16 +123,156 @@
     </div>
 
     <script>
-        function exportTimeline() {
-            alert('Timeline export functionality would be implemented here');
+        let allEntries = [];
+        let currentCaseId = null;
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = { info: '#3b82f6', success: '#10b981', error: '#ef4444', warning: '#f59e0b' };
+            toast.style.cssText = `position:fixed;top:20px;right:20px;background:${colors[type] || colors.info};color:white;padding:12px 18px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:340px;`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
         }
 
-        function printTimeline() {
-            window.print();
+        function escapeHtml(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
+
+        function actionIcon(action) {
+            const a = String(action || '');
+            if (a.includes('upload')) return 'upload';
+            if (a.includes('download')) return 'download';
+            if (a.includes('view')) return 'eye';
+            if (a.includes('note')) return 'file-text';
+            if (a.includes('integrity')) return 'shield-alert';
+            if (a.includes('status') || a.includes('transition')) return 'git-branch';
+            if (a.includes('verify') || a.includes('verification')) return 'check-circle';
+            return 'activity';
+        }
+
+        async function loadCases() {
+            const sel = document.getElementById('caseSelect');
+            try {
+                const result = await window.apiClient.get('/cases', { skipWalletAuth: true });
+                const cases = result.data || result.cases || [];
+                if (!cases.length) {
+                    sel.innerHTML = '<option value="">No cases available</option>';
+                    return;
+                }
+                sel.innerHTML = '<option value="">Select a case...</option>' + cases.map(c =>
+                    `<option value="${c.id}">${escapeHtml(c.case_number || ('CASE-' + c.id))} - ${escapeHtml(c.title || 'Untitled')}</option>`
+                ).join('');
+                const preselect = new URLSearchParams(location.search).get('case');
+                if (preselect && cases.some(c => String(c.id) === String(preselect))) {
+                    sel.value = preselect;
+                    loadTimeline(preselect);
+                }
+            } catch (e) {
+                if (String(e && e.message || '').includes('401')) { window.location.href = 'index.html'; return; }
+                sel.innerHTML = '<option value="">Failed to load cases</option>';
+            }
+        }
+
+        async function loadTimeline(caseId) {
+            currentCaseId = caseId;
+            const tl = document.getElementById('verticalTimeline');
+            tl.innerHTML = '<div class="no-data">Loading custody events...</div>';
+            document.getElementById('timelineSummary').style.display = 'none';
+            try {
+                const [custodyRes, evidenceRes] = await Promise.all([
+                    window.apiClient.get(`/custody/case/${caseId}`, { skipWalletAuth: true }),
+                    window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true }).catch(() => null),
+                ]);
+                allEntries = (custodyRes.entries || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                const actions = [...new Set(allEntries.map(e => e.action).filter(Boolean))].sort();
+                document.getElementById('actionFilter').innerHTML = '<option value="all">All actions</option>' +
+                    actions.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a.replace(/_/g, ' '))}</option>`).join('');
+
+                const evidence = evidenceRes ? (evidenceRes.data || []) : [];
+                renderSummary(allEntries, evidence.length);
+                renderTimeline();
+            } catch (e) {
+                tl.innerHTML = `<div class="no-data">Failed to load timeline: ${escapeHtml(e.message || e)}</div>`;
+            }
+        }
+
+        function renderSummary(entries, evidenceCount) {
+            const actors = new Set(entries.map(e => e.actor || e.actor_name).filter(Boolean));
+            const days = new Set(entries.map(e => (e.created_at || '').slice(0, 10)).filter(Boolean));
+            document.getElementById('sumEvents').textContent = entries.length;
+            document.getElementById('sumActors').textContent = actors.size;
+            document.getElementById('sumDays').textContent = days.size;
+            document.getElementById('sumEvidence').textContent = evidenceCount;
+            document.getElementById('timelineSummary').style.display = 'block';
+        }
+
+        function renderTimeline() {
+            const actionFilter = document.getElementById('actionFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const tl = document.getElementById('verticalTimeline');
+            const entries = allEntries.filter(e => {
+                if (actionFilter !== 'all' && e.action !== actionFilter) return false;
+                if (dateFilter && (e.created_at || '').slice(0, 10) !== dateFilter) return false;
+                return true;
+            });
+            if (!entries.length) {
+                tl.innerHTML = '<div class="no-data">No custody events match these filters.</div>';
+                return;
+            }
+            tl.innerHTML = entries.map(e => `
+                <div class="timeline-event">
+                    <div class="timeline-marker"><i data-lucide="${actionIcon(e.action)}"></i></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h4>${escapeHtml(String(e.action || 'event').replace(/_/g, ' '))}${e.evidence_id != null ? ' - evidence #' + e.evidence_id : ''}</h4>
+                            <span class="timeline-date">${e.created_at ? new Date(e.created_at).toLocaleString() : ''}</span>
+                        </div>
+                        <div class="timeline-meta-line">
+                            <strong>Actor:</strong> ${escapeHtml(e.actor_name || e.actor || 'unknown')}${e.actor_role ? ' (' + escapeHtml(e.actor_role) + ')' : ''}
+                        </div>
+                        ${e.details ? `<div class="timeline-meta-line">${escapeHtml(typeof e.details === 'string' ? e.details : JSON.stringify(e.details))}</div>` : ''}
+                        ${e.entry_hash ? `<div class="timeline-meta-line">Entry hash: ${escapeHtml(e.entry_hash.slice(0, 32))}...</div>` : ''}
+                    </div>
+                </div>`).join('');
+            lucide.createIcons();
+        }
+
+        // Real export: the signed case PDF report (M17) instead of a stub.
+        async function exportTimeline() {
+            if (!currentCaseId) { showToast('Select a case first.', 'warning'); return; }
+            try {
+                const r = await fetch('/api/cases/' + encodeURIComponent(currentCaseId) + '/report.pdf', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) {
+                    const j = await r.json().catch(() => ({}));
+                    throw new Error(j.error || ('Export failed (HTTP ' + r.status + ')'));
+                }
+                const blob = await r.blob();
+                const cd = r.headers.get('Content-Disposition') || '';
+                const m = /filename="?([^";]+)"?/.exec(cd);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = m ? m[1] : ('case-' + currentCaseId + '-report.pdf');
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+            } catch (e) {
+                showToast('Export failed: ' + (e.message || e), 'error');
+            }
+        }
+
+        document.getElementById('caseSelect').addEventListener('change', (e) => {
+            if (e.target.value) loadTimeline(e.target.value);
+        });
+        document.getElementById('actionFilter').addEventListener('change', renderTimeline);
+        document.getElementById('dateFilter').addEventListener('change', renderTimeline);
 
         document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
+            loadCases();
         });
     </script>
     <script src="footer.js"></script>
