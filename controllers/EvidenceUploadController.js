@@ -3,6 +3,7 @@ const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const { getAuthUser, getStableWallet } = require('../middleware/identity');
 const { canAccessCase } = require('../middleware/caseAccess');
+const { isCaseClosed } = require('../services/caseHelpers');
 const { supabase } = require('../config');
 const crypto = require('crypto');
 
@@ -87,6 +88,14 @@ const uploadEvidence = async (req, res) => {
     }
     if (!(await canAccessCase(authUser, parsedCaseId))) {
       return res.status(403).json({ success: false, error: 'You do not have access to this case' });
+    }
+
+    // M12: closed cases are immutable - no new evidence until reopened
+    if (await isCaseClosed(parsedCaseId)) {
+      return res.status(409).json({
+        success: false,
+        error: 'This case is closed. Reopen it before adding evidence.',
+      });
     }
 
     // Duplicate detection by content hash within the same case (audit M2)
