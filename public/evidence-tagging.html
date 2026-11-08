@@ -415,6 +415,14 @@
                     <input type="radio" name="filterLogic" value="AND" checked> AND
                     <input type="radio" name="filterLogic" value="OR"> OR
                 </div>
+                <div class="saved-filters-bar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0;">
+                    <select id="savedFilterSelect" class="form-control" style="width:auto; min-width:180px;" onchange="evidenceTagging.applySavedFilter(this.value)">
+                        <option value="">Saved filters...</option>
+                    </select>
+                    <input type="text" id="savedFilterName" class="form-control" placeholder="Name this filter" style="width:160px;">
+                    <button type="button" class="btn btn-secondary" onclick="evidenceTagging.saveCurrentFilter()">Save current</button>
+                    <button type="button" class="btn btn-secondary" onclick="evidenceTagging.deleteSavedFilter()">Delete selected</button>
+                </div>
                 <button onclick="evidenceTagging.filterBySelectedTags()" class="btn btn-primary">
                     Filter Evidence
                 </button>
@@ -454,26 +462,15 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="api-client.js"></script>
     <script src="evidence-tagging.js"></script>
     <script>
-        // Additional helper functions
-        window.evidenceTagging.filterBySelectedTags = async function () {
-            const selectedTagIds = Array.from(this.selectedTags);
-            if (selectedTagIds.length === 0) {
-                this.showMessage('Please select tags to filter by', 'warning');
-                return;
-            }
-
-            const logic = document.querySelector('input[name="filterLogic"]:checked').value;
-            await this.filterByTags(selectedTagIds, logic);
-        };
-
-        // Load real evidence data on page load
+        // Load real evidence data once the class instance exists (it is
+        // created on DOMContentLoaded inside evidence-tagging.js)
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const evidence = await window.evidenceTagging.loadAllEvidence();
                 window.evidenceTagging.renderFilteredEvidence(evidence);
+                window.evidenceTagging.loadSavedFilters && window.evidenceTagging.loadSavedFilters();
             } catch (error) {
                 console.error('Failed to load real evidence:', error);
             }
