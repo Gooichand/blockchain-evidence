@@ -2,6 +2,9 @@ const integratedEvidenceService = require('../services/integratedEvidenceService
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const { getAuthUser, getStableWallet } = require('../middleware/identity');
+const { canAccessCase } = require('../middleware/caseAccess');
+const { supabase } = require('../config');
+const crypto = require('crypto');
 
 // SECURITY FIX: Enhanced Evidence Upload with REAL Blockchain & IPFS
 // Identity is pulled from the verified session (JWT or crypto signature), never req.body
@@ -14,11 +17,23 @@ const uploadEvidence = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { caseId, type, description, location, collectionDate } = req.body;
+    const { caseId, type, description, location, collectionDate, title } = req.body;
     const file = req.file;
 
     if (!file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
+    }
+
+    // Zero-byte files are not evidence and previously hung the pipeline (audit M2)
+    if (file.size === 0) {
+      return res.status(400).json({ success: false, error: 'Empty files cannot be uploaded as evidence' });
+    }
+
+    if (title && String(title).length > 200) {
+      return res.status(400).json({ success: false, error: 'Evidence title must be 200 characters or fewer' });
+    }
+    if (description && String(description).length > 5000) {
+      return res.status(400).json({ success: false, error: 'Description must be 5000 characters or fewer' });
     }
 
     // BUG FIX: Validate caseId exists and is an integer
@@ -34,6 +49,37 @@ const uploadEvidence = async (req, res) => {
     // SECURITY FIX: Verify the uploader has permissions in DB
     if (!['admin', 'investigator', 'evidence_manager', 'legal_professional', 'court_official', 'forensic_analyst'].includes(authUser.role)) {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to upload evidence' });
+    }
+
+    // C2 fix: the case must exist and the caller must have access to it.
+    // Previously any caseId (including other users' cases or 999999) was accepted.
+    const { data: targetCase, error: caseLookupError } = (await supabase
+      .from('cases')
+      .select('id')
+      .eq('id', parsedCaseId)
+      .single()) || {};
+    if (caseLookupError || !targetCase) {
+      return res.status(404).json({ success: false, error: 'Case not found' });
+    }
+    if (!(await canAccessCase(authUser, parsedCaseId))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this case' });
+    }
+
+    // Duplicate detection by content hash within the same case (audit M2)
+    const uploadHash = crypto.createHash('sha256').update(file.buffer).digest('hex');
+    const { data: dupRows } = (await supabase
+      .from('evidence')
+      .select('id, title, name')
+      .eq('case_id', String(parsedCaseId))
+      .eq('hash', uploadHash)
+      .limit(1)) || {};
+    if (dupRows && dupRows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: 'This exact file is already stored as evidence in this case',
+        existingEvidenceId: dupRows[0].id,
+        existingTitle: dupRows[0].title || dupRows[0].name,
+      });
     }
 
     // Existence and `is_active` are already guaranteed here: `requireAuth`
@@ -91,6 +137,7 @@ const uploadEvidence = async (req, res) => {
     const metadata = {
       caseId: parsedCaseId,
       type,
+      title: title ? String(title).trim() : '',
       description: description || '',
       location: location || '',
       collectionDate: collectionDate || new Date().toISOString(),
