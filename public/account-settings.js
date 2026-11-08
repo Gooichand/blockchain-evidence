@@ -33,6 +33,53 @@ class AccountSettings {
         this.loadUserData();
         await this.loadSessions();
         await this.loadTwoFactorStatus();
+        this.activityOffset = 0;
+        this.activityEntries = [];
+        await this.loadMyActivity();
+    }
+
+    async loadMyActivity(append = false) {
+        try {
+            const result = await window.apiClient.get(`/my/activity?limit=50&offset=${this.activityOffset}`);
+            const entries = (result && result.activity) || [];
+            this.activityEntries = append ? this.activityEntries.concat(entries) : entries;
+            this.activityOffset = this.activityEntries.length;
+            this.renderMyActivity();
+            const moreBtn = document.getElementById('loadMoreActivity');
+            if (moreBtn) moreBtn.style.display = entries.length === 50 ? '' : 'none';
+        } catch (error) {
+            console.warn('Failed to load activity:', error);
+            const list = document.getElementById('myActivityList');
+            if (list && !this.activityEntries.length) {
+                list.innerHTML = '<p class="empty-state">Could not load activity.</p>';
+            }
+        }
+    }
+
+    renderMyActivity() {
+        const list = document.getElementById('myActivityList');
+        if (!list) return;
+        if (!this.activityEntries.length) {
+            list.innerHTML = '<p class="empty-state">No activity recorded yet.</p>';
+            return;
+        }
+        const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        list.innerHTML = this.activityEntries.map((entry) => `
+            <div class="session-item">
+                <div class="session-info">
+                    <div class="session-device">
+                        <i data-lucide="${entry.result === 'success' ? 'check-circle' : (entry.result === 'denied' ? 'shield-x' : 'alert-triangle')}"></i>
+                        <strong>${esc(entry.action.replace(/_/g, ' '))}</strong>
+                        ${entry.result !== 'success' ? `<span class="status-badge disabled">${esc(entry.result)}</span>` : ''}
+                    </div>
+                    <div class="session-details">
+                        <span>${esc(new Date(entry.timestamp).toLocaleString())}</span>
+                        ${entry.ipAddress ? `<span>IP: ${esc(entry.ipAddress)}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
     }
 
     setupEventListeners() {
@@ -429,6 +476,10 @@ function confirmTwoFactorSetup() {
 
 function cancelTwoFactorSetup() {
     accountSettings.cancelTwoFactorSetup();
+}
+
+function loadMoreActivity() {
+    accountSettings.loadMyActivity(true);
 }
 
 function saveNotificationSettings() {
