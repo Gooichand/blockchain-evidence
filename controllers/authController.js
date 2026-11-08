@@ -4,9 +4,28 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { ethers } = require('ethers');
+const otplib = require('otplib');
+const QRCode = require('qrcode');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '7d';
+
+// Account lockout policy: 5 consecutive failed logins locks the account for 15 minutes.
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
+// Password policy: 10+ chars with upper, lower, digit and symbol.
+const PASSWORD_MIN_LENGTH = 10;
+function passwordPolicyError(password) {
+  if (typeof password !== 'string' || password.length < PASSWORD_MIN_LENGTH) {
+    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`;
+  }
+  if (!/[a-z]/.test(password)) return 'Password must include a lowercase letter';
+  if (!/[A-Z]/.test(password)) return 'Password must include an uppercase letter';
+  if (!/\d/.test(password)) return 'Password must include a number';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must include a symbol';
+  return null;
+}
 
 // Guard: fail loudly if JWT is misconfigured instead of crashing mid-request
 if (!JWT_SECRET) {
@@ -32,7 +51,7 @@ function parseUserAgent(ua = '') {
 }
 
 /** Record a server-side session row for the signed-in user. */
-async function createUserSession(user, req) {
+async function createUserSession(user, req, tokenJti) {
   try {
     const headers = (req && req.headers) || {};
     const ua = headers['user-agent'] || '';
@@ -40,6 +59,7 @@ async function createUserSession(user, req) {
     await supabase.from('user_sessions').insert({
       user_id: user.id,
       wallet_address: user.wallet_address || null,
+      token_jti: tokenJti || null,
       ip_address:
         (headers['x-forwarded-for'] && headers['x-forwarded-for'].split(',')[0].trim()) ||
         (req && req.socket && req.socket.remoteAddress) ||
@@ -194,7 +214,7 @@ const walletLogin = async (req, res) => {
 // Email login
 const emailLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, totp } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -212,11 +232,58 @@ const emailLogin = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    // Enforce temporary lockout after repeated failed attempts.
+    if (user.locked_until && new Date(user.locked_until).getTime() > Date.now()) {
+      const minutesLeft = Math.max(1, Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 60000));
+      return res.status(423).json({
+        error: `Account temporarily locked. Try again in ${minutesLeft} minute(s).`,
+        lockedUntil: user.locked_until,
+      });
+    }
+
     // Verify password using bcrypt
     const isValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isValid) {
+      // Track consecutive failures; lock the account after the threshold.
+      const attempts = (user.failed_login_attempts || 0) + 1;
+      const update = { failed_login_attempts: attempts };
+      if (attempts >= MAX_FAILED_ATTEMPTS) {
+        update.failed_login_attempts = 0;
+        update.locked_until = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString();
+      }
+      await supabase.from('users').update(update).eq('id', user.id);
       return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Password correct: clear any stale lockout state.
+    if (user.failed_login_attempts || user.locked_until) {
+      await supabase
+        .from('users')
+        .update({ failed_login_attempts: 0, locked_until: null })
+        .eq('id', user.id);
+    }
+
+    // Two-factor authentication: require a TOTP code when the account has it enabled.
+    if (user.totp_enabled && user.totp_secret) {
+      if (!totp) {
+        return res.status(401).json({
+          error: 'Two-factor authentication code required',
+          requiresTwoFactor: true,
+        });
+      }
+      try {
+        const result = await otplib.verify({ token: String(totp).trim(), secret: user.totp_secret });
+        if (!result || !result.valid) {
+          return res.status(401).json({
+            error: 'Invalid two-factor authentication code',
+            requiresTwoFactor: true,
+          });
+        }
+      } catch (totpError) {
+        console.error('TOTP verification error:', totpError);
+        return res.status(500).json({ error: 'Two-factor verification failed' });
+      }
     }
 
     // Log login activity (check returned error since Supabase does not throw on DB failures)
@@ -230,12 +297,13 @@ const emailLogin = async (req, res) => {
       console.error('Failed to log email login activity:', logError);
     }
 
-    // Record server-side session
-    await createUserSession(user, req);
+    // Generate JWT and record the server-side session against its id so it
+    // can be revoked later from the sessions page.
+    const jti = crypto.randomUUID();
+    await createUserSession(user, req, jti);
 
-    // Generate JWT
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role, jti: crypto.randomUUID() },
+      { userId: user.id, email: user.email, role: user.role, jti },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -280,6 +348,11 @@ const logout = async (req, res) => {
         if (payload && payload.jti) {
           const { revokeToken } = require('../middleware/authorization');
           revokeToken(payload.jti);
+          // Persistently deactivate the recorded session row too.
+          await supabase
+            .from('user_sessions')
+            .update({ is_active: false })
+            .eq('token_jti', payload.jti);
         }
       } catch (_) {
         // Already invalid/expired token — nothing to revoke.
@@ -322,8 +395,9 @@ const emailRegister = async (req, res) => {
     }
 
     // TODO: integrate breached-password check (e.g., HaveIBeenPwned API / zxcvbn scoring)
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    const policyError = passwordPolicyError(password);
+    if (policyError) {
+      return res.status(400).json({ error: policyError });
     }
 
     // Lightweight email format validation
@@ -736,8 +810,9 @@ const changePassword = async (req, res) => {
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ success: false, error: 'Current and new password are required' });
     }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ success: false, error: 'New password must be at least 8 characters long' });
+    const newPolicyError = passwordPolicyError(newPassword);
+    if (newPolicyError) {
+      return res.status(400).json({ success: false, error: newPolicyError });
     }
 
     const { data: account } = (await supabase
@@ -789,13 +864,14 @@ const getSessions = async (req, res) => {
       .from('user_sessions')
       .select('*')
       .eq('user_id', user.id)
+      .eq('is_active', true)
       .order('last_active', { ascending: false })
       .limit(50)) || {};
     if (error) throw error;
 
     const sessions = (rows || []).map((row) => ({
       id: row.id,
-      current: false,
+      current: Boolean(row.token_jti && row.token_jti === user.jti),
       device: row.device || 'Unknown device',
       browser: row.browser || 'Unknown browser',
       location: row.location || 'Unknown',
@@ -808,6 +884,216 @@ const getSessions = async (req, res) => {
   } catch (error) {
     console.error('Get sessions error:', error);
     res.status(500).json({ success: false, error: 'Failed to get sessions' });
+  }
+};
+
+// Revoke one of the signed-in user's sessions (remote sign-out).
+const revokeSession = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const sessionId = Number(req.params.id);
+    if (!Number.isInteger(sessionId)) {
+      return res.status(400).json({ success: false, error: 'Invalid session id' });
+    }
+
+    const { data: row, error } = (await supabase
+      .from('user_sessions')
+      .select('id, user_id, token_jti')
+      .eq('id', sessionId)
+      .single()) || {};
+    if (error || !row || row.user_id !== user.id) {
+      return res.status(404).json({ success: false, error: 'Session not found' });
+    }
+
+    const { error: updateError } = (await supabase
+      .from('user_sessions')
+      .update({ is_active: false })
+      .eq('id', sessionId)) || {};
+    if (updateError) throw updateError;
+
+    // Also revoke the JWT tied to the session so API access stops immediately.
+    if (row.token_jti) {
+      const { revokeToken } = require('../middleware/authorization');
+      revokeToken(row.token_jti);
+    }
+
+    res.json({ success: true, message: 'Session ended' });
+  } catch (error) {
+    console.error('Revoke session error:', error);
+    res.status(500).json({ success: false, error: 'Failed to end session' });
+  }
+};
+
+// Revoke every session except the caller's current one.
+const revokeOtherSessions = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { data: rows, error } = (await supabase
+      .from('user_sessions')
+      .select('id, token_jti')
+      .eq('user_id', user.id)
+      .eq('is_active', true)) || {};
+    if (error) throw error;
+
+    const { revokeToken } = require('../middleware/authorization');
+    let revoked = 0;
+    for (const row of rows || []) {
+      if (row.token_jti && row.token_jti === user.jti) continue;
+      await supabase.from('user_sessions').update({ is_active: false }).eq('id', row.id);
+      if (row.token_jti) revokeToken(row.token_jti);
+      revoked += 1;
+    }
+
+    res.json({ success: true, revoked, message: 'All other sessions have been ended' });
+  } catch (error) {
+    console.error('Revoke other sessions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to end other sessions' });
+  }
+};
+
+// Whether the signed-in user has TOTP two-factor authentication enabled.
+const getTwoFactorStatus = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { data: row, error } = (await supabase
+      .from('users')
+      .select('totp_enabled')
+      .eq('id', user.id)
+      .single()) || {};
+    if (error) throw error;
+
+    res.json({ success: true, totpEnabled: Boolean(row && row.totp_enabled) });
+  } catch (error) {
+    console.error('2FA status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get two-factor status' });
+  }
+};
+
+// Start TOTP enrollment: generate a pending secret and return a QR code.
+const setupTwoFactor = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { data: row, error } = (await supabase
+      .from('users')
+      .select('totp_enabled')
+      .eq('id', user.id)
+      .single()) || {};
+    if (error) throw error;
+    if (row && row.totp_enabled) {
+      return res.status(400).json({ success: false, error: 'Two-factor authentication is already enabled' });
+    }
+
+    const secret = await otplib.generateSecret();
+    const { error: updateError } = (await supabase
+      .from('users')
+      .update({ totp_secret: secret, totp_enabled: false })
+      .eq('id', user.id)) || {};
+    if (updateError) throw updateError;
+
+    const otpauthUrl = await otplib.generateURI({
+      secret,
+      issuer: 'EVID-DGC',
+      label: user.email || String(user.id),
+    });
+    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+    res.json({ success: true, secret, otpauthUrl, qrCodeDataUrl });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    res.status(500).json({ success: false, error: 'Failed to start two-factor setup' });
+  }
+};
+
+// Finish TOTP enrollment: verify a code against the pending secret.
+const enableTwoFactor = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { code } = req.body;
+    const { data: row, error } = (await supabase
+      .from('users')
+      .select('totp_secret, totp_enabled')
+      .eq('id', user.id)
+      .single()) || {};
+    if (error) throw error;
+    if (row && row.totp_enabled) {
+      return res.status(400).json({ success: false, error: 'Two-factor authentication is already enabled' });
+    }
+    if (!row || !row.totp_secret) {
+      return res.status(400).json({ success: false, error: 'Start two-factor setup first' });
+    }
+
+    const result = await otplib.verify({ token: String(code || '').trim(), secret: row.totp_secret });
+    if (!result || !result.valid) {
+      return res.status(401).json({ success: false, error: 'Invalid authentication code' });
+    }
+
+    const { error: updateError } = (await supabase
+      .from('users')
+      .update({ totp_enabled: true })
+      .eq('id', user.id)) || {};
+    if (updateError) throw updateError;
+
+    res.json({ success: true, message: 'Two-factor authentication enabled' });
+  } catch (error) {
+    console.error('2FA enable error:', error);
+    res.status(500).json({ success: false, error: 'Failed to enable two-factor authentication' });
+  }
+};
+
+// Disable TOTP: requires a valid current code.
+const disableTwoFactor = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { code } = req.body;
+    const { data: row, error } = (await supabase
+      .from('users')
+      .select('totp_secret, totp_enabled')
+      .eq('id', user.id)
+      .single()) || {};
+    if (error) throw error;
+    if (!row || !row.totp_enabled || !row.totp_secret) {
+      return res.status(400).json({ success: false, error: 'Two-factor authentication is not enabled' });
+    }
+
+    const result = await otplib.verify({ token: String(code || '').trim(), secret: row.totp_secret });
+    if (!result || !result.valid) {
+      return res.status(401).json({ success: false, error: 'Invalid authentication code' });
+    }
+
+    const { error: updateError } = (await supabase
+      .from('users')
+      .update({ totp_enabled: false, totp_secret: null })
+      .eq('id', user.id)) || {};
+    if (updateError) throw updateError;
+
+    res.json({ success: true, message: 'Two-factor authentication disabled' });
+  } catch (error) {
+    console.error('2FA disable error:', error);
+    res.status(500).json({ success: false, error: 'Failed to disable two-factor authentication' });
   }
 };
 
@@ -878,6 +1164,12 @@ module.exports = {
   updateProfile,
   changePassword,
   getSessions,
+  revokeSession,
+  revokeOtherSessions,
+  getTwoFactorStatus,
+  setupTwoFactor,
+  enableTwoFactor,
+  disableTwoFactor,
   logout,
   getCurrentUser,
 };
