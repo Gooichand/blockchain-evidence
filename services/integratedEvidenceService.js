@@ -22,7 +22,8 @@ class IntegratedEvidenceService {
           uploadedBy,
         });
       } catch (ipfsError) {
-        results.errors.push({ service: 'IPFS', error: ipfsError.message });
+        console.error('IPFS pinning failed:', ipfsError.message);
+        results.errors.push({ service: 'IPFS', error: 'File storage pinning failed. Please retry the upload.', code: 'IPFS_FAILED' });
       }
 
       const blockchainMetadata = {
@@ -40,7 +41,14 @@ class IntegratedEvidenceService {
           blockchainMetadata,
         );
       } catch (blockchainError) {
-        results.errors.push({ service: 'Blockchain', error: blockchainError.message });
+        // C1 fix: never hand raw ethers output (contract, wallet, calldata) to
+        // the browser. Log the detail server-side, return a clean reason.
+        console.error('Blockchain anchoring failed:', blockchainError.message);
+        results.errors.push({
+          service: 'Blockchain',
+          error: 'Blockchain anchoring is currently unavailable. The upload is stored and will be anchored automatically once the service wallet is authorized and funded.',
+          code: 'ANCHOR_UNAVAILABLE',
+        });
       }
 
       try {
@@ -48,8 +56,8 @@ class IntegratedEvidenceService {
           .from('evidence')
           .insert({
             case_id: metadata.caseId,
-            title: fileName,
-            name: fileName,
+            title: metadata.title || fileName,
+            name: metadata.title || fileName,
             file_name: fileName,
             type: metadata.type,
             // title, type, file_data, file_name and file_size are all NOT NULL in
@@ -78,6 +86,11 @@ class IntegratedEvidenceService {
             collection_date: metadata.collectionDate,
             blockchain_verified: !!results.blockchain,
             blockchain_timestamp: results.blockchain ? new Date().toISOString() : null,
+            // C1 fix: honest anchoring status instead of a silent "pending" forever
+            blockchain_status: results.blockchain ? 'confirmed' : 'failed',
+            blockchain_error_message: results.blockchain
+              ? null
+              : 'Anchoring unavailable: service wallet not authorized or not funded',
             timestamp: new Date().toISOString(),
           })
           .select()
@@ -88,6 +101,44 @@ class IntegratedEvidenceService {
       } catch (dbError) {
         results.errors.push({ service: 'Database', error: dbError.message });
         throw dbError;
+      }
+
+      // Record the anchoring outcome for auditability
+      try {
+        await supabase.from('blockchain_transactions').insert({
+          evidence_id: results.database.id,
+          case_id: metadata.caseId,
+          tx_hash: results.blockchain?.txHash || null,
+          block_number: results.blockchain?.blockNumber || null,
+          gas_used: results.blockchain?.gasUsed || null,
+          status: results.blockchain ? 'confirmed' : 'failed',
+          error_message: results.blockchain ? null : 'ANCHOR_UNAVAILABLE',
+          operation_type: 'storeEvidence',
+          submitted_by: uploadedBy,
+          submitted_at: new Date().toISOString(),
+        });
+      } catch (txLogErr) {
+        console.error('blockchain_transactions log failed:', txLogErr.message);
+      }
+
+      // Queue a retry so the anchor lands once the wallet is fixed
+      if (!results.blockchain) {
+        try {
+          await supabase.from('blockchain_retry_queue').insert({
+            operation: 'storeEvidence',
+            target_id: null,
+            payload: {
+              evidence_id: results.database.id,
+              hash: results.hash,
+              metadata: blockchainMetadata,
+            },
+            retry_count: 0,
+            next_retry_at: new Date().toISOString(),
+            status: 'pending',
+          });
+        } catch (retryErr) {
+          console.error('blockchain_retry_queue insert failed:', retryErr.message);
+        }
       }
 
       await supabase.from('activity_logs').insert({
