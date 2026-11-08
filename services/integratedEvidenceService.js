@@ -58,6 +58,7 @@ class IntegratedEvidenceService {
             case_id: metadata.caseId,
             title: metadata.title || fileName,
             name: metadata.title || fileName,
+            forensic_metadata: metadata.forensic || {},
             file_name: fileName,
             type: metadata.type,
             // title, type, file_data, file_name and file_size are all NOT NULL in
