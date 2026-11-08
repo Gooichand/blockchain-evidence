@@ -157,6 +157,21 @@ function requireRole(...roles) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     if (!user.role || !roles.includes(user.role)) {
+      // M16: permission denials are part of the audit trail.
+      try {
+        const { logAudit } = require('../lib/audit');
+        logAudit(req, {
+          userId: user.id || null,
+          action: 'permission_denied',
+          result: 'denied',
+          details: {
+            method: req.method,
+            path: req.originalUrl,
+            role: user.role || null,
+            required_roles: roles,
+          },
+        });
+      } catch (_) { /* audit logging must never break the request */ }
       return res.status(403).json({ success: false, error: 'Forbidden: insufficient privileges' });
     }
     req.user = req.user || user;
