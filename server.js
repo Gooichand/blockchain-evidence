@@ -138,6 +138,14 @@ app.use((req, res) => {
 
 // Generic error handler (must be LAST - Express requires 4-arg signature)
 app.use((error, req, res, _next) => {
+  // Multer rejections (oversized file, unexpected field) are client errors.
+  // Without this they fall through as a generic 500, which reads as a server fault.
+  if (error && error.name === 'MulterError') {
+    const msg = error.code === 'LIMIT_FILE_SIZE'
+      ? 'File too large. The maximum upload size is 500MB.'
+      : `Upload rejected: ${error.message}`;
+    return res.status(400).json({ success: false, error: msg });
+  }
   console.error('Unhandled error:', error);
   const status = error.status || 500;
   // SECURITY FIX: Never expose stack traces or internal error details in production
