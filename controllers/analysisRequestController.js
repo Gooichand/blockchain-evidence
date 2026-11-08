@@ -6,6 +6,7 @@ const setIO = (socketIO) => {
   io = socketIO;
 };
 const { stableUserId, canAccessEvidence } = require('../middleware/caseAccess');
+const { isCaseClosed } = require('../services/caseHelpers');
 const { logCustody } = require('./custodyController');
 
 /**
@@ -81,6 +82,10 @@ const createRequest = async (req, res) => {
 
     const sid = stableUserId(req.user);
     const caseId = parseInt(ev.case_id, 10);
+    // M12: closed cases are immutable - no new analysis until reopened
+    if (!isNaN(caseId) && (await isCaseClosed(caseId))) {
+      return res.status(409).json({ error: 'This case is closed. Reopen it before requesting analysis.' });
+    }
     const { data: task, error } = await supabase
       .from('analysis_tasks')
       .insert({
