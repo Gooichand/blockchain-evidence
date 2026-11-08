@@ -81,6 +81,8 @@ graded against the source.
 | **2 absent** | MFA / 2FA (columns exist, no code path) · 3D evidence viewer (never built) | |
 | **1 planned** | Mainnet — Amoy testnet only | |
 
+The analyst workstation's Tools tab includes a Networking Tools category with a Wi-Fi icon. It lists PCAP Analyzer, Port Scanner, DNS/WHOIS Lookup, Traceroute/Path Analysis, Connection Monitor and SSL/TLS Inspector, plus Traffic Flow Analysis and Protocol Decoder marked as coming soon. The networking analysis engine is under development; these entries do not yet provide working network analysis.
+
 Full ledger with file and line: [Known gaps](#known-gaps).
 
 ---
