@@ -21,6 +21,9 @@ const {
   getVerificationHistory,
   compareEvidence,
   createComparisonReport,
+  getIntegrityAlerts,
+  acknowledgeIntegrityAlert,
+  triggerIntegrityScan,
 } = require('../controllers/EvidenceVerificationController');
 const {
   getEvidenceExpiry,
@@ -56,6 +59,10 @@ router.get('/evidence/verification-history', getVerificationHistory);
 router.post('/evidence/verify-integrity', verificationLimiter, verifyIntegrity);
 router.post('/evidence/verification-certificate', requireAuth, generateVerificationCertificate);
 router.post('/evidence/comparison-report', createComparisonReport);
+// M5: integrity alerts from the scheduled/on-demand scans (static paths)
+router.get('/evidence/integrity-alerts', requireAuth, getIntegrityAlerts);
+router.post('/evidence/integrity-alerts/:id/acknowledge', requireAuth, acknowledgeIntegrityAlert);
+router.post('/evidence/integrity-scan', requireAuth, triggerIntegrityScan);
 
 // Evidence by case (static prefix before :id)
 router.get('/evidence/case/:caseId', requireAuth, getEvidenceByCase);
