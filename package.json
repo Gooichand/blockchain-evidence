@@ -69,7 +69,6 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.0",
     "lodash": "^4.17.21",
-    "otplib": "^13.0.0",
     "multer": "^2.4.0",
     "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
