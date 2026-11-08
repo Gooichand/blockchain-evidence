@@ -244,12 +244,24 @@ const caseCustodians = async (req, res) => {
     }
     const latest = {};
     accepted.forEach(t => { latest[t.evidence_id] = t; });
+    // Resolve display names for uploaders (stable id -> users row).
+    const sids = [...new Set(rows.map(r => r.submitted_by).filter(Boolean))];
+    const uploaderIds = sids.filter(s => /^user_\d+$/.test(s)).map(s => parseInt(s.slice(5), 10));
+    const wallets = sids.filter(s => !/^user_\d+$/.test(s));
+    const names = {};
+    if (uploaderIds.length || wallets.length) {
+      let q = supabase.from('users').select('id, full_name, email, wallet_address');
+      q = uploaderIds.length && wallets.length ? q.or(`id.in.(${uploaderIds.join(',')}),wallet_address.in.(${wallets.join(',')})`)
+        : uploaderIds.length ? q.in('id', uploaderIds) : q.in('wallet_address', wallets);
+      const { data: users } = await q;
+      (users || []).forEach(u => { names[u.wallet_address || `user_${u.id}`] = nameOf(u); });
+    }
     const custodians = {};
     rows.forEach(r => {
       const t = latest[r.id];
       custodians[r.id] = t
         ? { custodian: t.to_user, custodian_name: t.to_name, via: 'transfer' }
-        : { custodian: r.submitted_by, custodian_name: null, via: 'uploader' };
+        : { custodian: r.submitted_by, custodian_name: names[r.submitted_by] || null, via: 'uploader' };
     });
     res.json({ success: true, custodians });
   } catch (e) {
