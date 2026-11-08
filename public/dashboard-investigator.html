@@ -1115,7 +1115,7 @@
         // (previously redirected to enhanced-evidence-upload.html, which does not exist - the audit's 404 Upload card)
         async function uploadEvidence() {
             try {
-                const result = await window.apiClient.get('/cases/enhanced');
+                const result = await window.apiClient.get('/cases');
                 const cases = result.cases || result.data || [];
                 if (!cases.length) {
                     showToast('No cases found. Create a case first, then upload evidence to it.', 'warning');
