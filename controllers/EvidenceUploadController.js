@@ -180,7 +180,11 @@ const uploadEvidence = async (req, res) => {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 50,
     };
 
-    const maxSize = allowedTypes[file.mimetype];
+    // An explicitly confirmed dangerous file (executable/script kept as
+    // forensic evidence) bypasses the supported-type list; it still gets a
+    // hard 500MB cap and carries the confirmation + mismatch flags.
+    const confirmedDangerous = sniff.dangerous && String(req.body.confirmDangerous) === 'true';
+    const maxSize = allowedTypes[file.mimetype] || (confirmedDangerous ? 500 : 0);
     if (!maxSize) {
       return res.status(400).json({
         success: false,
