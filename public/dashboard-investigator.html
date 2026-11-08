@@ -383,15 +383,25 @@
                 }
 
                 const userAccount = localStorage.getItem('currentUser');
-                let userData = userAccount ? JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}') : null;
+                let userData = null;
+                try {
+                    userData = userAccount ? JSON.parse(localStorage.getItem('evidUser_' + userAccount) || '{}') : null;
+                } catch (_) {
+                    userData = null;
+                }
 
                 if (!userData || !userData.role) {
                     userData = window.apiClient.getCurrentUser();
                 }
 
                 if (!userData || !userData.role) {
-                    alert('User data not found. Please login again.');
-                    logout();
+                    // Incomplete or stale login state: clear and send back to login
+                    // without blocking dialogs (alert/confirm hang headless and
+                    // embedded browsers and freeze the page for real users too).
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('sessionId');
+                    window.location.replace('index.html?auth=required');
                     return;
                 }
 
@@ -401,7 +411,9 @@
 
             } catch (error) {
                 console.error('Dashboard initialization error:', error);
-                alert('Failed to load dashboard. Please try again.');
+                if (window.showNotification) {
+                    window.showNotification('Dashboard error', 'Failed to load dashboard. Please try again.', 'error');
+                }
             }
         }
 
