@@ -150,6 +150,7 @@ function sniffFileType(buffer, filename = '') {
 
 /** MIME families that should not count as mismatches. */
 const COMPATIBLE_GROUPS = [
+  ['application/x-msdownload', 'application/x-ms-dos-executable', 'application/x-executable', 'application/octet-stream'],
   ['image/jpeg', 'image/jpg'],
   ['video/mp4', 'video/quicktime', 'video/mov'],
   ['audio/m4a', 'audio/mp4', 'video/mp4'],
