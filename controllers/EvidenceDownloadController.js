@@ -341,7 +341,7 @@ const getAllEvidence = async (req, res) => {
     if (submitted_by) query = query.eq('submitted_by', submitted_by);
 
     // C2 fix: investigators only see their own / assigned-case evidence
-    query = await scopeEvidenceQuery(query, user);
+    query = (await scopeEvidenceQuery(query, user)).query;
 
     const { data: evidence, error, count } = await query;
 
