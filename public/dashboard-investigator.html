@@ -369,6 +369,12 @@
             initializeDashboard();
         });
 
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         async function initializeDashboard() {
             try {
                 if (!localStorage.getItem('authToken')) {
@@ -434,6 +440,18 @@
                 document.getElementById('activeCases').textContent = activeCases;
                 document.getElementById('evidenceItems').textContent = evidence.length;
 
+                // Pending reviews: my cases in a review status plus my open analysis requests
+                let pendingReviews = cases.filter(c => {
+                    const s = (c.status || '').toLowerCase().replace(/\s+/g, '_');
+                    return ['evidence_review', 'legal_review', 'pending_court'].includes(s);
+                }).length;
+                try {
+                    const reqs = await window.apiClient.get('/analysis/requests/mine', { skipWalletAuth: true });
+                    pendingReviews += (reqs.requests || []).filter(r => ['pending', 'in_progress'].includes(r.status)).length;
+                } catch (e) { /* analysis API optional */ }
+                const prEl = document.getElementById('pendingReviews');
+                if (prEl) prEl.textContent = pendingReviews;
+
                 // Evidence type breakdown
                 const photos = evidence.filter(e => (e.file_type || '').includes('image')).length;
                 const docs = evidence.filter(e => (e.file_type || '').includes('pdf') || (e.file_type || '').includes('document') || (e.file_type || '').includes('word') || (e.file_type || '').includes('text')).length;
@@ -452,11 +470,11 @@
                     casesGrid.innerHTML = cases.slice(0, 6).map(c => `
                             <div class="case-card">
                                 <div class="case-header">
-                                    <h3>${c.title}</h3>
-                                    <span class="status-badge status-${(c.status || 'open').toLowerCase()}">${c.status || 'OPEN'}</span>
+                                    <h3>${escapeHtml(c.title)}</h3>
+                                    <span class="status-badge status-${(c.status || 'open').toLowerCase()}">${escapeHtml(c.status || 'OPEN')}</span>
                                 </div>
                                 <p><strong>Case ID:</strong> ${c.id}</p>
-                                <p><strong>Case Number:</strong> ${c.case_number || 'N/A'}</p>
+                                <p><strong>Case Number:</strong> ${escapeHtml(c.case_number || 'N/A')}</p>
                                 <p><strong>Date:</strong> ${new Date(c.created_date || c.created_at || Date.now()).toLocaleDateString()}</p>
                                 <div class="case-actions" style="margin-top: 15px;">
                                     <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('${c.id}')">View Details</button>
@@ -486,15 +504,15 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h3>📁 Case Details - ${caseData.case_number || caseData.id}</h3>
+                            <h3>📁 Case Details - ${escapeHtml(caseData.case_number || caseData.id)}</h3>
                             <button class="modal-close" onclick="this.closest('.modal').remove()">
                                 <i data-lucide="x"></i>
                             </button>
                         </div>
                         <div class="modal-body">
                             <div class="case-details">
-                                <h4>${caseData.title}</h4>
-                                <p><strong>Description:</strong> ${caseData.description || 'No description provided'}</p>
+                                <h4>${escapeHtml(caseData.title)}</h4>
+                                <p><strong>Description:</strong> ${escapeHtml(caseData.description || 'No description provided')}</p>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                                     <div><strong>Status:</strong> <span class="status-badge status-${(caseData.status || 'open').toLowerCase()}">${status.status_name}</span></div>
                                     <div><strong>Priority:</strong> Level ${priority}</div>
@@ -504,6 +522,8 @@
                                     <div><strong>Evidence Count:</strong> ${caseData.evidence_count || 0}</div>
                                 </div>
                             </div>
+                            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                            <div id="caseWorkspace"><div class="no-data">Loading evidence, custody and notes...</div></div>
                         </div>
                         <div class="modal-actions">
                             <button onclick="addEvidence('${caseData.id}')" class="btn btn-primary">Add Evidence</button>
@@ -513,6 +533,7 @@
                 `;
                 document.body.appendChild(modal);
                 lucide.createIcons();
+                loadCaseWorkspace(caseData.id);
             } catch (error) {
                 console.error('Failed to load case details:', error);
                 alert('Failed to load case details: ' + (error.message || error));
@@ -599,7 +620,10 @@
                 if (result.success) {
                     // Close modal
                     document.querySelector('.modal').remove();
-                    showToast('✅ Evidence uploaded and secured on blockchain!', 'success');
+                    const anchored = result.blockchain && result.blockchain.txHash;
+                    showToast(anchored
+                        ? '✅ Evidence uploaded and anchored on blockchain.'
+                        : '✅ Evidence uploaded and hashed. Blockchain anchoring is pending and will retry automatically.', 'success');
                     await loadDashboardData();
                 } else {
                     throw new Error(result.error || 'Upload failed');
@@ -610,6 +634,201 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
+            }
+        }
+
+
+        // ===== Case workspace: custody ledger, notes, analysis requests (M4, M10, M11) =====
+        async function loadCaseWorkspace(caseId) {
+            const root = document.getElementById('caseWorkspace');
+            if (!root) return;
+            let evidence = [], notes = [], requests = [];
+            try {
+                const r = await window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true });
+                evidence = r.data || [];
+            } catch (e) { console.error('workspace evidence load failed', e); }
+            try {
+                const r = await window.apiClient.get(`/cases/${caseId}/notes`, { skipWalletAuth: true });
+                notes = r.notes || [];
+            } catch (e) { console.error('workspace notes load failed', e); }
+            try {
+                const r = await window.apiClient.get('/analysis/requests/mine', { skipWalletAuth: true });
+                requests = (r.requests || []).filter(q => String(q.case_id) === String(caseId));
+            } catch (e) { console.error('workspace requests load failed', e); }
+
+            const evHtml = evidence.length === 0
+                ? '<div class="no-data">No evidence in this case yet.</div>'
+                : evidence.map(ev => {
+                    const bs = ev.blockchain_status || (ev.blockchain_tx_hash ? 'confirmed' : 'pending');
+                    const badge = bs === 'confirmed'
+                        ? '<span style="color:#10b981;">● anchored</span>'
+                        : (bs === 'failed'
+                            ? '<span style="color:#f59e0b;" title="Anchoring will retry automatically">● anchoring pending</span>'
+                            : '<span style="color:#6b7280;">● ' + escapeHtml(bs) + '</span>');
+                    return `
+                    <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <strong>#${ev.id} ${escapeHtml(ev.title || ev.name || 'Untitled')}</strong> ${badge}<br>
+                                <small style="color:#6b7280;">SHA-256: ${escapeHtml((ev.hash || '').slice(0, 24))}${ev.hash ? '...' : ''}
+                                <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="navigator.clipboard && navigator.clipboard.writeText('${ev.hash || ''}')">Copy</button></small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline" onclick="toggleCustody(${ev.id})">Custody</button>
+                                <button class="btn btn-sm btn-outline" onclick="verifyEvidenceNow(${ev.id}, this)">Verify integrity</button>
+                                <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, '${escapeHtml(ev.title || ev.name || '')}')">Request analysis</button>
+                            </div>
+                        </div>
+                        <div id="custody-${ev.id}" style="display:none; margin-top:10px;"></div>
+                    </div>`;
+                }).join('');
+
+            const notesHtml = notes.length === 0
+                ? '<div class="no-data">No notes yet.</div>'
+                : notes.map(n => `
+                    <div style="border-left:3px solid #3b82f6; padding:6px 10px; margin-bottom:8px;">
+                        <div>${escapeHtml(n.content)}</div>
+                        <small style="color:#6b7280;">${escapeHtml(n.author_name || n.author)} - ${new Date(n.created_at).toLocaleString()} (v${n.version})${n.evidence_id ? ' - on evidence #' + n.evidence_id : ''}</small>
+                    </div>`).join('');
+
+            const reqHtml = requests.length === 0
+                ? ''
+                : `<h4 style="margin-top:20px;">🔬 Analysis requests</h4>` + requests.map(q => `
+                    <div style="padding:6px 0; border-bottom:1px solid #f3f4f6;">
+                        Evidence #${q.evidence_id} - ${escapeHtml(q.analysis_type || 'general')} -
+                        <strong>${escapeHtml(q.status)}</strong> <small style="color:#6b7280;">(${escapeHtml(q.priority)})</small>
+                    </div>`).join('');
+
+            root.innerHTML = `
+                <h4>📦 Evidence (${evidence.length})</h4>
+                ${evHtml}
+                <h4 style="margin-top:20px;">📝 Case notes</h4>
+                <div id="caseNotesList">${notesHtml}</div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <input type="text" id="newCaseNote" class="form-control" placeholder="Add a timestamped note to this case" style="flex:1;">
+                    <button class="btn btn-primary btn-sm" onclick="addCaseNote(${caseId})">Add note</button>
+                </div>
+                ${reqHtml}
+            `;
+            lucide.createIcons();
+        }
+
+        async function toggleCustody(evidenceId) {
+            const el = document.getElementById('custody-' + evidenceId);
+            if (!el) return;
+            if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+            el.style.display = 'block';
+            el.innerHTML = '<div class="no-data">Loading custody trail...</div>';
+            try {
+                const [trail, chain] = await Promise.all([
+                    window.apiClient.get(`/custody/evidence/${evidenceId}`, { skipWalletAuth: true }),
+                    window.apiClient.get(`/custody/evidence/${evidenceId}/verify-chain`, { skipWalletAuth: true }),
+                ]);
+                const entries = trail.entries || [];
+                const chainBadge = chain.chain_valid
+                    ? '<span style="color:#10b981;">✔ custody chain intact (' + chain.entries + ' entries)</span>'
+                    : '<span style="color:#ef4444;">✖ custody chain broken at entry ' + chain.broken_at_entry + '</span>';
+                el.innerHTML = '<div style="margin-bottom:6px;">' + chainBadge + '</div>' +
+                    (entries.length === 0 ? '<div class="no-data">No custody entries yet.</div>' :
+                    entries.map(e => `
+                        <div style="border-left:3px solid #10b981; padding:4px 10px; margin-bottom:6px;">
+                            <strong>${escapeHtml(e.action)}</strong> by ${escapeHtml(e.actor_name || e.actor)}
+                            <small style="color:#6b7280;"> - ${new Date(e.created_at).toLocaleString()}</small><br>
+                            <small style="color:#9ca3af; font-family:monospace;">hash ${escapeHtml((e.entry_hash || '').slice(0, 16))}...</small>
+                        </div>`).join(''));
+            } catch (e) {
+                el.innerHTML = '<div class="no-data">Failed to load custody trail.</div>';
+            }
+        }
+
+        async function verifyEvidenceNow(evidenceId, btn) {
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Verifying...';
+            try {
+                const r = await window.apiClient.get(`/evidence/${evidenceId}/verify`, { skipWalletAuth: true });
+                const v = r.data || {};
+                if (v.valid) {
+                    showToast('✅ Integrity verified: stored hash matches. Result recorded in the custody log.', 'success');
+                } else {
+                    showToast('⚠️ Verification FAILED or incomplete: ' + escapeHtml((v.errors || []).map(e => e.error || e).join('; ') || 'see details'), 'error');
+                }
+            } catch (e) {
+                showToast('Verification failed: ' + escapeHtml(e.message || e), 'error');
+            } finally {
+                btn.disabled = false; btn.innerHTML = original;
+            }
+        }
+
+        function openAnalysisRequest(evidenceId, title) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔬 Request forensic analysis - evidence #${evidenceId}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>${escapeHtml(title)}</strong></p>
+                        <label>Analysis type</label>
+                        <select id="analysisType" class="form-control">
+                            <option value="disk">Disk analysis</option>
+                            <option value="memory">Memory analysis</option>
+                            <option value="network">Network analysis</option>
+                            <option value="mobile">Mobile analysis</option>
+                            <option value="multimedia">Multimedia analysis</option>
+                            <option value="report_review">Report review</option>
+                        </select>
+                        <label style="margin-top:10px;">Priority</label>
+                        <select id="analysisPriority" class="form-control">
+                            <option value="low">Low</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        <label style="margin-top:10px;">Notes for the analyst</label>
+                        <textarea id="analysisNotes" class="form-control" rows="3" placeholder="What should the analyst look for?"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" onclick="submitAnalysisRequest(${evidenceId}, this)">Send request</button>
+                        <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Cancel</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+        }
+
+        async function submitAnalysisRequest(evidenceId, btn) {
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Sending...';
+            try {
+                const r = await window.apiClient.post('/analysis/requests', {
+                    evidence_id: evidenceId,
+                    analysis_type: document.getElementById('analysisType').value,
+                    priority: document.getElementById('analysisPriority').value,
+                    notes: document.getElementById('analysisNotes').value,
+                });
+                if (!r.success) throw new Error(r.error || 'Request failed');
+                showToast('✅ Analysis request sent to the forensic analyst queue.', 'success');
+                btn.closest('.modal').remove();
+            } catch (e) {
+                showToast('Request failed: ' + escapeHtml(e.message || e), 'error');
+                btn.disabled = false; btn.innerHTML = original;
+            }
+        }
+
+        async function addCaseNote(caseId) {
+            const input = document.getElementById('newCaseNote');
+            const content = (input.value || '').trim();
+            if (!content) { showToast('Write a note first.', 'error'); return; }
+            try {
+                const r = await window.apiClient.post(`/cases/${caseId}/notes`, { content });
+                if (!r.success) throw new Error(r.error || 'Failed to add note');
+                input.value = '';
+                showToast('📝 Note added.', 'success');
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Failed to add note: ' + escapeHtml(e.message || e), 'error');
             }
         }
 
@@ -741,4 +960,5 @@
     <script src="footer.js"></script>
 </body>
 
-</html>
+</html
+    
