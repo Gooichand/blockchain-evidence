@@ -248,19 +248,19 @@
                 <p>Manage investigations with blockchain-secured evidence integrity</p>
                 <div class="hero-stats">
                     <div class="stat-card">
-                        <span class="stat-number" id="activeCases">5</span>
+                        <span class="stat-number" id="activeCases">-</span>
                         <span>Active Cases</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="evidenceItems">23</span>
+                        <span class="stat-number" id="evidenceItems">-</span>
                         <span>Evidence Items</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="pendingReviews">3</span>
+                        <span class="stat-number" id="pendingReviews">-</span>
                         <span>Pending Reviews</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="integrityAlerts">0</span>
+                        <span class="stat-number" id="integrityAlerts">-</span>
                         <span>Integrity Alerts</span>
                     </div>
                 </div>
@@ -339,6 +339,19 @@
             <div class="card-body">
                 <div id="integrityAlertsList"><div class="no-data">Loading integrity status...</div></div>
                 <div id="integrityScanStatus" style="margin-top:12px;font-size:0.8rem;color:#6b7280;"></div>
+            </div>
+        </div>
+
+        <div class="card" id="recentCustodyCard" style="display:none;">
+            <div class="card-header">
+                <h2>🧾 Recent Custody Activity</h2>
+                <a class="btn btn-outline btn-sm" href="case-timeline.html">
+                    <i data-lucide="clock"></i>
+                    Full Timeline
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="recentCustodyList"><div class="no-data">Loading custody activity...</div></div>
             </div>
         </div>
 
@@ -506,6 +519,15 @@
                     if (card) card.style.display = 'none';
                 }
 
+                // M18: recent custody events across my accessible cases
+                try {
+                    const rc = await window.apiClient.get('/custody/recent?limit=6', { skipWalletAuth: true });
+                    renderRecentCustody(rc.entries || [], cases);
+                } catch (e) {
+                    const card = document.getElementById('recentCustodyCard');
+                    if (card) card.style.display = 'none';
+                }
+
                 const casesGrid = document.getElementById('casesGrid');
                 if (cases.length > 0) {
                     casesGrid.innerHTML = cases.slice(0, 6).map(c => `
@@ -531,6 +553,28 @@
                 document.getElementById('casesGrid').innerHTML = '<div class="no-data">Failed to load cases from server. Please refresh.</div>';
             }
         }
+        function renderRecentCustody(entries, cases) {
+            const card = document.getElementById('recentCustodyCard');
+            const list = document.getElementById('recentCustodyList');
+            if (!card || !list) return;
+            card.style.display = 'block';
+            const caseTitle = {};
+            (cases || []).forEach(c => { caseTitle[String(c.id)] = c.title || ('Case #' + c.id); });
+            if (!entries.length) {
+                list.innerHTML = '<div class="no-data">No custody events recorded yet. Uploads, views, downloads and status changes will appear here.</div>';
+                return;
+            }
+            list.innerHTML = entries.map(e => `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f3e8e8;border-radius:8px;margin-bottom:8px;">
+                    <div>
+                        <strong>${escapeHtml(String(e.action || '').replace(/_/g, ' '))}</strong>
+                        ${e.evidence_id != null ? ' - evidence #' + e.evidence_id : ''}
+                        <div style="font-size:0.8rem;color:#6b7280;">${escapeHtml(caseTitle[String(e.case_id)] || (e.case_id != null ? 'Case #' + e.case_id : 'No case'))} - ${escapeHtml(e.actor_name || e.actor || 'unknown')}</div>
+                    </div>
+                    <small style="color:#9ca3af;white-space:nowrap;">${e.created_at ? new Date(e.created_at).toLocaleString() : ''}</small>
+                </div>`).join('');
+        }
+
         function renderIntegrityAlerts(alerts) {
             const card = document.getElementById('integrityWatchCard');
             const list = document.getElementById('integrityAlertsList');
@@ -664,7 +708,7 @@
                 loadCaseTransitions(caseData.id);
             } catch (error) {
                 console.error('Failed to load case details:', error);
-                alert('Failed to load case details: ' + (error.message || error));
+                showToast('Failed to load case details: ' + (error.message || error), 'error');
             }
         }
 
@@ -692,18 +736,42 @@
             }
         }
 
-        async function changeCaseStatus(caseId, newStatusCode, label) {
-            const reason = prompt(`Reason for "${label}" (optional):`, '');
-            if (reason === null) return;
-            try {
-                const result = await window.apiClient.post(`/cases/${caseId}/status`, { newStatusCode, reason }, { skipWalletAuth: true });
-                if (!result.success) throw new Error(result.error || 'Status change failed');
-                showToast(`Case status updated: ${label}`, 'success');
-                document.querySelectorAll('.modal').forEach(m => m.remove());
-                loadDashboardData();
-            } catch (e) {
-                showToast(e.message || 'Failed to update case status', 'error');
-            }
+        function changeCaseStatus(caseId, newStatusCode, label) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:440px;">
+                    <div class="modal-header">
+                        <h3>${escapeHtml(label)}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Reason (optional)</label>
+                            <input type="text" id="statusReason" class="form-control" placeholder="Why is the case moving to this state?">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" id="statusConfirm">Confirm</button>
+                        <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Cancel</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            modal.querySelector('#statusReason').focus();
+            modal.querySelector('#statusConfirm').onclick = async () => {
+                const reason = modal.querySelector('#statusReason').value.trim();
+                modal.remove();
+                try {
+                    const result = await window.apiClient.post(`/cases/${caseId}/status`, { newStatusCode, reason }, { skipWalletAuth: true });
+                    if (!result.success) throw new Error(result.error || 'Status change failed');
+                    showToast(`Case status updated: ${label}`, 'success');
+                    document.querySelectorAll('.modal').forEach(m => m.remove());
+                    loadDashboardData();
+                } catch (e) {
+                    showToast(e.message || 'Failed to update case status', 'error');
+                }
+            };
         }
 
         function addEvidence(caseId) {
@@ -1334,31 +1402,92 @@
             }, 5000);
         }
 
-        async function createNewCase() {
-            const caseTitle = prompt('Enter case title:');
-            if (!caseTitle) return;
-
-            const location = prompt('Enter case location:') || 'Not specified';
-            const description = prompt('Enter case description:') || '';
-
-            try {
-                const result = await window.apiClient.post('/cases', {
-                    title: caseTitle,
-                    description: description,
-                    location: location,
-                    status: 'OPEN'
-                });
-
-                if (result.success) {
-                    alert(`✅ Case created successfully in database!\n\nCase ID: ${result.data?.id || 'New'}\nTitle: ${caseTitle}`);
-                    await loadDashboardData();
-                } else {
-                    throw new Error(result.error || 'Failed to create case');
+        function createNewCase() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:520px;">
+                    <div class="modal-header">
+                        <h3>📁 New Case</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Case title *</label>
+                            <input type="text" id="newCaseTitle" class="form-control" maxlength="200" placeholder="Short, unique case title">
+                        </div>
+                        <div class="form-group">
+                            <label>Case type</label>
+                            <select id="newCaseType" class="form-control">
+                                <option value="criminal">Criminal</option>
+                                <option value="civil">Civil</option>
+                                <option value="cybercrime">Cybercrime</option>
+                                <option value="financial">Financial</option>
+                                <option value="narcotics">Narcotics</option>
+                                <option value="fraud">Fraud</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Jurisdiction</label>
+                            <input type="text" id="newCaseJurisdiction" class="form-control" maxlength="100" placeholder="e.g. Hyderabad">
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="newCasePriority" class="form-control">
+                                <option value="1">1 - Critical</option>
+                                <option value="2">2 - High</option>
+                                <option value="3" selected>3 - Normal</option>
+                                <option value="4">4 - Low</option>
+                                <option value="5">5 - Routine</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="newCaseDescription" class="form-control" rows="3" maxlength="5000" placeholder="What is this case about?"></textarea>
+                        </div>
+                        <div id="newCaseError" style="display:none;color:#b91c1c;font-size:0.85rem;margin-top:6px;"></div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" id="newCaseSubmit">Create Case</button>
+                        <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Cancel</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            modal.querySelector('#newCaseTitle').focus();
+            modal.querySelector('#newCaseSubmit').onclick = async () => {
+                const title = modal.querySelector('#newCaseTitle').value.trim();
+                const errBox = modal.querySelector('#newCaseError');
+                if (!title) {
+                    errBox.textContent = 'Case title is required.';
+                    errBox.style.display = 'block';
+                    return;
                 }
-            } catch (error) {
-                console.error('Case creation error:', error);
-                alert('Error creating case: ' + error.message);
-            }
+                const btn = modal.querySelector('#newCaseSubmit');
+                btn.disabled = true;
+                btn.textContent = 'Creating...';
+                try {
+                    const result = await window.apiClient.post('/cases', {
+                        title,
+                        description: modal.querySelector('#newCaseDescription').value.trim(),
+                        case_type: modal.querySelector('#newCaseType').value,
+                        jurisdiction: modal.querySelector('#newCaseJurisdiction').value.trim(),
+                        priority_level: parseInt(modal.querySelector('#newCasePriority').value, 10),
+                    });
+                    if (!result.success) throw new Error(result.error || 'Failed to create case');
+                    const created = result.data || {};
+                    modal.remove();
+                    showToast(`Case created: ${created.case_number || created.id || title}`, 'success');
+                    await loadDashboardData();
+                } catch (error) {
+                    console.error('Case creation error:', error);
+                    errBox.textContent = error.message || 'Failed to create case';
+                    errBox.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Create Case';
+                }
+            };
         }
 
         // M7: quick-action card opens a case picker, then the upload modal
@@ -1396,28 +1525,51 @@
             }
         }
 
-        async function searchCases() {
-            const searchTerm = prompt('Enter search term (case title, description, or case number):');
-            if (!searchTerm) return;
-
-            try {
-                const result = await window.apiClient.get('/cases/enhanced', { params: { search: searchTerm, limit: 20 } });
-                const cases = result.cases || result.data || [];
-
-                if (cases.length > 0) {
-                    let resultText = `🔍 Search Results for "${searchTerm}":\n\n`;
-                    cases.forEach(c => {
-                        const status = c.case_statuses?.status_name || c.status || 'OPEN';
-                        resultText += `• ${c.case_number || c.id}: ${c.title} (${status})\n`;
-                    });
-                    alert(resultText);
-                } else {
-                    alert(`No cases found matching "${searchTerm}"`);
+        function searchCases() {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:560px;">
+                    <div class="modal-header">
+                        <h3>🔍 Search Cases</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="display:flex;gap:8px;">
+                            <input type="text" id="caseSearchInput" class="form-control" placeholder="Case title, description, or case number">
+                            <button class="btn btn-primary" id="caseSearchGo">Search</button>
+                        </div>
+                        <div id="caseSearchResults" style="margin-top:12px;"></div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            const input = modal.querySelector('#caseSearchInput');
+            const resultsBox = modal.querySelector('#caseSearchResults');
+            input.focus();
+            const runSearch = async () => {
+                const term = input.value.trim();
+                if (!term) return;
+                resultsBox.innerHTML = '<div class="no-data">Searching...</div>';
+                try {
+                    const result = await window.apiClient.get('/cases/enhanced', { params: { search: term, limit: 20 } });
+                    const cases = result.cases || result.data || [];
+                    if (!cases.length) {
+                        resultsBox.innerHTML = `<div class="no-data">No cases found matching "${escapeHtml(term)}"</div>`;
+                        return;
+                    }
+                    resultsBox.innerHTML = cases.map(c => `
+                        <button class="btn btn-outline" style="display:block;width:100%;text-align:left;margin-bottom:8px;" onclick="this.closest('.modal').remove(); viewCaseDetails('${c.id}')">
+                            <strong>${escapeHtml(c.case_number || ('CASE-' + c.id))}</strong> - ${escapeHtml(c.title || 'Untitled')}
+                            <span class="status-badge status-${(c.status || 'open').toLowerCase().replace(/[^a-z_]/g, '')}" style="margin-left:6px;">${escapeHtml(c.case_statuses?.status_name || c.status || 'OPEN')}</span>
+                        </button>`).join('');
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsBox.innerHTML = `<div class="no-data" style="color:#b91c1c;">Search failed: ${escapeHtml(error.message || String(error))}</div>`;
                 }
-            } catch (error) {
-                console.error('Search error:', error);
-                alert('Search failed: ' + (error.message || error));
-            }
+            };
+            modal.querySelector('#caseSearchGo').onclick = runSearch;
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
         }
 
         // M17: one-click signed PDF case report (server-generated, report hash)
@@ -1485,7 +1637,7 @@
 
         function refreshCases() {
             loadDashboardData();
-            alert('🔄 Cases refreshed successfully!');
+            showToast('Cases refreshed', 'success');
         }
 
         function logout() {
