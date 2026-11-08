@@ -46,31 +46,36 @@ class IPFSStorageService {
     });
     formData.append('pinataOptions', pinataOptions);
 
+    // Use undici (global fetch) rather than axios+form-data: the axios POST to
+    // api.pinata.cloud hangs until timeout from Render egress, while undici
+    // completes. Keep the retry loop behavior unchanged.
+    const body = new FormData();
+    body.append('file', new Blob([fileBuffer]), fileName);
+    body.append('pinataMetadata', pinataMetadata);
+    body.append('pinataOptions', pinataOptions);
+
     let lastError;
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        const response = await axios.post(
-          'https://api.pinata.cloud/pinning/pinFileToIPFS',
-          formData,
-          {
-            maxBodyLength: Infinity,
-            httpsAgent: pinataHttpsAgent,
-            headers: {
-              ...formData.getHeaders(),
-              // Cloudflare/Pinata hangs on chunked multipart from some egress
-              // paths; an explicit Content-Length makes the POST complete.
-              'Content-Length': formData.getLengthSync(),
-              Authorization: `Bearer ${this.pinataJWT}`,
-            },
-            timeout: 60000,
+        const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.pinataJWT}`,
           },
-        );
+          body,
+          signal: AbortSignal.timeout(60000),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Pinata responded ${response.status}: ${(await response.text()).slice(0, 200)}`);
+        }
+        const data = await response.json();
 
         return {
-          cid: response.data.IpfsHash,
-          size: response.data.PinSize,
-          timestamp: response.data.Timestamp,
-          isDuplicate: response.data.isDuplicate || false,
+          cid: data.IpfsHash,
+          size: data.PinSize,
+          timestamp: data.Timestamp,
+          isDuplicate: data.isDuplicate || false,
         };
       } catch (error) {
         lastError = error;
