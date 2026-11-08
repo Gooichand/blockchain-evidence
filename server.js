@@ -13,6 +13,7 @@ const { limiter } = require('./middleware/rateLimiters');
 const { setIO: setNotificationIO } = require('./services/notificationService');
 const { setIO: setNotificationControllerIO } = require('./controllers/notificationController');
 const { setIO: setAnalysisIO } = require('./controllers/analysisRequestController');
+const { startIntegrityScheduler } = require('./services/integrityScheduler');
 
 // -- Shared CORS origins (single source of truth) --
 const allowedOrigins = [
@@ -163,6 +164,9 @@ if (require.main === module) {
   process.on('uncaughtException', (err) => {
     console.error('Uncaught exception (kept alive):', err);
   });
+
+  // M5: nightly integrity re-verification (02:17 UTC) + alerts on mismatch
+  startIntegrityScheduler();
 
   server.listen(PORT, () => {
     console.log(`EVID-DGC API Server running on port ${PORT}`);
