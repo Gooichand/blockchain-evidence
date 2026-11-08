@@ -74,6 +74,7 @@ const getEnhancedCases = async (req, res) => {
       .from('cases')
       .select(
         `*, case_statuses!inner(status_code, status_name, color_code, icon), case_assignments!left(assigned_to, role_type, assignment_type, assigned_at)`,
+        { count: 'exact' },
       );
 
     // C2 fix: scope to the caller's accessible cases before any filter
@@ -103,22 +104,41 @@ const getEnhancedCases = async (req, res) => {
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
     const offset = (pageNum - 1) * limitNum;
-    
+
+    // M13: whitelist sortable columns so a bad sortBy cannot break the query
+    const SORTABLE = ['created_date', 'title', 'priority_level', 'case_number'];
+    const sortCol = SORTABLE.includes(sortBy) ? sortBy : 'created_date';
+
     query = query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .order(sortCol, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limitNum - 1);
 
-    const { data: cases, error } = await query;
+    // count comes from the same filtered, access-scoped query (exact)
+    const { data: cases, error, count: totalCount } = await query;
     if (error) throw error;
 
-    const { count: totalCount } = (await supabase
-      .from('cases')
-      .select('*', { count: 'exact', head: true })) || {};
+    // M13: evidence counts per case for list views (one batched query)
+    const caseIds = (cases || []).map((c) => c.id);
+    const evidenceCounts = {};
+    if (caseIds.length) {
+      const { data: evRows } = (await supabase
+        .from('evidence')
+        .select('case_id')
+        .in('case_id', caseIds.map(String))) || {};
+      for (const row of evRows || []) {
+        const k = String(row.case_id);
+        evidenceCounts[k] = (evidenceCounts[k] || 0) + 1;
+      }
+    }
+    const casesWithCounts = (cases || []).map((c) => ({
+      ...c,
+      evidence_count: evidenceCounts[String(c.id)] || 0,
+    }));
 
     res.json({
       success: true,
-      data: cases,
-      cases,
+      data: casesWithCounts,
+      cases: casesWithCounts,
       pagination: {
         page: pageNum,
         limit: limitNum,
