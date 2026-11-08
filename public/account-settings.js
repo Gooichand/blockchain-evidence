@@ -32,6 +32,7 @@ class AccountSettings {
 
         this.loadUserData();
         await this.loadSessions();
+        await this.loadTwoFactorStatus();
     }
 
     setupEventListeners() {
@@ -233,37 +234,113 @@ class AccountSettings {
         lucide.createIcons();
     }
 
-    terminateSession(sessionId) {
-        this.sessions = this.sessions.filter(s => s.id !== sessionId);
-        this.renderSessions();
-        this.showAlert('Session terminated successfully', 'success');
-    }
-
-    logoutAllSessions() {
-        if (confirm('Are you sure you want to logout all other sessions? This will end all active sessions except the current one.')) {
-            this.sessions = this.sessions.filter(s => s.current);
-            this.renderSessions();
-            this.showAlert('All other sessions have been terminated', 'success');
+    async terminateSession(sessionId) {
+        try {
+            const result = await window.apiClient.post(`/auth/sessions/${sessionId}/revoke`, {});
+            if (result.success) {
+                this.sessions = this.sessions.filter(s => s.id !== sessionId);
+                this.renderSessions();
+                this.showAlert('Session ended successfully', 'success');
+            }
+        } catch (error) {
+            this.showAlert(error.message || 'Failed to end session', 'error');
         }
     }
 
-    toggleTwoFactor() {
+    async logoutAllSessions() {
+        if (!confirm('Are you sure you want to logout all other sessions? This will end all active sessions except the current one.')) {
+            return;
+        }
+        try {
+            const result = await window.apiClient.post('/auth/sessions/revoke-others', {});
+            if (result.success) {
+                await this.loadSessions();
+                this.showAlert('All other sessions have been ended', 'success');
+            }
+        } catch (error) {
+            this.showAlert(error.message || 'Failed to end other sessions', 'error');
+        }
+    }
+
+    async loadTwoFactorStatus() {
+        try {
+            const result = await window.apiClient.get('/auth/2fa/status');
+            this.totpEnabled = Boolean(result && result.totpEnabled);
+        } catch (error) {
+            this.totpEnabled = false;
+        }
+        this.renderTwoFactorStatus();
+    }
+
+    renderTwoFactorStatus() {
         const status = document.getElementById('twoFactorStatus');
         const button = document.getElementById('twoFactorToggle');
-        
-        if (status.textContent === 'Disabled') {
-            // Enable 2FA
+        if (!status || !button) return;
+        if (this.totpEnabled) {
             status.textContent = 'Enabled';
             status.className = 'status-badge enabled';
             button.textContent = 'Disable';
-            this.showAlert('Two-factor authentication enabled', 'success');
         } else {
-            // Disable 2FA
             status.textContent = 'Disabled';
             status.className = 'status-badge disabled';
             button.textContent = 'Enable';
-            this.showAlert('Two-factor authentication disabled', 'info');
         }
+    }
+
+    async toggleTwoFactor() {
+        if (this.totpEnabled) {
+            const code = prompt('Enter the 6-digit code from your authenticator app to disable two-factor authentication:');
+            if (code === null) return;
+            try {
+                const result = await window.apiClient.post('/auth/2fa/disable', { code: code.trim() });
+                if (result.success) {
+                    this.totpEnabled = false;
+                    this.renderTwoFactorStatus();
+                    this.showAlert('Two-factor authentication disabled', 'success');
+                }
+            } catch (error) {
+                this.showAlert(error.message || 'Failed to disable two-factor authentication', 'error');
+            }
+            return;
+        }
+
+        // Start enrollment: fetch a fresh secret and QR code from the server.
+        try {
+            const result = await window.apiClient.post('/auth/2fa/setup', {});
+            if (result.success) {
+                document.getElementById('twoFactorQr').src = result.qrCodeDataUrl;
+                document.getElementById('twoFactorSecret').textContent = result.secret;
+                document.getElementById('twoFactorCode').value = '';
+                document.getElementById('twoFactorSetup').style.display = '';
+                document.getElementById('twoFactorToggle').disabled = true;
+            }
+        } catch (error) {
+            this.showAlert(error.message || 'Failed to start two-factor setup', 'error');
+        }
+    }
+
+    async confirmTwoFactorSetup() {
+        const code = document.getElementById('twoFactorCode').value.trim();
+        if (!/^\d{6}$/.test(code)) {
+            this.showAlert('Enter the 6-digit code from your authenticator app.', 'error');
+            return;
+        }
+        try {
+            const result = await window.apiClient.post('/auth/2fa/enable', { code });
+            if (result.success) {
+                this.totpEnabled = true;
+                this.renderTwoFactorStatus();
+                this.cancelTwoFactorSetup();
+                this.showAlert('Two-factor authentication enabled. You will need your authenticator app at every login.', 'success');
+            }
+        } catch (error) {
+            this.showAlert(error.message || 'Invalid code. Check your authenticator app and try again.', 'error');
+        }
+    }
+
+    cancelTwoFactorSetup() {
+        document.getElementById('twoFactorSetup').style.display = 'none';
+        document.getElementById('twoFactorToggle').disabled = false;
     }
 
     loadNotificationSettings() {
@@ -344,6 +421,14 @@ function logoutAllSessions() {
 
 function toggleTwoFactor() {
     accountSettings.toggleTwoFactor();
+}
+
+function confirmTwoFactorSetup() {
+    accountSettings.confirmTwoFactorSetup();
+}
+
+function cancelTwoFactorSetup() {
+    accountSettings.cancelTwoFactorSetup();
 }
 
 function saveNotificationSettings() {
