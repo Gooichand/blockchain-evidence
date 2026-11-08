@@ -58,6 +58,10 @@
                         <i data-lucide="monitor"></i>
                         Active Sessions
                     </a>
+                    <a href="#activity" class="settings-nav-item" onclick="showSettingsTab('activity')">
+                        <i data-lucide="history"></i>
+                        My Activity
+                    </a>
                     <a href="#notifications" class="settings-nav-item" onclick="showSettingsTab('notifications')">
                         <i data-lucide="bell"></i>
                         Notifications
@@ -216,6 +220,26 @@
                                 <button class="btn btn-danger" onclick="logoutAllSessions()">
                                     <i data-lucide="log-out"></i>
                                     Logout All Other Sessions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Activity Tab -->
+                <div id="activity-tab" class="settings-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>My Activity</h3>
+                            <p>Your sign-ins, security events and actions — newest first</p>
+                        </div>
+                        <div class="card-body">
+                            <div id="myActivityList" class="sessions-list">
+                                <!-- Activity entries will be loaded here -->
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-outline" id="loadMoreActivity" onclick="loadMoreActivity()" style="display:none;">
+                                    Load more
                                 </button>
                             </div>
                         </div>
