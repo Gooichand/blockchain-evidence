@@ -53,7 +53,7 @@ const verifyEvidenceHash = async (req, res) => {
 
     const { data: evidence, error } = (await supabase
       .from('evidence')
-      .select('id, blockchain_tx_hash')
+      .select('id, blockchain_tx_hash, case_id')
       .eq('id', safeId)
       .single()) || {};
 
@@ -62,6 +62,26 @@ const verifyEvidenceHash = async (req, res) => {
     }
 
     const verification = await integratedEvidenceService.verifyEvidence(safeId);
+
+    // M4: custody ledger entry for this integrity re-verification
+    try {
+      const { logCustody } = require('./custodyController');
+      const cidNum = parseInt(evidence.case_id, 10);
+      await logCustody({
+        evidenceId: safeId,
+        caseId: isNaN(cidNum) ? null : cidNum,
+        action: 'hash_verified',
+        user,
+        details: {
+          valid: verification.overallValid,
+          blockchain_verified: verification.blockchainVerified,
+          ipfs_verified: verification.ipfsVerified,
+        },
+        req,
+      });
+    } catch (custodyErr) {
+      console.error('custody log for verification failed:', custodyErr);
+    }
 
     res.json({
       success: true,
