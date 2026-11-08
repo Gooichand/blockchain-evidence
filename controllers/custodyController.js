@@ -15,6 +15,26 @@ const {
  * detectable. Entries are append-only: there is no update or delete route.
  */
 
+/** Canonical JSON: sorted keys so JSONB round-trips hash identically. */
+function canonical(obj) {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+  if (Array.isArray(obj)) return '[' + obj.map(canonical).join(',') + ']';
+  return '{' + Object.keys(obj).sort().map((k) => JSON.stringify(k) + ':' + canonical(obj[k])).join(',') + '}';
+}
+
+/** Hash payload uses only DB-stable fields; created_at is stored, not hashed,
+ *  because TIMESTAMPTZ normalization would break recomputation. */
+function custodyPayload({ evidenceId, caseId, action, actor, details, prevHash }) {
+  return canonical({
+    action,
+    actor,
+    case_id: caseId,
+    details: details || {},
+    evidence_id: evidenceId,
+    prev_hash: prevHash,
+  });
+}
+
 function actorOf(user) {
   return {
     actor: stableUserId(user) || 'unknown',
@@ -45,16 +65,10 @@ async function logCustody({ evidenceId = null, caseId = null, action, user, deta
     if (last && last.length > 0) prevHash = last[0].entry_hash;
   }
   const createdAt = new Date().toISOString();
-  const payload = JSON.stringify({
-    evidence_id: evidenceId,
-    case_id: caseId,
-    action,
-    actor,
-    details,
-    prev_hash: prevHash,
-    created_at: createdAt,
-  });
-  const entryHash = crypto.createHash('sha256').update(payload).digest('hex');
+  const entryHash = crypto
+    .createHash('sha256')
+    .update(custodyPayload({ evidenceId, caseId, action, actor, details, prevHash }))
+    .digest('hex');
 
   const { data, error } = await supabase
     .from('custody_log')
@@ -153,16 +167,19 @@ const verifyCustodyChain = async (req, res) => {
         brokenAt = entry.id;
         break;
       }
-      const payload = JSON.stringify({
-        evidence_id: entry.evidence_id,
-        case_id: entry.case_id,
-        action: entry.action,
-        actor: entry.actor,
-        details: entry.details,
-        prev_hash: entry.prev_hash,
-        created_at: entry.created_at,
-      });
-      const recomputed = crypto.createHash('sha256').update(payload).digest('hex');
+      const recomputed = crypto
+        .createHash('sha256')
+        .update(
+          custodyPayload({
+            evidenceId: entry.evidence_id,
+            caseId: entry.case_id,
+            action: entry.action,
+            actor: entry.actor,
+            details: entry.details,
+            prevHash: entry.prev_hash,
+          }),
+        )
+        .digest('hex');
       if (recomputed !== entry.entry_hash) {
         brokenAt = entry.id;
         break;
