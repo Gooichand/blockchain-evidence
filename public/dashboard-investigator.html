@@ -1353,11 +1353,18 @@
         async function loadCaseWorkspace(caseId) {
             const root = document.getElementById('caseWorkspace');
             if (!root) return;
-            let evidence = [], notes = [], requests = [], custodians = {};
+            let evidence = [], notes = [], requests = [], custodians = {}, team = null, comments = [];
             try {
                 const r = await window.apiClient.get(`/cases/${caseId}/custodians`, { skipWalletAuth: true });
                 custodians = r.custodians || {};
             } catch (e) { console.error('workspace custodians load failed', e); }
+            try {
+                team = await window.apiClient.get(`/cases/${caseId}/team`, { skipWalletAuth: true });
+            } catch (e) { console.error('workspace team load failed', e); }
+            try {
+                const r = await window.apiClient.get(`/cases/${caseId}/comments`, { skipWalletAuth: true });
+                comments = r.comments || [];
+            } catch (e) { console.error('workspace comments load failed', e); }
             try {
                 const r = await window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true });
                 evidence = r.data || [];
@@ -1430,6 +1437,43 @@
                         <strong>${escapeHtml(q.status)}</strong> <small style="color:#6b7280;">(${escapeHtml(q.priority)})</small>
                     </div>`).join('');
 
+            const teamHtml = !team ? '' : `
+                <h4 style="margin-top:20px;">👥 Case team</h4>
+                <div id="caseTeamList">
+                    ${team.owner ? `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;"><strong>${escapeHtml(team.owner.name || team.owner.user)}</strong> <span style="color:#b91c1c;font-size:12px;font-weight:600;">OWNER</span></div>` : ''}
+                    ${(team.members || []).map(m => `
+                        <div style="padding:6px 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                            <div><strong>${escapeHtml(m.name || m.user)}</strong>
+                                <span style="color:#6b7280;font-size:12px;"> - ${escapeHtml(String(m.case_role || '').replace(/_/g, ' '))}${m.system_role ? ' (' + escapeHtml(m.system_role.replace(/_/g, ' ')) + ')' : ''}</span></div>
+                            ${team.can_manage ? `<button class="btn btn-sm btn-outline" onclick="removeTeamMember(${caseId}, '${escapeHtml(m.user)}')">Remove</button>` : ''}
+                        </div>`).join('')}
+                </div>
+                ${team.can_manage ? `
+                <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                    <select id="newTeamUser" class="form-control" style="flex:2;min-width:180px;"><option value="">Loading users...</option></select>
+                    <select id="newTeamRole" class="form-control" style="flex:1;min-width:130px;">
+                        <option value="co-investigator">co-investigator</option>
+                        <option value="lead">lead</option>
+                        <option value="analyst">analyst</option>
+                        <option value="viewer">viewer</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="addTeamMember(${caseId})">Add to team</button>
+                </div>` : ''}`;
+
+            const commentsHtml = `
+                <h4 style="margin-top:20px;">💬 Discussion (${comments.length})</h4>
+                <div id="caseCommentsList">
+                    ${comments.length === 0 ? '<div class="no-data">No comments yet. Start the discussion below.</div>' : comments.map(c => `
+                        <div style="border-left:3px solid #0ea5e9; padding:6px 10px; margin-bottom:8px;">
+                            <div>${escapeHtml(c.content).replace(/@([A-Za-z][A-Za-z]+(?:\s+[A-Za-z]+)?|user_\d+)/g, '<strong style="color:#0369a1;">@$1</strong>')}</div>
+                            <small style="color:#6b7280;">${escapeHtml(c.author_name || c.author)} - ${new Date(c.created_at).toLocaleString()}</small>
+                        </div>`).join('')}
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <input type="text" id="newCaseComment" class="form-control" placeholder="Comment - mention a teammate with @Their Name or @user_58" style="flex:1;">
+                    <button class="btn btn-primary btn-sm" onclick="addCaseComment(${caseId})">Comment</button>
+                </div>`;
+
             root.innerHTML = `
                 <h4>📦 Evidence (${evidence.length})</h4>
                 ${evHtml}
@@ -1440,8 +1484,22 @@
                     <button class="btn btn-primary btn-sm" onclick="addCaseNote(${caseId})">Add note</button>
                 </div>
                 ${reqHtml}
+                ${teamHtml}
+                ${commentsHtml}
             `;
             lucide.createIcons();
+            if (team && team.can_manage) {
+                try {
+                    const r = await window.apiClient.get('/transfers/recipients', { skipWalletAuth: true });
+                    const sel = document.getElementById('newTeamUser');
+                    if (sel) {
+                        const users = (r.recipients || []).filter(u => !(team.members || []).some(m => m.user === u.user) && u.user !== (team.owner || {}).user);
+                        sel.innerHTML = users.length
+                            ? '<option value="">Select a user...</option>' + users.map(u => `<option value="${escapeHtml(u.user)}">${escapeHtml(u.name || u.user)}${u.role ? ' (' + escapeHtml(u.role.replace(/_/g, ' ')) + ')' : ''}</option>`).join('')
+                            : '<option value="">Everyone is already on the team</option>';
+                    }
+                } catch (e) { console.error('team user list failed', e); }
+            }
         }
 
         async function toggleCustody(evidenceId) {
@@ -1794,6 +1852,43 @@
             };
             modal.querySelector('#caseSearchGo').onclick = runSearch;
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+        }
+
+        // S7: case team + comments
+        async function addTeamMember(caseId) {
+            const user = (document.getElementById('newTeamUser') || {}).value;
+            const role = (document.getElementById('newTeamRole') || {}).value || 'co-investigator';
+            if (!user) { showToast('Choose a user to add', 'warning'); return; }
+            try {
+                await window.apiClient.post(`/cases/${caseId}/team`, { user, role }, { skipWalletAuth: true });
+                showToast('Added to the case team', 'success');
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Could not add member: ' + (e.message || e), 'error');
+            }
+        }
+
+        async function removeTeamMember(caseId, userRef) {
+            try {
+                await window.apiClient.delete(`/cases/${caseId}/team/${encodeURIComponent(userRef)}`, { skipWalletAuth: true });
+                showToast('Removed from the case team', 'success');
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Could not remove member: ' + (e.message || e), 'error');
+            }
+        }
+
+        async function addCaseComment(caseId) {
+            const input = document.getElementById('newCaseComment');
+            const content = (input.value || '').trim();
+            if (!content) return;
+            try {
+                await window.apiClient.post(`/cases/${caseId}/comments`, { content }, { skipWalletAuth: true });
+                input.value = '';
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Could not post comment: ' + (e.message || e), 'error');
+            }
         }
 
         // S6: evidence transfer with acceptance
