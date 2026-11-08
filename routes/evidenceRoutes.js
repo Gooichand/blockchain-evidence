@@ -5,6 +5,7 @@ const upload = require('../middleware/upload');
 const { uploadEvidence } = require('../controllers/EvidenceUploadController');
 const {
   downloadEvidence,
+  previewEvidence,
   bulkExport,
   getDownloadHistory,
   getAllEvidence,
@@ -67,6 +68,8 @@ router.get('/verify/:hash', publicVerify);
 // ── Parameterized paths (:id) MUST come LAST ────────────────────────────────
 router.get('/evidence/:id', requireAuth, getEvidenceById);
 router.post('/evidence/:id/download', requireAuth, downloadEvidence);
+// M8: in-browser preview (inline, authed, integrity-checked, custody-logged)
+router.get('/evidence/:id/preview', requireAuth, previewEvidence);
 router.get('/evidence/:id/download-history', requireAuth, getDownloadHistory);
 router.get('/evidence/:id/verify', requireAuth, verificationLimiter, verifyEvidenceHash);
 router.get('/evidence/:id/blockchain-proof', getBlockchainProof);
