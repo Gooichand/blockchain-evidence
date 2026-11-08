@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/requireAuth');
+const { validate, schemas } = require('../middleware/validate');
 const {
   getCases,
   getCaseStatuses,
@@ -19,10 +20,10 @@ router.get('/cases/statistics', requireAuth, getCaseStatistics);
 router.get('/cases/export', requireAuth, exportCases);
 router.get('/cases/enhanced', requireAuth, getEnhancedCases);
 router.get('/cases', requireAuth, getCases);
-router.post('/cases', requireAuth, createCase);
+router.post('/cases', requireAuth, validate(schemas.createCase), createCase);
 router.get('/case-statuses', requireAuth, getCaseStatuses);
 router.get('/cases/:id/details', requireAuth, getCaseDetails);
-router.post('/cases/:id/status', requireAuth, updateCaseStatus);
+router.post('/cases/:id/status', requireAuth, validate(schemas.updateCaseStatus), updateCaseStatus);
 router.get('/cases/:id/available-transitions', requireAuth, getAvailableTransitions);
 router.post('/cases/:id/assign', requireAuth, assignCase);
 
