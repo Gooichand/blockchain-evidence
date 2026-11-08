@@ -4,8 +4,8 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { ethers } = require('ethers');
-const otplib = require('otplib');
 const QRCode = require('qrcode');
+const { generateTotpSecret, totpVerify } = require('../lib/totp');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '7d';
@@ -58,9 +58,6 @@ async function createUserSession(user, req, tokenJti) {
     const { device, browser } = parseUserAgent(ua);
     await supabase.from('user_sessions').insert({
       user_id: user.id,
-      // session_token is NOT NULL in the schema; store the JWT id (never the
-      // raw token) so the row can be matched for revocation.
-      session_token: tokenJti || crypto.randomUUID(),
       wallet_address: user.wallet_address || null,
       token_jti: tokenJti || null,
       ip_address:
@@ -276,8 +273,7 @@ const emailLogin = async (req, res) => {
         });
       }
       try {
-        const result = await otplib.verify({ token: String(totp).trim(), secret: user.totp_secret });
-        if (!result || !result.valid) {
+        if (!totpVerify(user.totp_secret, totp)) {
           return res.status(401).json({
             error: 'Invalid two-factor authentication code',
             requiresTwoFactor: true,
@@ -1002,18 +998,18 @@ const setupTwoFactor = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Two-factor authentication is already enabled' });
     }
 
-    const secret = await otplib.generateSecret();
+    const secret = generateTotpSecret();
     const { error: updateError } = (await supabase
       .from('users')
       .update({ totp_secret: secret, totp_enabled: false })
       .eq('id', user.id)) || {};
     if (updateError) throw updateError;
 
-    const otpauthUrl = await otplib.generateURI({
-      secret,
-      issuer: 'EVID-DGC',
-      label: user.email || String(user.id),
-    });
+    const issuer = 'EVID-DGC';
+    const label = user.email || String(user.id);
+    const otpauthUrl =
+      `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(label)}` +
+      `?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
     res.json({ success: true, secret, otpauthUrl, qrCodeDataUrl });
@@ -1045,8 +1041,7 @@ const enableTwoFactor = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Start two-factor setup first' });
     }
 
-    const result = await otplib.verify({ token: String(code || '').trim(), secret: row.totp_secret });
-    if (!result || !result.valid) {
+    if (!totpVerify(row.totp_secret, code)) {
       return res.status(401).json({ success: false, error: 'Invalid authentication code' });
     }
 
@@ -1082,8 +1077,7 @@ const disableTwoFactor = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Two-factor authentication is not enabled' });
     }
 
-    const result = await otplib.verify({ token: String(code || '').trim(), secret: row.totp_secret });
-    if (!result || !result.valid) {
+    if (!totpVerify(row.totp_secret, code)) {
       return res.status(401).json({ success: false, error: 'Invalid authentication code' });
     }
 
