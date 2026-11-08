@@ -57,6 +57,9 @@ class IPFSStorageService {
             httpsAgent: pinataHttpsAgent,
             headers: {
               ...formData.getHeaders(),
+              // Cloudflare/Pinata hangs on chunked multipart from some egress
+              // paths; an explicit Content-Length makes the POST complete.
+              'Content-Length': formData.getLengthSync(),
               Authorization: `Bearer ${this.pinataJWT}`,
             },
             timeout: 60000,
