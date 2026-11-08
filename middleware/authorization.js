@@ -76,6 +76,7 @@ const PROTECTED_PAGES = {
   'case-management.html': ['investigator', 'evidence_manager', 'legal_professional', 'court_official', 'admin'],
   'audit-trail.html': ['admin', 'auditor'],
   'legal-hold-management.html': ['legal_professional', 'evidence_manager', 'court_official', 'admin'],
+  'retention-policy.html': ['evidence_manager', 'admin'],
   'evidence-comparison.html': INTERNAL_ROLES,
   'evidence-verification.html': INTERNAL_ROLES,
   'evidence-export.html': INTERNAL_ROLES,
