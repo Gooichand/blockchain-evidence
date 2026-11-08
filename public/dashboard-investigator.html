@@ -567,7 +567,7 @@
                         <form id="evidenceForm">
                             <div class="form-group">
                                 <label>Evidence Title</label>
-                                <input type="text" id="evidenceTitle" class="form-control" placeholder="Enter evidence title" required>
+                                <input type="text" id="evidenceTitle" class="form-control" placeholder="Evidence title (single file; batches use file names)">
                             </div>
                             <div class="form-group">
                                 <label>Description</label>
@@ -585,8 +585,14 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Upload File</label>
-                                <input type="file" id="evidenceFile" class="form-control" accept="image/*,video/*,.pdf,.doc,.docx,.txt,.mp3,.wav">
+                                <label>Evidence Files <span style="font-weight:400; color:#888;">(drop one or many)</span></label>
+                                <div id="evDropZone" class="ev-dropzone">
+                                    <span style="font-size:26px;">📤</span>
+                                    <p style="margin:6px 0;"><strong>Drag &amp; drop files here</strong> or <span style="color:#b71c1c; text-decoration:underline;">browse</span></p>
+                                    <p class="ev-dropzone-hint">PDF, images, video, audio, Office docs, text, ZIP/RAR. Size limits by file type (10 MB - 500 MB).</p>
+                                </div>
+                                <input type="file" id="evidenceFile" multiple style="display:none;">
+                                <div id="evUploadQueue" class="ev-upload-queue"></div>
                             </div>
                             <details style="margin-top:10px;">
                                 <summary style="cursor:pointer; font-weight:600;">Forensic intake details (recommended)</summary>
@@ -615,7 +621,7 @@
                         </form>
                     </div>
                     <div class="modal-actions">
-                        <button onclick="submitEvidence('${caseId}')" class="btn btn-primary">
+                        <button id="evSubmitBtn" onclick="submitEvidence('${caseId}')" class="btn btn-primary">
                             <i data-lucide="upload"></i> Upload Evidence
                         </button>
                         <button onclick="this.closest('.modal').remove()" class="btn btn-outline">Cancel</button>
@@ -623,76 +629,229 @@
                 </div>
             `;
             document.body.appendChild(modal);
+            wireUploadDropzone();
             lucide.createIcons();
         }
 
-        async function submitEvidence(caseId) {
-            const title = document.getElementById('evidenceTitle').value;
-            const description = document.getElementById('evidenceDescription').value;
-            const type = document.getElementById('evidenceType').value;
-            const file = document.getElementById('evidenceFile').files[0];
+        // ===== M7: reliable upload pipeline =====
+        // Drag & drop, multi-file queue, per-file progress (XHR), client+server
+        // size/type agreement, zero-byte rejection, SHA-256 computed in the browser
+        // (Web Crypto) and compared with the server hash, duplicate detection by hash.
+        const UPLOAD_LIMITS = {
+            'application/pdf': 100,
+            'image/jpeg': 50, 'image/jpg': 50, 'image/png': 50, 'image/gif': 25,
+            'video/mp4': 500, 'video/avi': 500, 'video/mov': 500,
+            'audio/mp3': 100, 'audio/wav': 200, 'audio/m4a': 100,
+            'application/msword': 50,
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 50,
+            'application/vnd.ms-excel': 50,
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 50,
+            'text/plain': 10,
+            'application/zip': 500, 'application/x-rar-compressed': 500,
+        };
+        let evQueue = [];
 
-            if (!title || !type || !file) {
-                alert('Please fill in required fields (Title, Type, and File)');
-                return;
+        function fmtBytes(n) {
+            if (n < 1024) return n + ' B';
+            if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+            if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+            return (n / 1073741824).toFixed(2) + ' GB';
+        }
+
+        // Client-side mirror of the server rules in EvidenceUploadController - the two must agree
+        function validateEvidenceFile(file) {
+            if (file.size === 0) return 'Empty files cannot be uploaded as evidence';
+            const max = UPLOAD_LIMITS[file.type];
+            if (!max) return `File type ${file.type || 'unknown'} is not supported`;
+            if (file.size > max * 1024 * 1024) return `Too large: ${file.type} allows up to ${max} MB (this file is ${fmtBytes(file.size)})`;
+            return null;
+        }
+
+        async function sha256File(file) {
+            const buf = await file.arrayBuffer();
+            const digest = await crypto.subtle.digest('SHA-256', buf);
+            return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function renderUploadQueue() {
+            const root = document.getElementById('evUploadQueue');
+            if (!root) return;
+            root.innerHTML = evQueue.map((it, i) => `
+                <div class="evq-item">
+                    <div class="evq-main">
+                        <div class="evq-name">${escapeHtml(it.file.name)} <span class="evq-size">${fmtBytes(it.file.size)}</span></div>
+                        <div class="evq-status ${it.stateCls || ''}">${escapeHtml(it.status)}</div>
+                    </div>
+                    <div class="evq-bar"><div class="evq-bar-fill" style="width:${it.progress || 0}%"></div></div>
+                    ${it.done ? '' : `<button class="evq-remove" onclick="evQueue.splice(${i},1); renderUploadQueue();" title="Remove">&times;</button>`}
+                </div>`).join('');
+        }
+
+        function addFilesToQueue(fileList) {
+            let added = 0;
+            for (const file of fileList) {
+                const err = validateEvidenceFile(file);
+                if (err) { showToast(`${file.name}: ${err}`, 'error'); continue; }
+                if (evQueue.some(q => q.file.name === file.name && q.file.size === file.size && !q.done)) continue;
+                evQueue.push({ file, status: 'Queued', progress: 0, done: false });
+                added++;
+            }
+            renderUploadQueue();
+        }
+
+        function wireUploadDropzone() {
+            const dz = document.getElementById('evDropZone');
+            const input = document.getElementById('evidenceFile');
+            if (!dz || !input) return;
+            evQueue = [];
+            dz.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => { addFilesToQueue(input.files); input.value = ''; });
+            ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('drag-over'); }));
+            ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag-over'); }));
+            dz.addEventListener('drop', e => addFilesToQueue(e.dataTransfer.files));
+        }
+
+        // XHR instead of fetch so we get real upload progress events
+        function uploadFileWithProgress(formData, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/evidence/upload');
+                const token = localStorage.getItem('authToken');
+                if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+                xhr.onload = () => {
+                    let j;
+                    try { j = JSON.parse(xhr.responseText); }
+                    catch (e) { j = { success: false, error: 'Unexpected server response (HTTP ' + xhr.status + ')' }; }
+                    j.__status = xhr.status;
+                    resolve(j);
+                };
+                xhr.onerror = () => reject(new Error('Network error during upload'));
+                xhr.ontimeout = () => reject(new Error('Upload timed out'));
+                xhr.send(formData);
+            });
+        }
+
+        async function submitEvidence(caseId) {
+            if (!evQueue.length) { showToast('Add at least one file to upload', 'warning'); return; }
+            const type = document.getElementById('evidenceType').value;
+            if (!type) { showToast('Please select an evidence type', 'warning'); return; }
+            const titleVal = document.getElementById('evidenceTitle').value.trim();
+            const description = document.getElementById('evidenceDescription').value;
+            if (evQueue.length === 1 && !titleVal) { showToast('Please enter an evidence title', 'warning'); return; }
+
+            const btn = document.getElementById('evSubmitBtn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="loading-spinner"></i> Uploading...'; }
+
+            // Forensic intake fields are shared across the batch (M6)
+            const forensicMap = {
+                sourceDevice: 'evSourceDevice',
+                deviceMakeModel: 'evDeviceMakeModel',
+                deviceSerial: 'evDeviceSerial',
+                collectedBy: 'evCollectedBy',
+                acquisitionMethod: 'evAcquisitionMethod',
+                collectionReason: 'evCollectionReason',
+                conditionNotes: 'evConditionNotes',
+            };
+            const single = evQueue.length === 1;
+            let ok = 0, failed = 0, dup = 0;
+            for (const it of evQueue) {
+                if (it.done) continue;
+                try {
+                    it.status = 'Hashing...'; renderUploadQueue();
+                    const clientHash = await sha256File(it.file);
+                    it.status = 'Uploading'; renderUploadQueue();
+
+                    const fd = new FormData();
+                    fd.append('title', single ? titleVal : it.file.name.replace(/\.[^.]+$/, ''));
+                    fd.append('description', description);
+                    fd.append('type', type);
+                    fd.append('caseId', caseId);
+                    fd.append('file', it.file);
+                    for (const [field, elId] of Object.entries(forensicMap)) {
+                        const el = document.getElementById(elId);
+                        if (el && el.value.trim()) fd.append(field, el.value.trim());
+                    }
+                    const locEl = document.getElementById('evLocation');
+                    if (locEl && locEl.value.trim()) fd.append('location', locEl.value.trim());
+                    const cdEl = document.getElementById('evCollectionDate');
+                    if (cdEl && cdEl.value) {
+                        fd.append('collectionDate', new Date(cdEl.value).toISOString());
+                        fd.append('collectionTimezone', Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+                    }
+
+                    const res = await uploadFileWithProgress(fd, p => { it.progress = Math.round(p * 100); renderUploadQueue(); });
+                    it.progress = 100; it.done = true;
+                    if (res.__status === 409) {
+                        dup++;
+                        it.status = `Duplicate - already stored as "${res.existingTitle || 'existing item'}" (Evidence #${res.existingEvidenceId})`;
+                        it.stateCls = 'warn';
+                    } else if (res.success) {
+                        const serverHash = res.data && res.data.hash;
+                        if (serverHash && serverHash.toLowerCase() === clientHash.toLowerCase()) {
+                            ok++;
+                            it.status = 'Uploaded \u2713 hash verified';
+                            it.stateCls = 'ok';
+                            if (res.blockchain && res.blockchain.txHash) it.status += ' \u00b7 anchored on-chain';
+                        } else if (serverHash) {
+                            failed++;
+                            it.status = 'ERROR: server hash does not match local hash - file may have changed in transit';
+                            it.stateCls = 'err';
+                        } else {
+                            ok++;
+                            it.status = 'Uploaded';
+                            it.stateCls = 'ok';
+                        }
+                    } else {
+                        failed++;
+                        it.status = 'Error: ' + (res.error || 'upload failed');
+                        it.stateCls = 'err';
+                    }
+                } catch (e) {
+                    failed++;
+                    it.done = true;
+                    it.status = 'Error: ' + (e.message || e);
+                    it.stateCls = 'err';
+                }
+                renderUploadQueue();
             }
 
-            const btn = event.target;
-            const originalContent = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="loading-spinner"></i> Uploading...';
-
-            try {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('description', description);
-                formData.append('type', type);
-                formData.append('caseId', caseId);
-                formData.append('file', file);
-                const forensicMap = {
-                    sourceDevice: 'evSourceDevice',
-                    deviceMakeModel: 'evDeviceMakeModel',
-                    deviceSerial: 'evDeviceSerial',
-                    collectedBy: 'evCollectedBy',
-                    acquisitionMethod: 'evAcquisitionMethod',
-                    collectionReason: 'evCollectionReason',
-                    conditionNotes: 'evConditionNotes',
-                };
-                for (const [field, elId] of Object.entries(forensicMap)) {
-                    const el = document.getElementById(elId);
-                    if (el && el.value.trim()) formData.append(field, el.value.trim());
-                }
-                const locEl = document.getElementById('evLocation');
-                if (locEl && locEl.value.trim()) formData.append('location', locEl.value.trim());
-                const cdEl = document.getElementById('evCollectionDate');
-                if (cdEl && cdEl.value) {
-                    formData.append('collectionDate', new Date(cdEl.value).toISOString());
-                    formData.append('collectionTimezone', Intl.DateTimeFormat().resolvedOptions().timeZone || '');
-                }
-
-                // Use secure apiClient for multipart upload
-                const result = await window.apiClient.upload('/evidence/upload', formData);
-
-                if (result.success) {
-                    // Close modal
-                    document.querySelector('.modal').remove();
-                    const anchored = result.blockchain && result.blockchain.txHash;
-                    showToast(anchored
-                        ? '✅ Evidence uploaded and anchored on blockchain.'
-                        : '✅ Evidence uploaded and hashed. Blockchain anchoring is pending and will retry automatically.', 'success');
-                    await loadDashboardData();
-                } else {
-                    throw new Error(result.error || 'Upload failed');
-                }
-            } catch (error) {
-                console.error('Evidence upload error:', error);
-                alert('Error uploading evidence: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="upload"></i> Upload Evidence'; lucide.createIcons(); }
+            if (ok) {
+                showToast(`${ok} file(s) uploaded and integrity-verified` + (dup ? `, ${dup} duplicate(s) skipped` : '') + (failed ? `, ${failed} failed` : ''), failed ? 'warning' : 'success');
+                await loadDashboardData();
+            } else if (dup && !failed) {
+                showToast('Every file was a duplicate of existing evidence in this case', 'warning');
+            } else if (failed) {
+                showToast(failed + ' file(s) failed to upload - see the queue for details', 'error');
             }
         }
 
+        // Upload component styles (dropzone + queue)
+        (function injectUploadStyles() {
+            if (document.getElementById('evUploadStyles')) return;
+            const st = document.createElement('style');
+            st.id = 'evUploadStyles';
+            st.textContent = `
+                .ev-dropzone { border:2px dashed rgba(183,28,28,.3); border-radius:12px; padding:20px; text-align:center; background:#fff7f7; transition:all .2s; cursor:pointer; }
+                .ev-dropzone:hover { border-color:rgba(183,28,28,.55); background:#fff1f1; }
+                .ev-dropzone.drag-over { border-color:#b71c1c; background:#ffecec; transform:scale(1.01); }
+                .ev-dropzone-hint { font-size:12px; color:#8a8a8a; margin:4px 0 0; }
+                .ev-upload-queue { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; }
+                .evq-item { border:1px solid rgba(211,47,47,.12); border-radius:10px; padding:10px 34px 10px 12px; background:#fff; position:relative; }
+                .evq-main { display:flex; justify-content:space-between; gap:10px; font-size:13px; margin-bottom:6px; }
+                .evq-name { font-weight:600; word-break:break-all; }
+                .evq-size { color:#888; font-weight:400; margin-left:6px; font-size:12px; }
+                .evq-status { font-size:12px; color:#666; white-space:nowrap; }
+                .evq-status.ok { color:#15803d; font-weight:600; }
+                .evq-status.warn { color:#b45309; font-weight:600; }
+                .evq-status.err { color:#b91c1c; font-weight:600; white-space:normal; text-align:right; }
+                .evq-bar { height:6px; background:#f3e2e2; border-radius:4px; overflow:hidden; }
+                .evq-bar-fill { height:100%; width:0; background:linear-gradient(90deg,#d32f2f,#b71c1c); transition:width .2s; }
+                .evq-remove { position:absolute; top:8px; right:10px; border:0; background:none; color:#b91c1c; font-size:16px; cursor:pointer; line-height:1; }
+            `;
+            document.head.appendChild(st);
+        })();
 
         // ===== Case workspace: custody ledger, notes, analysis requests (M4, M10, M11) =====
         async function loadCaseWorkspace(caseId) {
@@ -952,8 +1111,39 @@
             }
         }
 
-        function uploadEvidence() {
-            window.location.href = 'enhanced-evidence-upload.html';
+        // M7: quick-action card opens a case picker, then the upload modal
+        // (previously redirected to enhanced-evidence-upload.html, which does not exist - the audit's 404 Upload card)
+        async function uploadEvidence() {
+            try {
+                const result = await window.apiClient.get('/cases/enhanced');
+                const cases = result.cases || result.data || [];
+                if (!cases.length) {
+                    showToast('No cases found. Create a case first, then upload evidence to it.', 'warning');
+                    return;
+                }
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>📤 Upload Evidence - Select Case</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom:12px; color:#666;">Choose the case this evidence belongs to:</p>
+                        <div style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;">
+                            ${cases.map(c => `
+                                <button class="btn btn-outline" style="text-align:left;" onclick="this.closest('.modal').remove(); addEvidence('${c.id}')">
+                                    <strong>${escapeHtml(c.case_number || ('CASE-' + c.id))}</strong> · ${escapeHtml(c.title || 'Untitled')}
+                                </button>`).join('')}
+                        </div>
+                    </div>
+                </div>`;
+                document.body.appendChild(modal);
+                lucide.createIcons();
+            } catch (e) {
+                showToast('Could not load cases: ' + (e.message || e), 'error');
+            }
         }
 
         async function searchCases() {
