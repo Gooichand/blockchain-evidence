@@ -1,5 +1,4 @@
 const rateLimit = require('express-rate-limit');
-const { ipKeyGenerator } = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const { rateLimits } = require('../config');
 
@@ -27,7 +26,16 @@ function userOrIpKey(req) {
   } catch (_) {
     // invalid or expired token - fall through to the IP key
   }
-  return ipKeyGenerator(req.ip);
+  return ipFallbackKey(req);
+}
+
+// IP fallback for anonymous traffic. IPv6 users can rotate through a /64, so
+// bucket IPv6 addresses by their first four hextets (a /64 prefix) instead of
+// keying on the full address.
+function ipFallbackKey(req) {
+  const ip = req.ip || '';
+  if (ip.includes(':')) return 'ip6:' + ip.split(':').slice(0, 4).join(':');
+  return 'ip:' + ip;
 }
 
 /**
