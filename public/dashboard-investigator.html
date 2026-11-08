@@ -1171,7 +1171,10 @@
             const m = ev.extracted_metadata || {};
             const flags = ev.metadata_flags || [];
             const bits = [];
-            if (m.make || m.model) bits.push('📷 ' + escapeHtml([m.make, m.model].filter(Boolean).join(' ')));
+            const cam = (m.model && m.make && String(m.model).toLowerCase().startsWith(String(m.make).toLowerCase()))
+                ? m.model
+                : [m.make, m.model].filter(Boolean).join(' ');
+            if (cam) bits.push('📷 ' + escapeHtml(cam));
             if (m.takenAt) bits.push('taken ' + new Date(m.takenAt).toLocaleString());
             if (m.gps) bits.push('GPS ' + m.gps.lat + ', ' + m.gps.lon);
             if (m.software) bits.push('software: ' + escapeHtml(m.software));
