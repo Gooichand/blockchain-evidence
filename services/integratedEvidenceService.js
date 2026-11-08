@@ -1,6 +1,7 @@
 const blockchainService = require('./blockchain/blockchainService');
 const ipfsStorageService = require('./storage/ipfsStorageService');
 const { supabase } = require('../config');
+const { extractMetadata } = require('./metadataExtractor');
 const crypto = require('crypto');
 
 class IntegratedEvidenceService {
@@ -15,6 +16,17 @@ class IntegratedEvidenceService {
 
     try {
       results.hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+      // S1: automatic metadata/EXIF extraction (never throws; failures are logged)
+      try {
+        results.metadata = await extractMetadata(fileBuffer, metadata.mimeType, {
+          forensic: metadata.forensic || {},
+          uploadedAt: new Date().toISOString(),
+        });
+      } catch (metaErr) {
+        console.error('metadata extraction failed:', metaErr.message);
+        results.metadata = { extracted: {}, flags: [] };
+      }
 
       try {
         results.ipfs = await ipfsStorageService.uploadFile(fileBuffer, fileName, {
@@ -59,6 +71,8 @@ class IntegratedEvidenceService {
             title: metadata.title || fileName,
             name: metadata.title || fileName,
             forensic_metadata: metadata.forensic || {},
+            extracted_metadata: (results.metadata && results.metadata.extracted) || {},
+            metadata_flags: (results.metadata && results.metadata.flags) || [],
             file_name: fileName,
             type: metadata.type,
             // title, type, file_data, file_name and file_size are all NOT NULL in
