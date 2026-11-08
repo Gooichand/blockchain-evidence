@@ -23,6 +23,10 @@ const schemas = {
   emailLogin: z.object({
     email: z.string().email().max(254),
     password: z.string().min(1).max(256),
+    totp: z.string().regex(/^\d{6}$/).optional(),
+  }),
+  totpCode: z.object({
+    code: z.string().regex(/^\d{6}$/, 'Code must be the 6-digit number from your authenticator app'),
   }),
   createCase: z.object({
     title: z.string().min(1).max(200),
