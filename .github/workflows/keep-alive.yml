@@ -1,0 +1,21 @@
+name: Keep Render awake
+
+# Render's free plan sleeps after ~15 minutes without traffic, which makes the
+# first visitor wait up to a minute. This pings the health endpoint every 5
+# minutes (GitHub may delay scheduled runs by a few minutes under load).
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping site health endpoint
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 --max-time 60 \
+            https://blockchain-evidence.onrender.com/api/health
