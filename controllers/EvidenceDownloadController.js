@@ -8,6 +8,7 @@ const {
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const archiver = require('archiver');
+const crypto = require('crypto');
 const { scopeEvidenceQuery, canAccessEvidence, canAccessCase } = require('../middleware/caseAccess');
 
 /**
@@ -76,6 +77,18 @@ const downloadEvidence = async (req, res) => {
     const watermarkText = generateWatermarkText(verifiedWallet, caseNumber || `EVID-${id}`, new Date());
 
     let fileBuffer = await ipfsStorageService.getFile(cid);
+
+    // M8: re-verify integrity on every download - recompute SHA-256 over the
+    // stored bytes and compare with the hash recorded at intake. The result is
+    // logged to the custody ledger and sent as a response header. A mismatch
+    // never silently passes; the file is still served so evidence stays
+    // accessible, but every consumer can see the flag.
+    const downloadHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    const integrityOk = evidence.hash ? downloadHash === String(evidence.hash).toLowerCase() : null;
+    if (integrityOk === false) {
+      console.error(`INTEGRITY MISMATCH on download of evidence #${id}: stored=${evidence.hash} actual=${downloadHash}`);
+    }
+
     let contentType = evidence.file_type || 'application/octet-stream';
     let filename = evidence.name ? `watermarked_${evidence.name}` : `evidence_${id}_watermarked`;
 
@@ -99,7 +112,7 @@ const downloadEvidence = async (req, res) => {
         caseId: isNaN(cidNum) ? null : cidNum,
         action: 'downloaded',
         user,
-        details: { watermark_applied: true, filename },
+        details: { watermark_applied: true, filename, integrity_verified: integrityOk, download_hash: downloadHash },
         req,
       });
     } catch (custodyErr) {
@@ -118,6 +131,7 @@ const downloadEvidence = async (req, res) => {
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('X-Watermark-Applied', 'true');
+    res.setHeader('X-Integrity-Verified', integrityOk === null ? 'unknown' : String(integrityOk));
     res.setHeader('X-Downloaded-By', verifiedWallet.slice(0, 8) + '...');
 
     res.send(fileBuffer);
@@ -371,6 +385,114 @@ const getAllEvidence = async (req, res) => {
   }
 };
 
+// M8: in-browser preview of the stored file itself (image, PDF, video, audio,
+// text) without exposing a public IPFS link. Authenticated, access-checked,
+// integrity-verified, custody-logged, and served inline over the API.
+const PREVIEWABLE = (mime) =>
+  !!mime && (mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/')
+    || mime === 'application/pdf' || mime === 'text/plain');
+
+const previewEvidence = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot preview evidence' });
+    }
+
+    const safeId = parseInt(id, 10);
+    if (isNaN(safeId)) {
+      return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
+    }
+
+    const { data: evidence, error } = (await supabase
+      .from('evidence')
+      .select('*')
+      .eq('id', safeId)
+      .single()) || {};
+    if (error || !evidence) {
+      return res.status(404).json({ success: false, error: 'Evidence not found' });
+    }
+    if (!(await canAccessEvidence(user, evidence))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this evidence' });
+    }
+
+    const contentType = evidence.file_type || 'application/octet-stream';
+    if (!PREVIEWABLE(contentType)) {
+      return res.status(415).json({ success: false, error: 'This file type cannot be previewed - use download instead' });
+    }
+
+    const cid = evidence.ipfs_cid || evidence.ipfs_hash;
+    if (!cid) {
+      return res.status(404).json({ success: false, error: 'No stored file for this evidence record' });
+    }
+
+    const fileBuffer = await ipfsStorageService.getFile(cid);
+
+    // Integrity re-check on every access (same rule as download)
+    const viewHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    const integrityOk = evidence.hash ? viewHash === String(evidence.hash).toLowerCase() : null;
+    if (integrityOk === false) {
+      console.error(`INTEGRITY MISMATCH on preview of evidence #${safeId}: stored=${evidence.hash} actual=${viewHash}`);
+    }
+
+    // M4: custody ledger entry for this view
+    try {
+      const { logCustody } = require('./custodyController');
+      const cidNum = parseInt(evidence.case_id, 10);
+      await logCustody({
+        evidenceId: evidence.id,
+        caseId: isNaN(cidNum) ? null : cidNum,
+        action: 'viewed',
+        user,
+        details: { preview: true, integrity_verified: integrityOk },
+        req,
+      });
+    } catch (custodyErr) {
+      console.error('custody log for preview failed:', custodyErr);
+    }
+
+    const safeName = String(evidence.name || `evidence_${safeId}`).replace(/["\r\n]/g, '_');
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
+    res.setHeader('Cache-Control', 'private, no-cache');
+    res.setHeader('X-Integrity-Verified', integrityOk === null ? 'unknown' : String(integrityOk));
+    res.setHeader('Accept-Ranges', 'bytes');
+
+    // Range support so video/audio can seek without a full re-fetch
+    const range = req.headers.range;
+    const total = fileBuffer.length;
+    if (range) {
+      const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+      if (m) {
+        let start = m[1] ? parseInt(m[1], 10) : 0;
+        let end = m[2] ? parseInt(m[2], 10) : total - 1;
+        if (m[1] === '' && m[2]) { start = Math.max(total - parseInt(m[2], 10), 0); end = total - 1; }
+        if (start >= total || start > end) {
+          res.setHeader('Content-Range', `bytes */${total}`);
+          return res.status(416).end();
+        }
+        end = Math.min(end, total - 1);
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
+        res.setHeader('Content-Length', end - start + 1);
+        return res.send(fileBuffer.subarray(start, end + 1));
+      }
+    }
+    res.setHeader('Content-Length', total);
+    res.send(fileBuffer);
+  } catch (error) {
+    console.error('Evidence preview error:', error);
+    const msg = process.env.NODE_ENV === 'production' ? 'Failed to preview evidence' : error.message;
+    res.status(500).json({ success: false, error: msg });
+  }
+};
+
 // Get evidence details for preview
 const getEvidenceById = async (req, res) => {
   try {
@@ -466,6 +588,7 @@ module.exports = {
   bulkExport,
   getDownloadHistory,
   getAllEvidence,
+  previewEvidence,
   getEvidenceById,
   getEvidenceByCase,
 };
