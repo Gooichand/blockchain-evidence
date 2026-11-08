@@ -1,5 +1,10 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const https = require('https');
+
+// Render (and some PaaS) egress can hang on IPv6 routes to api.pinata.cloud -
+// the connection times out instead of failing fast. Force IPv4 for Pinata calls.
+const pinataHttpsAgent = new https.Agent({ family: 4, keepAlive: true });
 
 class IPFSService {
   constructor() {
@@ -25,6 +30,8 @@ class IPFSService {
 
     const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
       maxBodyLength: Infinity,
+      httpsAgent: pinataHttpsAgent,
+      timeout: 30000,
       headers: {
         'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
         Authorization: `Bearer ${this.pinataJWT}`,
@@ -40,7 +47,7 @@ class IPFSService {
 
   async getFile(cid) {
     const url = `${this.gateway}${cid}`;
-    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const response = await axios.get(url, { responseType: 'arraybuffer', httpsAgent: pinataHttpsAgent, timeout: 30000 });
     return Buffer.from(response.data);
   }
 
@@ -48,6 +55,8 @@ class IPFSService {
     const response = await axios.get(
       `https://api.pinata.cloud/pinning/pinJobs?ipfs_pin_hash=${cid}`,
       {
+        httpsAgent: pinataHttpsAgent,
+        timeout: 30000,
         headers: {
           Authorization: `Bearer ${this.pinataJWT}`,
         },
