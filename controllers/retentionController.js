@@ -171,7 +171,8 @@ const setLegalHold = async (req, res) => {
       return res.status(403).json({ error: 'User account is inactive' });
     }
 
-    if (!['admin', 'investigator', 'evidence_manager'].includes(user.role)) {
+    // C3 fix: investigators may not set legal holds (spec restriction)
+    if (!['admin', 'evidence_manager'].includes(user.role)) {
       return res
         .status(403)
         .json({ error: 'Unauthorized: Insufficient role for legal hold operations' });
@@ -238,7 +239,8 @@ const updateAdmissionStatus = async (req, res) => {
       return res.status(403).json({ success: false, error: 'User not found or inactive' });
     }
 
-    if (!['admin', 'evidence_manager', 'investigator'].includes(user.role)) {
+    // C3 fix: investigators may not approve/reject court admission (spec restriction)
+    if (!['admin', 'evidence_manager'].includes(user.role)) {
       return res.status(403).json({ success: false, error: 'Unauthorized: insufficient role for admission review' });
     }
 
@@ -298,7 +300,8 @@ const bulkRetentionPolicy = async (req, res) => {
       return res.status(403).json({ error: 'User not found or inactive' });
     }
 
-    if (!['admin', 'investigator', 'evidence_manager'].includes(user.role)) {
+    // C3 fix: investigators may not set legal holds (spec restriction)
+    if (!['admin', 'evidence_manager'].includes(user.role)) {
       return res.status(403).json({ error: 'Unauthorized: Insufficient role for bulk operations' });
     }
 
