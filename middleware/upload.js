@@ -7,40 +7,13 @@ const upload = multer({
     // (10MB-500MB by MIME type) are what actually govern each upload.
     fileSize: 500 * 1024 * 1024,
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      'application/pdf',
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'video/mp4',
-      'video/avi',
-      'video/mov',
-      'audio/mp3',
-      'audio/wav',
-      'audio/m4a',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'application/zip',
-      'application/x-rar-compressed',
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      // A rejected MIME type is a client error. Without an explicit status the
-      // Express error handler defaults to 500, so an unsupported upload was
-      // reported as a server fault instead of a 400.
-      const err = new Error(`File type ${file.mimetype} not supported`);
-      err.status = 400;
-      err.code = 'UNSUPPORTED_FILE_TYPE';
-      cb(err, false);
-    }
-  },
+  // No MIME filtering here: EvidenceUploadController is the single gate.
+  // It sniffs the real type from magic bytes (S2), returns a proper 400
+  // JSON for unsupported or dangerous files, and lets an investigator
+  // explicitly confirm an executable kept as forensic evidence. Rejecting
+  // here instead would bypass the sniff + confirmation flow, and multipart
+  // field order decides whether confirmDangerous is even parsed yet.
+  fileFilter: (req, file, cb) => cb(null, true),
 });
 
 module.exports = upload;
