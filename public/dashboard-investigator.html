@@ -1166,6 +1166,30 @@
         })();
 
         // ===== Case workspace: custody ledger, notes, analysis requests (M4, M10, M11) =====
+        // S1: extracted file metadata (EXIF, PDF/Office props) + mismatch flags
+        function renderExtractedMeta(ev) {
+            const m = ev.extracted_metadata || {};
+            const flags = ev.metadata_flags || [];
+            const bits = [];
+            if (m.make || m.model) bits.push('📷 ' + escapeHtml([m.make, m.model].filter(Boolean).join(' ')));
+            if (m.takenAt) bits.push('taken ' + new Date(m.takenAt).toLocaleString());
+            if (m.gps) bits.push('GPS ' + m.gps.lat + ', ' + m.gps.lon);
+            if (m.software) bits.push('software: ' + escapeHtml(m.software));
+            if (m.width && m.height) bits.push(m.width + 'x' + m.height);
+            if (m.format && !m.width) bits.push('format: ' + escapeHtml(m.format));
+            if (m.title) bits.push('doc title: ' + escapeHtml(m.title));
+            if (m.creator || m.author) bits.push('author: ' + escapeHtml(m.creator || m.author));
+            if (m.producer) bits.push('producer: ' + escapeHtml(m.producer));
+            if (m.lastModifiedBy) bits.push('last edited by: ' + escapeHtml(m.lastModifiedBy));
+            if (m.created) bits.push('doc created ' + escapeHtml(m.created));
+            let html = '';
+            if (bits.length) html += '<br><small style="color:#475569;">' + bits.join(' · ') + '</small>';
+            flags.forEach(f => {
+                html += '<br><small style="color:#b91c1c;font-weight:600;">⚠ ' + escapeHtml(f.message || f.code) + '</small>';
+            });
+            return html;
+        }
+
         async function loadCaseWorkspace(caseId) {
             const root = document.getElementById('caseWorkspace');
             if (!root) return;
@@ -1200,6 +1224,7 @@
                                 <small style="color:#6b7280;">SHA-256: ${escapeHtml((ev.hash || '').slice(0, 24))}${ev.hash ? '...' : ''}
                                 <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="navigator.clipboard && navigator.clipboard.writeText('${ev.hash || ''}')">Copy</button></small>
                                 ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
+                                ${renderExtractedMeta(ev)}
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-primary" onclick="previewEvidence(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'), '${escapeHtml(ev.file_type || '')}')">Preview</button>
