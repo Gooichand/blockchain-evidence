@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authLimiter } = require('../middleware/rateLimiters');
 const { requireAuth } = require('../middleware/requireAuth');
+const { validate, schemas } = require('../middleware/validate');
 const {
   emailLogin,
   emailRegister,
@@ -20,7 +21,7 @@ const {
 
 // SECURITY FIX: Nonce endpoint for wallet ECDSA challenge (must be before registration)
 router.get('/auth/wallet/nonce', authLimiter, walletNonce);
-router.post('/auth/email/login', authLimiter, emailLogin);
+router.post('/auth/email/login', authLimiter, validate(schemas.emailLogin), emailLogin);
 router.post('/auth/email/register', authLimiter, emailRegister);
 router.post('/auth/wallet/login', authLimiter, walletLogin);
 router.post('/auth/wallet/register', authLimiter, walletRegister);
