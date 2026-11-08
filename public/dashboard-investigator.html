@@ -775,6 +775,7 @@
         }
 
         function addEvidence(caseId) {
+            window.__evCaseId = caseId;
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
@@ -985,6 +986,75 @@
             return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // Forensic intake fields shared across the batch (M6)
+        const FORENSIC_FIELD_MAP = {
+            sourceDevice: 'evSourceDevice',
+            deviceMakeModel: 'evDeviceMakeModel',
+            deviceSerial: 'evDeviceSerial',
+            collectedBy: 'evCollectedBy',
+            acquisitionMethod: 'evAcquisitionMethod',
+            collectionReason: 'evCollectionReason',
+            conditionNotes: 'evConditionNotes',
+        };
+
+        function buildEvidenceFormData(it, caseId, opts) {
+            const fd = new FormData();
+            const single = evQueue.length === 1;
+            fd.append('title', single ? document.getElementById('evidenceTitle').value.trim() : it.file.name.replace(/\.[^.]+$/, ''));
+            fd.append('description', document.getElementById('evidenceDescription').value);
+            fd.append('type', document.getElementById('evidenceType').value);
+            fd.append('caseId', caseId);
+            fd.append('file', it.file);
+            for (const [field, elId] of Object.entries(FORENSIC_FIELD_MAP)) {
+                const el = document.getElementById(elId);
+                if (el && el.value.trim()) fd.append(field, el.value.trim());
+            }
+            const locEl = document.getElementById('evLocation');
+            if (locEl && locEl.value.trim()) fd.append('location', locEl.value.trim());
+            const cdEl = document.getElementById('evCollectionDate');
+            if (cdEl && cdEl.value) {
+                fd.append('collectionDate', new Date(cdEl.value).toISOString());
+                fd.append('collectionTimezone', Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+            }
+            if (opts && opts.confirmDangerous) fd.append('confirmDangerous', 'true');
+            return fd;
+        }
+
+        // Server flagged the file as executable/script (S2). The investigator
+        // can explicitly confirm and re-upload just this file.
+        async function confirmDangerousUpload(i, caseId) {
+            const it = evQueue[i];
+            if (!it || !it.needsConfirm) return;
+            it.needsConfirm = false;
+            it.done = false;
+            it.status = 'Uploading (dangerous file confirmed)...';
+            it.stateCls = '';
+            renderUploadQueue();
+            try {
+                const fd = buildEvidenceFormData(it, caseId, { confirmDangerous: true });
+                const res = await uploadFileWithProgress(fd, p => { it.progress = Math.round(p * 100); renderUploadQueue(); });
+                it.progress = 100; it.done = true;
+                if (res.__status === 409) {
+                    it.status = `Duplicate - already stored as "${res.existingTitle || 'existing item'}" (Evidence #${res.existingEvidenceId})`;
+                    it.stateCls = 'warn';
+                } else if (res.success) {
+                    it.status = 'Uploaded (dangerous file confirmed)';
+                    it.stateCls = 'warn';
+                    showToast('Dangerous file uploaded with explicit investigator confirmation', 'warning');
+                    await loadDashboardData();
+                } else {
+                    it.status = 'Error: ' + (res.error || 'upload failed');
+                    it.stateCls = 'err';
+                    it.needsConfirm = res.code === 'DANGEROUS_FILE';
+                }
+            } catch (e) {
+                it.done = true;
+                it.status = 'Error: ' + (e.message || e);
+                it.stateCls = 'err';
+            }
+            renderUploadQueue();
+        }
+
         function renderUploadQueue() {
             const root = document.getElementById('evUploadQueue');
             if (!root) return;
@@ -995,6 +1065,7 @@
                         <div class="evq-status ${it.stateCls || ''}">${escapeHtml(it.status)}</div>
                     </div>
                     <div class="evq-bar"><div class="evq-bar-fill" style="width:${it.progress || 0}%"></div></div>
+                    ${it.needsConfirm ? `<button class="evq-confirm" onclick="confirmDangerousUpload(${i}, window.__evCaseId)">Upload anyway - I confirm this is evidence</button>` : ''}
                     ${it.done ? '' : `<button class="evq-remove" onclick="evQueue.splice(${i},1); renderUploadQueue();" title="Remove">&times;</button>`}
                 </div>`).join('');
         }
@@ -1045,6 +1116,7 @@
         }
 
         async function submitEvidence(caseId) {
+            window.__evCaseId = caseId;
             if (!evQueue.length) { showToast('Add at least one file to upload', 'warning'); return; }
             const type = document.getElementById('evidenceType').value;
             if (!type) { showToast('Please select an evidence type', 'warning'); return; }
@@ -1055,16 +1127,6 @@
             const btn = document.getElementById('evSubmitBtn');
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="loading-spinner"></i> Uploading...'; }
 
-            // Forensic intake fields are shared across the batch (M6)
-            const forensicMap = {
-                sourceDevice: 'evSourceDevice',
-                deviceMakeModel: 'evDeviceMakeModel',
-                deviceSerial: 'evDeviceSerial',
-                collectedBy: 'evCollectedBy',
-                acquisitionMethod: 'evAcquisitionMethod',
-                collectionReason: 'evCollectionReason',
-                conditionNotes: 'evConditionNotes',
-            };
             const single = evQueue.length === 1;
             let ok = 0, failed = 0, dup = 0;
             for (const it of evQueue) {
@@ -1074,24 +1136,7 @@
                     const clientHash = await sha256File(it.file);
                     it.status = 'Uploading'; renderUploadQueue();
 
-                    const fd = new FormData();
-                    fd.append('title', single ? titleVal : it.file.name.replace(/\.[^.]+$/, ''));
-                    fd.append('description', description);
-                    fd.append('type', type);
-                    fd.append('caseId', caseId);
-                    fd.append('file', it.file);
-                    for (const [field, elId] of Object.entries(forensicMap)) {
-                        const el = document.getElementById(elId);
-                        if (el && el.value.trim()) fd.append(field, el.value.trim());
-                    }
-                    const locEl = document.getElementById('evLocation');
-                    if (locEl && locEl.value.trim()) fd.append('location', locEl.value.trim());
-                    const cdEl = document.getElementById('evCollectionDate');
-                    if (cdEl && cdEl.value) {
-                        fd.append('collectionDate', new Date(cdEl.value).toISOString());
-                        fd.append('collectionTimezone', Intl.DateTimeFormat().resolvedOptions().timeZone || '');
-                    }
-
+                    const fd = buildEvidenceFormData(it, caseId);
                     const res = await uploadFileWithProgress(fd, p => { it.progress = Math.round(p * 100); renderUploadQueue(); });
                     it.progress = 100; it.done = true;
                     if (res.__status === 409) {
@@ -1114,6 +1159,11 @@
                             it.status = 'Uploaded';
                             it.stateCls = 'ok';
                         }
+                    } else if (res.code === 'DANGEROUS_FILE') {
+                        failed++;
+                        it.status = 'Blocked: ' + (res.error || 'potentially dangerous file');
+                        it.stateCls = 'err';
+                        it.needsConfirm = true;
                     } else {
                         failed++;
                         it.status = 'Error: ' + (res.error || 'upload failed');
@@ -1158,6 +1208,8 @@
                 .evq-status.ok { color:#15803d; font-weight:600; }
                 .evq-status.warn { color:#b45309; font-weight:600; }
                 .evq-status.err { color:#b91c1c; font-weight:600; white-space:normal; text-align:right; }
+                .evq-confirm { margin-top:6px; font-size:12px; font-weight:600; color:#b45309; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; padding:4px 10px; cursor:pointer; }
+                .evq-confirm:hover { background:#fde68a; }
                 .evq-bar { height:6px; background:#f3e2e2; border-radius:4px; overflow:hidden; }
                 .evq-bar-fill { height:100%; width:0; background:linear-gradient(90deg,#d32f2f,#b71c1c); transition:width .2s; }
                 .evq-remove { position:absolute; top:8px; right:10px; border:0; background:none; color:#b91c1c; font-size:16px; cursor:pointer; line-height:1; }
