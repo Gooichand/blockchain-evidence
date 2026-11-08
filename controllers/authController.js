@@ -252,16 +252,25 @@ const emailLogin = async (req, res) => {
         update.failed_login_attempts = 0;
         update.locked_until = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString();
       }
-      await supabase.from('users').update(update).eq('id', user.id);
+      try {
+        await supabase.from('users').update(update).eq('id', user.id);
+      } catch (lockoutError) {
+        // Lockout bookkeeping must never break the auth flow itself.
+        console.error('Failed to record failed login attempt:', lockoutError);
+      }
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Password correct: clear any stale lockout state.
     if (user.failed_login_attempts || user.locked_until) {
-      await supabase
-        .from('users')
-        .update({ failed_login_attempts: 0, locked_until: null })
-        .eq('id', user.id);
+      try {
+        await supabase
+          .from('users')
+          .update({ failed_login_attempts: 0, locked_until: null })
+          .eq('id', user.id);
+      } catch (resetError) {
+        console.error('Failed to clear login lockout state:', resetError);
+      }
     }
 
     // Two-factor authentication: require a TOTP code when the account has it enabled.
