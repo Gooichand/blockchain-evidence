@@ -658,7 +658,11 @@
             }
         }
 
+        let currentCaseId = null;
+        let evById = {};
+
         async function viewCaseDetails(caseId) {
+            currentCaseId = caseId;
             try {
                 const result = await window.apiClient.get(`/cases/${caseId}/details`, { skipWalletAuth: true });
                 if (!result.success) throw new Error(result.error || 'Failed to load case');
@@ -1195,6 +1199,96 @@
             }
         }
 
+        // ---- S3: tags & exhibit numbers ----
+        let tagModalEvidenceId = null;
+
+        async function openTagModal(evidenceId) {
+            tagModalEvidenceId = evidenceId;
+            const ev = evById[evidenceId];
+            document.getElementById('tagModalTitle').textContent =
+                `Tags for ${ev && ev.exhibit_id ? ev.exhibit_id + ' - ' : ''}#${evidenceId} ${ev ? (ev.title || ev.name || '') : ''}`;
+            document.getElementById('tagModal').classList.add('active');
+            await renderTagModal();
+            document.getElementById('newTagName').value = '';
+            document.getElementById('newTagName').focus();
+        }
+
+        function closeTagModal() {
+            document.getElementById('tagModal').classList.remove('active');
+            tagModalEvidenceId = null;
+        }
+
+        async function renderTagModal() {
+            const ev = evById[tagModalEvidenceId] || {};
+            const current = ev.tags || [];
+            const currentIds = new Set(current.map(t => t.id));
+            let all = [];
+            try {
+                const r = await window.apiClient.get('/tags', { skipWalletAuth: true });
+                all = r.tags || [];
+            } catch (e) { console.error('tag list load failed', e); }
+
+            document.getElementById('tagModalCurrent').innerHTML = current.length
+                ? current.map(t => `
+                    <span class="ev-tag-chip" style="background:${escapeHtml(t.color)}22; color:${escapeHtml(t.color)}; border:1px solid ${escapeHtml(t.color)}55;">
+                        ${escapeHtml(t.name)}
+                        <button class="ev-tag-x" onclick="removeTagFromEvidence(${t.id})" title="Remove tag">&times;</button>
+                    </span>`).join('')
+                : '<small style="color:#6b7280;">No tags yet.</small>';
+
+            const available = all.filter(t => !currentIds.has(t.id));
+            document.getElementById('tagModalAvailable').innerHTML = available.length
+                ? available.map(t => `
+                    <button class="ev-tag-chip ev-tag-add" style="background:${escapeHtml(t.color)}11; color:${escapeHtml(t.color)}; border:1px dashed ${escapeHtml(t.color)}88;" onclick="addTagToEvidence(${t.id})" title="${escapeHtml(t.category || 'general')} - used ${t.usage_count || 0}x">
+                        + ${escapeHtml(t.name)}
+                    </button>`).join('')
+                : '<small style="color:#6b7280;">Every existing tag is already applied. Create a new one below.</small>';
+        }
+
+        async function addTagToEvidence(tagId) {
+            try {
+                const r = await window.apiClient.post(`/evidence/${tagModalEvidenceId}/tags`, { tagIds: [tagId] }, { skipWalletAuth: true });
+                if (r.success === false) throw new Error(r.error || 'failed');
+                const all = await window.apiClient.get('/tags', { skipWalletAuth: true });
+                const tag = (all.tags || []).find(t => t.id === tagId);
+                const ev = evById[tagModalEvidenceId];
+                if (ev && tag) ev.tags = [...(ev.tags || []), tag];
+                await renderTagModal();
+                if (currentCaseId) viewCaseDetails(currentCaseId);
+            } catch (e) {
+                showToast('Could not add tag: ' + (e.message || e), 'error');
+            }
+        }
+
+        async function removeTagFromEvidence(tagId) {
+            try {
+                const r = await window.apiClient.delete(`/evidence/${tagModalEvidenceId}/tags/${tagId}`, { skipWalletAuth: true });
+                if (r && r.success === false) throw new Error(r.error || 'failed');
+                const ev = evById[tagModalEvidenceId];
+                if (ev) ev.tags = (ev.tags || []).filter(t => t.id !== tagId);
+                await renderTagModal();
+                if (currentCaseId) viewCaseDetails(currentCaseId);
+            } catch (e) {
+                showToast('Could not remove tag: ' + (e.message || e), 'error');
+            }
+        }
+
+        async function createAndApplyTag() {
+            const nameEl = document.getElementById('newTagName');
+            const colorEl = document.getElementById('newTagColor');
+            const catEl = document.getElementById('newTagCategory');
+            const name = nameEl.value.trim();
+            if (!name) { showToast('Enter a tag name', 'warning'); return; }
+            try {
+                const r = await window.apiClient.post('/tags', { name, color: colorEl.value, category: catEl.value }, { skipWalletAuth: true });
+                if (r.success === false) throw new Error(r.error || 'failed');
+                nameEl.value = '';
+                await addTagToEvidence(r.tag.id);
+            } catch (e) {
+                showToast('Could not create tag: ' + (e.message || e), 'error');
+            }
+        }
+
         // Upload component styles (dropzone + queue)
         (function injectUploadStyles() {
             if (document.getElementById('evUploadStyles')) return;
@@ -1277,11 +1371,19 @@
                         : (bs === 'failed'
                             ? '<span style="color:#f59e0b;" title="Anchoring will retry automatically">● anchoring pending</span>'
                             : '<span style="color:#6b7280;">● ' + escapeHtml(bs) + '</span>');
+                    evById[ev.id] = ev;
+                    const exhibitBadge = ev.exhibit_id
+                        ? `<span class="exhibit-badge" title="Court-style exhibit number">${escapeHtml(ev.exhibit_id)}</span>`
+                        : '';
+                    const tagChips = (ev.tags || []).map(t =>
+                        `<span class="ev-tag-chip" style="background:${escapeHtml(t.color || '#3B82F6')}22; color:${escapeHtml(t.color || '#3B82F6')}; border:1px solid ${escapeHtml(t.color || '#3B82F6')}55;" title="Tag (${escapeHtml(t.category || 'general')})">${escapeHtml(t.name)}</span>`
+                    ).join('');
                     return `
                     <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                             <div>
-                                <strong>#${ev.id} ${escapeHtml(ev.title || ev.name || 'Untitled')}</strong> ${badge}<br>
+                                <strong>#${ev.id} ${escapeHtml(ev.title || ev.name || 'Untitled')}</strong> ${exhibitBadge} ${badge}<br>
+                                ${tagChips ? `<div style="margin:4px 0;">${tagChips}</div>` : ''}
                                 <small style="color:#6b7280;">SHA-256: ${escapeHtml((ev.hash || '').slice(0, 24))}${ev.hash ? '...' : ''}
                                 <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="navigator.clipboard && navigator.clipboard.writeText('${ev.hash || ''}')">Copy</button></small>
                                 ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
@@ -1294,6 +1396,7 @@
                                 <button class="btn btn-sm btn-outline" onclick="toggleCustody(${ev.id})">Custody</button>
                                 <button class="btn btn-sm btn-outline" onclick="verifyEvidenceNow(${ev.id}, this)">Verify integrity</button>
                                 <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, decodeURIComponent('${encodeURIComponent(ev.title || ev.name || '')}'))">Request analysis</button>
+                                <button class="btn btn-sm btn-outline" onclick="openTagModal(${ev.id})">Tags</button>
                             </div>
                         </div>
                         <div id="custody-${ev.id}" style="display:none; margin-top:10px;"></div>
@@ -1734,6 +1837,47 @@
         }
     </script>
     <script src="footer.js"></script>
+    <!-- S3: tag management modal -->
+    <div class="modal" id="tagModal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h3 id="tagModalTitle">Tags</h3>
+                <button class="modal-close" onclick="closeTagModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Applied tags</label>
+                    <div id="tagModalCurrent" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Add an existing tag</label>
+                    <div id="tagModalAvailable" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Create a new tag</label>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="newTagName" class="form-control" placeholder="Tag name" style="flex:1; min-width:140px;" onkeydown="if(event.key==='Enter'){event.preventDefault();createAndApplyTag();}">
+                        <input type="color" id="newTagColor" value="#3B82F6" style="width:40px; height:34px; padding:2px; border:1px solid #ddd; border-radius:6px;">
+                        <select id="newTagCategory" class="form-control" style="width:auto;">
+                            <option value="general">General</option>
+                            <option value="priority">Priority</option>
+                            <option value="status">Status</option>
+                            <option value="type">Type</option>
+                            <option value="sensitivity">Sensitivity</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="createAndApplyTag()">Create &amp; apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .exhibit-badge { display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #f59e0b55; border-radius:5px; font-size:11px; font-weight:700; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+        .ev-tag-chip { display:inline-flex; align-items:center; gap:4px; border-radius:10px; font-size:11px; font-weight:600; padding:2px 8px; }
+        .ev-tag-x { background:none; border:none; color:inherit; cursor:pointer; font-size:13px; line-height:1; padding:0 0 0 2px; }
+        button.ev-tag-add { cursor:pointer; }
+        button.ev-tag-add:hover { opacity:.75; }
+    </style>
 </body>
 
 </html>
