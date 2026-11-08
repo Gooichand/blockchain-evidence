@@ -26,6 +26,9 @@ const allowedOrigins = [
 
 // -- Express + HTTP + Socket.IO --
 const app = express();
+// Render runs the app behind a proxy; trust the first hop so
+// express-rate-limit keys on the real client IP, not the proxy (M7).
+app.set('trust proxy', 1);
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
