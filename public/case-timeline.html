@@ -232,7 +232,7 @@
                         <div class="timeline-meta-line">
                             <strong>Actor:</strong> ${escapeHtml(e.actor_name || e.actor || 'unknown')}${e.actor_role ? ' (' + escapeHtml(e.actor_role) + ')' : ''}
                         </div>
-                        ${e.details ? `<div class="timeline-meta-line">${escapeHtml(typeof e.details === 'string' ? e.details : JSON.stringify(e.details))}</div>` : ''}
+                        ${(e.details && (typeof e.details === 'string' ? e.details.trim() : Object.keys(e.details).length)) ? `<div class="timeline-meta-line">${escapeHtml(typeof e.details === 'string' ? e.details : JSON.stringify(e.details))}</div>` : ''}
                         ${e.entry_hash ? `<div class="timeline-meta-line">Entry hash: ${escapeHtml(e.entry_hash.slice(0, 32))}...</div>` : ''}
                     </div>
                 </div>`).join('');
