@@ -338,6 +338,7 @@
             </div>
             <div class="card-body">
                 <div id="integrityAlertsList"><div class="no-data">Loading integrity status...</div></div>
+                <div id="integrityScanStatus" style="margin-top:12px;font-size:0.8rem;color:#6b7280;"></div>
             </div>
         </div>
 
@@ -495,10 +496,11 @@
                 if (document.getElementById('statVideos')) document.getElementById('statVideos').textContent = videos;
                 if (document.getElementById('statVerified')) document.getElementById('statVerified').textContent = verified + '%';
 
-                // M5: open integrity alerts for evidence I can access
+                // M5: open integrity alerts + last scan status for evidence I can access
                 try {
                     const alertRes = await window.apiClient.get('/evidence/integrity-alerts?open=true', { skipWalletAuth: true });
                     renderIntegrityAlerts(alertRes.data || alertRes.alerts || []);
+                    loadIntegrityScanStatus();
                 } catch (e) {
                     const card = document.getElementById('integrityWatchCard');
                     if (card) card.style.display = 'none';
@@ -559,6 +561,27 @@
                 </div>
             `).join('');
             if (window.lucide) lucide.createIcons();
+        }
+
+        async function loadIntegrityScanStatus() {
+            const el = document.getElementById('integrityScanStatus');
+            if (!el) return;
+            try {
+                const res = await window.apiClient.get('/evidence/integrity-scan-status', { skipWalletAuth: true });
+                const d = res.data || {};
+                if (!d.lastRun) {
+                    el.textContent = 'No integrity scan has completed yet.';
+                    return;
+                }
+                const r = d.lastRun;
+                const when = new Date(r.finished_at).toLocaleString();
+                let text = `Last scan (${r.source}): ${when} - ${r.checked} checked, ${r.mismatches} mismatch(es)`;
+                if (r.errors > 0) text += `, ${r.errors} could not be verified`;
+                if (r.status === 'failed') text = `Last scan (${r.source}) FAILED at ${when} - ${r.checked} checked before the failure`;
+                el.textContent = text + (d.running ? ' - a scan is running now.' : '.');
+            } catch (e) {
+                el.textContent = 'Scan status unavailable.';
+            }
         }
 
         async function acknowledgeIntegrityAlert(alertId) {
