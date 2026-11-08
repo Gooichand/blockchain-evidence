@@ -1,5 +1,4 @@
 const axios = require('axios');
-const FormData = require('form-data');
 const crypto = require('crypto');
 const https = require('https');
 
@@ -25,12 +24,6 @@ class IPFSStorageService {
       throw new Error('File must be a Buffer');
     }
 
-    const formData = new FormData();
-    formData.append('file', fileBuffer, {
-      filename: fileName,
-      contentType: 'application/octet-stream',
-    });
-
     const pinataMetadata = JSON.stringify({
       name: fileName,
       keyvalues: {
@@ -39,12 +32,10 @@ class IPFSStorageService {
         fileHash: crypto.createHash('sha256').update(fileBuffer).digest('hex'),
       },
     });
-    formData.append('pinataMetadata', pinataMetadata);
 
     const pinataOptions = JSON.stringify({
       cidVersion: 1,
     });
-    formData.append('pinataOptions', pinataOptions);
 
     // Use undici (global fetch) rather than axios+form-data: the axios POST to
     // api.pinata.cloud hangs until timeout from Render egress, while undici
