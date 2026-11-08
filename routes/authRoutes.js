@@ -15,6 +15,12 @@ const {
   updateProfile,
   changePassword,
   getSessions,
+  revokeSession,
+  revokeOtherSessions,
+  getTwoFactorStatus,
+  setupTwoFactor,
+  enableTwoFactor,
+  disableTwoFactor,
   logout,
   getCurrentUser,
 } = require('../controllers/authController');
@@ -33,6 +39,12 @@ router.post('/auth/reset-password', authLimiter, resetPassword);
 router.post('/auth/update-profile', requireAuth, updateProfile);
 router.post('/auth/change-password', requireAuth, changePassword);
 router.get('/auth/sessions', requireAuth, getSessions);
+router.post('/auth/sessions/revoke-others', requireAuth, revokeOtherSessions);
+router.post('/auth/sessions/:id/revoke', requireAuth, revokeSession);
+router.get('/auth/2fa/status', requireAuth, getTwoFactorStatus);
+router.post('/auth/2fa/setup', requireAuth, authLimiter, setupTwoFactor);
+router.post('/auth/2fa/enable', requireAuth, authLimiter, validate(schemas.totpCode), enableTwoFactor);
+router.post('/auth/2fa/disable', requireAuth, authLimiter, validate(schemas.totpCode), disableTwoFactor);
 router.get('/auth/me', requireAuth, getCurrentUser);
 router.post('/auth/logout', logout);
 
