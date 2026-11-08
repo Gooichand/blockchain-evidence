@@ -259,6 +259,10 @@
                         <span class="stat-number" id="pendingReviews">3</span>
                         <span>Pending Reviews</span>
                     </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="integrityAlerts">0</span>
+                        <span>Integrity Alerts</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -320,6 +324,20 @@
                 <div class="cases-grid" id="casesGrid">
                     <div class="no-data">Loading cases...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Integrity Watch (M5) -->
+        <div class="card" id="integrityWatchCard" style="display:none;">
+            <div class="card-header">
+                <h2>🛡️ Integrity Watch</h2>
+                <button class="btn btn-outline btn-sm" onclick="runIntegrityScan()">
+                    <i data-lucide="shield-check"></i>
+                    Run Scan
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="integrityAlertsList"><div class="no-data">Loading integrity status...</div></div>
             </div>
         </div>
 
@@ -477,6 +495,15 @@
                 if (document.getElementById('statVideos')) document.getElementById('statVideos').textContent = videos;
                 if (document.getElementById('statVerified')) document.getElementById('statVerified').textContent = verified + '%';
 
+                // M5: open integrity alerts for evidence I can access
+                try {
+                    const alertRes = await window.apiClient.get('/evidence/integrity-alerts?open=true', { skipWalletAuth: true });
+                    renderIntegrityAlerts(alertRes.data || alertRes.alerts || []);
+                } catch (e) {
+                    const card = document.getElementById('integrityWatchCard');
+                    if (card) card.style.display = 'none';
+                }
+
                 const casesGrid = document.getElementById('casesGrid');
                 if (cases.length > 0) {
                     casesGrid.innerHTML = cases.slice(0, 6).map(c => `
@@ -502,6 +529,66 @@
                 document.getElementById('casesGrid').innerHTML = '<div class="no-data">Failed to load cases from server. Please refresh.</div>';
             }
         }
+        function renderIntegrityAlerts(alerts) {
+            const card = document.getElementById('integrityWatchCard');
+            const list = document.getElementById('integrityAlertsList');
+            const statEl = document.getElementById('integrityAlerts');
+            if (statEl) statEl.textContent = alerts.length;
+            if (!card || !list) return;
+            card.style.display = 'block';
+            if (!alerts.length) {
+                list.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;color:#166534;"><span style="font-size:1.3rem;">✓</span> All accessible evidence passes integrity re-verification. No open alerts.</div>';
+                return;
+            }
+            list.innerHTML = alerts.map(a => `
+                <div style="padding:16px;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:8px;margin-bottom:12px;background:#fef2f2;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+                        <div>
+                            <strong style="color:#991b1b;">⚠ Integrity mismatch - Evidence #${a.evidence_id}</strong>
+                            <div style="font-size:0.85rem;color:#7f1d1d;margin-top:6px;">
+                                The stored file no longer matches its recorded SHA-256. This item should be treated as suspect.
+                            </div>
+                            <div style="font-size:0.75rem;color:#6b7280;margin-top:8px;word-break:break-all;">
+                                Expected: ${escapeHtml(a.expected_hash || '')}<br>
+                                Found: ${escapeHtml(a.actual_hash || '')}<br>
+                                Detected: ${new Date(a.detected_at).toLocaleString()} (${escapeHtml(a.check_source || 'scan')})
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="acknowledgeIntegrityAlert(${a.id})">Acknowledge</button>
+                    </div>
+                </div>
+            `).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function acknowledgeIntegrityAlert(alertId) {
+            try {
+                const res = await window.apiClient.post(`/evidence/integrity-alerts/${alertId}/acknowledge`, {}, { skipWalletAuth: true });
+                if (!res.success) throw new Error(res.error || 'Failed');
+                showToast('Integrity alert acknowledged', 'success');
+                loadDashboardData();
+            } catch (e) {
+                showToast(e.message || 'Failed to acknowledge alert', 'error');
+            }
+        }
+
+        async function runIntegrityScan() {
+            showToast('Integrity scan running - this re-verifies your evidence against its recorded hashes...', 'info');
+            try {
+                const res = await window.apiClient.post('/evidence/integrity-scan', {}, { skipWalletAuth: true });
+                if (!res.success) throw new Error(res.error || 'Scan failed');
+                const d = res.data || {};
+                if (d.mismatches > 0) {
+                    showToast(`Scan complete: ${d.mismatches} integrity mismatch(es) found across ${d.checked} item(s)`, 'error');
+                } else {
+                    showToast(`Scan complete: ${d.checked} item(s) re-verified, no mismatches`, 'success');
+                }
+                loadDashboardData();
+            } catch (e) {
+                showToast(e.message || 'Integrity scan failed', 'error');
+            }
+        }
+
         async function viewCaseDetails(caseId) {
             try {
                 const result = await window.apiClient.get(`/cases/${caseId}/details`, { skipWalletAuth: true });
