@@ -537,7 +537,7 @@
             if (!card || !list) return;
             card.style.display = 'block';
             if (!alerts.length) {
-                list.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;color:#166534;"><span style="font-size:1.3rem;">✓</span> All accessible evidence passes integrity re-verification. No open alerts.</div>';
+                list.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;color:#166534;"><span style="font-size:1.3rem;">✓</span> No open integrity alerts. This does not mean every file has been checked. Run a scan to verify accessible evidence.</div>';
                 return;
             }
             list.innerHTML = alerts.map(a => `
@@ -578,7 +578,9 @@
                 const res = await window.apiClient.post('/evidence/integrity-scan', {}, { skipWalletAuth: true });
                 if (!res.success) throw new Error(res.error || 'Scan failed');
                 const d = res.data || {};
-                if (d.mismatches > 0) {
+                if (d.errors > 0) {
+                    showToast(`Scan incomplete: ${d.checked} item(s), ${d.mismatches} mismatch(es), ${d.errors} could not be checked. Retry or review storage access.`, 'error');
+                } else if (d.mismatches > 0) {
                     showToast(`Scan complete: ${d.mismatches} integrity mismatch(es) found across ${d.checked} item(s)`, 'error');
                 } else {
                     showToast(`Scan complete: ${d.checked} item(s) re-verified, no mismatches`, 'success');
