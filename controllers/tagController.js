@@ -1,4 +1,5 @@
 const { supabase } = require('../config');
+const { canAccessCase, getAccessibleCaseIds } = require('../middleware/caseAccess');
 const { validateWalletAddress } = require('../middleware/verifyAdmin');
 const { getAuthUser, getStableWallet } = require('../middleware/identity');
 
@@ -85,13 +86,28 @@ const addTagsToEvidence = async (req, res) => {
       return res.status(400).json({ error: 'Tag IDs array is required' });
     }
 
+    // S3: the caller must have access to the case this evidence belongs to
+    const authUser = await getAuthUser(req);
+    const { data: evRow } = (await supabase.from('evidence').select('case_id').eq('id', id).single()) || {};
+    if (!evRow) {
+      return res.status(404).json({ error: 'Evidence not found' });
+    }
+    if (!authUser || !(await canAccessCase(authUser, evRow.case_id))) {
+      return res.status(403).json({ error: 'You do not have access to this case' });
+    }
+
     const evidenceTags = tagIds.map((tagId) => ({
       evidence_id: parseInt(id),
-      tag_id: tagId,
+      tag_id: parseInt(tagId),
       tagged_by: actor.wallet,
     }));
 
-    const { data, error } = (await supabase.from('evidence_tags').insert(evidenceTags).select()) || {};
+    // upsert-ignore keeps re-tagging idempotent instead of 500ing on the
+    // (evidence_id, tag_id) primary key
+    const { data, error } = (await supabase
+      .from('evidence_tags')
+      .upsert(evidenceTags, { onConflict: 'evidence_id,tag_id', ignoreDuplicates: true })
+      .select()) || {};
 
     if (error) throw error;
 
@@ -112,12 +128,20 @@ const removeTagFromEvidence = async (req, res) => {
       return res.status(401).json({ error: 'Valid wallet address or authentication required' });
     }
 
+    const authUser = await getAuthUser(req);
+    const { data: evRow } = (await supabase.from('evidence').select('case_id').eq('id', id).single()) || {};
+    if (!evRow) {
+      return res.status(404).json({ error: 'Evidence not found' });
+    }
+    if (!authUser || !(await canAccessCase(authUser, evRow.case_id))) {
+      return res.status(403).json({ error: 'You do not have access to this case' });
+    }
+
     const { error } = (await supabase
       .from('evidence_tags')
       .delete()
       .eq('evidence_id', id)
-      .eq('tag_id', tagId)
-      .eq('tagged_by', actor.wallet)) || {};
+      .eq('tag_id', tagId)) || {};
 
     if (error) throw error;
 
@@ -201,6 +225,16 @@ const filterByTags = async (req, res) => {
                     )
                 `,
         );
+    }
+
+    // S3: only search cases the caller may access (null = wide role, all cases)
+    const authUser = await getAuthUser(req);
+    const accessible = authUser ? await getAccessibleCaseIds(authUser) : [];
+    if (Array.isArray(accessible)) {
+      if (accessible.length === 0) {
+        return res.json({ success: true, evidence: [], filter_logic: logic });
+      }
+      query = query.in('case_id', accessible.map(String));
     }
 
     const { data: fetched, error } = await query;
