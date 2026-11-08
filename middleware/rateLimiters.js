@@ -1,5 +1,34 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 const { rateLimits } = require('../config');
+
+// M14: key rate limits per authenticated user where possible, not per shared
+// IP - offices and mobile carriers NAT many users behind one address, and one
+// noisy neighbour used to throttle everyone. Falls back to the IP for
+// anonymous traffic. The user id comes only from a verified JWT, never from a
+// client-supplied header.
+function userOrIpKey(req) {
+  try {
+    const auth = req.headers['authorization'] || '';
+    let token = null;
+    if (auth.startsWith('Bearer ')) token = auth.slice(7).trim();
+    if (!token) {
+      const pair = (req.headers.cookie || '')
+        .split(';')
+        .map((p) => p.trim())
+        .find((p) => p.startsWith('evid_token='));
+      if (pair) token = pair.slice('evid_token='.length);
+    }
+    if (token && process.env.JWT_SECRET) {
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      if (payload && payload.userId) return 'user:' + payload.userId;
+    }
+  } catch (_) {
+    // invalid or expired token - fall through to the IP key
+  }
+  return ipKeyGenerator(req.ip);
+}
 
 /**
  * SECURITY FIX: Rate limiters hardened to prevent brute force and DDoS.
@@ -18,6 +47,7 @@ const authLimiter = rateLimit({
 
 // General API rate limiting
 const limiter = rateLimit({
+  keyGenerator: userOrIpKey,
   windowMs: rateLimits.api.windowMs,
   max: rateLimits.api.max,
   message: { success: false, error: 'Too many requests to the API. Please slow down.' },
@@ -36,6 +66,7 @@ const adminLimiter = rateLimit({
 
 // Evidence export rate limiting
 const exportLimiter = rateLimit({
+  keyGenerator: userOrIpKey,
   windowMs: rateLimits.export.windowMs,
   max: rateLimits.export.max,
   message: { success: false, error: 'Export limit reached. Please wait before trying again.' },
@@ -70,6 +101,7 @@ const blockchainLimiter = rateLimit({
 
 // Evidence upload rate limiting
 const uploadLimiter = rateLimit({
+  keyGenerator: userOrIpKey,
   windowMs: 60 * 60 * 1000,
   max: 50,
   message: { success: false, error: 'Upload limit exceeded. Maximum 50 uploads per hour.' },
@@ -79,6 +111,7 @@ const uploadLimiter = rateLimit({
 
 // Verification rate limiting
 const verificationLimiter = rateLimit({
+  keyGenerator: userOrIpKey,
   windowMs: 60 * 1000,
   max: 30,
   message: { success: false, error: 'Verification limit exceeded. Maximum 30 verifications per minute.' },
