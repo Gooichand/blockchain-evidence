@@ -633,6 +633,96 @@
             lucide.createIcons();
         }
 
+        // ===== M8: evidence preview + download with integrity surface =====
+        async function previewEvidence(id, name, mime) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:860px;">
+                    <div class="modal-header">
+                        <h3>\uD83D\uDC41 ${escapeHtml(name || 'Evidence #' + id)}</h3>
+                        <button class="modal-close" onclick="closePreviewModal(this)"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body" id="previewBody" style="text-align:center; min-height:120px;">
+                        <p style="color:#666;">Loading preview...</p>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+            const body = modal.querySelector('#previewBody');
+            try {
+                const r = await fetch('/api/evidence/' + id + '/preview', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) {
+                    const j = await r.json().catch(() => ({}));
+                    body.innerHTML = `<p style="color:#b91c1c;">${escapeHtml(j.error || ('Preview failed (HTTP ' + r.status + ')'))}</p>
+                        <p><button class="btn btn-outline" onclick="downloadEvidenceFile(${id})">Download instead</button></p>`;
+                    return;
+                }
+                const integrity = r.headers.get('X-Integrity-Verified');
+                const flag = integrity === 'true'
+                    ? '<div style="color:#15803d; font-size:12px; margin-bottom:8px;">\u2713 Integrity verified - stored file matches the recorded SHA-256</div>'
+                    : (integrity === 'false'
+                        ? '<div style="color:#b91c1c; font-weight:600; font-size:13px; margin-bottom:8px;">\u26A0 INTEGRITY MISMATCH - the stored file does not match the recorded hash. Treat this evidence as suspect.</div>'
+                        : '');
+                const blob = await r.blob();
+                const url = URL.createObjectURL(blob);
+                modal.dataset.objectUrl = url;
+                if (mime.startsWith('image/')) {
+                    body.innerHTML = flag + `<img src="${url}" style="max-width:100%; max-height:65vh; border-radius:8px;" alt="evidence preview">`;
+                } else if (mime.startsWith('video/')) {
+                    body.innerHTML = flag + `<video src="${url}" controls style="max-width:100%; max-height:65vh; border-radius:8px;"></video>`;
+                } else if (mime.startsWith('audio/')) {
+                    body.innerHTML = flag + `<audio src="${url}" controls style="width:100%;"></audio>`;
+                } else if (mime === 'application/pdf') {
+                    body.innerHTML = flag + `<iframe src="${url}" style="width:100%; height:65vh; border:1px solid #eee; border-radius:8px;"></iframe>`;
+                } else if (mime === 'text/plain') {
+                    const text = await blob.text();
+                    body.innerHTML = flag + `<pre style="text-align:left; max-height:60vh; overflow:auto; background:#faf7f7; padding:14px; border-radius:8px; font-size:13px; white-space:pre-wrap; word-break:break-word;">${escapeHtml(text)}</pre>`;
+                } else {
+                    body.innerHTML = flag + '<p>This file type cannot be previewed.</p>';
+                }
+            } catch (e) {
+                body.innerHTML = `<p style="color:#b91c1c;">Preview failed: ${escapeHtml(e.message || String(e))}</p>`;
+            }
+        }
+
+        function closePreviewModal(btn) {
+            const modal = btn.closest('.modal');
+            if (modal && modal.dataset.objectUrl) URL.revokeObjectURL(modal.dataset.objectUrl);
+            if (modal) modal.remove();
+        }
+
+        async function downloadEvidenceFile(id) {
+            try {
+                showToast('Preparing download...', 'info');
+                const r = await fetch('/api/evidence/' + id + '/download', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) {
+                    const j = await r.json().catch(() => ({}));
+                    throw new Error(j.error || ('Download failed (HTTP ' + r.status + ')'));
+                }
+                const integrity = r.headers.get('X-Integrity-Verified');
+                const blob = await r.blob();
+                const cd = r.headers.get('Content-Disposition') || '';
+                const m = /filename="?([^";]+)"?/.exec(cd);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = m ? m[1] : ('evidence_' + id);
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+                if (integrity === 'true') showToast('Download complete - integrity verified against recorded hash', 'success');
+                else if (integrity === 'false') showToast('WARNING: downloaded file does NOT match its recorded hash', 'error');
+                else showToast('Download complete', 'success');
+            } catch (e) {
+                showToast('Download failed: ' + (e.message || e), 'error');
+            }
+        }
+
         // ===== M7: reliable upload pipeline =====
         // Drag & drop, multi-file queue, per-file progress (XHR), client+server
         // size/type agreement, zero-byte rejection, SHA-256 computed in the browser
@@ -890,6 +980,8 @@
                                 ${ev.forensic_metadata && Object.keys(ev.forensic_metadata).length ? '<br><small style="color:#6b7280;">' + ['sourceDevice','deviceMakeModel','deviceSerial','collectedBy','acquisitionMethod'].filter(k => ev.forensic_metadata[k]).map(k => escapeHtml(ev.forensic_metadata[k])).join(' - ') + '</small>' : ''}
                             </div>
                             <div>
+                                <button class="btn btn-sm btn-primary" onclick="previewEvidence(${ev.id}, '${escapeHtml((ev.title || ev.name || '')).replace(/'/g, "\'")}', '${escapeHtml(ev.file_type || '')}')">Preview</button>
+                                <button class="btn btn-sm btn-outline" onclick="downloadEvidenceFile(${ev.id})">Download</button>
                                 <button class="btn btn-sm btn-outline" onclick="toggleCustody(${ev.id})">Custody</button>
                                 <button class="btn btn-sm btn-outline" onclick="verifyEvidenceNow(${ev.id}, this)">Verify integrity</button>
                                 <button class="btn btn-sm btn-outline" onclick="openAnalysisRequest(${ev.id}, '${escapeHtml(ev.title || ev.name || '')}')">Request analysis</button>
