@@ -1,6 +1,7 @@
 const { supabase } = require('../config');
 const { stableUserId, canAccessCase, canAccessEvidence } = require('../middleware/caseAccess');
 const { logCustody } = require('./custodyController');
+const { isCaseClosed } = require('../services/caseHelpers');
 
 /**
  * Case notes and annotations (roadmap M10 / spec: add case notes).
@@ -65,6 +66,10 @@ const addCaseNote = async (req, res) => {
   try {
     const cid = await checkCaseAccess(req, res, req.params.id);
     if (cid === null) return;
+    // M12: closed cases are immutable - no new notes until reopened
+    if (await isCaseClosed(cid)) {
+      return res.status(409).json({ error: 'This case is closed. Reopen it before adding notes.' });
+    }
     const { content, evidence_id, annotation } = req.body || {};
     if (!content || !String(content).trim()) {
       return res.status(400).json({ error: 'Note content is required' });
@@ -146,6 +151,10 @@ const editNote = async (req, res) => {
   try {
     const rows = await loadGroup(req, res, req.params.groupId);
     if (!rows) return;
+    // M12: closed cases are immutable - notes are frozen until reopened
+    if (await isCaseClosed(rows[0].case_id)) {
+      return res.status(409).json({ error: 'This case is closed. Reopen it before editing notes.' });
+    }
     const { content } = req.body || {};
     if (!content || !String(content).trim()) {
       return res.status(400).json({ error: 'Note content is required' });
@@ -188,6 +197,10 @@ const deleteNote = async (req, res) => {
   try {
     const rows = await loadGroup(req, res, req.params.groupId);
     if (!rows) return;
+    // M12: closed cases are immutable - notes are frozen until reopened
+    if (await isCaseClosed(rows[0].case_id)) {
+      return res.status(409).json({ error: 'This case is closed. Reopen it before deleting notes.' });
+    }
     const latest = rows[rows.length - 1];
     const sid = stableUserId(req.user);
     if (latest.author !== sid && req.user.role !== 'admin') {
