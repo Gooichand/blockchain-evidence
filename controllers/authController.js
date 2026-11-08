@@ -58,6 +58,9 @@ async function createUserSession(user, req, tokenJti) {
     const { device, browser } = parseUserAgent(ua);
     await supabase.from('user_sessions').insert({
       user_id: user.id,
+      // session_token is NOT NULL in the schema; store the JWT id (never the
+      // raw token) so the row can be matched for revocation.
+      session_token: tokenJti || crypto.randomUUID(),
       wallet_address: user.wallet_address || null,
       token_jti: tokenJti || null,
       ip_address:
