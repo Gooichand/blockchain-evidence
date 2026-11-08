@@ -62,6 +62,7 @@ app.use(
           "https://polygon-amoy.g.alchemy.com",
           "https://polygon-rpc.com",
           "https://api.emailjs.com",
+          "https://api.github.com",
           "wss://*.socket.io",
           "ws://localhost:10000",
         ],
