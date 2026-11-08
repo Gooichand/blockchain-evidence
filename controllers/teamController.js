@@ -41,11 +41,12 @@ async function resolveUser(ref) {
   return { sid: data.wallet_address || `user_${data.id}`, name: nameOf(data), role: data.role };
 }
 
-async function notify(userSid, title, message, data) {
+async function notify(userSid, title, message, data, type) {
   try {
-    await supabase.from('notifications').insert({
-      user_wallet: userSid, title, message, type: 'case_team', data: data || {}, is_read: false,
+    const { error } = await supabase.from('notifications').insert({
+      user_wallet: userSid, title, message, type: type || 'case_team', data: data || {}, is_read: false,
     });
+    if (error) console.error('team notification failed:', error);
   } catch (e) {
     console.error('team notification failed:', e);
   }
@@ -255,7 +256,7 @@ const addComment = async (req, res) => {
     for (const t of targets) {
       await notify(t, `Mentioned in case ${(caseRow && caseRow.case_number) || '#' + cid}`,
         `${nameOf(req.user) || sid}: ${content.slice(0, 140)}${content.length > 140 ? '...' : ''}`,
-        { case_id: cid, comment_id: data.id });
+        { case_id: cid, comment_id: data.id }, 'mention');
     }
     res.status(201).json({ success: true, comment: data });
   } catch (e) {
