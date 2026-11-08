@@ -2,6 +2,7 @@ const { supabase } = require('../config');
 const { createNotification } = require('../services/notificationService');
 const { createStatusChangeNotification } = require('../services/caseHelpers');
 const { getAuthUser, getStableWallet } = require('../middleware/identity');
+const { scopeCaseQuery, canAccessCase } = require('../middleware/caseAccess');
 
 // Get cases for timeline
 const getCases = async (req, res) => {
@@ -11,10 +12,13 @@ const getCases = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { data: cases, error } = (await supabase
+    let query = supabase
       .from('cases')
-      .select('id, title, description, status, created_date')
-      .order('created_date', { ascending: false })) || {};
+      .select('id, title, description, status, created_date, case_number, priority_level, case_type, jurisdiction, status_id, created_by')
+      .order('created_date', { ascending: false });
+    // C2 fix: investigators only see their own / assigned cases
+    query = await scopeCaseQuery(query, authUser);
+    const { data: cases, error } = (await query) || {};
     
     if (error) throw error;
     res.json({ success: true, data: cases, cases });
@@ -71,6 +75,9 @@ const getEnhancedCases = async (req, res) => {
       .select(
         `*, case_statuses!inner(status_code, status_name, color_code, icon), case_assignments!left(assigned_to, role_type, assignment_type, assigned_at)`,
       );
+
+    // C2 fix: scope to the caller's accessible cases before any filter
+    query = await scopeCaseQuery(query, authUser);
 
     if (status) query = query.eq('case_statuses.status_code', status);
     if (priority) query = query.eq('priority_level', priority);
@@ -145,13 +152,55 @@ const createCase = async (req, res) => {
       estimated_completion,
     } = req.body;
 
-    if (!title) {
+    // Input validation with clean 400s (audit M1)
+    const cleanTitle = typeof title === 'string' ? title.trim() : '';
+    if (!cleanTitle) {
       return res.status(400).json({ success: false, error: 'Case title is required' });
+    }
+    if (cleanTitle.length > 200) {
+      return res.status(400).json({ success: false, error: 'Case title must be 200 characters or fewer' });
+    }
+    if (/<[^>]*>/.test(cleanTitle) || (description && /<[^>]*>/.test(description))) {
+      return res.status(400).json({ success: false, error: 'HTML tags are not allowed in case title or description' });
+    }
+    if (description && description.length > 5000) {
+      return res.status(400).json({ success: false, error: 'Description must be 5000 characters or fewer' });
+    }
+    const CASE_TYPES = ['criminal', 'civil', 'cybercrime', 'financial', 'narcotics', 'fraud', 'other'];
+    if (case_type && !CASE_TYPES.includes(case_type)) {
+      return res.status(400).json({ success: false, error: `Invalid case type. Allowed: ${CASE_TYPES.join(', ')}` });
+    }
+    if (priority_level !== undefined && priority_level !== null && priority_level !== '') {
+      const pl = parseInt(priority_level, 10);
+      if (isNaN(pl) || pl < 1 || pl > 5) {
+        return res.status(400).json({ success: false, error: 'Priority level must be an integer between 1 and 5' });
+      }
+    }
+    if (jurisdiction && String(jurisdiction).length > 100) {
+      return res.status(400).json({ success: false, error: 'Jurisdiction must be 100 characters or fewer' });
     }
 
     if (!['admin', 'investigator', 'evidence_manager'].includes(authUser.role)) {
       return res.status(403).json({ success: false, error: 'Insufficient permissions to create cases' });
     }
+
+    // Duplicate guard: same creator + identical open case title
+    const { data: dup } = (await supabase
+      .from('cases')
+      .select('id')
+      .eq('created_by', verifiedWallet)
+      .ilike('title', cleanTitle)
+      .limit(1)) || {};
+    if (dup && dup.length > 0) {
+      return res.status(409).json({ success: false, error: 'You already have a case with this title', existingCaseId: dup[0].id });
+    }
+
+    // Generate a human case number: CASE-YYYY-NNNNNN
+    const year = new Date().getFullYear();
+    const { count: caseCount } = (await supabase
+      .from('cases')
+      .select('*', { count: 'exact', head: true })) || {};
+    const caseNumber = `CASE-${year}-${String((caseCount || 0) + 1).padStart(6, '0')}`;
 
     const { data: defaultStatus } = (await supabase
       .from('case_statuses')
@@ -162,7 +211,8 @@ const createCase = async (req, res) => {
     const { data: newCase, error } = (await supabase
       .from('cases')
       .insert({
-        title,
+        title: cleanTitle,
+        case_number: caseNumber,
         description: description || '',
         priority_level: parseInt(priority_level) || 3,
         case_type: case_type || 'criminal',
@@ -214,6 +264,11 @@ const getCaseDetails = async (req, res) => {
       .single()) || {};
     
     if (caseError || !caseData) return res.status(404).json({ success: false, error: 'Case not found' });
+
+    // C2 fix: investigators may only open their own / assigned cases
+    if (!(await canAccessCase(authUser, safeId))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this case' });
+    }
 
     const { data: statusHistory, error: historyError } = (await supabase
       .from('case_status_history')
@@ -285,6 +340,11 @@ const updateCaseStatus = async (req, res) => {
       .single()) || {};
     
     if (caseError || !currentCase) return res.status(404).json({ success: false, error: 'Case not found' });
+
+    // C2 fix: investigators can only move their own cases through the workflow
+    if (!(await canAccessCase(authUser, safeId))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this case' });
+    }
 
     const { data: newStatus, error: statusError } = (await supabase
       .from('case_statuses')
@@ -538,10 +598,12 @@ const getCaseStatistics = async (req, res) => {
         dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
     }
 
-    const { data: statusStats, error: statusError } = (await supabase
+    let statusQuery = supabase
       .from('cases')
       .select(`status_id, case_statuses(status_code, status_name, color_code)`)
-      .gte('created_date', dateFilter)) || {};
+      .gte('created_date', dateFilter);
+    statusQuery = await scopeCaseQuery(statusQuery, authUser);
+    const { data: statusStats, error: statusError } = (await statusQuery) || {};
     
     if (statusError) throw statusError;
 
@@ -553,10 +615,12 @@ const getCaseStatistics = async (req, res) => {
       return acc;
     }, {});
 
-    const { data: priorityStats, error: priorityError } = (await supabase
+    let priorityQuery = supabase
       .from('cases')
       .select('priority_level')
-      .gte('created_date', dateFilter)) || {};
+      .gte('created_date', dateFilter);
+    priorityQuery = await scopeCaseQuery(priorityQuery, authUser);
+    const { data: priorityStats, error: priorityError } = (await priorityQuery) || {};
     
     if (priorityError) throw priorityError;
 
@@ -611,6 +675,8 @@ const exportCases = async (req, res) => {
       req.query;
     
     let query = supabase.from('cases').select(`*, case_statuses(status_name)`);
+    // C2 fix
+    query = await scopeCaseQuery(query, authUser);
 
     if (status) query = query.eq('case_statuses.status_code', status);
     if (priority) query = query.eq('priority_level', priority);
