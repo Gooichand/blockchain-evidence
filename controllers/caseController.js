@@ -17,7 +17,7 @@ const getCases = async (req, res) => {
       .select('id, title, description, status, created_date, case_number, priority_level, case_type, jurisdiction, status_id, created_by')
       .order('created_date', { ascending: false });
     // C2 fix: investigators only see their own / assigned cases
-    query = await scopeCaseQuery(query, authUser);
+    query = (await scopeCaseQuery(query, authUser)).query;
     const { data: cases, error } = (await query) || {};
     
     if (error) throw error;
@@ -77,7 +77,7 @@ const getEnhancedCases = async (req, res) => {
       );
 
     // C2 fix: scope to the caller's accessible cases before any filter
-    query = await scopeCaseQuery(query, authUser);
+    query = (await scopeCaseQuery(query, authUser)).query;
 
     if (status) query = query.eq('case_statuses.status_code', status);
     if (priority) query = query.eq('priority_level', priority);
@@ -602,7 +602,7 @@ const getCaseStatistics = async (req, res) => {
       .from('cases')
       .select(`status_id, case_statuses(status_code, status_name, color_code)`)
       .gte('created_date', dateFilter);
-    statusQuery = await scopeCaseQuery(statusQuery, authUser);
+    statusQuery = (await scopeCaseQuery(statusQuery, authUser)).query;
     const { data: statusStats, error: statusError } = (await statusQuery) || {};
     
     if (statusError) throw statusError;
@@ -619,7 +619,7 @@ const getCaseStatistics = async (req, res) => {
       .from('cases')
       .select('priority_level')
       .gte('created_date', dateFilter);
-    priorityQuery = await scopeCaseQuery(priorityQuery, authUser);
+    priorityQuery = (await scopeCaseQuery(priorityQuery, authUser)).query;
     const { data: priorityStats, error: priorityError } = (await priorityQuery) || {};
     
     if (priorityError) throw priorityError;
@@ -676,7 +676,7 @@ const exportCases = async (req, res) => {
     
     let query = supabase.from('cases').select(`*, case_statuses(status_name)`);
     // C2 fix
-    query = await scopeCaseQuery(query, authUser);
+    query = (await scopeCaseQuery(query, authUser)).query;
 
     if (status) query = query.eq('case_statuses.status_code', status);
     if (priority) query = query.eq('priority_level', priority);
