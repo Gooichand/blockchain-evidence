@@ -292,6 +292,69 @@ class EvidenceTagging {
         }
     }
 
+    async filterBySelectedTags() {
+        const selectedTagIds = Array.from(this.selectedTags);
+        if (selectedTagIds.length === 0) {
+            this.showMessage('Please select tags to filter by', 'warning');
+            return;
+        }
+        const logic = document.querySelector('input[name="filterLogic"]:checked').value;
+        await this.filterByTags(selectedTagIds, logic);
+    }
+
+    async loadSavedFilters() {
+        try {
+            const r = await window.apiClient.get('/saved-filters', { skipWalletAuth: true });
+            const sel = document.getElementById('savedFilterSelect');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">Saved filters...</option>' +
+                (r.filters || []).map(f => `<option value="${f.id}">${f.name.replace(/</g, '&lt;')}</option>`).join('');
+            this.savedFilters = r.filters || [];
+        } catch (e) {
+            console.error('saved filters load failed', e);
+        }
+    }
+
+    applySavedFilter(id) {
+        const f = (this.savedFilters || []).find(x => String(x.id) === String(id));
+        if (!f) return;
+        this.selectedTags = new Set(f.filter.tagIds);
+        this.updateSelectedTagsDisplay();
+        const radio = document.querySelector(`input[name="filterLogic"][value="${f.filter.logic}"]`);
+        if (radio) radio.checked = true;
+        this.filterByTags(f.filter.tagIds, f.filter.logic);
+    }
+
+    async saveCurrentFilter() {
+        const nameEl = document.getElementById('savedFilterName');
+        const name = (nameEl.value || '').trim();
+        if (!name) { this.showMessage('Enter a name for the filter', 'warning'); return; }
+        const tagIds = Array.from(this.selectedTags);
+        if (tagIds.length === 0) { this.showMessage('Select at least one tag first', 'warning'); return; }
+        const logic = document.querySelector('input[name="filterLogic"]:checked').value;
+        try {
+            await window.apiClient.post('/saved-filters', { name, filter: { tagIds, logic } }, { skipWalletAuth: true });
+            nameEl.value = '';
+            await this.loadSavedFilters();
+            this.showMessage(`Filter "${name}" saved`, 'success');
+        } catch (e) {
+            this.showMessage('Could not save filter: ' + (e.message || e), 'error');
+        }
+    }
+
+    async deleteSavedFilter() {
+        const sel = document.getElementById('savedFilterSelect');
+        const id = sel.value;
+        if (!id) { this.showMessage('Select a saved filter to delete', 'warning'); return; }
+        try {
+            await window.apiClient.delete(`/saved-filters/${id}`, { skipWalletAuth: true });
+            await this.loadSavedFilters();
+            this.showMessage('Filter deleted', 'success');
+        } catch (e) {
+            this.showMessage('Could not delete filter: ' + (e.message || e), 'error');
+        }
+    }
+
     showMessage(message, type) {
         const messageContainer = document.getElementById('messageContainer');
         if (!messageContainer) {
