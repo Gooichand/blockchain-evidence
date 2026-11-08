@@ -111,7 +111,7 @@ class NavbarManager {
             'investigator': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-investigator.html' },
                 { label: 'Cases', icon: 'folder', href: 'cases.html' },
-                { label: 'Evidence', icon: 'file-text', href: 'evidence-manager.html' }
+                { label: 'Evidence', icon: 'file-text', href: 'evidence.html' }
             ],
             'forensic_analyst': [
                 { label: 'Dashboard', icon: 'home', href: 'dashboard-analyst.html' },
