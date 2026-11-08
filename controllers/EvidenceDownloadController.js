@@ -8,6 +8,7 @@ const {
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const archiver = require('archiver');
+const { scopeEvidenceQuery, canAccessEvidence, canAccessCase } = require('../middleware/caseAccess');
 
 /**
  * SECURITY FIX: All identity verification now uses req.authenticatedWallet 
@@ -46,16 +47,47 @@ const downloadEvidence = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
     }
 
-    const watermarkText = generateWatermarkText(verifiedWallet, evidence.case_number, new Date());
+    // C2 fix: investigators may only download their own / assigned-case evidence
+    if (!(await canAccessEvidence(user, evidence))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this evidence' });
+    }
 
-    let fileBuffer = await ipfsStorageService.getFile(evidence.ipfs_hash || evidence.storage_ref);
+    // H3 fix: uploads store the CID in ipfs_cid; the old code read ipfs_hash /
+    // storage_ref, which made every download fail with a 500.
+    const cid = evidence.ipfs_cid || evidence.ipfs_hash;
+    if (!cid) {
+      return res.status(404).json({ success: false, error: 'No stored file for this evidence record' });
+    }
+
+    // Resolve the case number for the watermark (evidence rows do not carry it)
+    let caseNumber = evidence.case_number || null;
+    if (!caseNumber) {
+      const cidNum = parseInt(evidence.case_id, 10);
+      if (!isNaN(cidNum)) {
+        const { data: caseRow } = (await supabase
+          .from('cases')
+          .select('case_number')
+          .eq('id', cidNum)
+          .single()) || {};
+        caseNumber = caseRow?.case_number || null;
+      }
+    }
+
+    const watermarkText = generateWatermarkText(verifiedWallet, caseNumber || `EVID-${id}`, new Date());
+
+    let fileBuffer = await ipfsStorageService.getFile(cid);
     let contentType = evidence.file_type || 'application/octet-stream';
     let filename = evidence.name ? `watermarked_${evidence.name}` : `evidence_${id}_watermarked`;
 
-    if (evidence.file_type?.startsWith('image/')) {
-      fileBuffer = await watermarkImage(fileBuffer, watermarkText);
-    } else if (evidence.file_type === 'application/pdf') {
-      fileBuffer = await watermarkPDF(fileBuffer, watermarkText);
+    try {
+      if (evidence.file_type?.startsWith('image/')) {
+        fileBuffer = await watermarkImage(fileBuffer, watermarkText);
+      } else if (evidence.file_type === 'application/pdf') {
+        fileBuffer = await watermarkPDF(fileBuffer, watermarkText);
+      }
+    } catch (wmErr) {
+      // A watermark failure must not block access to the evidence itself
+      console.error('Watermark failed, serving original file:', wmErr.message);
     }
 
     // SECURITY FIX: Log using verified identity
@@ -103,7 +135,7 @@ const bulkExport = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Public viewers cannot export evidence' });
     }
 
-    const { data: evidenceItems, error: evidenceError } = (await supabase
+    let { data: evidenceItems, error: evidenceError } = (await supabase
       .from('evidence')
       .select('*')
       .in('id', evidenceIds)) || {};
@@ -111,6 +143,16 @@ const bulkExport = async (req, res) => {
     if (evidenceError || !evidenceItems || evidenceItems.length === 0) {
       return res.status(404).json({ success: false, error: 'No evidence found with provided IDs' });
     }
+
+    // C2 fix: drop anything the caller may not access; refuse if nothing remains
+    const allowedItems = [];
+    for (const item of evidenceItems) {
+      if (await canAccessEvidence(user, item)) allowedItems.push(item);
+    }
+    if (allowedItems.length === 0) {
+      return res.status(403).json({ success: false, error: 'You do not have access to the requested evidence' });
+    }
+    evidenceItems = allowedItems;
 
     const archive = archiver('zip', { zlib: { level: 9 } });
 
@@ -158,7 +200,7 @@ const bulkExport = async (req, res) => {
 
     for (const evidence of evidenceItems) {
       const watermarkText = generateWatermarkText(verifiedWallet, evidence.case_number, new Date());
-      let fileBuffer = await ipfsStorageService.getFile(evidence.ipfs_hash || evidence.storage_ref);
+      let fileBuffer = await ipfsStorageService.getFile(evidence.ipfs_cid || evidence.ipfs_hash);
       let filename = `${evidence.id}_watermarked_${evidence.name || 'evidence'}`;
 
       if (evidence.file_type?.startsWith('image/')) {
@@ -282,6 +324,9 @@ const getAllEvidence = async (req, res) => {
     if (status) query = query.eq('status', status);
     if (submitted_by) query = query.eq('submitted_by', submitted_by);
 
+    // C2 fix: investigators only see their own / assigned-case evidence
+    query = await scopeEvidenceQuery(query, user);
+
     const { data: evidence, error, count } = await query;
 
     if (error) throw error;
@@ -335,6 +380,11 @@ const getEvidenceById = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Evidence not found' });
     }
 
+    // C2 fix
+    if (!(await canAccessEvidence(user, evidence))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this evidence' });
+    }
+
     res.json({ success: true, data: evidence });
   } catch (error) {
     console.error('Get evidence by ID error:', error);
@@ -356,6 +406,11 @@ const getEvidenceByCase = async (req, res) => {
 
     if (user.role === 'public_viewer') {
       return res.status(403).json({ success: false, error: 'Public viewers cannot view case evidence' });
+    }
+
+    // C2 fix: verify the caller may access the requested case
+    if (!(await canAccessCase(user, caseId))) {
+      return res.status(403).json({ success: false, error: 'You do not have access to this case' });
     }
 
     const { data: evidence, error } = (await supabase
