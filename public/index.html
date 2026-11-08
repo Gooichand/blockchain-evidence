@@ -1136,6 +1136,12 @@
                                         </button>
                                     </div>
                                 </div>
+                                <div class="login-email-field" id="loginTotpField" style="display:none;">
+                                    <label for="loginTotp">
+                                        <i data-lucide="shield-check"></i> Two-Factor Code
+                                    </label>
+                                    <input type="text" id="loginTotp" class="login-email-input" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}">
+                                </div>
                                 <div class="login-email-row">
                                     <label class="login-remember">
                                         <input type="checkbox" id="loginRemember"> Remember me
@@ -1300,6 +1306,10 @@
                             <i data-lucide="eye"></i>
                         </button>
                     </div>
+                </div>
+                <div class="login-sub-field" id="publicTotpField" style="display:none;">
+                    <label for="publicTotp"><i data-lucide="shield-check"></i> Two-Factor Code</label>
+                    <input type="text" id="publicTotp" class="login-sub-input" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}">
                 </div>
                 <div class="login-sub-actions">
                     <button type="submit" class="login-sub-btn login-sub-btn--primary" id="publicLoginSubmit">
