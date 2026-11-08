@@ -47,7 +47,7 @@ const verifyEvidenceHash = async (req, res) => {
 
     // BUG FIX: Validate ID
     const safeId = parseInt(id, 10);
-    if (isNaN(safeId)) {
+    if (!Number.isSafeInteger(safeId) || safeId < 1) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
@@ -564,10 +564,18 @@ const acknowledgeIntegrityAlert = async (req, res) => {
     if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const safeId = parseInt(req.params.id, 10);
+    if (user.role === 'public_viewer') return res.status(403).json({ success: false, error: 'Insufficient role' });
+    const { canAccessEvidence } = require('../middleware/caseAccess');
+    const safeId = Number(req.params.id);
     if (isNaN(safeId)) {
       return res.status(400).json({ success: false, error: 'Invalid alert ID' });
     }
+    const { data: alert, error: lookupError } = await supabase.from('integrity_alerts').select('id,evidence_id').eq('id', safeId).maybeSingle();
+    if (lookupError) throw lookupError;
+    if (!alert) return res.status(404).json({ success: false, error: 'Alert not found' });
+    const { data: evidenceRow, error: evidenceError } = await supabase.from('evidence').select('id,case_id,submitted_by').eq('id', alert.evidence_id).maybeSingle();
+    if (evidenceError) throw evidenceError;
+    if (!evidenceRow || !await canAccessEvidence(user, evidenceRow)) return res.status(403).json({ success: false, error: 'Access denied' });
     const { data, error } = (await supabase
       .from('integrity_alerts')
       .update({
