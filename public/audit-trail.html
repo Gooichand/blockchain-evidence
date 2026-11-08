@@ -232,6 +232,8 @@
                         <p><strong>User:</strong> ${entry.user_wallet.substring(0, 10)}... (${entry.users?.full_name || 'System'})</p>
                         <p><strong>Action:</strong> ${entry.details || 'N/A'}</p>
                         <p><strong>Resource:</strong> ${entry.resource_type} (${entry.resource_id || 'Global'})</p>
+                        ${entry.ip_address ? `<p><strong>IP:</strong> ${entry.ip_address}</p>` : ''}
+                        ${entry.result && entry.result !== 'success' ? `<p><strong>Result:</strong> ${entry.result}</p>` : ''}
                         ${entry.blockchain_tx ? `<p><strong>Blockchain TX:</strong> <a href="https://amoy.polygonscan.com/tx/${entry.blockchain_tx}" target="_blank"><code>${entry.blockchain_tx.substring(0, 20)}...</code></a></p>` : ''}
                     </div>
                 </div>
