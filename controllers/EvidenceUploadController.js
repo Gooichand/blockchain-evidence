@@ -1,4 +1,5 @@
 const integratedEvidenceService = require('../services/integratedEvidenceService');
+const { sniffFileType, mimeCompatible } = require('../services/fileTypeSniffer');
 const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const { getAuthUser, getStableWallet } = require('../middleware/identity');
@@ -52,6 +53,37 @@ const uploadEvidence = async (req, res) => {
     // Zero-byte files are not evidence and previously hung the pipeline (audit M2)
     if (file.size === 0) {
       return res.status(400).json({ success: false, error: 'Empty files cannot be uploaded as evidence' });
+    }
+
+    // S2: verify the real file type from magic bytes; never trust the
+    // browser-supplied MIME or extension (audit M2 accepted fake-MIME files).
+    const sniff = sniffFileType(file.buffer, file.originalname);
+    const verificationFlags = [];
+    if (sniff.dangerous) {
+      if (String(req.body.confirmDangerous) !== 'true') {
+        return res.status(400).json({
+          success: false,
+          code: 'DANGEROUS_FILE',
+          error: `This file is ${sniff.dangerReason}. Executables and scripts can only be uploaded as evidence when the investigator explicitly confirms.`,
+          detected: sniff.detected || undefined,
+        });
+      }
+      verificationFlags.push({
+        code: 'dangerous_file_confirmed',
+        message: `Investigator confirmed upload of ${sniff.dangerReason}.`,
+      });
+    }
+    if (sniff.detected && sniff.detected.mime && !mimeCompatible(file.mimetype, sniff.detected.mime)) {
+      verificationFlags.push({
+        code: 'file_type_mismatch',
+        message: `File claims to be ${file.mimetype} but its content looks like ${sniff.detected.label} (${sniff.detected.mime}).`,
+      });
+    }
+    if (!sniff.detected && sniff.binaryTextClaim && String(file.mimetype || '').startsWith('text/')) {
+      verificationFlags.push({
+        code: 'content_sniff_mismatch',
+        message: 'File is claimed as text but contains binary data.',
+      });
     }
 
     if (title && String(title).length > 200) {
@@ -176,6 +208,8 @@ const uploadEvidence = async (req, res) => {
       collectionDate: collectionDate || new Date().toISOString(),
       mimeType: file.mimetype,
       forensic,
+      verificationFlags,
+      detectedType: sniff.detected || null,
     };
 
     // Use integrated service for DB + Blockchain + IPFS coordination
