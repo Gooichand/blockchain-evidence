@@ -17,6 +17,9 @@ const auditRoutes = require('./auditRoutes');
 const legalRoutes = require('./legalRoutes');
 const courtRoutes = require('./courtRoutes');
 const legalHoldRoutes = require('./legalHoldRoutes');
+const custodyRoutes = require('./custodyRoutes');
+const notesRoutes = require('./notesRoutes');
+const analysisRoutes = require('./analysisRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -38,6 +41,9 @@ function registerRoutes(app) {
   app.use('/api', legalRoutes);
   app.use('/api', courtRoutes);
   app.use('/api', legalHoldRoutes);
+  app.use('/api', custodyRoutes);
+  app.use('/api', notesRoutes);
+  app.use('/api', analysisRoutes);
 }
 
 module.exports = registerRoutes;
