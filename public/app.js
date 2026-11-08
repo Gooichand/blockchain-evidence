@@ -243,14 +243,30 @@ function initializeApp() {
     if (forgotForm) {
       forgotForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('forgotEmail')?.value;
-        if (!email) return;
+        const emailInput = document.getElementById('forgotEmail');
+        const status = document.getElementById('forgotStatus');
+        const btn = forgotForm.querySelector('button[type="submit"]');
+        const setStatus = (msg, kind) => {
+          if (!status) { showAlert(msg, kind === 'ok' ? 'success' : 'error'); return; }
+          status.textContent = msg;
+          status.className = 'login-sub-status visible ' + kind;
+        };
+        const email = (emailInput?.value || '').trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          setStatus('Please enter a valid email address.', 'err');
+          emailInput?.focus();
+          return;
+        }
+        const label = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+        setStatus('Sending reset link...', 'info');
         try {
-          await window.apiClient.post('/auth/forgot-password', { email });
-          showAlert('Password reset link sent!', 'success');
-          closeForgotPasswordModal();
+          const res = await window.apiClient.post('/auth/forgot-password', { email });
+          setStatus((res && res.message) || 'If that email is registered, a reset link has been sent. Check your inbox.', 'ok');
         } catch (err) {
-          showAlert(err.message || 'Failed to send reset link', 'error');
+          setStatus((err && err.message) || 'Could not send the reset link. Please try again.', 'err');
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = label; if (typeof lucide !== 'undefined') lucide.createIcons(); }
         }
       });
     }

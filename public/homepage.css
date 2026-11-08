@@ -1341,10 +1341,11 @@
 @media (max-width: 768px) {
   .hero-section { min-height: auto; padding: 60px 0 20px; }
   .hero-inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 24px 20px;
     gap: 0;
   }
+  .hero-left { min-width: 0; }
   .hero-left h1 { font-size: 2.2rem; }
   .hero-cta { flex-direction: column; }
   .btn-hero-primary, .btn-hero-secondary {
@@ -1389,9 +1390,11 @@
 
 /* --- Small Mobile --- */
 @media (max-width: 480px) {
+  /* Orbit is drawn on a fixed 400px grid; zoom keeps it inside a 390px screen */
   .evidence-vault {
     width: 400px;
     height: 400px;
+    zoom: 0.82;
   }
   .vault-orbital-svg { width: 400px; height: 400px; }
   .vault-ambient-bloom { width: 320px; height: 320px; }
@@ -1402,12 +1405,13 @@
      Step 4 @90°:  left=200, top=361
      Step 5 @150°: left=61,  top=281
      Step 6 @210°: left=61,  top=120  */
-  .step-pos-1 { left: 200px; top: 39px;  }
-  .step-pos-2 { left: 340px; top: 120px; }
-  .step-pos-3 { left: 340px; top: 281px; }
-  .step-pos-4 { left: 200px; top: 361px; }
-  .step-pos-5 { left: 61px;  top: 281px; }
-  .step-pos-6 { left: 61px;  top: 120px; }
+  /* cards are left-anchored and 98px wide: shift by half a card so the ring stays centred and inside 400px */
+  .step-pos-1 { left: 151px; top: 39px;  }
+  .step-pos-2 { left: 291px; top: 120px; }
+  .step-pos-3 { left: 291px; top: 281px; }
+  .step-pos-4 { left: 151px; top: 361px; }
+  .step-pos-5 { left: 12px;  top: 281px; }
+  .step-pos-6 { left: 12px;  top: 120px; }
   .polar-panel { width: 98px; padding: 7px 9px; border-radius: 14px; }
   .polar-panel h4 { font-size: 0.68rem; }
   .polar-panel p  { font-size: 0.62rem; display: none; }
@@ -6500,4 +6504,73 @@
   .talent-culture { padding: 28px 20px; }
   .talent-final-cta { padding: 32px 20px; }
   .talent-final-content h3 { font-size: 1.2rem; }
+}
+
+/* --- Hero orbit on small tablets / large phones (481-560px) --- */
+@media (min-width: 481px) and (max-width: 560px) {
+  .evidence-vault { zoom: 0.82; }
+}
+
+/* --- Q&A assistant status + search scope note --- */
+.qa-assistant-status {
+  display: none;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #475569;
+  max-width: 500px;
+}
+.qa-assistant-status.visible { display: block; }
+.qa-assistant-status.ok { color: #2e7d32; }
+.qa-assistant-status.warn { color: #b71c1c; }
+.qa-search-scope {
+  display: none;
+  margin: 8px 4px 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.qa-search-scope.visible { display: block; }
+.qa-scope-all {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-left: 4px;
+  color: #d32f2f;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* --- Latest release card --- */
+.latest-release-section { max-width: 1400px; margin: 0 auto; padding: 0 60px 40px; }
+#latest-release-container:empty { display: none; }
+.lr-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 22px 26px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(211, 47, 47, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.lr-info { min-width: 0; flex: 1 1 260px; }
+.lr-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #d32f2f; }
+.lr-title { margin: 4px 0; font-size: 1.1rem; font-weight: 700; color: #1a1a2e; overflow-wrap: anywhere; }
+.lr-meta { margin: 0; font-size: 0.85rem; color: #64748b; overflow-wrap: anywhere; }
+.lr-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 10px;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  color: #fff; font-weight: 600; font-size: 0.9rem; text-decoration: none;
+}
+.lr-link:hover { filter: brightness(1.08); }
+@media (max-width: 768px) {
+  .latest-release-section { padding: 0 16px 28px; }
+  .lr-link { width: 100%; justify-content: center; }
 }

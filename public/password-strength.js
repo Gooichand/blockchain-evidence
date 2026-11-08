@@ -72,21 +72,25 @@ class PasswordStrength {
         const percentage = (score / 5) * 100;
 
         // Update strength meter
-        const meter = this.strengthContainer.querySelector('.strength-fill');
-        const text = this.strengthContainer.querySelector('.strength-text');
+        const meter = this.strengthContainer.querySelector('.strength-fill, .login-pw-strength-fill');
+        const text = this.strengthContainer.querySelector('.strength-text, .login-pw-strength-text');
 
         if (meter) {
             meter.style.width = `${percentage}%`;
-            meter.className = `strength-fill strength-${level}`;
+            meter.className = meter.classList.contains('login-pw-strength-fill')
+                ? `login-pw-strength-fill strength-${level}`
+                : `strength-fill strength-${level}`;
         }
 
         if (text) {
             if (password.length === 0) {
                 text.textContent = 'Password strength';
-                text.className = 'strength-text';
+                text.className = text.classList.contains('login-pw-strength-text') ? 'login-pw-strength-text' : 'strength-text';
             } else {
                 text.textContent = `${level.charAt(0).toUpperCase() + level.slice(1)} password`;
-                text.className = `strength-text strength-${level}`;
+                text.className = text.classList.contains('login-pw-strength-text')
+                    ? `login-pw-strength-text strength-${level}`
+                    : `strength-text strength-${level}`;
             }
         }
 

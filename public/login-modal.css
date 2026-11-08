@@ -1164,3 +1164,20 @@ body.login-modal-open {
 .login-card-btn--public:active {
     transform: translateY(0);
 }
+
+/* Password strength levels (registration modal) */
+.login-pw-strength-fill.strength-weak { background: #ef4444; }
+.login-pw-strength-fill.strength-fair { background: #f59e0b; }
+.login-pw-strength-fill.strength-good { background: #3b82f6; }
+.login-pw-strength-fill.strength-strong { background: #10b981; }
+.login-pw-strength-text.strength-weak { color: #ef4444; }
+.login-pw-strength-text.strength-fair { color: #f59e0b; }
+.login-pw-strength-text.strength-good { color: #3b82f6; }
+.login-pw-strength-text.strength-strong { color: #10b981; }
+
+/* Inline status line inside sub-modals (forgot password) */
+.login-sub-status { display: none; margin: 8px 0 0; font-size: 0.82rem; line-height: 1.4; }
+.login-sub-status.visible { display: block; }
+.login-sub-status.ok { color: #2e7d32; }
+.login-sub-status.err { color: var(--lm-primary-dark); }
+.login-sub-status.info { color: var(--lm-text-muted); }

@@ -36,6 +36,7 @@
     <script src="qa-manager.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="contact-form.js" defer></script>
+    <script src="latest-release.js" defer></script>
 </head>
 
 <body>
@@ -816,12 +817,12 @@
                         <p>Remote-first culture with async communication, flexible hours, and results-driven performance.</p>
                     </div>
                     <div class="career-why-card">
-                        <div class="cwc-icon"><i data-lucide="flask"></i></div>
+                        <div class="cwc-icon"><i data-lucide="flask-conical"></i></div>
                         <h4>Research Opportunities</h4>
                         <p>Dedicated R&D time to explore emerging technologies and publish findings in leading journals.</p>
                     </div>
                     <div class="career-why-card">
-                        <div class="cwc-icon"><i data-lucide="github"></i></div>
+                        <div class="cwc-icon"><i data-lucide="git-pull-request"></i></div>
                         <h4>Open Source Contributions</h4>
                         <p>We encourage and sponsor contributions to open source projects that align with our mission.</p>
                     </div>
@@ -1150,6 +1151,7 @@
                     <label for="forgotEmail"><i data-lucide="mail"></i> Email Address</label>
                     <input type="email" id="forgotEmail" class="login-sub-input" placeholder="Enter your email" required>
                     <p class="login-sub-text">We'll send you a link to reset your password.</p>
+                    <p class="login-sub-status" id="forgotStatus" role="status" aria-live="polite"></p>
                 </div>
                 <div class="login-sub-actions">
                     <button type="submit" class="login-sub-btn login-sub-btn--primary">

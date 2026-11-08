@@ -478,7 +478,7 @@ const QA_DATA = {
         <p>EVID-DGC supports two authentication methods, both highly secure:</p>
         <h4>MetaMask Wallet Authentication</h4>
         <ul>
-          <li>Uolves cryptographic signatures instead of passwords</li>
+          <li>Uses cryptographic signatures instead of passwords</li>
           <li>Your private key never leaves your computer</li>
           <li>Each session requires a unique signed message</li>
         </ul>
@@ -1057,6 +1057,7 @@ class QAManager {
             <input type="text" class="qa-assistant-input" placeholder="Ask a question..." aria-label="Ask EVID Assistant">
             <button class="qa-assistant-btn" aria-label="Ask"><i data-lucide="arrow-right"></i></button>
           </div>
+          <p class="qa-assistant-status" id="qaAssistantStatus" role="status" aria-live="polite"></p>
           <div class="qa-assistant-suggestions">
             <span>Try:</span>
             <button class="qa-assist-sug" data-query="How do I upload evidence?">Upload evidence</button>
@@ -1091,6 +1092,7 @@ class QAManager {
           <span class="qa-search-kbd"><i data-lucide="command"></i>K</span>
           <div class="qa-search-suggestions"></div>
         </div>
+        <p class="qa-search-scope" id="qaSearchScope" role="status" aria-live="polite"></p>
       </div>
     `;
   }
@@ -1189,6 +1191,13 @@ class QAManager {
 
   attachEvents() {
     document.addEventListener('click', (e) => {
+      // "Search all categories" in the scope note
+      if (e.target.closest('.qa-scope-all')) {
+        this.setCategory('all');
+        this.filterQuestions();
+        return;
+      }
+
       // Category chips
       const chip = e.target.closest('.qa-chip');
       if (chip) {
@@ -1220,6 +1229,7 @@ class QAManager {
       const popCard = e.target.closest('.qa-popular-card');
       if (popCard) {
         const id = popCard.dataset.id;
+        if (!this.filteredQuestions.some(q => q.id === id)) { this.revealQuestion(id); return; }
         this.state.openQuestion = id;
         this.filterQuestions();
         setTimeout(() => {
@@ -1370,23 +1380,95 @@ class QAManager {
     });
   }
 
+  // Words that carry no meaning for matching ("how do I ...")
+  static get STOP_WORDS() {
+    return ['the','and','for','how','what','who','why','when','where','does','can','you','your','are','with','this','that','from','into','about','have','has','any','all','use','do','is','it','to','of','in','on','a','an','i','my','me','we','our','be'];
+  }
+
+  // 0 = no match. Whole phrase beats single words; question text beats answer text.
+  matchScore(item, query) {
+    const q = String(query || '').toLowerCase().trim();
+    if (!q) return 0;
+    const qt = item.question.toLowerCase();
+    const at = item.answer.toLowerCase();
+    let score = 0;
+    if (qt.includes(q)) score += 100;
+    if (at.includes(q)) score += 50;
+    const words = q.replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/)
+      .filter(w => w.length >= 3 && !QAManager.STOP_WORDS.includes(w));
+    if (words.length) {
+      const hits = words.filter(w => qt.includes(w) || at.includes(w));
+      // every meaningful word must appear somewhere for a word-based match
+      if (hits.length === words.length) {
+        words.forEach(w => { score += qt.includes(w) ? 10 : 3; });
+      }
+    }
+    return score;
+  }
+
+  setCategory(cat) {
+    this.state.activeCategory = cat;
+    this.container.querySelectorAll('.qa-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.category === cat));
+  }
+
+  updateSearchScope() {
+    const el = this.container && this.container.querySelector('#qaSearchScope');
+    if (!el) return;
+    const cat = this.state.activeCategory;
+    const q = (this.state.searchQuery || '').trim();
+    if (q.length >= 2 && cat !== 'all') {
+      const label = (QA_DATA.categories.find(c => c.id === cat) || {}).label || cat;
+      el.innerHTML = 'Searching in <strong>' + label + '</strong> only. <button type="button" class="qa-scope-all">Search all categories</button>';
+      el.classList.add('visible');
+    } else {
+      el.textContent = '';
+      el.classList.remove('visible');
+    }
+  }
+
+  setAssistantStatus(html, kind) {
+    const el = this.container.querySelector('#qaAssistantStatus');
+    if (!el) return;
+    el.innerHTML = html;
+    el.className = 'qa-assistant-status' + (html ? ' visible ' + (kind || '') : '');
+  }
+
+  revealQuestion(id) {
+    // make sure the question is visible whatever category/search is active
+    const inView = this.filteredQuestions.some(q => q.id === id);
+    if (!inView) {
+      this.setCategory('all');
+      this.state.searchQuery = '';
+      const si = this.container.querySelector('.qa-search-input');
+      if (si) si.value = '';
+    }
+    this.state.openQuestion = id;
+    this.filterQuestions();
+    setTimeout(() => {
+      const el = this.container.querySelector('.qa-item[data-id="' + id + '"]');
+      if (el) {
+        const content = el.querySelector('.qa-answer');
+        if (content) { content.style.maxHeight = content.scrollHeight + 'px'; }
+        el.classList.add('open');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+  }
+
   performAssistantSearch(query) {
-    const q = query.toLowerCase();
-    const results = QA_DATA.questions.filter(item =>
-      item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q)
-    );
-    if (results.length > 0) {
-      const best = results[0];
-      this.state.openQuestion = best.id;
-      this.filterQuestions();
-      setTimeout(() => {
-        const el = this.container.querySelector(`.qa-item[data-id="${best.id}"]`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          const content = el.querySelector('.qa-answer');
-          if (content) { content.style.maxHeight = content.scrollHeight + 'px'; el.classList.add('open'); }
-        }
-      }, 150);
+    const q = String(query || '').trim();
+    if (!q) return;
+    const ranked = QA_DATA.questions
+      .map(item => ({ item, score: this.matchScore(item, q) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score);
+    if (ranked.length > 0) {
+      const best = ranked[0].item;
+      this.revealQuestion(best.id);
+      this.setAssistantStatus('Best match: <strong>' + best.question + '</strong> (opened below)', 'ok');
+    } else {
+      this.setAssistantStatus('No matching answer for that yet. Try different keywords, such as "upload", "roles" or "blockchain".', 'warn');
     }
   }
 
@@ -1425,11 +1507,10 @@ class QAManager {
     let results = QA_DATA.questions;
     if (cat !== 'all') results = results.filter(item => item.category === cat);
     if (q.length >= 2) {
-      results = results.filter(item =>
-        item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q)
-      );
+      results = results.filter(item => this.matchScore(item, q) > 0);
     }
     this.filteredQuestions = results;
+    this.updateSearchScope();
     const list = this.container.querySelector('#qaMainList');
     if (list) {
       list.innerHTML = this.renderQuestions(results);

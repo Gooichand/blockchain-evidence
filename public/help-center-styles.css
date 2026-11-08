@@ -477,9 +477,14 @@ mark {
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .help-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
         margin: 1rem auto;
+    }
+
+    .help-sidebar,
+    .help-content {
+        min-width: 0;
     }
     
     .help-sidebar {

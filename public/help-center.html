@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
     <link rel="stylesheet" href="accessibility-fixes.css">
+    <link rel="stylesheet" href="help-center-styles.css">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
 </head>
@@ -25,7 +26,7 @@
                 <span>EVID-DGC Help</span>
             </div>
             <nav class="nav-menu">
-                <a href="dashboard.html" class="nav-link">
+                <a href="dashboard.html" class="nav-link" id="helpBackLink">
                     <i data-lucide="arrow-left"></i>
                     <span>Back to Dashboard</span>
                 </a>
@@ -456,6 +457,19 @@
         });
     </script>
     <script src="footer.js"></script>
+<script>
+        // Logged-out visitors have no dashboard: send them home instead of bouncing off the auth guard
+        (function () {
+            var link = document.getElementById('helpBackLink');
+            var token = null;
+            try { token = localStorage.getItem('authToken'); } catch (e) {}
+            if (link && !token) {
+                link.setAttribute('href', 'index.html');
+                var label = link.querySelector('span');
+                if (label) label.textContent = 'Back to Home';
+            }
+        })();
+    </script>
 </body>
 
 </html>

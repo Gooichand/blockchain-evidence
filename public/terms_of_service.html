@@ -19,7 +19,7 @@
             <span>EVID-DGC</span>
         </div>
         <nav class="nav-menu">
-            <a href="#" class="nav-link" id="backButton">
+            <a href="index.html" class="nav-link" id="backButton">
                 <i data-lucide="arrow-left"></i>
                 <span>Back</span>
             </a>
@@ -171,7 +171,7 @@
         document.getElementById("backButton").addEventListener("click", function (e) {
         e.preventDefault();
 
-        if (window.history.length > 1) {
+        if (document.referrer && document.referrer.indexOf(window.location.origin) === 0 && document.referrer !== window.location.href) {
         window.history.back();
         } else {
         window.location.href = "index.html";

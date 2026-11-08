@@ -110,10 +110,10 @@
 
     // Live validation on blur, cleanup on input
     [
-      [nameInput, 'contactNameError'],
-      [emailInput, 'contactEmailError'],
-      [subjectInput, 'contactSubjectError'],
-      [messageInput, 'contactMessageError'],
+      [nameInput, 'contactNameError', 'name'],
+      [emailInput, 'contactEmailError', 'email'],
+      [subjectInput, 'contactSubjectError', 'subject'],
+      [messageInput, 'contactMessageError', 'message'],
     ].forEach(function (pair) {
       var input = pair[0];
       var errorEl = document.getElementById(pair[1]);

@@ -9,10 +9,8 @@ class ForgotPasswordManager {
         // this.addForgotPasswordLinks();
 
         // Handle forgot password form submission
-        const forgotForm = document.getElementById('forgotPasswordForm');
-        if (forgotForm) {
-            forgotForm.addEventListener('submit', this.handleForgotPassword.bind(this));
-        }
+        // NOTE: the #forgotPasswordForm submit is handled in app.js (real /auth/forgot-password API).
+        // The old localStorage demo handler is intentionally not bound: two handlers raced and hid feedback.
 
         // Handle reset password form submission
         const resetForm = document.getElementById('resetPasswordForm');
