@@ -537,7 +537,7 @@
                                     <span class="status-badge status-${(c.status || 'open').toLowerCase()}">${escapeHtml(c.status || 'OPEN')}</span>
                                 </div>
                                 <p><strong>Case ID:</strong> ${c.id}</p>
-                                <p><strong>Case Number:</strong> ${escapeHtml(c.case_number || 'N/A')}</p>
+                                <p><strong>Case Number:</strong> ${escapeHtml(c.case_number || ('CASE-' + c.id))}</p>
                                 <p><strong>Date:</strong> ${new Date(c.created_date || c.created_at || Date.now()).toLocaleDateString()}</p>
                                 <div class="case-actions" style="margin-top: 15px;">
                                     <button class="btn btn-sm btn-primary" onclick="viewCaseDetails('${c.id}')">View Details</button>
