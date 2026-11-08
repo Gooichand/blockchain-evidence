@@ -646,6 +646,7 @@
                                     <div><strong>Evidence Count:</strong> ${caseData.evidence_count || 0}</div>
                                 </div>
                             </div>
+                            <div id="caseTransitions" style="margin: 15px 0;"></div>
                             <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
                             <div id="caseWorkspace"><div class="no-data">Loading evidence, custody and notes...</div></div>
                         </div>
@@ -658,9 +659,48 @@
                 document.body.appendChild(modal);
                 lucide.createIcons();
                 loadCaseWorkspace(caseData.id);
+                loadCaseTransitions(caseData.id);
             } catch (error) {
                 console.error('Failed to load case details:', error);
                 alert('Failed to load case details: ' + (error.message || error));
+            }
+        }
+
+        // M12: lifecycle transitions available to the investigator's role on this case
+        async function loadCaseTransitions(caseId) {
+            const box = document.getElementById('caseTransitions');
+            if (!box) return;
+            try {
+                const result = await window.apiClient.get(`/cases/${caseId}/available-transitions`, { skipWalletAuth: true });
+                const transitions = (result && (result.transitions || result.data)) || [];
+                if (!transitions.length) { box.innerHTML = ''; return; }
+                box.innerHTML = `
+                    <div style="padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa;">
+                        <strong>Case actions</strong>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                            ${transitions.map(t => `
+                                <button class="btn btn-sm btn-outline" onclick="changeCaseStatus('${caseId}', '${t.to_status.status_code}', '${escapeHtml(t.transition_name || t.to_status.status_name)}')">
+                                    ${escapeHtml(t.transition_name || t.to_status.status_name)}
+                                </button>`).join('')}
+                        </div>
+                    </div>`;
+            } catch (e) {
+                console.error('Failed to load case transitions:', e);
+                box.innerHTML = '';
+            }
+        }
+
+        async function changeCaseStatus(caseId, newStatusCode, label) {
+            const reason = prompt(`Reason for "${label}" (optional):`, '');
+            if (reason === null) return;
+            try {
+                const result = await window.apiClient.post(`/cases/${caseId}/status`, { newStatusCode, reason }, { skipWalletAuth: true });
+                if (!result.success) throw new Error(result.error || 'Status change failed');
+                showToast(`Case status updated: ${label}`, 'success');
+                document.querySelectorAll('.modal').forEach(m => m.remove());
+                loadDashboardData();
+            } catch (e) {
+                showToast(e.message || 'Failed to update case status', 'error');
             }
         }
 
