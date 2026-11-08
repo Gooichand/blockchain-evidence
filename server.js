@@ -108,6 +108,10 @@ io.on('connection', (socket) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// 1b. REQUEST IDS (M14) - every request gets a traceable id, echoed back in
+// the X-Request-Id response header
+app.use(require('./middleware/requestId'));
+
 // 2. STATIC FILES - BEFORE API ROUTES
 //    Server-side page guard runs BEFORE static so privileged dashboard/tool
 //    pages are authorized (401/403 or safe redirect) before any HTML is served.
