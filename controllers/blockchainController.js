@@ -3,17 +3,25 @@ const blockchainService = require('../services/blockchain/blockchainService');
 const ipfsStorageService = require('../services/storage/ipfsStorageService');
 const { supabase } = require('../config');
 
+const maskAddress = (addr) =>
+  addr && typeof addr === 'string' && addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : null;
+
 const getSystemStatus = async (req, res) => {
   try {
     const status = await integratedEvidenceService.getSystemStatus();
-    res.json({
-      success: true,
-      status: JSON.parse(
-        JSON.stringify(status, (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
-      ),
-    });
+    const out = JSON.parse(
+      JSON.stringify(status, (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
+    );
+    // H6 fix: wallet address and balance stay with admin/auditor only
+    if (!['admin', 'auditor'].includes(req.user?.role) && out.blockchain) {
+      if (out.blockchain.network) {
+        out.blockchain.network.walletAddress = maskAddress(out.blockchain.network.walletAddress);
+      }
+      delete out.blockchain.balance;
+    }
+    res.json({ success: true, status: out });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get system status: ' + error.message });
+    res.status(500).json({ error: 'Failed to get system status' });
   }
 };
 
@@ -28,12 +36,15 @@ const getBlockchainConfig = async (req, res) => {
         name: networkInfo.name,
         chainId: networkInfo.chainId,
         contractAddress: networkInfo.contractAddress,
-        walletAddress: networkInfo.walletAddress,
+        // H6 fix: never expose the full server wallet to non-admin roles
+        walletAddress: ['admin', 'auditor'].includes(req.user?.role)
+          ? networkInfo.walletAddress
+          : maskAddress(networkInfo.walletAddress),
         explorerUrl: blockchainService.getAddressExplorerUrl(networkInfo.contractAddress),
       },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get blockchain config: ' + error.message });
+    res.status(500).json({ error: 'Failed to get blockchain config' });
   }
 };
 
@@ -75,12 +86,13 @@ const getBlockchainStats = async (req, res) => {
         },
         network: {
           currentBlock: blockNumber,
-          walletBalance: balance,
+          // H6 fix
+          ...( ['admin', 'auditor'].includes(req.user?.role) ? { walletBalance: balance } : {} ),
         },
       },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get blockchain stats: ' + error.message });
+    res.status(500).json({ error: 'Failed to get blockchain stats' });
   }
 };
 
@@ -119,7 +131,7 @@ const getIPFSStats = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get IPFS stats: ' + error.message });
+    res.status(500).json({ error: 'Failed to get IPFS stats' });
   }
 };
 
