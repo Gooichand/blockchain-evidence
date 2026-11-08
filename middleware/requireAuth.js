@@ -39,6 +39,20 @@ const requireAuth = async (req, res, next) => {
 
           if (!error && user && user.is_active) {
             identity = user;
+            identity.jti = payload.jti || null;
+
+            // Persistent session revocation: a session row marked inactive
+            // (remote sign-out) invalidates the JWT tied to it.
+            if (payload.jti) {
+              const { data: sessionRow } = (await supabase
+                .from('user_sessions')
+                .select('is_active')
+                .eq('token_jti', payload.jti)
+                .maybeSingle()) || {};
+              if (sessionRow && sessionRow.is_active === false) {
+                return res.status(401).json({ success: false, error: 'Session has been revoked.' });
+              }
+            }
           } else {
             return res.status(401).json({ success: false, error: 'Authentication required. Session user not found.' });
           }
