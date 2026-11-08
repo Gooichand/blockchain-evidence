@@ -24,10 +24,19 @@ class IPFSStorageService {
       throw new Error('File must be a Buffer');
     }
 
+    // Pinata allows at most 10 keyvalues per pin. Reserve 2 slots for the
+    // service-level keys and take at most 8 flat caller values.
+    const callerKeyvalues = {};
+    for (const [key, value] of Object.entries(metadata || {})) {
+      if (value == null || typeof value === 'object') continue;
+      callerKeyvalues[key] = String(value).slice(0, 200);
+      if (Object.keys(callerKeyvalues).length >= 8) break;
+    }
+
     const pinataMetadata = JSON.stringify({
       name: fileName,
       keyvalues: {
-        ...metadata,
+        ...callerKeyvalues,
         uploadedAt: new Date().toISOString(),
         fileHash: crypto.createHash('sha256').update(fileBuffer).digest('hex'),
       },
