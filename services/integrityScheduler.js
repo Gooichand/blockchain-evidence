@@ -19,13 +19,13 @@ const ipfsStorageService = require('./storage/ipfsStorageService');
 const { isScopedRole, stableUserId, getAccessibleCaseIds } = require('../middleware/caseAccess');
 
 const PAGE = 200;
+let running = false;
 
 async function fetchEvidencePage(offset, idFilter) {
   let query = supabase
     .from('evidence')
-    .select('id, case_id, hash, ipfs_cid, title, name, submitted_by')
+    .select('id, case_id, hash, ipfs_cid, ipfs_hash, title, name, submitted_by')
     .not('hash', 'is', null)
-    .not('ipfs_cid', 'is', null)
     .order('id', { ascending: true })
     .range(offset, offset + PAGE - 1);
   if (idFilter && idFilter.length) query = query.in('id', idFilter);
@@ -46,7 +46,8 @@ async function notifyUsers(wallets, title, message, data) {
     is_read: false,
   }));
   try {
-    await supabase.from('notifications').insert(rows);
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) throw error;
   } catch (e) {
     console.error('integrity alert notification insert failed:', e.message);
   }
@@ -78,7 +79,8 @@ async function runIntegrityScan(opts = {}) {
     const caseIds = (await getAccessibleCaseIds(opts.user)) || [];
     const ors = [`submitted_by.eq.${sid}`];
     if (caseIds.length) ors.push(`case_id.in.(${caseIds.map(String).join(',')})`);
-    const { data: mine } = (await supabase.from('evidence').select('id').or(ors.join(','))) || {};
+    const { data: mine, error: scopeError } = await supabase.from('evidence').select('id').or(ors.join(','));
+    if (scopeError) throw scopeError;
     idFilter = (mine || []).map((r) => r.id);
     if (!idFilter.length) return { checked: 0, mismatches: 0, errors: 0, startedAt };
   }
@@ -97,7 +99,9 @@ async function runIntegrityScan(opts = {}) {
       checked++;
       let actual = null;
       try {
-        const buf = await ipfsStorageService.getFile(ev.ipfs_cid);
+        const cid = ev.ipfs_cid || ev.ipfs_hash;
+        if (!cid) throw new Error('No retrievable IPFS copy; item could not be verified');
+        const buf = await ipfsStorageService.getFile(cid);
         actual = crypto.createHash('sha256').update(buf).digest('hex');
       } catch (e) {
         errorCount++;
@@ -109,22 +113,26 @@ async function runIntegrityScan(opts = {}) {
       mismatchCount++;
       console.error(`INTEGRITY MISMATCH evidence #${ev.id}: expected=${ev.hash} actual=${actual}`);
 
+      let createdAlert = false;
       // Dedupe: one open alert per evidence item at a time
       try {
-        const { data: open } = (await supabase
+        const { data: open, error: openError } = (await supabase
           .from('integrity_alerts')
           .select('id')
           .eq('evidence_id', ev.id)
           .eq('acknowledged', false)
           .limit(1)) || {};
+        if (openError) throw openError;
         if (!open || !open.length) {
-          await supabase.from('integrity_alerts').insert({
+          const { error: insertError } = await supabase.from('integrity_alerts').insert({
             evidence_id: ev.id,
             case_id: parseInt(ev.case_id, 10) || null,
             expected_hash: ev.hash,
             actual_hash: actual,
             check_source: opts.source || 'nightly_scan',
           });
+          if (insertError) throw insertError;
+          createdAlert = true;
         }
       } catch (e) {
         console.error('integrity_alerts insert failed:', e.message);
@@ -144,6 +152,7 @@ async function runIntegrityScan(opts = {}) {
         console.error('custody log for mismatch failed:', e.message);
       }
 
+      if (!createdAlert) continue;
       const label = ev.title || ev.name || `Evidence #${ev.id}`;
       const admins = await adminWallets();
       await notifyUsers(
@@ -161,11 +170,17 @@ async function runIntegrityScan(opts = {}) {
   return { checked, mismatches: mismatchCount, errors: errorCount, startedAt };
 }
 
+async function guardedScan(opts) {
+  if (running) throw new Error('An integrity scan is already running');
+  running = true;
+  try { return await runIntegrityScan(opts); } finally { running = false; }
+}
+
 function startIntegrityScheduler() {
   // Nightly at 02:17 UTC - off the top of the hour to spread load.
   cron.schedule('17 2 * * *', async () => {
     try {
-      await runIntegrityScan({ source: 'nightly_scan' });
+      await guardedScan({ source: 'nightly_scan' });
     } catch (e) {
       console.error('nightly integrity scan failed:', e);
     }
@@ -173,4 +188,4 @@ function startIntegrityScheduler() {
   console.log('Integrity scheduler started (nightly 02:17 UTC)');
 }
 
-module.exports = { runIntegrityScan, startIntegrityScheduler };
+module.exports = { runIntegrityScan: guardedScan, startIntegrityScheduler };
