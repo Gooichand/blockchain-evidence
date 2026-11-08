@@ -47,6 +47,32 @@ async function createStatusChangeNotification(caseId, fromStatusId, toStatusId, 
   }
 }
 
+
+// M12: resolve a case's current status code (e.g. 'open', 'closed').
+// Returns null when the case or status is missing or the lookup fails, so a
+// transient error never blocks legitimate work - the status transition
+// endpoint remains the authoritative gate for lifecycle changes.
+async function getCaseStatusCode(caseId) {
+  try {
+    const { data } = (await supabase
+      .from('cases')
+      .select('case_statuses(status_code)')
+      .eq('id', caseId)
+      .single()) || {};
+    return (data && data.case_statuses && data.case_statuses.status_code) || null;
+  } catch (error) {
+    console.error('getCaseStatusCode error:', error);
+    return null;
+  }
+}
+
+// M12: closed cases are immutable - no new evidence, notes or analysis requests.
+async function isCaseClosed(caseId) {
+  return (await getCaseStatusCode(caseId)) === 'closed';
+}
+
 module.exports = {
   createStatusChangeNotification,
+  getCaseStatusCode,
+  isCaseClosed,
 };
