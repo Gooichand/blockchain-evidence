@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <title>Help Center | EVID-DGC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="accessibility-fixes.css">
+    <link rel="stylesheet" href="help-center-styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+</head>
+
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <header class="header-nav">
+        <div class="navbar-container">
+            <div class="nav-brand">
+                <i data-lucide="shield-check"></i>
+                <span>EVID-DGC Help</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-link" id="helpBackLink">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" id="main-content">
+        <div class="help-layout">
+            <!-- Help Sidebar -->
+            <div class="help-sidebar">
+                <div class="help-search">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="helpSearch" placeholder="Search help articles..." onkeyup="searchHelp()"
+                            aria-label="Search help articles">
+                    </div>
+                </div>
+
+                <nav class="help-nav">
+                    <h3>Categories</h3>
+                    <a href="#getting-started" class="help-nav-item active"
+                        onclick="showHelpSection('getting-started')">
+                        <i data-lucide="play-circle"></i>
+                        Getting Started
+                    </a>
+                    <a href="#case-management" class="help-nav-item" onclick="showHelpSection('case-management')">
+                        <i data-lucide="folder"></i>
+                        Case Management
+                    </a>
+                    <a href="#evidence" class="help-nav-item" onclick="showHelpSection('evidence')">
+                        <i data-lucide="file-text"></i>
+                        Evidence Handling
+                    </a>
+                    <a href="#roles" class="help-nav-item" onclick="showHelpSection('roles')">
+                        <i data-lucide="users"></i>
+                        User Roles
+                    </a>
+                    <a href="#security" class="help-nav-item" onclick="showHelpSection('security')">
+                        <i data-lucide="shield"></i>
+                        Security & Privacy
+                    </a>
+                    <a href="#troubleshooting" class="help-nav-item" onclick="showHelpSection('troubleshooting')">
+                        <i data-lucide="help-circle"></i>
+                        Troubleshooting
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Help Content -->
+            <div class="help-content">
+                <!-- Getting Started Section -->
+                <div id="getting-started-section" class="help-section active">
+                    <h1>Getting Started with EVID-DGC</h1>
+
+                    <div class="help-article">
+                        <h2>What is EVID-DGC?</h2>
+                        <p>EVID-DGC is a blockchain-based evidence management system designed for law enforcement, legal
+                            professionals, and court officials. It ensures evidence integrity through immutable records
+                            and provides role-based access control.</p>
+
+                        <h3>Key Features:</h3>
+                        <ul>
+                            <li><strong>Secure Evidence Storage:</strong> All evidence is cryptographically secured</li>
+                            <li><strong>Chain of Custody:</strong> Complete audit trail of evidence handling</li>
+                            <li><strong>Role-Based Access:</strong> Different permissions for different user types</li>
+                            <li><strong>Blockchain Verification:</strong> Tamper-proof evidence integrity</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>First Time Login</h2>
+                        <div class="step-by-step">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Choose Login Method</h4>
+                                    <p>You can login using either MetaMask wallet or email/password</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Select Your Role</h4>
+                                    <p>Choose the role that matches your job function (Investigator, Legal Professional,
+                                        etc.)</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Complete Profile</h4>
+                                    <p>Fill in your professional information and department details</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Access Dashboard</h4>
+                                    <p>You'll be redirected to your role-specific dashboard</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Management Section -->
+                <div id="case-management-section" class="help-section">
+                    <h1>Case Management</h1>
+
+                    <div class="help-article">
+                        <h2>Creating a New Case</h2>
+                        <p>Only Investigators and Administrators can create new cases.</p>
+
+                        <div class="step-by-step">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Navigate to Cases</h4>
+                                    <p>Click on "Cases" in your dashboard menu</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Click "New Case"</h4>
+                                    <p>Use the "Create New Case" button</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Fill Case Details</h4>
+                                    <p>Enter case title, description, priority level, and jurisdiction</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Save Case</h4>
+                                    <p>Click "Create Case" to save and generate a case number</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>Case Status Management</h2>
+                        <p>Cases progress through different statuses based on investigation progress:</p>
+
+                        <div class="status-guide">
+                            <div class="status-item">
+                                <span class="status-badge open">Open</span>
+                                <p>Case is actively being investigated</p>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-badge in-progress">In Progress</span>
+                                <p>Evidence is being collected and analyzed</p>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-badge under-review">Under Review</span>
+                                <p>Case is being reviewed by legal professionals</p>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-badge closed">Closed</span>
+                                <p>Case investigation is complete</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evidence Section -->
+                <div id="evidence-section" class="help-section">
+                    <h1>Evidence Handling</h1>
+
+                    <div class="help-article">
+                        <h2>Uploading Evidence</h2>
+                        <p>Evidence can be uploaded by Investigators, Forensic Analysts, and Evidence Managers.</p>
+
+                        <div class="step-by-step">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Select Case</h4>
+                                    <p>Navigate to the case where you want to add evidence</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Click "Add Evidence"</h4>
+                                    <p>Use the evidence upload button in the case details</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Fill Evidence Details</h4>
+                                    <p>Enter description, type, collection date, and location</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Upload File</h4>
+                                    <p>Select and upload the evidence file (max 100MB)</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">5</div>
+                                <div class="step-content">
+                                    <h4>Verify Upload</h4>
+                                    <p>System will generate a cryptographic hash for integrity verification</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>Evidence Verification</h2>
+                        <p>All evidence is automatically verified using blockchain technology:</p>
+
+                        <ul>
+                            <li><strong>Hash Generation:</strong> Each file gets a unique cryptographic fingerprint</li>
+                            <li><strong>Blockchain Storage:</strong> Hash is stored on immutable blockchain</li>
+                            <li><strong>Integrity Check:</strong> Files are verified against blockchain records</li>
+                            <li><strong>Tamper Detection:</strong> Any changes to files are immediately detected</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>Chain of Custody</h2>
+                        <p>The system automatically maintains a complete chain of custody record:</p>
+
+                        <ul>
+                            <li>Who uploaded the evidence</li>
+                            <li>When it was uploaded</li>
+                            <li>Who has accessed the evidence</li>
+                            <li>Any modifications or annotations</li>
+                            <li>Download history with watermarks</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Roles Section -->
+                <div id="roles-section" class="help-section">
+                    <h1>User Roles & Permissions</h1>
+
+                    <div class="help-article">
+                        <h2>Role Overview</h2>
+                        <p>EVID-DGC uses 8 different user roles, each with specific permissions:</p>
+
+                        <div class="roles-grid">
+                            <div class="role-card">
+                                <div class="role-icon">
+                                    <i data-lucide="eye"></i>
+                                </div>
+                                <h3>Public Viewer</h3>
+                                <p>View public cases and evidence only</p>
+                                <ul>
+                                    <li>Browse public information</li>
+                                    <li>View case summaries</li>
+                                    <li>No editing permissions</li>
+                                </ul>
+                            </div>
+
+                            <div class="role-card">
+                                <div class="role-icon">
+                                    <i data-lucide="search"></i>
+                                </div>
+                                <h3>Investigator</h3>
+                                <p>Create cases and manage investigations</p>
+                                <ul>
+                                    <li>Create new cases</li>
+                                    <li>Upload evidence</li>
+                                    <li>Generate reports</li>
+                                    <li>Manage investigations</li>
+                                </ul>
+                            </div>
+
+                            <div class="role-card">
+                                <div class="role-icon">
+                                    <i data-lucide="microscope"></i>
+                                </div>
+                                <h3>Forensic Analyst</h3>
+                                <p>Analyze evidence and create technical reports</p>
+                                <ul>
+                                    <li>Analyze evidence</li>
+                                    <li>Generate forensic reports</li>
+                                    <li>Validate evidence integrity</li>
+                                    <li>Cross-reference evidence</li>
+                                </ul>
+                            </div>
+
+                            <div class="role-card">
+                                <div class="role-icon">
+                                    <i data-lucide="scale"></i>
+                                </div>
+                                <h3>Legal Professional</h3>
+                                <p>Review cases for legal proceedings</p>
+                                <ul>
+                                    <li>Review case documentation</li>
+                                    <li>Access legal evidence</li>
+                                    <li>Generate legal reports</li>
+                                    <li>Update case status</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div id="security-section" class="help-section">
+                    <h1>Security & Privacy</h1>
+
+                    <div class="help-article">
+                        <h2>Data Security</h2>
+                        <p>EVID-DGC implements multiple layers of security:</p>
+
+                        <ul>
+                            <li><strong>Encryption:</strong> All data is encrypted in transit and at rest</li>
+                            <li><strong>Blockchain:</strong> Evidence hashes stored on immutable blockchain</li>
+                            <li><strong>Access Control:</strong> Role-based permissions system</li>
+                            <li><strong>Audit Logs:</strong> Complete activity tracking</li>
+                            <li><strong>Watermarking:</strong> Downloaded evidence is watermarked</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>Password Security</h2>
+                        <div class="security-tips">
+                            <h3>Best Practices:</h3>
+                            <ul>
+                                <li>Use at least 8 characters</li>
+                                <li>Include uppercase and lowercase letters</li>
+                                <li>Add numbers and special characters</li>
+                                <li>Don't reuse passwords from other accounts</li>
+                                <li>Change passwords regularly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting Section -->
+                <div id="troubleshooting-section" class="help-section">
+                    <h1>Troubleshooting</h1>
+
+                    <div class="help-article">
+                        <h2>Common Issues</h2>
+
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFaq(this)">
+                                    <h3>I forgot my password. How do I reset it?</h3>
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Click "Forgot Password?" on the login page, enter your email address, and follow
+                                        the instructions in the reset email.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFaq(this)">
+                                    <h3>Why can't I upload evidence?</h3>
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Check that: 1) You have the correct role permissions, 2) File size is under
+                                        100MB, 3) File type is supported, 4) You're connected to the internet.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFaq(this)">
+                                    <h3>How do I change my role?</h3>
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Only administrators can change user roles. Contact your system administrator to
+                                        request a role change.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFaq(this)">
+                                    <h3>What browsers are supported?</h3>
+                                    <i data-lucide="chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>EVID-DGC works best with modern browsers: Chrome 90+, Firefox 88+, Safari 14+,
+                                        Edge 90+. For MetaMask features, use Chrome or Firefox.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="help-article">
+                        <h2>Contact Support</h2>
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <i data-lucide="mail"></i>
+                                <div>
+                                    <strong>Email Support</strong>
+                                    <p>DGC2MHNE@proton.me</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i data-lucide="phone"></i>
+                                <div>
+                                    <strong>Phone Support</strong>
+                                    <p>+91 9390606393</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="accessibility-manager.js"></script>
+    <script src="help-center.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            lucide.createIcons();
+        });
+    </script>
+    <script src="footer.js"></script>
+<script>
+        // Logged-out visitors have no dashboard: send them home instead of bouncing off the auth guard
+        (function () {
+            var link = document.getElementById('helpBackLink');
+            var token = null;
+            try { token = localStorage.getItem('authToken'); } catch (e) {}
+            if (link && !token) {
+                link.setAttribute('href', 'index.html');
+                var label = link.querySelector('span');
+                if (label) label.textContent = 'Back to Home';
+            }
+        })();
+    </script>
+</body>
+
+</html>

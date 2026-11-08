@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Blockchain Evidence</title>
+    <meta name="description"
+        content="Professional blockchain evidence management for law enforcement, forensic analysts, and legal professionals.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="faq-hover-effects.css">
+    <link rel="stylesheet" href="password-security.css">
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="contact-section.css">
+    <link rel="stylesheet" href="login-modal.css">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="logo-32x32.png">
+    <link rel="shortcut icon" href="logo-32x32.png" type="image/png">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="config.js"></script>
+    <script src="networks.js"></script>
+    <script src="wallet-manager.js"></script>
+    <script src="password-strength.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="blockchain-service.js"></script>
+    <script src="app.js"></script>
+    <script src="header.js"></script>
+    <script src="forgot-password.js"></script>
+    <script src="documentation-manager.js"></script>
+    <script src="qa-manager.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="contact-form.js" defer></script>
+    <script src="latest-release.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation Header -->
+    <div id="header-placeholder" style="height: 68px;"></div>
+    <noscript>
+        <nav class="dock-nav" style="display: block !important; position: static; transform: none; padding: 1rem; text-align: center;">
+            <a href="index.html" style="font-weight:800;color:#d32f2f;text-decoration:none;margin-right:2rem;">EVID-DGC</a>
+            <a href="#home" style="color:#333;text-decoration:none;margin:0 0.75rem;">Home</a>
+            <a href="#how-it-works" style="color:#333;text-decoration:none;margin:0 0.75rem;">How It Works</a>
+            <a href="#documentation" style="color:#333;text-decoration:none;margin:0 0.75rem;">Documentation</a>
+            <a href="#faq" style="color:#333;text-decoration:none;margin:0 0.75rem;">Q&A</a>
+            <a href="#career" style="color:#333;text-decoration:none;margin:0 0.75rem;">Career</a>
+            <a href="#contact" style="color:#333;text-decoration:none;margin:0 0.75rem;">Contacts</a>
+            <a href="#" onclick="openLoginModal()" style="color:#fff;background:#d32f2f;padding:0.5rem 1.5rem;border-radius:50px;text-decoration:none;margin-left:1rem;">Login</a>
+        </nav>
+    </noscript>
+
+    <!-- Animated Background -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container" id="main-content">
+        <!-- Hero Section -->
+        <div class="hero-section" id="home">
+            <div class="bg-environment">
+                <div class="bg-spotlight-beam"></div>
+                <div class="bg-gradient-sphere bg-sphere-1"></div>
+                <div class="bg-gradient-sphere bg-sphere-2"></div>
+                <div class="bg-gradient-sphere bg-sphere-3"></div>
+                <div class="bg-grid"></div>
+                <div class="bg-circuit"></div>
+                <div class="bg-nodes">
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                    <div class="bg-node"></div>
+                </div>
+                <div class="bg-wave"></div>
+            </div>
+
+            <div class="hero-inner">
+                <div class="hero-left">
+                    <div class="hero-badge">Digital Evidence Management</div>
+                    <h1>Blockchain <span class="text-highlight">Evidence</span><br>Management System</h1>
+                    <p class="hero-sub">
+                        Tamper-proof digital evidence management powered by blockchain, SHA-256 hashing, IPFS,
+                        immutable audit trails, and secure chain of custody&mdash;built for law enforcement,
+                        forensic laboratories, and courts.
+                    </p>
+                    <div class="hero-cta">
+                        <button class="btn-hero-primary" onclick="openLoginModal()">
+                            <i data-lucide="shield"></i>
+                            Access Dashboard
+                        </button>
+                        <button class="btn-hero-secondary" onclick="scrollToSection('how-it-works')">
+                            <i data-lucide="play-circle"></i>
+                            See How It Works
+                        </button>
+                    </div>
+                    <div class="hero-trust">
+                        <div class="hero-trust-avatars">
+                            <span>LE</span>
+                            <span>FA</span>
+                            <span>CO</span>
+                            <span>AM</span>
+                        </div>
+                        <div class="hero-trust-text">
+                            Trusted by <strong>Law Enforcement</strong> &amp; <strong>Forensic Experts</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-center orbit-stage-container">
+                    <div class="evidence-vault">
+                        <!-- 3 Layer Orbit Rings: solid / dashed / dotted — radius scaled to 820×820 orbit stage -->
+                        <div class="vault-ambient-bloom"></div>
+                        <svg class="vault-orbital-svg" viewBox="0 0 820 820" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Three concentric orbit rings: inner hint, mid guide, outer at card radius -->
+                            <circle cx="410" cy="410" r="175" class="orbit-path inner-path" />
+                            <circle cx="410" cy="410" r="265" class="orbit-path middle-path" />
+                            <circle cx="410" cy="410" r="330" class="orbit-path outer-path" />
+                            <!-- Smooth arc bezier connectors tracing orbital path between the 6 card positions -->
+                            <!-- r=330, centre (410,410): six cardinal points at 270°,330°,30°,90°,150°,210° -->
+                            <path d="M 410 80 A 330 330 0 0 1 696 245" class="orbit-bezier-line" />
+                            <path d="M 696 245 A 330 330 0 0 1 696 575" class="orbit-bezier-line" />
+                            <path d="M 696 575 A 330 330 0 0 1 410 740" class="orbit-bezier-line" />
+                            <path d="M 410 740 A 330 330 0 0 1 124 575" class="orbit-bezier-line" />
+                            <path d="M 124 575 A 330 330 0 0 1 124 245" class="orbit-bezier-line" />
+                            <path d="M 124 245 A 330 330 0 0 1 410 80" class="orbit-bezier-line" />
+                        </svg>
+
+                        <!-- Subtle Floating Orbit Nodes -->
+                        <div class="orbit-node node-1"></div>
+                        <div class="orbit-node node-2"></div>
+                        <div class="orbit-node node-3"></div>
+                        <div class="orbit-node node-4"></div>
+                        <div class="orbit-node node-5"></div>
+                        <div class="orbit-node node-6"></div>
+
+                        <div class="vault-glow"></div>
+                        <div class="vault-glow-ring"></div>
+                        <div class="vault-glow-ring"></div>
+                        <div class="vault-glow-ring"></div>
+                        <div class="vault-hash-tag">0x8a3f...SHA-256</div>
+                        <div class="vault-hash-tag">0x4c92...IPFS</div>
+                        <div class="vault-hash-tag">0x7b1d...BLOCK</div>
+                        <div class="vault-hash-tag">0xf3a8...CHAIN</div>
+
+                        <!-- 3D CUBE (UNTOUCHED PERFECT IMPLEMENTATION) -->
+                        <div class="vault-cube-container">
+                            <div class="vault-cube" id="interactiveVaultCube">
+                                <div class="cube-face front" data-step="1">
+                                    <i data-lucide="shield"></i>
+                                    <span>01. Collect</span>
+                                </div>
+                                <div class="cube-face right" data-step="2">
+                                    <i data-lucide="hash"></i>
+                                    <span>02. SHA-256</span>
+                                </div>
+                                <div class="cube-face back" data-step="3">
+                                    <i data-lucide="database"></i>
+                                    <span>03. IPFS</span>
+                                </div>
+                                <div class="cube-face left" data-step="4">
+                                    <i data-lucide="link"></i>
+                                    <span>04. Blockchain</span>
+                                </div>
+                                <div class="cube-face top" data-step="5">
+                                    <i data-lucide="git-branch"></i>
+                                    <span>05. Custody</span>
+                                </div>
+                                <div class="cube-face bottom" data-step="6">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>06. Court</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6 Workflow Steps Surrounding the Cube (Polar Angle Positioning) -->
+                        <div class="polar-orbit-workflow">
+                            <!-- 01 Top Center (330° / 0°) -->
+                            <div class="timeline-step polar-panel step-pos-1" data-step="1">
+                                <div class="step-header">
+                                    <span class="step-num">01</span>
+                                    <h4>Collect Evidence</h4>
+                                </div>
+                                <p>Crime scene evidence captured</p>
+                            </div>
+                            <!-- 02 Top Right (30°) -->
+                            <div class="timeline-step polar-panel step-pos-2" data-step="2">
+                                <div class="step-header">
+                                    <span class="step-num">02</span>
+                                    <h4>Generate SHA-256</h4>
+                                </div>
+                                <p>Unique digital fingerprint</p>
+                            </div>
+                            <!-- 03 Mid Right (90°) -->
+                            <div class="timeline-step polar-panel step-pos-3" data-step="3">
+                                <div class="step-header">
+                                    <span class="step-num">03</span>
+                                    <h4>Store on IPFS</h4>
+                                </div>
+                                <p>Decentralized storage</p>
+                            </div>
+                            <!-- 04 Bottom Center (150° / 180°) -->
+                            <div class="timeline-step polar-panel step-pos-4" data-step="4">
+                                <div class="step-header">
+                                    <span class="step-num">04</span>
+                                    <h4>Record Blockchain</h4>
+                                </div>
+                                <p>Immutable ledger record</p>
+                            </div>
+                            <!-- 05 Bottom Left (210°) -->
+                            <div class="timeline-step polar-panel step-pos-5" data-step="5">
+                                <div class="step-header">
+                                    <span class="step-num">05</span>
+                                    <h4>Maintain Custody</h4>
+                                </div>
+                                <p>Every action logged</p>
+                            </div>
+                            <!-- 06 Top Left (285°) -->
+                            <div class="timeline-step polar-panel step-pos-6" data-step="6">
+                                <div class="step-header">
+                                    <span class="step-num">06</span>
+                                    <h4>Court Verification</h4>
+                                </div>
+                                <p>Integrity verified instantly</p>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Strip -->
+        <div class="feature-strip">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i data-lucide="shield-check"></i>
+                    <h4>Tamper Proof</h4>
+                    <p>Immutable blockchain verification</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="fingerprint"></i>
+                    <h4>SHA-256 Integrity</h4>
+                    <p>Cryptographic hash verification</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="link"></i>
+                    <h4>Blockchain Verification</h4>
+                    <p>Polygon network validation</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="database"></i>
+                    <h4>IPFS Storage</h4>
+                    <p>Decentralized file storage</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="git-branch"></i>
+                    <h4>Chain of Custody</h4>
+                    <p>Complete audit trail</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="file-check"></i>
+                    <h4>Court Ready Reports</h4>
+                    <p>Admissible evidence docs</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="metrics-section">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-number" id="metricEvidence">12,847</div>
+                    <div class="metric-label">Evidence Uploaded</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricCases">3,421</div>
+                    <div class="metric-label">Cases Registered</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricVerified">99.97%</div>
+                    <div class="metric-label">Integrity Verified</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricRecords">48,256</div>
+                    <div class="metric-label">Blockchain Records</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricUsers">847</div>
+                    <div class="metric-label">Authorized Users</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="metricRequests">6,193</div>
+                    <div class="metric-label">Verification Requests</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="how-it-works-section" id="how-it-works">
+
+            <!-- Section Hero -->
+            <div class="hiw-hero">
+                <div class="hiw-badge">Evidence Lifecycle</div>
+                <h2>How Digital Evidence Moves<br>Through <span>EVID-DGC</span></h2>
+                <p>Follow the complete lifecycle of digital evidence&mdash;from collection to courtroom&mdash;secured with blockchain, SHA-256 hashing, IPFS storage, immutable chain of custody, and role-based access control.</p>
+                <div class="hiw-visual">
+                    <div class="hiw-visual-item"><i data-lucide="search"></i> Collect</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="fingerprint"></i> Hash</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="database"></i> Store</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="link"></i> Verify</div>
+                    <div class="hiw-visual-arrow"><i data-lucide="arrow-right"></i></div>
+                    <div class="hiw-visual-item"><i data-lucide="file-check"></i> Report</div>
+                </div>
+            </div>
+
+            <!-- Interactive Workflow Timeline -->
+            <div class="workflow-section">
+                <div class="workflow-timeline" id="workflowTimeline">
+                    <div class="workflow-node active" data-role="investigator">
+                        <div class="workflow-node-circle"><i data-lucide="search"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Investigator</div>
+                    </div>
+                    <div class="workflow-node" data-role="custodian">
+                        <div class="workflow-node-circle"><i data-lucide="cloud"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Cloud Custodian</div>
+                    </div>
+                    <div class="workflow-node" data-role="analyst">
+                        <div class="workflow-node-circle"><i data-lucide="microscope"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Forensic Analyst</div>
+                    </div>
+                    <div class="workflow-node" data-role="legal">
+                        <div class="workflow-node-circle"><i data-lucide="scale"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Legal Professional</div>
+                    </div>
+                    <div class="workflow-node" data-role="court">
+                        <div class="workflow-node-circle"><i data-lucide="gavel"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Court Official</div>
+                    </div>
+                    <div class="workflow-node" data-role="manager">
+                        <div class="workflow-node-circle"><i data-lucide="archive"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Evidence Manager</div>
+                    </div>
+                    <div class="workflow-node" data-role="auditor">
+                        <div class="workflow-node-circle"><i data-lucide="clipboard-check"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Auditor</div>
+                    </div>
+                    <div class="workflow-node" data-role="admin">
+                        <div class="workflow-node-circle"><i data-lucide="shield"></i></div>
+                        <div class="active-indicator"></div>
+                        <div class="workflow-node-label">Administrator</div>
+                    </div>
+                </div>
+
+                <!-- Role Details Card -->
+                <div class="role-details-card" id="roleDetailsCard">
+                    <div class="role-details-header">
+                        <div class="role-details-icon"><i data-lucide="search" id="roleIcon"></i></div>
+                        <div class="role-details-title">
+                            <h3 id="roleTitle">Investigator</h3>
+                            <p class="role-mission" id="roleMission">Collect and preserve digital evidence from crime scenes and secure it for blockchain verification</p>
+                        </div>
+                    </div>
+                    <div class="role-details-grid">
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="check-circle"></i> Responsibilities</h4>
+                            <ul id="roleResponsibilities">
+                                <li>Secure crime scene digital evidence collection</li>
+                                <li>Create and manage investigation cases</li>
+                                <li>Upload evidence with metadata and timestamps</li>
+                                <li>Initiate chain of custody records</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="unlock"></i> Allowed Actions</h4>
+                            <ul id="roleAllowed">
+                                <li>Create new case files</li>
+                                <li>Upload evidence files</li>
+                                <li>Add case notes and annotations</li>
+                                <li>View assigned case evidence</li>
+                                <li>Request forensic analysis</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block restricted">
+                            <h4><i data-lucide="lock"></i> Restricted Actions</h4>
+                            <ul id="roleRestricted">
+                                <li>Modify blockchain records</li>
+                                <li>Delete uploaded evidence</li>
+                                <li>Access other investigator cases</li>
+                                <li>Approve court submissions</li>
+                                <li>Modify system configurations</li>
+                            </ul>
+                        </div>
+                        <div class="role-detail-block">
+                            <h4><i data-lucide="link"></i> Blockchain Records</h4>
+                            <div class="role-detail-tags" id="roleRecords">
+                                <span class="role-detail-tag">Case Created</span>
+                                <span class="role-detail-tag">Evidence Uploaded</span>
+                                <span class="role-detail-tag">Chain of Custody Initiated</span>
+                                <span class="role-detail-tag">Hash Generated</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="role-example">
+                        <i data-lucide="activity"></i>
+                        <span id="roleExample">"An investigator arrives at a crime scene, photographs evidence using a secure device, uploads the images to the system, and a SHA-256 hash is immediately generated and recorded on the blockchain."</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evidence Journey -->
+            <div class="journey-section">
+                <h3>Evidence Journey</h3>
+                <p>The complete technical flow from crime scene to courtroom</p>
+                <div class="journey-flow">
+                    <div class="journey-step"><span class="step-index">01</span><i data-lucide="map-pin"></i><span>Crime Scene</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">02</span><i data-lucide="folder-plus"></i><span>Case Created</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">03</span><i data-lucide="upload"></i><span>Evidence Uploaded</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">04</span><i data-lucide="fingerprint"></i><span>SHA-256 Generated</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">05</span><i data-lucide="database"></i><span>Stored in IPFS</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">06</span><i data-lucide="link"></i><span>Blockchain Transaction</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">07</span><i data-lucide="git-branch"></i><span>Chain of Custody</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">08</span><i data-lucide="microscope"></i><span>Forensic Analysis</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">09</span><i data-lucide="scale"></i><span>Legal Review</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">10</span><i data-lucide="gavel"></i><span>Court Verification</span></div>
+                    <div class="journey-arrow"><i data-lucide="chevron-right"></i></div>
+                    <div class="journey-step"><span class="step-index">11</span><i data-lucide="file-check"></i><span>Court Ready Report</span></div>
+                </div>
+            </div>
+
+            <!-- Security Layer -->
+            <div class="security-section">
+                <h3>Security &amp; Integrity Layer</h3>
+                <p>Every action is protected by multiple security layers</p>
+                <div class="security-grid">
+                    <div class="security-card">
+                        <i data-lucide="fingerprint"></i>
+                        <h4>SHA-256</h4>
+                        <p>Cryptographic hashing creates a unique digital fingerprint for every piece of evidence</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="database"></i>
+                        <h4>IPFS</h4>
+                        <p>Decentralized storage ensures evidence is distributed and cannot be lost or altered</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="link"></i>
+                        <h4>Polygon Blockchain</h4>
+                        <p>Immutable ledger records every transaction with timestamp and validator confirmation</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="activity"></i>
+                        <h4>Audit Trail</h4>
+                        <p>Every action is logged with user identity, timestamp, and cryptographic signature</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="git-branch"></i>
+                        <h4>Chain of Custody</h4>
+                        <p>Complete traceability of evidence movement with handover verification at each step</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="shield"></i>
+                        <h4>Role Based Access</h4>
+                        <p>Granular permissions ensure users can only access what their role authorizes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transparency Module -->
+            <div class="transparency-section">
+                <div class="transparency-card">
+                    <div class="transparency-left">
+                        <div class="t-icon"><i data-lucide="eye"></i></div>
+                        <h3>Public Transparency</h3>
+                        <p>The Public Viewer role allows journalists, oversight committees, and the public to verify evidence integrity without accessing sensitive case details.</p>
+                    </div>
+                    <div class="transparency-right">
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>Verify Evidence Exists</strong>
+                                <p>Confirm that evidence has been registered on the blockchain with a valid hash</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>View Redacted Case Info</strong>
+                                <p>Access case metadata without sensitive content or personal identifiers</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="check-circle"></i>
+                            <div>
+                                <strong>Audit Chain of Custody</strong>
+                                <p>Review the complete evidence movement log to ensure proper handling</p>
+                            </div>
+                        </div>
+                        <div class="transparency-item">
+                            <i data-lucide="x-circle"></i>
+                            <div>
+                                <strong>Cannot Modify Evidence</strong>
+                                <p>Read-only access ensures the public cannot alter or interfere with evidence</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Summary -->
+            <div class="final-summary">
+                <blockquote>&ldquo;No single user can create, modify, approve, and hide <span>evidence</span>.&rdquo;</blockquote>
+                <div class="pillars-grid">
+                    <div class="pillar-card">
+                        <i data-lucide="shield-check"></i>
+                        <h4>Integrity</h4>
+                        <p>Evidence cannot be tampered with once recorded on the blockchain</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="users"></i>
+                        <h4>Accountability</h4>
+                        <p>Every action is cryptographically signed and permanently logged</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="eye"></i>
+                        <h4>Transparency</h4>
+                        <p>Public verifiability without compromising sensitive case data</p>
+                    </div>
+                    <div class="pillar-card">
+                        <i data-lucide="file-check"></i>
+                        <h4>Court Readiness</h4>
+                        <p>All evidence is formatted and verified for admissibility in court</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Release Section -->
+        <div class="latest-release-section">
+            <div id="latest-release-container"></div>
+        </div>
+
+        <!-- Documentation Section -->
+        <div class="documentation-section" id="documentation">
+            <!-- Entire documentation center rendered by documentation-manager.js -->
+        </div>
+
+        <!-- Q&A Knowledge Center -->
+        <div class="qa-section" id="faq">
+            <!-- Entire Q&A center rendered by qa-manager.js -->
+        </div>
+
+        <!-- Career Section -->
+        <div class="career-section" id="career">
+            <div class="career-hero">
+                <div class="career-hero-left">
+                    <div class="career-badge">Build the Future of Digital Justice</div>
+                    <h2>Careers at <span class="text-highlight">EVID-DGC</span></h2>
+                    <p class="career-hero-sub">Join us in building the next generation of blockchain-powered digital evidence management for law enforcement, forensic laboratories, and the global justice system.</p>
+                    <div class="career-hero-buttons">
+                        <button class="career-btn-primary" onclick="document.getElementById('career-talent')?.scrollIntoView({behavior:'smooth'})">
+                            <i data-lucide="users"></i> Join Our Talent Network
+                        </button>
+
+                    </div>
+                    <div class="career-trust">
+                        <div class="career-trust-item"><i data-lucide="building-2"></i><span>Enterprise Security</span></div>
+                        <div class="career-trust-divider"></div>
+                        <div class="career-trust-item"><i data-lucide="globe"></i><span>4+ Countries</span></div>
+                        <div class="career-trust-divider"></div>
+                        <div class="career-trust-item"><i data-lucide="users"></i><span>20+ Team Members</span></div>
+                    </div>
+                </div>
+                <div class="career-hero-right">
+                    <div class="career-hero-center">
+                        <div class="career-illustration">
+                            <div class="ci-cube"><i data-lucide="box"></i></div>
+                            <div class="ci-ring ci-ring-1"></div>
+                            <div class="ci-ring ci-ring-2"></div>
+                            <div class="ci-ring ci-ring-3"></div>
+                            <div class="ci-node ci-node-1"><i data-lucide="fingerprint"></i></div>
+                            <div class="ci-node ci-node-2"><i data-lucide="scale"></i></div>
+                            <div class="ci-node ci-node-3"><i data-lucide="shield"></i></div>
+                            <div class="ci-node ci-node-4"><i data-lucide="folder"></i></div>
+                            <div class="ci-node ci-node-5"><i data-lucide="link"></i></div>
+                            <div class="ci-particle ci-p-1"></div>
+                            <div class="ci-particle ci-p-2"></div>
+                            <div class="ci-particle ci-p-3"></div>
+                            <div class="ci-particle ci-p-4"></div>
+                            <div class="ci-particle ci-p-5"></div>
+                            <div class="ci-particle ci-p-6"></div>
+                            <div class="ci-particle ci-p-7"></div>
+                            <div class="ci-particle ci-p-8"></div>
+                        </div>
+                    </div>
+                    <div class="career-stats">
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="briefcase"></i></div>
+                            <div class="csc-info"><span class="csc-value">10+</span><span class="csc-label">Open Positions</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="layers"></i></div>
+                            <div class="csc-info"><span class="csc-value">6</span><span class="csc-label">Departments</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="users"></i></div>
+                            <div class="csc-info"><span class="csc-value">20+</span><span class="csc-label">Team Members</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="globe"></i></div>
+                            <div class="csc-info"><span class="csc-value">4</span><span class="csc-label">Countries</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="target"></i></div>
+                            <div class="csc-info"><span class="csc-value">100%</span><span class="csc-label">Mission Driven</span></div>
+                        </div>
+                        <div class="career-stat-card">
+                            <div class="csc-icon"><i data-lucide="shield"></i></div>
+                            <div class="csc-info"><span class="csc-value">99.9%</span><span class="csc-label">Uptime</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="career-talent" id="career-talent">
+                <div class="career-talent-header">
+                    <i data-lucide="users"></i>
+                    <h3>Join the <span class="text-highlight">EVID-DGC</span> Talent Network</h3>
+                    <p>Whether you're a student, researcher, cybersecurity professional, blockchain developer, or digital forensics enthusiast, we're always interested in connecting with talented individuals who share our vision of building secure digital justice systems.</p>
+                </div>
+
+                <div class="talent-main-card">
+                    <div class="talent-main-left">
+                        <div class="talent-illustration">
+                            <div class="ti-glow"></div>
+                            <div class="ti-center"><i data-lucide="shield"></i></div>
+                            <div class="ti-orbit ti-orbit-1"></div>
+                            <div class="ti-orbit ti-orbit-2"></div>
+                            <div class="ti-orbit ti-orbit-3"></div>
+                            <div class="ti-node ti-node-1"><i data-lucide="link"></i></div>
+                            <div class="ti-node ti-node-2"><i data-lucide="fingerprint"></i></div>
+                            <div class="ti-node ti-node-3"><i data-lucide="scale"></i></div>
+                            <div class="ti-node ti-node-4"><i data-lucide="box"></i></div>
+                            <div class="ti-node ti-node-5"><i data-lucide="code-2"></i></div>
+                            <div class="ti-node ti-node-6"><i data-lucide="globe"></i></div>
+                            <div class="ti-particle ti-p-1"></div>
+                            <div class="ti-particle ti-p-2"></div>
+                            <div class="ti-particle ti-p-3"></div>
+                            <div class="ti-particle ti-p-4"></div>
+                            <div class="ti-particle ti-p-5"></div>
+                            <div class="ti-particle ti-p-6"></div>
+                        </div>
+                    </div>
+                    <div class="talent-main-right">
+                        <h4>Interested in Working With Us?</h4>
+                        <p>We welcome internship applications, research collaborations, open-source contributors, and future full-time professionals. Tell us about your skills, experience, interests, and how you'd like to contribute to EVID-DGC.</p>
+                    </div>
+                </div>
+
+                <div class="talent-who-section">
+                    <div class="talent-who-header">
+                        <i data-lucide="users"></i>
+                        <h3>Who <span class="text-highlight">Should Apply?</span></h3>
+                    </div>
+                    <div class="talent-who-grid">
+                        <div class="talent-who-card">
+                            <div class="twc-icon"><i data-lucide="graduation-cap"></i></div>
+                            <h4>Students</h4>
+                            <div class="twc-items">
+                                <span>Looking for internships</span>
+                                <span>Capstone projects</span>
+                                <span>Real-world experience</span>
+                            </div>
+                        </div>
+                        <div class="talent-who-card">
+                            <div class="twc-icon"><i data-lucide="shield"></i></div>
+                            <h4>Cybersecurity Professionals</h4>
+                            <div class="twc-items">
+                                <span>SOC</span>
+                                <span>Blue Team</span>
+                                <span>Threat Hunting</span>
+                                <span>Security Engineering</span>
+                            </div>
+                        </div>
+                        <div class="talent-who-card">
+                            <div class="twc-icon"><i data-lucide="link"></i></div>
+                            <h4>Blockchain Developers</h4>
+                            <div class="twc-items">
+                                <span>Smart Contracts</span>
+                                <span>Ethereum</span>
+                                <span>Hyperledger</span>
+                                <span>Web3</span>
+                                <span>Cryptography</span>
+                            </div>
+                        </div>
+                        <div class="talent-who-card">
+                            <div class="twc-icon"><i data-lucide="search"></i></div>
+                            <h4>Digital Forensics</h4>
+                            <div class="twc-items">
+                                <span>Evidence Analysis</span>
+                                <span>Malware</span>
+                                <span>Incident Response</span>
+                                <span>Chain of Custody</span>
+                            </div>
+                        </div>
+                        <div class="talent-who-card">
+                            <div class="twc-icon"><i data-lucide="scale"></i></div>
+                            <h4>Researchers &amp; Legal Experts</h4>
+                            <div class="twc-items">
+                                <span>Cyber Law</span>
+                                <span>Digital Evidence</span>
+                                <span>Compliance</span>
+                                <span>Academic Research</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="talent-checklist">
+                    <div class="talent-checklist-header">
+                        <i data-lucide="clipboard-list"></i>
+                        <h3>What Should You <span class="text-highlight">Include?</span></h3>
+                    </div>
+                    <div class="talent-checklist-grid">
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Full Name</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Internship or Full-Time</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Skills</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Experience</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Resume (Optional)</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>GitHub / Portfolio</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>LinkedIn Profile</span></div>
+                        <div class="talent-check-item"><i data-lucide="check-circle"></i><span>Why You Want to Join EVID-DGC</span></div>
+                    </div>
+                </div>
+
+                <div class="talent-culture">
+                    <div class="talent-culture-glow"></div>
+                    <div class="talent-culture-content">
+                        <i data-lucide="heart"></i>
+                        <h3>We Value Passion Over Titles</h3>
+                        <p>At EVID-DGC, we care more about curiosity, innovation, technical ability, problem-solving, and a willingness to learn than job titles alone. If you're passionate about Digital Forensics, Blockchain, Cybersecurity, or Digital Justice, we'd love to hear from you.</p>
+                    </div>
+                </div>
+
+                <div class="talent-final-cta">
+                    <div class="talent-final-glow"></div>
+                    <div class="talent-final-particles"></div>
+                    <div class="talent-final-content">
+                        <h3>Ready to Build the Future<br>of Digital Evidence?</h3>
+                        <div class="talent-final-email">DGC2MHNE@proton.me</div>
+                        <div style="font-size:0.85rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;">OR</div>
+                        <a href="mailto:DGC2MHNE@outlook.com?subject=EVID-DGC%20Application%20%E2%80%93%20Internship%20%2F%20Full-Time%20Opportunity" style="font-size:1.05rem;font-weight:700;color:#d32f2f;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">DGC2MHNE@outlook.com</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="career-why">
+                <div class="career-why-header">
+                    <i data-lucide="sparkles"></i>
+                    <h3>Why You'll Love Working Here</h3>
+                </div>
+                <div class="career-why-grid">
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="globe"></i></div>
+                        <h4>Impact at Scale</h4>
+                        <p>Your work will power digital justice across borders, securing evidence for millions of cases worldwide.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="cpu"></i></div>
+                        <h4>Cutting-edge Technology</h4>
+                        <p>Work with blockchain, zero-knowledge proofs, IPFS, and advanced cryptographic systems daily.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="book-open"></i></div>
+                        <h4>Continuous Learning</h4>
+                        <p>Annual learning budget, conference sponsorships, and dedicated time for research and certification.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="trending-up"></i></div>
+                        <h4>Career Growth</h4>
+                        <p>Clear career progression paths, mentorship programs, and leadership development opportunities.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="calendar"></i></div>
+                        <h4>Flexible Work Culture</h4>
+                        <p>Remote-first culture with async communication, flexible hours, and results-driven performance.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="flask-conical"></i></div>
+                        <h4>Research Opportunities</h4>
+                        <p>Dedicated R&D time to explore emerging technologies and publish findings in leading journals.</p>
+                    </div>
+                    <div class="career-why-card">
+                        <div class="cwc-icon"><i data-lucide="git-pull-request"></i></div>
+                        <h4>Open Source Contributions</h4>
+                        <p>We encourage and sponsor contributions to open source projects that align with our mission.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="height: 60px;"></div>
+        </div>
+
+        <!-- Contact Section -->
+        <section class="contact-section" id="contact" aria-labelledby="contact-heading">
+            <div class="contact-ambient" aria-hidden="true">
+                <div class="contact-orb contact-orb-1"></div>
+                <div class="contact-orb contact-orb-2"></div>
+                <div class="contact-orb contact-orb-3"></div>
+                <span class="contact-float contact-float-1"></span>
+                <span class="contact-float contact-float-2"></span>
+                <span class="contact-float contact-float-3"></span>
+            </div>
+
+            <div class="contact-shell">
+                <div class="contact-hero">
+                    <div class="contact-hero-inner">
+                        <div class="contact-badge">
+                            <span class="contact-badge-dot"></span>
+                            Support &amp; Partnerships
+                        </div>
+
+                        <h2 class="contact-title" id="contact-heading">Let's <span>Connect</span></h2>
+
+                        <p class="contact-subtitle">
+                            We're here to help answer your questions, discuss collaborations, and support your
+                            journey with EVID-DGC.
+                        </p>
+
+                        <div class="contact-cards" role="list">
+                            <a class="contact-info-card" href="mailto:DGC2MHNE@proton.me" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="mail"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Email Us</h3>
+                                    <p>DGC2MHNE@proton.me</p>
+                                </div>
+                                <span class="contact-info-arrow" aria-hidden="true">
+                                    <i data-lucide="arrow-up-right"></i>
+                                </span>
+                            </a>
+
+                            <div class="contact-info-card" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="clock"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Response Time</h3>
+                                    <p>Within 24 Hours</p>
+                                </div>
+                            </div>
+
+                            <div class="contact-info-card" role="listitem">
+                                <div class="contact-info-icon" aria-hidden="true">
+                                    <i data-lucide="calendar-days"></i>
+                                </div>
+                                <div class="contact-info-body">
+                                    <h3>Working Hours</h3>
+                                    <p>Monday – Saturday</p>
+                                    <p class="contact-info-time">9:00 AM – 6:00 PM (IST)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-form-wrap">
+                        <div class="contact-form-glow" aria-hidden="true"></div>
+                        <form class="contact-form" id="contactForm" novalidate>
+                            <div class="contact-form-header">
+                                <h3>Send a Message</h3>
+                                <p>We usually respond within 24 hours.</p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactName">Name</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="user" aria-hidden="true"></i>
+                                    <input type="text" id="contactName" name="name" maxlength="60"
+                                        placeholder="Your full name" autocomplete="name" required>
+                                </div>
+                                <p class="contact-field-error" id="contactNameError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactEmail">Email</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="at-sign" aria-hidden="true"></i>
+                                    <input type="email" id="contactEmail" name="email" maxlength="120"
+                                        placeholder="you@example.com" autocomplete="email" required>
+                                </div>
+                                <p class="contact-field-error" id="contactEmailError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactSubject">Subject</label>
+                                <div class="contact-input-shell">
+                                    <i data-lucide="tag" aria-hidden="true"></i>
+                                    <input type="text" id="contactSubject" name="subject" maxlength="100"
+                                        placeholder="How can we help?" required>
+                                </div>
+                                <p class="contact-field-error" id="contactSubjectError" role="alert"></p>
+                            </div>
+
+                            <div class="contact-field">
+                                <label for="contactMessage">Message</label>
+                                <div class="contact-input-shell contact-input-shell-area">
+                                    <i data-lucide="message-square" aria-hidden="true"></i>
+                                    <textarea id="contactMessage" name="message" maxlength="2000" rows="4"
+                                        placeholder="Tell us a little about your inquiry..." required></textarea>
+                                </div>
+                                <div class="contact-field-meta">
+                                    <p class="contact-field-error" id="contactMessageError" role="alert"></p>
+                                    <span class="contact-char-count" id="contactCharCount" aria-live="polite">0 / 2000</span>
+                                </div>
+                            </div>
+
+                            <input type="text" class="contact-honeypot" name="website" tabindex="-1"
+                                autocomplete="off" aria-hidden="true">
+
+                            <button type="submit" class="contact-submit" id="contactSubmitBtn">
+                                <span class="contact-submit-label">
+                                    Send Message
+                                    <i data-lucide="arrow-right" class="contact-submit-arrow" aria-hidden="true"></i>
+                                </span>
+                                <span class="contact-spinner" aria-hidden="true"></span>
+                            </button>
+                        </form>
+
+                        <div class="contact-status" id="contactStatus" role="status" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         Premium Login Modal
+         ═══════════════════════════════════════════════════════ -->
+    <div id="loginOverlay" class="login-overlay" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+        <!-- Ambient Effects -->
+        <div class="login-ambient" aria-hidden="true">
+            <div class="login-orb login-orb--1"></div>
+            <div class="login-orb login-orb--2"></div>
+            <div class="login-orb login-orb--3"></div>
+            <div class="login-particles">
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+                <span class="login-particle"></span>
+            </div>
+            <div class="login-glass-cube login-glass-cube--tl"></div>
+            <div class="login-glass-cube login-glass-cube--tr"></div>
+            <div class="login-glass-cube login-glass-cube--bl"></div>
+            <div class="login-glass-cube login-glass-cube--br"></div>
+        </div>
+
+        <!-- Modal -->
+        <div class="login-modal" id="loginModal" tabindex="-1">
+            <div class="login-modal-inner">
+                <!-- Close -->
+                <button class="login-close" id="loginCloseBtn" aria-label="Close login modal">
+                    <i data-lucide="x"></i>
+                </button>
+
+                <!-- Header -->
+                <div class="login-header">
+                    <div class="login-header-brand">
+                        <img src="logo-32x32.png" alt="EVID-DGC" class="login-header-logo">
+                    </div>
+                    <h2 class="login-header-title" id="loginModalTitle">Login Options</h2>
+                    <p class="login-header-subtitle">
+                        Choose your preferred authentication method to securely access the Blockchain Evidence Management System.
+                    </p>
+                </div>
+
+                <!-- Auth Cards -->
+                <div class="login-cards-grid">
+                    <!-- Card 1: MetaMask -->
+                    <div class="login-auth-card" id="loginCardWallet">
+                        <div class="login-card-icon login-card-icon--wallet">
+                            <i data-lucide="wallet"></i>
+                        </div>
+                        <h3 class="login-card-title">MetaMask Wallet</h3>
+                        <p class="login-card-subtitle">Blockchain Authentication</p>
+                        <ul class="login-features">
+                            <li><i data-lucide="check-circle"></i> Secure blockchain authentication</li>
+                            <li><i data-lucide="check-circle"></i> Full ownership of credentials</li>
+                            <li><i data-lucide="check-circle"></i> Fast wallet connection</li>
+                        </ul>
+                        <div id="loginNetworkBadge" class="login-network-badge"></div>
+                        <button class="login-card-btn login-card-btn--primary" id="loginConnectWallet" type="button">
+                            <span class="login-btn-text">Connect Wallet <i data-lucide="arrow-right"></i></span>
+                            <span class="login-btn-spinner"></span>
+                        </button>
+                        <div class="login-metamask-missing" id="loginMetaMaskMissing" style="display:none;">
+                            <p>MetaMask not installed.</p>
+                            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" class="login-metamask-install">
+                                <i data-lucide="external-link"></i> Install MetaMask
+                            </a>
+                        </div>
+                        <div class="login-wallet-connected" id="loginWalletConnected">
+                            <i data-lucide="check-circle"></i>
+                            <div class="login-wallet-info">
+                                <span class="login-wallet-label">Connected</span>
+                                <span class="login-wallet-addr" id="loginWalletAddress"></span>
+                            </div>
+                            <button class="login-wallet-disconnect" id="loginDisconnectWallet" type="button">Disconnect</button>
+                        </div>
+                        <!-- Login Now button — shown when wallet is already connected -->
+                        <button class="login-card-btn login-card-btn--primary" id="loginWalletLoginBtn" type="button" style="display:none;margin-top:12px;">
+                            <span class="login-btn-text">Login Now <i data-lucide="log-in"></i></span>
+                            <span class="login-btn-spinner"></span>
+                        </button>
+                    </div>
+
+                    <!-- Card 2: Email -->
+                    <div class="login-auth-card" id="loginCardEmail">
+                        <div class="login-card-icon login-card-icon--email">
+                            <i data-lucide="mail"></i>
+                        </div>
+                        <h3 class="login-card-title">Email &amp; Password</h3>
+                        <p class="login-card-subtitle">Traditional Authentication</p>
+                        <ul class="login-features">
+                            <li><i data-lucide="check-circle"></i> Secure encrypted login</li>
+                            <li><i data-lucide="check-circle"></i> Fast authentication</li>
+                            <li><i data-lucide="check-circle"></i> Role-based access</li>
+                        </ul>
+                        <button class="login-card-btn login-card-btn--primary" id="loginShowEmailForm" type="button">
+                            <span class="login-btn-text">Login with Email <i data-lucide="arrow-right"></i></span>
+                            <span class="login-btn-spinner"></span>
+                        </button>
+                        <!-- Expandable Email Form -->
+                        <div class="login-email-form-wrap" id="loginEmailFormWrap">
+                            <form id="emailLoginForm" novalidate>
+                                <div class="login-email-field">
+                                    <label for="loginEmail">
+                                        <i data-lucide="mail"></i> Email Address
+                                    </label>
+                                    <input type="email" id="loginEmail" class="login-email-input" placeholder="you@example.com" required autocomplete="email">
+                                </div>
+                                <div class="login-email-field">
+                                    <label for="loginPassword">
+                                        <i data-lucide="lock"></i> Password
+                                    </label>
+                                    <div class="login-email-input-wrap password-input-wrapper">
+                                        <input type="password" id="loginPassword" class="login-email-input" placeholder="Enter your password" required autocomplete="current-password">
+                                        <button type="button" class="login-email-toggle password-toggle-btn" onclick="togglePasswordVisibility('loginPassword')" aria-label="Toggle password visibility">
+                                            <i data-lucide="eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="login-email-row">
+                                    <label class="login-remember">
+                                        <input type="checkbox" id="loginRemember"> Remember me
+                                    </label>
+                                    <a href="#" onclick="event.preventDefault(); openForgotPasswordModal()" class="login-forgot-link">Forgot password?</a>
+                                </div>
+                                <button type="submit" class="login-email-submit" id="loginEmailSubmit">
+                                    Sign In
+                                </button>
+                            </form>
+                            <p style="text-align:center;margin-top:14px;font-size:0.8rem;color:var(--lm-text-muted);">
+                                Don't have an account?
+                                <a href="#" onclick="event.preventDefault(); openRegistrationModal()" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Public Login Entry -->
+                <div class="login-public-entry">
+                    <div class="login-public-divider"><span>or</span></div>
+                    <p class="login-public-note">Public Visitor? View published case records with email login — no MetaMask needed.</p>
+                    <button type="button" class="login-card-btn login-card-btn--public" onclick="openPublicLoginModal()" id="loginPublicBtn">
+                        <span class="login-btn-text"><i data-lucide="eye"></i> Public Login</span>
+                        <span class="login-btn-spinner"></span>
+                    </button>
+                </div>
+
+                <!-- Security Strip -->
+                <div class="login-security-strip">
+                    <div class="login-security-badge">
+                        <i data-lucide="lock"></i>
+                        <span>Secure Authentication</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="link"></i>
+                        <span>Blockchain Verified</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="shield"></i>
+                        <span>Role-Based Access</span>
+                    </div>
+                    <div class="login-security-badge">
+                        <i data-lucide="zap"></i>
+                        <span>Fast &amp; Reliable</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Sub-Modal -->
+    <div id="forgotPasswordOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="forgotPasswordTitle">Reset Password</h3>
+                <button class="login-submodal-close" onclick="closeForgotPasswordModal()" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="forgotPasswordForm">
+                <div class="login-sub-field">
+                    <label for="forgotEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="forgotEmail" class="login-sub-input" placeholder="Enter your email" required>
+                    <p class="login-sub-text">We'll send you a link to reset your password.</p>
+                    <p class="login-sub-status" id="forgotStatus" role="status" aria-live="polite"></p>
+                </div>
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--primary">
+                        <i data-lucide="send"></i> Send Reset Link
+                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closeForgotPasswordModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Registration Sub-Modal -->
+    <div id="registrationOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="registrationTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="registrationTitle">Create Account</h3>
+                <button class="login-submodal-close" onclick="closeRegistrationModal()" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="emailRegistrationForm">
+                <div class="login-sub-field">
+                    <label for="regEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="regEmail" class="login-sub-input" placeholder="Enter your email" required>
+                </div>
+                <div class="login-sub-field">
+                    <label for="regPassword"><i data-lucide="lock"></i> Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="regPassword" class="login-sub-input" placeholder="Create a password" required>
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('regPassword')" aria-label="Toggle password visibility">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                    <div class="login-pw-strength" id="regPasswordStrength">
+                        <div class="login-pw-strength-meter"><div class="login-pw-strength-fill"></div></div>
+                        <span class="login-pw-strength-text">Password strength</span>
+                    </div>
+                </div>
+                <div class="login-sub-field">
+                    <label for="regConfirmPassword"><i data-lucide="lock"></i> Confirm Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="regConfirmPassword" class="login-sub-input" placeholder="Confirm your password" required>
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('regConfirmPassword')" aria-label="Toggle password visibility">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="login-sub-field">
+                    <label for="regFullName"><i data-lucide="user"></i> Full Name</label>
+                    <input type="text" id="regFullName" class="login-sub-input" placeholder="Enter your full name" required>
+                </div>
+                <div class="login-sub-field">
+                    <label for="regRole"><i data-lucide="users"></i> Role</label>
+                    <select id="regRole" class="login-sub-input" required>
+                        <option value="">Select your role</option>
+                        <option value="public_viewer">Public Viewer</option>
+                        <option value="investigator">Investigator</option>
+                        <option value="forensic_analyst">Forensic Analyst</option>
+                        <option value="legal_professional">Legal Professional</option>
+                        <option value="court_official">Court Official</option>
+                        <option value="evidence_manager">Evidence Manager</option>
+                        <option value="auditor">Auditor</option>
+                    </select>
+                    <p class="login-sub-text" id="regRoleHint" style="display:none;"></p>
+                </div>
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--success">
+                        <i data-lucide="user-plus"></i> Create Account
+                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closeRegistrationModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Public Login Sub-Modal -->
+    <div id="publicLoginOverlay" class="login-submodal-overlay" role="dialog" aria-modal="true" aria-labelledby="publicLoginTitle">
+        <div class="login-submodal">
+            <div class="login-submodal-header">
+                <h3 id="publicLoginTitle"><i data-lucide="eye"></i> Public Login</h3>
+                <button class="login-submodal-close" onclick="closePublicLoginModal()" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <p class="login-sub-text">Sign in with your email and password to view published case records. No MetaMask required.</p>
+            <form id="publicLoginForm">
+                <div class="login-sub-field">
+                    <label for="publicEmail"><i data-lucide="mail"></i> Email Address</label>
+                    <input type="email" id="publicEmail" class="login-sub-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="login-sub-field">
+                    <label for="publicPassword"><i data-lucide="lock"></i> Password</label>
+                    <div class="login-sub-pw-wrap password-input-wrapper">
+                        <input type="password" id="publicPassword" class="login-sub-input" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="login-sub-pw-toggle password-toggle-btn" onclick="togglePasswordVisibility('publicPassword')" aria-label="Toggle password visibility">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="login-sub-actions">
+                    <button type="submit" class="login-sub-btn login-sub-btn--primary" id="publicLoginSubmit">
+                        <i data-lucide="log-in"></i> Sign In
+                    </button>
+                    <button type="button" class="login-sub-btn login-sub-btn--outline" onclick="closePublicLoginModal()">Cancel</button>
+                </div>
+            </form>
+            <p style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--lm-text-muted);">
+                Don't have an account?
+                <a href="#" onclick="event.preventDefault(); closePublicLoginModal(); openRegistrationModal('public_viewer')" style="color:var(--lm-primary);font-weight:600;text-decoration:none;">Create one</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Error Sub-Modal -->
+    <div id="errorOverlay" class="login-submodal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="errorModalTitle">
+        <div class="login-submodal login-error-content">
+            <div class="login-error-icon-wrap">
+                <i data-lucide="alert-circle"></i>
+            </div>
+            <h2 id="errorModalTitle" style="margin:0 0 8px;font-size:1.15rem;font-weight:700;color:var(--lm-text);">Error</h2>
+            <div id="errorModalDescription" class="login-error-msg">An error occurred</div>
+            <div class="login-sub-actions" style="justify-content:center;">
+                <button id="errorModalActionBtn" class="login-sub-btn login-sub-btn--primary" style="display:none;">Action</button>
+                <button onclick="closeErrorModal()" class="login-sub-btn login-sub-btn--outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollUpBtn" class="scroll-up-btn" onclick="scrollToTop()" aria-label="Scroll to top">
+        <i data-lucide="arrow-up"></i>
+    </button>
+
+
+    <script src="footer.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var roleData = {
+            investigator: {
+                icon: 'search', title: 'Investigator',
+                mission: 'Collect and preserve digital evidence from crime scenes and secure it for blockchain verification',
+                responsibilities: ['Secure crime scene digital evidence collection', 'Create and manage investigation cases', 'Upload evidence with metadata and timestamps', 'Initiate chain of custody records'],
+                allowed: ['Create new case files', 'Upload evidence files', 'Add case notes and annotations', 'View assigned case evidence', 'Request forensic analysis'],
+                restricted: ['Modify blockchain records', 'Delete uploaded evidence', 'Access other investigator cases', 'Approve court submissions', 'Modify system configurations'],
+                records: ['Case Created', 'Evidence Uploaded', 'Chain of Custody Initiated', 'Hash Generated'],
+                example: '"An investigator arrives at a crime scene, photographs evidence using a secure device, uploads the images to the system, and a SHA-256 hash is immediately generated and recorded on the blockchain."'
+            },
+            custodian: {
+                icon: 'cloud', title: 'Cloud Custodian',
+                mission: 'Manage secure encrypted transfer and storage of digital evidence between authorized roles',
+                responsibilities: ['Securely transfer evidence between custody holders', 'Verify encryption integrity during handover', 'Maintain evidence availability and redundancy', 'Log all transfer events on blockchain'],
+                allowed: ['Transfer evidence to authorized roles', 'Verify file integrity during transfer', 'Generate transfer receipts', 'Monitor storage health', 'Flag anomalies in access patterns'],
+                restricted: ['Open or view evidence content', 'Modify evidence metadata', 'Delete evidence from storage', 'Grant access to unauthorized users', 'Bypass encryption protocols'],
+                records: ['Evidence Transferred', 'Custody Handover Logged', 'Integrity Check Passed', 'Storage Location Updated'],
+                example: '"After an investigator uploads evidence, the Cloud Custodian ensures the encrypted file is securely transmitted to IPFS storage with a verifiable integrity check recorded on the blockchain."'
+            },
+            analyst: {
+                icon: 'microscope', title: 'Forensic Analyst',
+                mission: 'Perform technical examination of digital evidence and generate forensic reports with blockchain verification',
+                responsibilities: ['Examine digital evidence using forensic tools', 'Generate cryptographic hash verification reports', 'Document analysis methodology and findings', 'Create court-ready forensic reports'],
+                allowed: ['Access assigned evidence for analysis', 'Run forensic analysis tools', 'Generate analysis reports', 'Add technical findings to case record', 'Request additional evidence items'],
+                restricted: ['Modify original evidence files', 'Delete case records', 'Access evidence outside assigned cases', 'Share findings without authorization', 'Skip chain of custody procedures'],
+                records: ['Analysis Started', 'Tool Execution Logged', 'Hash Verified', 'Forensic Report Generated'],
+                example: '"A forensic analyst examines a hard drive image using validated tools, documenting each step. The analysis log and hash verification are recorded on the blockchain for court admissibility."'
+            },
+            legal: {
+                icon: 'scale', title: 'Legal Professional',
+                mission: 'Review evidence and case files to ensure legal compliance and prepare court submissions',
+                responsibilities: ['Review evidence for legal compliance', 'Prepare legal documents and motions', 'Ensure chain of custody meets evidentiary standards', 'Coordinate with court officials for submissions'],
+                allowed: ['Review case evidence and analysis', 'Prepare legal submissions', 'Request additional forensic analysis', 'Communicate with court officials', 'Mark evidence for court presentation'],
+                restricted: ['Modify or delete evidence', 'Access raw forensic data', 'Override chain of custody', 'Make changes to blockchain records', 'Exceed authorized case access'],
+                records: ['Legal Review Initiated', 'Compliance Check Passed', 'Court Submission Prepared', 'Evidence Marked for Trial'],
+                example: '"A legal professional reviews the chain of custody documentation and forensic reports, verifies that all evidence handling meets legal standards, and prepares the submission package for court."'
+            },
+            court: {
+                icon: 'gavel', title: 'Court Official',
+                mission: 'Verify evidence integrity for court proceedings and certify evidence admissibility',
+                responsibilities: ['Authenticate evidence blockchain records', 'Verify chain of custody completeness', 'Certify evidence for court proceedings', 'Maintain court evidence docket'],
+                allowed: ['Verify evidence blockchain records', 'View complete chain of custody', 'Certify evidence admissibility', 'Request additional verification', 'Docket evidence for proceedings'],
+                restricted: ['Modify evidence or case records', 'Access investigative notes', 'Delete court records', 'Share sealed evidence publicly', 'Alter blockchain timestamps'],
+                records: ['Evidence Authenticated', 'Chain of Custody Verified', 'Admissibility Certified', 'Court Docket Updated'],
+                example: '"A judge or court clerk accesses the system to verify the blockchain timestamp and hash of a piece of evidence, confirming it has not been tampered with since the moment of collection."'
+            },
+            manager: {
+                icon: 'archive', title: 'Evidence Manager',
+                mission: 'Oversee the complete evidence lifecycle, storage, retention, and chain of custody across all cases',
+                responsibilities: ['Manage evidence storage and retention policies', 'Monitor chain of custody records', 'Coordinate evidence access requests', 'Ensure compliance with evidence handling standards'],
+                allowed: ['View all case evidence records', 'Manage retention schedules', 'Generate system-wide audit reports', 'Coordinate evidence transfers', 'Monitor storage capacity'],
+                restricted: ['Modify or delete evidence', 'Access evidence content without authorization', 'Override role permissions', 'Skip chain of custody steps', 'Delete blockchain records'],
+                records: ['Retention Policy Applied', 'Storage Audit Completed', 'Evidence Lifecycle Updated', 'Compliance Report Generated'],
+                example: '"The Evidence Manager runs a quarterly audit of all stored evidence, verifying that retention policies are followed and that no evidence has been accessed without proper authorization."'
+            },
+            auditor: {
+                icon: 'clipboard-check', title: 'Auditor',
+                mission: 'Conduct independent audits of the system to ensure compliance with forensic standards and regulations',
+                responsibilities: ['Audit blockchain transaction logs', 'Verify compliance with ISO/NIST standards', 'Inspect chain of custody records', 'Generate compliance reports'],
+                allowed: ['View all system logs and records', 'Verify blockchain transaction integrity', 'Generate compliance reports', 'Flag suspicious activities', 'Review access logs'],
+                restricted: ['Modify system configuration', 'Access evidence content', 'Change user permissions', 'Delete audit records', 'Interfere with active cases'],
+                records: ['Audit Initiated', 'Transaction Log Verified', 'Compliance Checked', 'Audit Report Filed'],
+                example: '"An external auditor reviews the blockchain ledger to verify that every evidence transaction matches the chain of custody records, ensuring full compliance with digital forensics standards."'
+            },
+            admin: {
+                icon: 'shield', title: 'Administrator',
+                mission: 'Manage system configuration, user roles, permissions, and ensure platform security and availability',
+                responsibilities: ['Configure system settings and policies', 'Manage user accounts and role assignments', 'Monitor system security and performance', 'Coordinate emergency response procedures'],
+                allowed: ['Configure system settings', 'Manage user roles and permissions', 'View all system logs', 'Generate platform-wide reports', 'Perform system maintenance'],
+                restricted: ['Cannot modify blockchain records', 'Cannot alter evidence after upload', 'Cannot override chain of custody', 'Cannot access evidence content without role', 'Cannot delete audit trail entries'],
+                records: ['User Role Assigned', 'System Configuration Updated', 'Security Policy Applied', 'Maintenance Logged'],
+                example: '"An administrator configures a new investigator role, sets their permissions, and assigns them to a case. Every configuration change is recorded immutably on the blockchain."'
+            }
+        };
+
+        function updateRoleCard(roleId) {
+            var data = roleData[roleId];
+            if (!data) return;
+            var card = document.getElementById('roleDetailsCard');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(10px)';
+            setTimeout(function () {
+                document.getElementById('roleIcon').setAttribute('data-lucide', data.icon);
+                document.getElementById('roleTitle').textContent = data.title;
+                document.getElementById('roleMission').textContent = data.mission;
+                var respEl = document.getElementById('roleResponsibilities');
+                respEl.innerHTML = data.responsibilities.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var allowEl = document.getElementById('roleAllowed');
+                allowEl.innerHTML = data.allowed.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var restrictEl = document.getElementById('roleRestricted');
+                restrictEl.innerHTML = data.restricted.map(function (r) { return '<li>' + r + '</li>'; }).join('');
+                var recEl = document.getElementById('roleRecords');
+                recEl.innerHTML = data.records.map(function (r) { return '<span class="role-detail-tag">' + r + '</span>'; }).join('');
+                document.getElementById('roleExample').textContent = data.example;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 200);
+        }
+
+        var nodes = document.querySelectorAll('.workflow-node');
+        nodes.forEach(function (node) {
+            node.addEventListener('click', function () {
+                nodes.forEach(function (n) { n.classList.remove('active'); });
+                this.classList.add('active');
+                updateRoleCard(this.getAttribute('data-role'));
+            });
+        });
+    });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded, initializing application...');
+
+            try {
+                if (typeof config === 'undefined') {
+                    console.warn('Config not loaded! Creating default config.');
+                    window.config = {
+                        DEMO_MODE: true,
+                        APP_NAME: 'EVID-DGC'
+                    };
+                }
+                if (typeof NETWORKS === 'undefined') {
+                    console.error('Networks configuration not loaded!');
+                }
+
+                if (typeof initializeApp === 'function') {
+                    initializeApp();
+                } else {
+                    console.error('initializeApp function not found!');
+                    // Fallback initialization
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        });
+    </script>
+
+</body>
+
+</html>
