@@ -238,7 +238,10 @@ async function extractMetadata(fileBuffer, mimeType, context = {}) {
         if (meta.height) extracted.height = meta.height;
         if (meta.format) extracted.format = meta.format;
         if (meta.exif && meta.exif.length >= 8) {
-          Object.assign(extracted, parseExif(meta.exif));
+          // sharp hands back the raw APP1 payload, sometimes with the Exif\0\0 preamble
+          let exifBuf = meta.exif;
+          if (exifBuf.toString('ascii', 0, 6) === 'Exif\0\0') exifBuf = exifBuf.subarray(6);
+          Object.assign(extracted, parseExif(exifBuf));
         }
       } catch (e) {
         console.error('image metadata extraction failed:', e.message);
@@ -250,7 +253,9 @@ async function extractMetadata(fileBuffer, mimeType, context = {}) {
         flags.push({ code: 'exif_date_after_upload', message: `EXIF timestamp (${taken}) is after the upload time - the clock on the capture device may be wrong or the file may have been altered.` });
       }
       const claimed = context.forensic && (context.forensic.deviceMakeModel || context.forensic.sourceDevice);
-      const actual = [extracted.make, extracted.model].filter(Boolean).join(' ');
+      const actual = (extracted.model && extracted.make && String(extracted.model).toLowerCase().startsWith(String(extracted.make).toLowerCase()))
+        ? extracted.model
+        : [extracted.make, extracted.model].filter(Boolean).join(' ');
       if (claimed && actual && !actual.toLowerCase().includes(String(claimed).toLowerCase()) && !String(claimed).toLowerCase().includes(actual.toLowerCase())) {
         flags.push({ code: 'device_mismatch', message: `Intake form names device "${claimed}" but the file EXIF says "${actual}".` });
       }
