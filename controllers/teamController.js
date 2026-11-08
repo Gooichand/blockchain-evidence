@@ -13,6 +13,8 @@ const { stableUserId, canAccessCase } = require('../middleware/caseAccess');
  */
 
 const TEAM_ROLES = ['lead', 'co-investigator', 'analyst', 'viewer'];
+// case_assignments.assignment_type is CHECK-constrained to these three values.
+const ASSIGNMENT_TYPE = { lead: 'primary', 'co-investigator': 'secondary', analyst: 'secondary', viewer: 'observer' };
 
 function nameOf(u) {
   return u.full_name || u.name || u.email || null;
@@ -135,7 +137,7 @@ const addMember = async (req, res) => {
         assigned_to: target.sid,
         assigned_by: sid,
         role_type: caseRole,
-        assignment_type: 'team',
+        assignment_type: ASSIGNMENT_TYPE[caseRole] || 'secondary',
         notes: '',
       })
       .select()
