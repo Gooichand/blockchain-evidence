@@ -4,6 +4,7 @@ const {
   stableUserId,
   canAccessCase,
   canAccessEvidence,
+  getAccessibleCaseIds,
 } = require('../middleware/caseAccess');
 
 /**
@@ -199,4 +200,28 @@ const verifyCustodyChain = async (req, res) => {
   }
 };
 
-module.exports = { logCustody, getEvidenceCustody, getCaseCustody, verifyCustodyChain };
+// GET /api/custody/recent - latest custody events across the cases the caller
+// may access (M18: truthful dashboard "recent custody events").
+const getRecentCustody = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 15, 50);
+    let q = supabase
+      .from('custody_log')
+      .select('id, evidence_id, case_id, action, actor, actor_name, actor_role, created_at')
+      .order('id', { ascending: false })
+      .limit(limit);
+    const accessible = await getAccessibleCaseIds(req.user);
+    if (accessible !== null) {
+      if (accessible.length === 0) return res.json({ success: true, entries: [] });
+      q = q.in('case_id', accessible.map(String));
+    }
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json({ success: true, entries: data || [] });
+  } catch (e) {
+    console.error('getRecentCustody error:', e);
+    res.status(500).json({ error: 'Failed to load recent custody events' });
+  }
+};
+
+module.exports = { logCustody, getEvidenceCustody, getCaseCustody, verifyCustodyChain, getRecentCustody };
