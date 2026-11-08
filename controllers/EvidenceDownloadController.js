@@ -335,7 +335,20 @@ const getAllEvidence = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { limit = 50, offset = 0, case_id, status, submitted_by } = req.query;
+    const {
+      limit = 50,
+      offset = 0,
+      case_id,
+      status,
+      submitted_by,
+      search,
+      type,
+      dateFrom,
+      dateTo,
+      tag,
+      sortBy = 'timestamp',
+      sortOrder = 'desc',
+    } = req.query;
 
     if (user.role === 'public_viewer') {
       return res.status(403).json({ success: false, error: 'Public viewers cannot list evidence' });
@@ -344,15 +357,43 @@ const getAllEvidence = async (req, res) => {
     const limitNum = Math.min(parseInt(limit, 10) || 50, 100);
     const offsetNum = Math.max(parseInt(offset, 10) || 0, 0);
 
+    // M13: whitelist sortable columns so a bad sortBy cannot break the query
+    const SORTABLE = ['timestamp', 'title', 'type', 'status', 'case_id'];
+    const sortCol = SORTABLE.includes(sortBy) ? sortBy : 'timestamp';
+
     let query = supabase
       .from('evidence')
       .select('*', { count: 'exact' })
-      .order('timestamp', { ascending: false })
+      .order(sortCol, { ascending: sortOrder === 'asc' })
       .range(offsetNum, offsetNum + limitNum - 1);
 
     if (case_id) query = query.eq('case_id', case_id);
     if (status) query = query.eq('status', status);
     if (submitted_by) query = query.eq('submitted_by', submitted_by);
+    // M13: search, type, date range and tag filters for the evidence list page
+    if (type) query = query.eq('type', type);
+    if (dateFrom) query = query.gte('timestamp', dateFrom);
+    if (dateTo) query = query.lte('timestamp', dateTo);
+    if (search) {
+      const s = String(search).replace(/[%_.*(),'"]/g, '').trim();
+      if (s) {
+        query = query.or(`title.ilike.%${s}%,name.ilike.%${s}%,file_name.ilike.%${s}%,hash.ilike.%${s}%`);
+      }
+    }
+    if (tag) {
+      const tagId = parseInt(tag, 10);
+      if (!isNaN(tagId)) {
+        const { data: et } = (await supabase
+          .from('evidence_tags')
+          .select('evidence_id')
+          .eq('tag_id', tagId)) || {};
+        const taggedIds = [...new Set((et || []).map((r) => r.evidence_id))];
+        if (!taggedIds.length) {
+          return res.json({ success: true, data: [], pagination: { total: 0, limit: limitNum, offset: offsetNum } });
+        }
+        query = query.in('id', taggedIds);
+      }
+    }
 
     // C2 fix: investigators only see their own / assigned-case evidence
     query = (await scopeEvidenceQuery(query, user)).query;
