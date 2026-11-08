@@ -15,8 +15,16 @@ const getNotifications = async (req, res) => {
     const offsetNum = parseInt(offset, 10) || 0;
     const limitNum = parseInt(limit, 10) || 50;
 
-    if (!validateWalletAddress(wallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    // H6 fix: a caller may only read their own notifications. Email-login
+    // users are keyed by `user_<id>` instead of a wallet.
+    const ownKeys = [req.user?.wallet_address, req.user?.id ? `user_${req.user.id}` : null].filter(Boolean);
+    const isPrivileged = ['admin', 'auditor'].includes(req.user?.role);
+    if (!isPrivileged && !ownKeys.includes(wallet)) {
+      return res.status(403).json({ error: 'You can only read your own notifications' });
+    }
+
+    if (!validateWalletAddress(wallet) && !/^user_\d+$/.test(wallet)) {
+      return res.status(400).json({ error: 'Invalid notification owner identifier' });
     }
 
     let query = supabase
@@ -52,10 +60,11 @@ const getNotifications = async (req, res) => {
 const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userWallet } = req.body;
+    // H6 fix: derive the owner from the verified session, not the body
+    const userWallet = req.user?.wallet_address || (req.user?.id ? `user_${req.user.id}` : null);
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!userWallet) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const { error } = (await supabase
@@ -76,10 +85,11 @@ const markAsRead = async (req, res) => {
 // Mark all notifications as read
 const markAllAsRead = async (req, res) => {
   try {
-    const { userWallet } = req.body;
+    // H6 fix: derive the owner from the verified session, not the body
+    const userWallet = req.user?.wallet_address || (req.user?.id ? `user_${req.user.id}` : null);
 
-    if (!validateWalletAddress(userWallet)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
+    if (!userWallet) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const { error } = (await supabase
