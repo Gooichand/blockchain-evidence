@@ -28,6 +28,17 @@ class IntegratedEvidenceService {
         results.metadata = { extracted: {}, flags: [] };
       }
 
+      // S2: merge file-type verification results recorded by the controller
+      if (metadata.detectedType) {
+        results.metadata.extracted.detected_type = metadata.detectedType.label;
+        if (metadata.detectedType.mime !== metadata.mimeType) {
+          results.metadata.extracted.claimed_type = metadata.mimeType;
+        }
+      }
+      if (Array.isArray(metadata.verificationFlags) && metadata.verificationFlags.length) {
+        results.metadata.flags = results.metadata.flags.concat(metadata.verificationFlags);
+      }
+
       try {
         results.ipfs = await ipfsStorageService.uploadFile(fileBuffer, fileName, {
           ...metadata,
