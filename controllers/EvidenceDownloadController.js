@@ -535,6 +535,26 @@ const previewEvidence = async (req, res) => {
 };
 
 // Get evidence details for preview
+
+// S3: attach [{id, name, color}] tags to a list of evidence rows (one extra query)
+const attachTags = async (rows) => {
+  if (!rows || rows.length === 0) return rows;
+  const ids = rows.map((r) => r.id);
+  const { data: links } = (await supabase
+    .from('evidence_tags')
+    .select('evidence_id, tag_id, tags(id, name, color, category)')
+    .in('evidence_id', ids)) || {};
+  const byEvidence = {};
+  for (const l of links || []) {
+    if (!l.tags) continue;
+    (byEvidence[l.evidence_id] = byEvidence[l.evidence_id] || []).push({
+      id: l.tags.id, name: l.tags.name, color: l.tags.color, category: l.tags.category,
+    });
+  }
+  for (const r of rows) r.tags = byEvidence[r.id] || [];
+  return rows;
+};
+
 const getEvidenceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -580,6 +600,8 @@ const getEvidenceById = async (req, res) => {
       console.error('custody log for view failed:', custodyErr);
     }
 
+    await attachTags([evidence]);
+
     res.json({ success: true, data: evidence });
   } catch (error) {
     console.error('Get evidence by ID error:', error);
@@ -615,6 +637,8 @@ const getEvidenceByCase = async (req, res) => {
       .order('timestamp', { ascending: true })) || {};
 
     if (error) throw error;
+
+    await attachTags(evidence || []);
 
     res.json({ success: true, data: evidence });
   } catch (error) {
