@@ -90,6 +90,22 @@ const downloadEvidence = async (req, res) => {
       console.error('Watermark failed, serving original file:', wmErr.message);
     }
 
+    // M4: custody ledger entry for this access
+    try {
+      const { logCustody } = require('./custodyController');
+      const cidNum = parseInt(evidence.case_id, 10);
+      await logCustody({
+        evidenceId: evidence.id,
+        caseId: isNaN(cidNum) ? null : cidNum,
+        action: 'downloaded',
+        user,
+        details: { watermark_applied: true, filename },
+        req,
+      });
+    } catch (custodyErr) {
+      console.error('custody log for download failed:', custodyErr);
+    }
+
     // SECURITY FIX: Log using verified identity
     await logDownloadAction(verifiedWallet, id, 'evidence_download', {
       evidence_id: id,
@@ -383,6 +399,22 @@ const getEvidenceById = async (req, res) => {
     // C2 fix
     if (!(await canAccessEvidence(user, evidence))) {
       return res.status(403).json({ success: false, error: 'You do not have access to this evidence' });
+    }
+
+    // M4: custody ledger entry for viewing this evidence record
+    try {
+      const { logCustody } = require('./custodyController');
+      const cidNum = parseInt(evidence.case_id, 10);
+      await logCustody({
+        evidenceId: evidence.id,
+        caseId: isNaN(cidNum) ? null : cidNum,
+        action: 'viewed',
+        user,
+        details: {},
+        req,
+      });
+    } catch (custodyErr) {
+      console.error('custody log for view failed:', custodyErr);
     }
 
     res.json({ success: true, data: evidence });
