@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { ethers } = require('ethers');
 const QRCode = require('qrcode');
 const { generateTotpSecret, totpVerify } = require('../lib/totp');
+const { logAudit, clientIp } = require('../lib/audit');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '7d';
@@ -238,6 +239,7 @@ const emailLogin = async (req, res) => {
     // Enforce temporary lockout after repeated failed attempts.
     if (user.locked_until && new Date(user.locked_until).getTime() > Date.now()) {
       const minutesLeft = Math.max(1, Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 60000));
+      await logAudit(req, { userId: user.id, action: 'email_login_locked', result: 'denied', details: { auth_type: 'email' } });
       return res.status(423).json({
         error: `Account temporarily locked. Try again in ${minutesLeft} minute(s).`,
         lockedUntil: user.locked_until,
@@ -261,6 +263,12 @@ const emailLogin = async (req, res) => {
         // Lockout bookkeeping must never break the auth flow itself.
         console.error('Failed to record failed login attempt:', lockoutError);
       }
+      await logAudit(req, {
+        userId: user.id,
+        action: 'email_login_failed',
+        result: 'failure',
+        details: { auth_type: 'email', locked: attempts >= MAX_FAILED_ATTEMPTS },
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -286,6 +294,7 @@ const emailLogin = async (req, res) => {
       }
       try {
         if (!totpVerify(user.totp_secret, totp)) {
+          await logAudit(req, { userId: user.id, action: 'email_login_2fa_failed', result: 'failure', details: { auth_type: 'email' } });
           return res.status(401).json({
             error: 'Invalid two-factor authentication code',
             requiresTwoFactor: true,
@@ -297,16 +306,8 @@ const emailLogin = async (req, res) => {
       }
     }
 
-    // Log login activity (check returned error since Supabase does not throw on DB failures)
-    const { error: logError } = (await supabase.from('activity_logs').insert({
-      user_id: user.id,
-      action: 'email_login',
-      details: JSON.stringify({ auth_type: 'email' }),
-      timestamp: new Date().toISOString(),
-    })) || {};
-    if (logError) {
-      console.error('Failed to log email login activity:', logError);
-    }
+    // Log login activity with client IP and result (M16 audit trail)
+    await logAudit(req, { userId: user.id, action: 'email_login', result: 'success', details: { auth_type: 'email' } });
 
     // Generate JWT and record the server-side session against its id so it
     // can be revoked later from the sessions page.
@@ -371,6 +372,13 @@ const logout = async (req, res) => {
     }
 
     clearSessionCookie(res);
+    try {
+      const { verifyRequestIdentity } = require('../middleware/authorization');
+      const { user: identity } = verifyRequestIdentity(req);
+      if (identity) {
+        await logAudit(req, { userId: identity.id, action: 'logout', result: 'success' });
+      }
+    } catch (_) { /* logout stays quiet on logging problems */ }
     return res.json({ success: true, message: 'Logged out' });
   } catch (error) {
     console.error('Logout error:', error);
@@ -851,6 +859,8 @@ const changePassword = async (req, res) => {
     const { error: logError } = (await supabase.from('activity_logs').insert({
       user_id: user.id,
       action: 'password_changed',
+      result: 'success',
+      ip_address: clientIp(req),
       details: JSON.stringify({ auth_type: 'email' }),
       timestamp: new Date().toISOString(),
     })) || {};
@@ -932,6 +942,7 @@ const revokeSession = async (req, res) => {
       revokeToken(row.token_jti);
     }
 
+    await logAudit(req, { userId: user.id, action: 'session_revoked', result: 'success', details: { session_id: sessionId } });
     res.json({ success: true, message: 'Session ended' });
   } catch (error) {
     console.error('Revoke session error:', error);
@@ -963,6 +974,7 @@ const revokeOtherSessions = async (req, res) => {
       revoked += 1;
     }
 
+    await logAudit(req, { userId: user.id, action: 'sessions_revoked_others', result: 'success', details: { revoked } });
     res.json({ success: true, revoked, message: 'All other sessions have been ended' });
   } catch (error) {
     console.error('Revoke other sessions error:', error);
@@ -1063,6 +1075,7 @@ const enableTwoFactor = async (req, res) => {
       .eq('id', user.id)) || {};
     if (updateError) throw updateError;
 
+    await logAudit(req, { userId: user.id, action: '2fa_enabled', result: 'success' });
     res.json({ success: true, message: 'Two-factor authentication enabled' });
   } catch (error) {
     console.error('2FA enable error:', error);
@@ -1099,6 +1112,7 @@ const disableTwoFactor = async (req, res) => {
       .eq('id', user.id)) || {};
     if (updateError) throw updateError;
 
+    await logAudit(req, { userId: user.id, action: '2fa_disabled', result: 'success' });
     res.json({ success: true, message: 'Two-factor authentication disabled' });
   } catch (error) {
     console.error('2FA disable error:', error);
