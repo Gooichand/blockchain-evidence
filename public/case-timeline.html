@@ -35,6 +35,14 @@
         .summary-stats .stat-item i { color: #b91c1c; }
         .summary-stats .stat-num { display: block; font-size: 1.4rem; font-weight: 700; margin: 6px 0 2px; }
         .summary-stats .stat-label { font-size: 0.8rem; color: #6b7280; }
+        .timeline-group-header { display: flex; align-items: baseline; gap: 10px; margin: 22px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #f0d5d5; }
+        .timeline-group-header h3 { margin: 0; font-size: 1.02rem; color: #7f1d1d; }
+        .timeline-group-header span { font-size: 0.8rem; color: #9ca3af; }
+        .type-chip { display: inline-block; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+        .type-chip.evidence { background: #fee2e2; color: #b91c1c; }
+        .type-chip.custody { background: #fef3c7; color: #92400e; }
+        .type-chip.note { background: #ede9fe; color: #6d28d9; }
+        .type-chip.analysis { background: #d1fae5; color: #065f46; }
         .no-data { padding: 24px; text-align: center; color: #6b7280; }
     </style>
 </head>
@@ -62,7 +70,7 @@
                     <i data-lucide="clock"></i>
                 </div>
                 <h1>Case Timeline</h1>
-                <p>Real chain-of-custody events, newest first</p>
+                <p>Every real case event - evidence, custody, notes, analysis - newest first</p>
             </div>
             <div class="card-body">
                 <div class="timeline-controls">
@@ -70,8 +78,17 @@
                         <select id="caseSelect" class="form-control">
                             <option value="">Loading cases...</option>
                         </select>
-                        <select id="actionFilter" class="form-control">
-                            <option value="all">All actions</option>
+                        <select id="typeFilter" class="form-control">
+                            <option value="all">All event types</option>
+                            <option value="evidence">Evidence</option>
+                            <option value="custody">Custody</option>
+                            <option value="note">Notes</option>
+                            <option value="analysis">Analysis</option>
+                        </select>
+                        <select id="zoomSelect" class="form-control">
+                            <option value="day">Zoom: Day</option>
+                            <option value="week">Zoom: Week</option>
+                            <option value="month">Zoom: Month</option>
                         </select>
                         <input type="date" id="dateFilter" class="form-control">
                     </div>
@@ -141,10 +158,11 @@
 
         function actionIcon(action) {
             const a = String(action || '');
-            if (a.includes('upload')) return 'upload';
+            if (a.includes('upload') || a.includes('evidence_added')) return 'upload';
             if (a.includes('download')) return 'download';
             if (a.includes('view')) return 'eye';
             if (a.includes('note')) return 'file-text';
+            if (a.includes('analysis')) return 'flask-conical';
             if (a.includes('integrity')) return 'shield-alert';
             if (a.includes('status') || a.includes('transition')) return 'git-branch';
             if (a.includes('verify') || a.includes('verification')) return 'check-circle';
@@ -174,24 +192,38 @@
             }
         }
 
+        // Zoom grouping: day -> calendar date, week -> ISO week (Mon), month -> YYYY-MM.
+        function groupKey(ts, zoom) {
+            const d = new Date(ts);
+            if (isNaN(d)) return null;
+            if (zoom === 'month') return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (zoom === 'week') {
+                const monday = new Date(d);
+                const dow = (d.getDay() + 6) % 7;
+                monday.setDate(d.getDate() - dow);
+                return monday.getFullYear() + '-' + String(monday.getMonth() + 1).padStart(2, '0') + '-' + String(monday.getDate()).padStart(2, '0');
+            }
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function groupLabel(key, zoom) {
+            if (!key) return 'Undated';
+            const d = new Date(key + (zoom === 'month' ? '-01' : '') + 'T00:00:00');
+            if (zoom === 'month') return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+            if (zoom === 'week') return 'Week of ' + d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+            return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
         async function loadTimeline(caseId) {
             currentCaseId = caseId;
             const tl = document.getElementById('verticalTimeline');
-            tl.innerHTML = '<div class="no-data">Loading custody events...</div>';
+            tl.innerHTML = '<div class="no-data">Loading case events...</div>';
             document.getElementById('timelineSummary').style.display = 'none';
             try {
-                const [custodyRes, evidenceRes] = await Promise.all([
-                    window.apiClient.get(`/custody/case/${caseId}`, { skipWalletAuth: true }),
-                    window.apiClient.get(`/evidence/case/${caseId}`, { skipWalletAuth: true }).catch(() => null),
-                ]);
-                allEntries = (custodyRes.entries || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-                const actions = [...new Set(allEntries.map(e => e.action).filter(Boolean))].sort();
-                document.getElementById('actionFilter').innerHTML = '<option value="all">All actions</option>' +
-                    actions.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a.replace(/_/g, ' '))}</option>`).join('');
-
-                const evidence = evidenceRes ? (evidenceRes.data || []) : [];
-                renderSummary(allEntries, evidence.length);
+                const res = await window.apiClient.get(`/cases/${caseId}/timeline`, { skipWalletAuth: true });
+                allEntries = (res.events || []).filter(e => e.ts);
+                const counts = res.counts || {};
+                renderSummary(allEntries, counts.evidence || 0);
                 renderTimeline();
             } catch (e) {
                 tl.innerHTML = `<div class="no-data">Failed to load timeline: ${escapeHtml(e.message || e)}</div>`;
@@ -199,8 +231,8 @@
         }
 
         function renderSummary(entries, evidenceCount) {
-            const actors = new Set(entries.map(e => e.actor || e.actor_name).filter(Boolean));
-            const days = new Set(entries.map(e => (e.created_at || '').slice(0, 10)).filter(Boolean));
+            const actors = new Set(entries.map(e => e.actor_name).filter(Boolean));
+            const days = new Set(entries.map(e => (e.ts || '').slice(0, 10)).filter(Boolean));
             document.getElementById('sumEvents').textContent = entries.length;
             document.getElementById('sumActors').textContent = actors.size;
             document.getElementById('sumDays').textContent = days.size;
@@ -209,33 +241,44 @@
         }
 
         function renderTimeline() {
-            const actionFilter = document.getElementById('actionFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const zoom = document.getElementById('zoomSelect').value;
             const dateFilter = document.getElementById('dateFilter').value;
             const tl = document.getElementById('verticalTimeline');
             const entries = allEntries.filter(e => {
-                if (actionFilter !== 'all' && e.action !== actionFilter) return false;
-                if (dateFilter && (e.created_at || '').slice(0, 10) !== dateFilter) return false;
+                if (typeFilter !== 'all' && e.type !== typeFilter) return false;
+                if (dateFilter && (e.ts || '').slice(0, 10) !== dateFilter) return false;
                 return true;
             });
             if (!entries.length) {
-                tl.innerHTML = '<div class="no-data">No custody events match these filters.</div>';
+                tl.innerHTML = '<div class="no-data">No events match these filters.</div>';
                 return;
             }
-            tl.innerHTML = entries.map(e => `
+            const groups = [];
+            const byKey = {};
+            entries.forEach(e => {
+                const key = groupKey(e.ts, zoom) || 'undated';
+                if (!byKey[key]) { byKey[key] = []; groups.push(key); }
+                byKey[key].push(e);
+            });
+            tl.innerHTML = groups.map(key => `
+                <div class="timeline-group-header">
+                    <h3>${escapeHtml(key === 'undated' ? 'Undated' : groupLabel(key, zoom))}</h3>
+                    <span>${byKey[key].length} event${byKey[key].length === 1 ? '' : 's'}</span>
+                </div>` + byKey[key].map(e => `
                 <div class="timeline-event">
                     <div class="timeline-marker"><i data-lucide="${actionIcon(e.action)}"></i></div>
                     <div class="timeline-content">
                         <div class="timeline-header">
-                            <h4>${escapeHtml(String(e.action || 'event').replace(/_/g, ' '))}${e.evidence_id != null ? ' - evidence #' + e.evidence_id : ''}</h4>
-                            <span class="timeline-date">${e.created_at ? new Date(e.created_at).toLocaleString() : ''}</span>
+                            <h4>${escapeHtml(e.title || e.action || 'event')}${e.evidence_id != null ? ' - evidence #' + e.evidence_id : ''}<span class="type-chip ${escapeHtml(e.type)}">${escapeHtml(e.type)}</span></h4>
+                            <span class="timeline-date">${e.ts ? new Date(e.ts).toLocaleString() : ''}</span>
                         </div>
-                        <div class="timeline-meta-line">
-                            <strong>Actor:</strong> ${escapeHtml(e.actor_name || e.actor || 'unknown')}${e.actor_role ? ' (' + escapeHtml(e.actor_role) + ')' : ''}
-                        </div>
-                        ${(e.details && (typeof e.details === 'string' ? e.details.trim() : Object.keys(e.details).length)) ? `<div class="timeline-meta-line">${escapeHtml(typeof e.details === 'string' ? e.details : JSON.stringify(e.details))}</div>` : ''}
-                        ${e.entry_hash ? `<div class="timeline-meta-line">Entry hash: ${escapeHtml(e.entry_hash.slice(0, 32))}...</div>` : ''}
+                        ${e.actor_name ? `<div class="timeline-meta-line"><strong>Actor:</strong> ${escapeHtml(e.actor_name)}${e.actor_role ? ' (' + escapeHtml(e.actor_role) + ')' : ''}</div>` : ''}
+                        ${e.exhibit_id ? `<div class="timeline-meta-line"><span class="exhibit-badge">${escapeHtml(e.exhibit_id)}</span></div>` : ''}
+                        ${(e.details && Object.keys(e.details).length) ? `<div class="timeline-meta-line">${escapeHtml(typeof e.details === 'string' ? e.details : Object.entries(e.details).filter(([, v]) => v).map(([k, v]) => k + ': ' + v).join(' - '))}</div>` : ''}
+                        ${e.entry_hash ? `<div class="timeline-meta-line">Entry hash: ${escapeHtml(String(e.entry_hash).slice(0, 32))}...</div>` : ''}
                     </div>
-                </div>`).join('');
+                </div>`).join('')).join('');
             lucide.createIcons();
         }
 
@@ -267,7 +310,8 @@
         document.getElementById('caseSelect').addEventListener('change', (e) => {
             if (e.target.value) loadTimeline(e.target.value);
         });
-        document.getElementById('actionFilter').addEventListener('change', renderTimeline);
+        document.getElementById('typeFilter').addEventListener('change', renderTimeline);
+        document.getElementById('zoomSelect').addEventListener('change', renderTimeline);
         document.getElementById('dateFilter').addEventListener('change', renderTimeline);
 
         document.addEventListener('DOMContentLoaded', function () {
