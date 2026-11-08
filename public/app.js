@@ -545,7 +545,9 @@ async function handlePublicLogin(event) {
 
   try {
     showLoading(true, "Logging in...");
-    const data = await window.apiClient.post("/auth/email/login", { email, password }, { skipAuth: true });
+    const totpInput = document.getElementById('publicTotp');
+    const totp = totpInput && totpInput.value.trim() ? totpInput.value.trim() : undefined;
+    const data = await window.apiClient.post("/auth/email/login", totp ? { email, password, totp } : { email, password }, { skipAuth: true });
 
     if (data.success) {
       const storageKey = (data.user.wallet_address || data.user.walletAddress || email).toLowerCase();
@@ -576,9 +578,25 @@ async function handlePublicLogin(event) {
     }
   } catch (error) {
     console.error("Public login error:", error);
+    if (error.data && error.data.requiresTwoFactor) {
+      const totpField = document.getElementById('publicTotpField');
+      if (totpField) {
+        totpField.style.display = '';
+        const totpInput = document.getElementById('publicTotp');
+        if (totpInput) totpInput.focus();
+      }
+      showAlert(error.data.error === 'Two-factor authentication code required'
+        ? "Enter the 6-digit code from your authenticator app."
+        : (error.data.error || "Invalid two-factor code."), "error");
+      showLoading(false);
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
     let message = error.message || "Login failed. Please try again.";
     if (error.status === 401) {
       message = "Invalid email or password. Please check your credentials and try again.";
+    } else if (error.status === 423) {
+      message = error.message || "Account temporarily locked. Please try again later.";
     } else if (error.status === 429) {
       message = "Too many login attempts. Please wait a moment and try again.";
     } else if (error.status >= 500) {
@@ -669,7 +687,9 @@ async function handleEmailLogin(event) {
       return;
     }
 
-    const data = await window.apiClient.post("/auth/email/login", { email, password }, { skipAuth: true });
+    const totpInput = document.getElementById('loginTotp');
+    const totp = totpInput && totpInput.value.trim() ? totpInput.value.trim() : undefined;
+    const data = await window.apiClient.post("/auth/email/login", totp ? { email, password, totp } : { email, password }, { skipAuth: true });
 
     if (data.success) {
       // Determine the storage key: use wallet_address if present, else email
@@ -706,9 +726,29 @@ async function handleEmailLogin(event) {
     }
   } catch (error) {
     console.error("Login error:", error);
+    if (error.data && error.data.requiresTwoFactor) {
+      const totpField = document.getElementById('loginTotpField');
+      if (totpField) {
+        totpField.style.display = '';
+        const totpInputEl = document.getElementById('loginTotp');
+        if (totpInputEl) totpInputEl.focus();
+      }
+      showAlert(error.data.error === 'Two-factor authentication code required'
+        ? "Enter the 6-digit code from your authenticator app."
+        : (error.data.error || "Invalid two-factor code."), "error");
+      showLoading(false);
+      window.__emailLoginInProgress = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+      return;
+    }
     let message = error.message || "Login failed. Please try again.";
     if (error.status === 401) {
       message = "Invalid email or password. Please check your credentials and try again.";
+    } else if (error.status === 423) {
+      message = error.message || "Account temporarily locked. Please try again later.";
     } else if (error.status === 429) {
       message = "Too many login attempts. Please wait a moment and try again.";
     } else if (error.status >= 500) {
@@ -741,8 +781,8 @@ async function handleEmailRegistration(event) {
     return;
   }
 
-  if (password.length < 6) {
-    showAlert("Password must be at least 6 characters.", "error");
+  if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    showAlert("Password must be at least 10 characters and include uppercase, lowercase, a number, and a symbol.", "error");
     return;
   }
 
