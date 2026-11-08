@@ -514,7 +514,106 @@ const createComparisonReport = async (req, res) => {
   }
 };
 
+// ─── M5: integrity alerts (from the nightly scan / on-demand scans) ───
+
+// Wide-view roles see every alert; scoped roles see alerts on evidence they
+// submitted or that belongs to their accessible cases.
+const getIntegrityAlerts = async (req, res) => {
+  try {
+    const { getAuthUser } = require('../middleware/identity');
+    const { isScopedRole, stableUserId, getAccessibleCaseIds } = require('../middleware/caseAccess');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot view integrity alerts' });
+    }
+
+    let query = supabase
+      .from('integrity_alerts')
+      .select('*')
+      .order('detected_at', { ascending: false })
+      .limit(100);
+    if (req.query.open === 'true') query = query.eq('acknowledged', false);
+
+    if (isScopedRole(user.role)) {
+      const sid = stableUserId(user);
+      const caseIds = (await getAccessibleCaseIds(user)) || [];
+      const ors = [`submitted_by.eq.${sid}`];
+      if (caseIds.length) ors.push(`case_id.in.(${caseIds.map(String).join(',')})`);
+      const { data: mine } = (await supabase.from('evidence').select('id').or(ors.join(','))) || {};
+      const ids = (mine || []).map((r) => r.id);
+      if (!ids.length) return res.json({ success: true, data: [], alerts: [] });
+      query = query.in('evidence_id', ids);
+    }
+
+    const { data, error } = (await query) || {};
+    if (error) throw error;
+    res.json({ success: true, data: data || [], alerts: data || [] });
+  } catch (error) {
+    console.error('Get integrity alerts error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load integrity alerts' });
+  }
+};
+
+const acknowledgeIntegrityAlert = async (req, res) => {
+  try {
+    const { getAuthUser, getStableWallet } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    const safeId = parseInt(req.params.id, 10);
+    if (isNaN(safeId)) {
+      return res.status(400).json({ success: false, error: 'Invalid alert ID' });
+    }
+    const { data, error } = (await supabase
+      .from('integrity_alerts')
+      .update({
+        acknowledged: true,
+        acknowledged_by: getStableWallet(req),
+        acknowledged_at: new Date().toISOString(),
+      })
+      .eq('id', safeId)
+      .eq('acknowledged', false)
+      .select()) || {};
+    if (error) throw error;
+    if (!data || !data.length) {
+      return res.status(404).json({ success: false, error: 'Alert not found or already acknowledged' });
+    }
+    res.json({ success: true, data: data[0] });
+  } catch (error) {
+    console.error('Acknowledge integrity alert error:', error);
+    res.status(500).json({ success: false, error: 'Failed to acknowledge alert' });
+  }
+};
+
+// On-demand scan: wide roles scan everything; scoped roles scan only their
+// own accessible evidence. The nightly job covers the full set regardless.
+const triggerIntegrityScan = async (req, res) => {
+  try {
+    const { getAuthUser } = require('../middleware/identity');
+    const { runIntegrityScan } = require('../services/integrityScheduler');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot run integrity scans' });
+    }
+    const result = await runIntegrityScan({ user, source: 'manual_scan', req });
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Manual integrity scan error:', error);
+    res.status(500).json({ success: false, error: 'Integrity scan failed' });
+  }
+};
+
 module.exports = {
+  getIntegrityAlerts,
+  acknowledgeIntegrityAlert,
+  triggerIntegrityScan,
   verifyEvidenceHash,
   getBlockchainProof,
   verifyIntegrity,
