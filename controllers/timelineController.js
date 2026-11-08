@@ -18,7 +18,7 @@ const { canAccessCase } = require('../middleware/caseAccess');
 function custodyEvent(row) {
   return {
     type: 'custody',
-    ts: row.created_at,
+    ts: row.created_at || row.timestamp || null,
     action: row.action || 'event',
     title: String(row.action || 'custody event').replace(/_/g, ' '),
     actor_name: row.actor_name || row.actor || null,
@@ -32,7 +32,8 @@ function custodyEvent(row) {
 function evidenceEvent(row) {
   return {
     type: 'evidence',
-    ts: row.created_at,
+    // evidence.timestamp is the upload time in this schema (no created_at)
+    ts: row.created_at || row.timestamp || row.uploaded_at || null,
     action: 'evidence_added',
     title: `Evidence added: ${row.title || row.file_name || ('item #' + row.id)}`,
     actor_name: row.uploaded_by_name || row.uploaded_by || null,
@@ -48,7 +49,7 @@ function noteEvent(row) {
     : (row.annotation ? JSON.stringify(row.annotation) : '');
   return {
     type: 'note',
-    ts: row.created_at,
+    ts: row.created_at || row.updated_at || null,
     action: 'note_added',
     title: body.length > 90 ? body.slice(0, 90) + '...' : (body || 'Case note'),
     actor_name: row.author_name || row.author || null,
