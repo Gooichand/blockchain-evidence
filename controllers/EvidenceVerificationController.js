@@ -597,6 +597,26 @@ const acknowledgeIntegrityAlert = async (req, res) => {
   }
 };
 
+// Latest durable scan status for the dashboard: aggregate counts only.
+const getIntegrityScanStatus = async (req, res) => {
+  try {
+    const { getAuthUser } = require('../middleware/identity');
+    const { getLatestScanStatus } = require('../services/integrityScheduler');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot view scan status' });
+    }
+    const status = await getLatestScanStatus();
+    res.json({ success: true, data: status });
+  } catch (error) {
+    console.error('Get integrity scan status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load scan status' });
+  }
+};
+
 // On-demand scan: wide roles scan everything; scoped roles scan only their
 // own accessible evidence. The nightly job covers the full set regardless.
 const triggerIntegrityScan = async (req, res) => {
@@ -622,6 +642,7 @@ module.exports = {
   getIntegrityAlerts,
   acknowledgeIntegrityAlert,
   triggerIntegrityScan,
+  getIntegrityScanStatus,
   verifyEvidenceHash,
   getBlockchainProof,
   verifyIntegrity,
