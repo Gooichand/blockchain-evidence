@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence | EVID-DGC</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-improvements.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="fixed-navbar.js"></script>
+    <script src="device-detector.js"></script>
+    <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
+    <style>
+        .ev-filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        @media (max-width: 1200px) {
+            .ev-filters { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        .ev-filters label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--primary-red-light);
+            color: var(--primary-red);
+        }
+        .ev-table th { cursor: pointer; user-select: none; white-space: nowrap; }
+        .ev-table th .sort-ind { color: var(--primary-red); }
+        .hash-cell { font-family: monospace; font-size: 12px; color: #666; }
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 4px 2px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pagination-bar .page-info { color: #666; font-size: 14px; }
+        .state-box { text-align: center; padding: 40px; color: #666; }
+        .state-box i { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5; }
+        .state-box.error { color: var(--primary-red); }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar injected by fixed-navbar.js -->
+
+    <div class="container">
+        <div class="hero-section" style="margin: 40px 0; text-align: left;">
+            <h1>Evidence</h1>
+            <p class="hero-subtitle">Search, filter and review evidence across your cases</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-body">
+                <div class="ev-filters">
+                    <div>
+                        <label for="fSearch">Search</label>
+                        <input type="text" id="fSearch" class="form-control" placeholder="Title, file name or hash...">
+                    </div>
+                    <div>
+                        <label for="fType">Type</label>
+                        <select id="fType" class="form-control">
+                            <option value="">All types</option>
+                            <option value="Photo">Photo</option>
+                            <option value="Video">Video</option>
+                            <option value="Document">Document</option>
+                            <option value="Audio">Audio</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="fStatus">Status</label>
+                        <select id="fStatus" class="form-control">
+                            <option value="">All statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="verified">Verified</option>
+                            <option value="processing">Processing</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="fTag">Tag</label>
+                        <select id="fTag" class="form-control"><option value="">All tags</option></select>
+                    </div>
+                    <div>
+                        <label for="fFrom">From</label>
+                        <input type="date" id="fFrom" class="form-control">
+                    </div>
+                    <div>
+                        <label for="fTo">To</label>
+                        <input type="date" id="fTo" class="form-control">
+                    </div>
+                    <div>
+                        <button class="btn btn-outline" id="fReset" type="button">
+                            <i data-lucide="rotate-ccw"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="user-table ev-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th data-sort="title">Title <span class="sort-ind" data-ind="title"></span></th>
+                                <th data-sort="type">Type <span class="sort-ind" data-ind="type"></span></th>
+                                <th data-sort="case_id">Case <span class="sort-ind" data-ind="case_id"></span></th>
+                                <th data-sort="status">Status <span class="sort-ind" data-ind="status"></span></th>
+                                <th>Hash</th>
+                                <th data-sort="timestamp">Collected <span class="sort-ind" data-ind="timestamp"></span></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evBody">
+                            <tr><td colspan="8" class="state-box"><p>Loading evidence...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-bar">
+                    <span class="page-info" id="pageInfo"></span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-outline" id="prevPage" type="button">Previous</button>
+                        <button class="btn btn-sm btn-outline" id="nextPage" type="button">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            search: '', type: '', status: '', tag: '', dateFrom: '', dateTo: '',
+            sortBy: 'timestamp', sortOrder: 'desc', page: 1, limit: 15,
+        };
+        let searchTimer = null;
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        async function loadTags() {
+            try {
+                const r = await window.apiClient.get('/tags', { skipWalletAuth: true });
+                const tags = r.tags || [];
+                const sel = document.getElementById('fTag');
+                for (const t of tags) {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {
+                console.error('Failed to load tags:', e);
+            }
+        }
+
+        function renderRows(items) {
+            const body = document.getElementById('evBody');
+            if (!items.length) {
+                body.innerHTML = `<tr><td colspan="8" class="state-box">
+                    <i data-lucide="file-search"></i>
+                    <p>No evidence matches these filters.</p></td></tr>`;
+                lucide.createIcons();
+                return;
+            }
+            body.innerHTML = items.map(ev => {
+                const title = ev.title || ev.name || ev.file_name || 'Untitled';
+                const hash = ev.hash ? ev.hash.slice(0, 12) + '...' : '-';
+                const when = ev.timestamp ? new Date(ev.timestamp).toLocaleString() : '-';
+                return `<tr>
+                    <td>#${ev.id}</td>
+                    <td><strong>${escapeHtml(title)}</strong></td>
+                    <td>${escapeHtml(ev.type || '-')}</td>
+                    <td>${escapeHtml(ev.case_id || '-')}</td>
+                    <td><span class="status-badge">${escapeHtml(ev.status || '-')}</span></td>
+                    <td class="hash-cell" title="${escapeHtml(ev.hash || '')}">${hash}</td>
+                    <td>${when}</td>
+                    <td style="white-space: nowrap;">
+                        <a class="btn btn-sm btn-outline" href="/api/evidence/${ev.id}/preview" target="_blank" rel="noopener">View</a>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderPagination(p) {
+            const total = p.total || 0;
+            const pages = Math.max(Math.ceil(total / state.limit), 1);
+            document.getElementById('pageInfo').textContent =
+                total === 0 ? 'No evidence' : `Page ${state.page} of ${pages} - ${total} item(s)`;
+            document.getElementById('prevPage').disabled = state.page <= 1;
+            document.getElementById('nextPage').disabled = state.page >= pages;
+        }
+
+        function renderSortIndicators() {
+            document.querySelectorAll('.sort-ind').forEach(el => {
+                el.textContent = el.dataset.ind === state.sortBy ? (state.sortOrder === 'asc' ? '▲' : '▼') : '';
+            });
+        }
+
+        async function loadEvidence() {
+            const body = document.getElementById('evBody');
+            body.innerHTML = '<tr><td colspan="8" class="state-box"><p>Loading evidence...</p></td></tr>';
+            try {
+                const params = {
+                    limit: state.limit,
+                    offset: (state.page - 1) * state.limit,
+                    sortBy: state.sortBy,
+                    sortOrder: state.sortOrder,
+                };
+                if (state.search) params.search = state.search;
+                if (state.type) params.type = state.type;
+                if (state.status) params.status = state.status;
+                if (state.tag) params.tag = state.tag;
+                if (state.dateFrom) params.dateFrom = state.dateFrom;
+                if (state.dateTo) params.dateTo = state.dateTo;
+                const r = await window.apiClient.get('/evidence', { params, skipWalletAuth: true });
+                if (!r.success) throw new Error(r.error || 'Failed to load evidence');
+                renderRows(r.data || []);
+                renderPagination(r.pagination || {});
+                renderSortIndicators();
+            } catch (e) {
+                console.error('loadEvidence error:', e);
+                body.innerHTML = `<tr><td colspan="8" class="state-box error">
+                    <i data-lucide="alert-triangle"></i>
+                    <p>Could not load evidence: ${escapeHtml(e.message || e)}</p>
+                    <button class="btn btn-sm btn-primary" onclick="loadEvidence()">Retry</button></td></tr>`;
+                lucide.createIcons();
+            }
+        }
+
+        document.getElementById('fSearch').addEventListener('input', (e) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { state.search = e.target.value.trim(); state.page = 1; loadEvidence(); }, 350);
+        });
+        document.getElementById('fType').addEventListener('change', (e) => { state.type = e.target.value; state.page = 1; loadEvidence(); });
+        document.getElementById('fStatus').addEventListener('change', (e) => { state.status = e.target.value; state.page = 1; loadEvidence(); });
+        document.getElementById('fTag').addEventListener('change', (e) => { state.tag = e.target.value; state.page = 1; loadEvidence(); });
+        document.getElementById('fFrom').addEventListener('change', (e) => { state.dateFrom = e.target.value; state.page = 1; loadEvidence(); });
+        document.getElementById('fTo').addEventListener('change', (e) => { state.dateTo = e.target.value; state.page = 1; loadEvidence(); });
+        document.getElementById('fReset').addEventListener('click', () => {
+            state.search = state.type = state.status = state.tag = state.dateFrom = state.dateTo = '';
+            state.page = 1; state.sortBy = 'timestamp'; state.sortOrder = 'desc';
+            ['fSearch', 'fType', 'fStatus', 'fTag', 'fFrom', 'fTo'].forEach(id => { document.getElementById(id).value = ''; });
+            loadEvidence();
+        });
+        document.getElementById('prevPage').addEventListener('click', () => { if (state.page > 1) { state.page--; loadEvidence(); } });
+        document.getElementById('nextPage').addEventListener('click', () => { state.page++; loadEvidence(); });
+        document.querySelectorAll('.ev-table th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.sort;
+                if (state.sortBy === col) state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+                else { state.sortBy = col; state.sortOrder = 'asc'; }
+                state.page = 1;
+                loadEvidence();
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadTags();
+            loadEvidence();
+        });
+    </script>
+    <script src="footer.js"></script>
+</body>
+
+</html>
