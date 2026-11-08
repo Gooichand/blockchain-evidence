@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../config');
+const { extractToken, isRevoked } = require('./authorization');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,14 +16,20 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 const requireAuth = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization'] || '';
-    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    // Accept the httpOnly session cookie as well as the Bearer header so
+    // browser sessions work without keeping the JWT in localStorage (H5).
+    const token0 = extractToken(req);
+    const bearerToken = token0 || null;
 
     let identity = null;
 
     if (bearerToken && JWT_SECRET) {
       try {
         const payload = jwt.verify(bearerToken, JWT_SECRET);
+        // Enforce server-side logout revocations for API calls too.
+        if (payload && payload.jti && isRevoked(payload.jti)) {
+          return res.status(401).json({ success: false, error: 'Session has been logged out.' });
+        }
         if (payload && payload.userId) {
           const { data: user, error } = (await supabase
             .from('users')
