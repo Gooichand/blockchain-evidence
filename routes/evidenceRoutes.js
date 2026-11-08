@@ -24,6 +24,7 @@ const {
   getIntegrityAlerts,
   acknowledgeIntegrityAlert,
   triggerIntegrityScan,
+  getIntegrityScanStatus,
 } = require('../controllers/EvidenceVerificationController');
 const {
   getEvidenceExpiry,
@@ -63,6 +64,7 @@ router.post('/evidence/comparison-report', createComparisonReport);
 router.get('/evidence/integrity-alerts', requireAuth, getIntegrityAlerts);
 router.post('/evidence/integrity-alerts/:id/acknowledge', requireAuth, acknowledgeIntegrityAlert);
 router.post('/evidence/integrity-scan', requireAuth, triggerIntegrityScan);
+router.get('/evidence/integrity-scan-status', requireAuth, getIntegrityScanStatus);
 
 // Evidence by case (static prefix before :id)
 router.get('/evidence/case/:caseId', requireAuth, getEvidenceByCase);
