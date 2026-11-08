@@ -23,6 +23,7 @@ const custodyRoutes = require('./custodyRoutes');
 const notesRoutes = require('./notesRoutes');
 const analysisRoutes = require('./analysisRoutes');
 const reportRoutes = require('./reportRoutes');
+const timelineRoutes = require('./timelineRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -50,6 +51,7 @@ function registerRoutes(app) {
   app.use('/api', notesRoutes);
   app.use('/api', analysisRoutes);
   app.use('/api', reportRoutes);
+  app.use('/api', timelineRoutes);
 }
 
 module.exports = registerRoutes;
