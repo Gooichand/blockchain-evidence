@@ -88,6 +88,7 @@ const requireAuth = async (req, res, next) => {
       wallet_address: identity.wallet_address || null,
       role: identity.role,
       full_name: identity.full_name || 'Forensic Analyst',
+      jti: identity.jti || null,
     };
 
     // Legacy compatibility: controllers that read req.authenticatedWallet
