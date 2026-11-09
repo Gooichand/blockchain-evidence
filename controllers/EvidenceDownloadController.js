@@ -648,9 +648,254 @@ const getEvidenceByCase = async (req, res) => {
   }
 };
 
+
+// ---- A4: court-ready export package ----
+// Minimal valid PDF writer (Helvetica, multi-page, ASCII-only) so the package
+// carries a human-readable report without any extra dependency.
+function buildSimplePdf(lines) {
+  const esc = (t) =>
+    String(t)
+      .replace(/[^\x20-\x7E]/g, '?')
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)');
+  const perPage = 46;
+  const pageLines = [];
+  for (let i = 0; i < Math.max(lines.length, 1); i += perPage) pageLines.push(lines.slice(i, i + perPage));
+  const pageCount = pageLines.length;
+  const fontNum = 3 + pageCount * 2;
+  const objs = {};
+  objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+  const kids = [];
+  for (let pIdx = 0; pIdx < pageCount; pIdx++) kids.push(3 + pIdx * 2 + ' 0 R');
+  objs[2] = '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + pageCount + ' >>';
+  for (let pIdx = 0; pIdx < pageCount; pIdx++) {
+    const pageNum = 3 + pIdx * 2;
+    const contentNum = pageNum + 1;
+    objs[pageNum] =
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ' +
+      fontNum + ' 0 R >> >> /Contents ' + contentNum + ' 0 R >>';
+    let stream = 'BT /F1 9 Tf 40 800 Td 16 TL\n';
+    for (const ln of pageLines[pIdx]) stream += '(' + esc(ln) + ') Tj T*\n';
+    stream += 'ET';
+    objs[contentNum] = '<< /Length ' + Buffer.byteLength(stream) + ' >>\nstream\n' + stream + '\nendstream';
+  }
+  objs[fontNum] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  for (let n = 1; n <= fontNum; n++) {
+    offsets[n] = Buffer.byteLength(pdf);
+    pdf += n + ' 0 obj\n' + objs[n] + '\nendobj\n';
+  }
+  const xrefPos = Buffer.byteLength(pdf);
+  pdf += 'xref\n0 ' + (fontNum + 1) + '\n0000000000 65535 f \n';
+  for (let n = 1; n <= fontNum; n++) pdf += String(offsets[n]).padStart(10, '0') + ' 00000 n \n';
+  pdf += 'trailer\n<< /Size ' + (fontNum + 1) + ' /Root 1 0 R >>\nstartxref\n' + xrefPos + '\n%%EOF';
+  return Buffer.from(pdf, 'binary');
+}
+
+/**
+ * A4: court-ready export package.
+ * ZIP containing: original files, manifest.json (recomputed SHA-256 per file,
+ * compared with the recorded hash), custody_log.json, blockchain_proofs.json,
+ * report.pdf and signature.json (EIP-191 signature over the manifest by the
+ * server's evidence wallet, publicly verifiable against its address).
+ */
+const courtExport = async (req, res) => {
+  try {
+    const { getAuthUser } = require('../middleware/identity');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const { evidenceIds } = req.body || {};
+    if (!evidenceIds || !Array.isArray(evidenceIds) || evidenceIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Evidence IDs array is required' });
+    }
+    if (evidenceIds.length > 25) {
+      return res.status(400).json({ success: false, error: 'Maximum 25 items per court package' });
+    }
+    if (user.role === 'public_viewer') {
+      return res.status(403).json({ success: false, error: 'Public viewers cannot export evidence' });
+    }
+
+    const { data: items, error } = (await supabase
+      .from('evidence')
+      .select('*')
+      .in('id', evidenceIds)) || {};
+    if (error || !items || items.length === 0) {
+      return res.status(404).json({ success: false, error: 'No evidence found with provided IDs' });
+    }
+
+    const allowed = [];
+    for (const item of items) {
+      if (await canAccessEvidence(user, item)) allowed.push(item);
+    }
+    if (allowed.length === 0) {
+      return res.status(403).json({ success: false, error: 'You do not have access to the requested evidence' });
+    }
+
+    const { data: custodyRows } = (await supabase
+      .from('custody_log')
+      .select('evidence_id, action, actor_name, actor_role, details, prev_hash, entry_hash, created_at')
+      .in('evidence_id', allowed.map((i) => i.id))
+      .order('created_at', { ascending: true })) || {};
+
+    const files = [];
+    const manifestItems = [];
+    for (const item of allowed) {
+      let buf = null;
+      let sha = null;
+      let fetchError = null;
+      try {
+        buf = await ipfsStorageService.getFile(item.ipfs_cid || item.ipfs_hash);
+        sha = crypto.createHash('sha256').update(buf).digest('hex');
+      } catch (e) {
+        fetchError = e.message || 'file fetch failed';
+      }
+      const safeName = String(item.file_name || item.name || 'evidence').replace(/[^\w.\-]+/g, '_');
+      const fname = item.id + '_' + safeName;
+      if (buf) files.push({ name: 'files/' + fname, data: buf });
+      manifestItems.push({
+        id: item.id,
+        title: item.title || item.name || null,
+        case_id: item.case_id != null ? String(item.case_id) : null,
+        filename: buf ? fname : null,
+        file_type: item.file_type || item.mime_type || null,
+        file_size: item.file_size || null,
+        sha256_at_export: sha,
+        recorded_hash: item.hash || null,
+        hash_match: sha && item.hash ? sha === String(item.hash).toLowerCase() : null,
+        fetch_error: fetchError,
+        recorded_at: item.timestamp || null,
+        submitted_by: item.submitted_by || null,
+        ipfs_cid: item.ipfs_cid || item.ipfs_hash || null,
+        blockchain: {
+          tx_hash: item.blockchain_tx_hash || null,
+          block_number: item.blockchain_block_number || item.polygon_block_number || null,
+          status: item.blockchain_status || null,
+          timestamp: item.blockchain_timestamp || null,
+        },
+      });
+    }
+
+    const exportedBy = user.email || user.wallet_address || user.id || 'unknown';
+    const manifest = {
+      package: 'EVID-DGC court-ready export package',
+      version: 1,
+      generated_at: new Date().toISOString(),
+      generated_by: exportedBy,
+      note: 'Files under /files are the original stored bytes (no watermark). sha256_at_export is recomputed at export time; hash_match compares it with the recorded hash.',
+      items: manifestItems,
+    };
+    const manifestJson = JSON.stringify(manifest, null, 2);
+    const manifestHash = crypto.createHash('sha256').update(manifestJson).digest('hex');
+
+    // Sign the manifest with the server's evidence wallet (secp256k1, EIP-191):
+    // anyone can recover the signer from the signature and compare it with the
+    // published server wallet address - no shared secret needed.
+    let signature;
+    try {
+      if (!process.env.PRIVATE_KEY) throw new Error('server wallet not configured');
+      const { ethers } = require('ethers');
+      const w = new ethers.Wallet(process.env.PRIVATE_KEY);
+      signature = {
+        algorithm: 'EIP-191 personal_sign (secp256k1)',
+        signer: w.address,
+        message_sha256: manifestHash,
+        signature: await w.signMessage(manifestJson),
+        how_to_verify:
+          'Hash manifest.json with SHA-256 (message_sha256), recover the address from the EIP-191 signature over the exact manifest.json bytes, and compare it with signer.',
+      };
+    } catch (e) {
+      signature = { error: 'signing unavailable: ' + (e.message || e) };
+    }
+
+    const custody = { entries: custodyRows || [], note: 'Full custody chain for the packaged items, oldest first. entry_hash chains to prev_hash.' };
+
+    const anchored = manifestItems.filter((i) => i.blockchain.tx_hash);
+    const blockchainProofs = {
+      network: 'Polygon Amoy testnet',
+      contract_address: process.env.CONTRACT_ADDRESS || null,
+      anchored_count: anchored.length,
+      unanchored_ids: manifestItems.filter((i) => !i.blockchain.tx_hash).map((i) => i.id),
+      proofs: anchored.map((i) => ({
+        evidence_id: i.id,
+        recorded_hash: i.recorded_hash,
+        tx_hash: i.blockchain.tx_hash,
+        block_number: i.blockchain.block_number,
+        timestamp: i.blockchain.timestamp,
+        explorer_url: (() => {
+          try {
+            return blockchainService.getExplorerUrl(i.blockchain.tx_hash);
+          } catch {
+            return null;
+          }
+        })(),
+      })),
+      note: 'Items listed in unanchored_ids have no on-chain anchor; their integrity rests on the recorded hash and custody chain only.',
+    };
+
+    const rl = [];
+    rl.push('EVID-DGC COURT-READY EXPORT PACKAGE');
+    rl.push('Generated: ' + manifest.generated_at + ' by ' + exportedBy);
+    rl.push('Items: ' + manifestItems.length + ' | Anchored on-chain: ' + anchored.length + ' | Manifest SHA-256: ' + manifestHash);
+    rl.push('Signer address: ' + (signature.signer || 'unavailable'));
+    rl.push('');
+    for (const i of manifestItems) {
+      rl.push('#' + i.id + ' ' + (i.title || 'Untitled') + ' (case ' + (i.case_id || '?') + ')');
+      rl.push('  file: ' + (i.filename || 'NOT INCLUDED - ' + i.fetch_error));
+      rl.push('  sha256 at export: ' + (i.sha256_at_export || 'n/a'));
+      rl.push('  recorded hash:    ' + (i.recorded_hash || 'n/a') + (i.hash_match === null ? '' : i.hash_match ? '  MATCH' : '  MISMATCH'));
+      rl.push('  recorded: ' + (i.recorded_at || 'n/a') + ' | anchored: ' + (i.blockchain.tx_hash ? 'yes (tx ' + i.blockchain.tx_hash.slice(0, 18) + '...)' : 'no'));
+      rl.push('');
+    }
+    rl.push('See manifest.json, custody_log.json, blockchain_proofs.json and signature.json in this package.');
+    const reportPdf = buildSimplePdf(rl);
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="court_package_${timestamp}.zip"`);
+    res.setHeader('X-Export-Count', String(allowed.length));
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => console.error('Court package archive error:', err));
+    archive.pipe(res);
+    archive.append(manifestJson, { name: 'manifest.json' });
+    archive.append(JSON.stringify(custody, null, 2), { name: 'custody_log.json' });
+    archive.append(JSON.stringify(blockchainProofs, null, 2), { name: 'blockchain_proofs.json' });
+    archive.append(JSON.stringify(signature, null, 2), { name: 'signature.json' });
+    archive.append(reportPdf, { name: 'report.pdf' });
+    for (const f of files) archive.append(f.data, { name: f.name });
+
+    try {
+      await logDownloadAction(exportedBy, null, 'evidence_court_export', {
+        evidence_ids: allowed.map((i) => i.id),
+        total_files: files.length,
+        manifest_sha256: manifestHash,
+        export_timestamp: manifest.generated_at,
+      });
+    } catch (logErr) {
+      console.error('Failed to log court export action:', logErr);
+    }
+
+    archive.finalize();
+  } catch (error) {
+    if (res.headersSent) {
+      console.error('Court export error while streaming:', error);
+      return;
+    }
+    console.error('Court export error:', error);
+    const msg = process.env.NODE_ENV === 'production' ? 'Court export failed' : error.message;
+    res.status(500).json({ success: false, error: msg });
+  }
+};
+
 module.exports = {
   downloadEvidence,
   bulkExport,
+  courtExport,
   getDownloadHistory,
   getAllEvidence,
   previewEvidence,
