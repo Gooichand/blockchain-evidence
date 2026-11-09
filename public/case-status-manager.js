@@ -11,6 +11,8 @@ class CaseStatusManager {
         await this.loadCaseStatuses();
         this.bindEvents();
         this.initializeFilters();
+        // Load the case list immediately so the page does not open empty
+        await this.loadCases(this.currentFilters);
     }
 
     async loadCaseStatuses() {
