@@ -26,6 +26,7 @@ const reportRoutes = require('./reportRoutes');
 const timelineRoutes = require('./timelineRoutes');
 const transferRoutes = require('./transferRoutes');
 const teamRoutes = require('./teamRoutes');
+const checklistRoutes = require('./checklistRoutes');
 
 function registerRoutes(app) {
   app.use('/api', healthRoutes);
@@ -56,6 +57,7 @@ function registerRoutes(app) {
   app.use('/api', timelineRoutes);
   app.use('/api', transferRoutes);
   app.use('/api', teamRoutes);
+  app.use('/api', checklistRoutes);
 }
 
 module.exports = registerRoutes;
