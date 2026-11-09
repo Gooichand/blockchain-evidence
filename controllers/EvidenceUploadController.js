@@ -44,7 +44,35 @@ const uploadEvidence = async (req, res) => {
     if (collectionDate && isNaN(Date.parse(collectionDate))) {
       return res.status(400).json({ success: false, error: 'collectionDate must be a valid date/time' });
     }
-    const file = req.file;
+    let file = req.file;
+    let uploadSession = null;
+
+    // S10: resumable chunked upload - the client sent the file in chunks
+    // first (POST /api/uploads + chunk PUTs + complete) and now attaches the
+    // assembled result to the case by uploadId instead of re-sending bytes.
+    if (!file && req.body.uploadId) {
+      const uploadSessionStore = require('../services/uploadSessionStore');
+      uploadSession = await uploadSessionStore.getSession(String(req.body.uploadId));
+      if (!uploadSession || !uploadSession.assembled) {
+        return res.status(400).json({
+          success: false,
+          error: 'Unknown or incomplete upload session. Upload the file chunks and complete the session first.',
+        });
+      }
+      if (uploadSession.createdBy !== uploadedBy) {
+        return res.status(403).json({ success: false, error: 'This upload session belongs to another user' });
+      }
+      const assembledBuffer = await uploadSessionStore.readAssembled(uploadSession.id);
+      if (!assembledBuffer) {
+        return res.status(400).json({ success: false, error: 'The assembled file is no longer available - upload session may have expired' });
+      }
+      file = {
+        buffer: assembledBuffer,
+        originalname: uploadSession.filename,
+        mimetype: uploadSession.mimeType || 'application/octet-stream',
+        size: uploadSession.size,
+      };
+    }
 
     if (!file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
@@ -249,6 +277,17 @@ const uploadEvidence = async (req, res) => {
       });
     } catch (custodyErr) {
       console.error('custody log for upload failed:', custodyErr);
+    }
+
+    // S10: a chunked-upload session is single-use - remove it once the
+    // evidence record exists so its disk copy is freed
+    if (uploadSession) {
+      try {
+        const uploadSessionStore = require('../services/uploadSessionStore');
+        await uploadSessionStore.deleteSession(uploadSession.id);
+      } catch (cleanupErr) {
+        console.error('upload session cleanup failed:', cleanupErr);
+      }
     }
 
     // Standardized successful response
