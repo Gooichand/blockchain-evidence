@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
     <script src="api-client.js"></script>
     <script src="storage.js"></script>
     <script src="session-manager.js"></script>
@@ -122,15 +123,18 @@
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
 </head>
 <body>
-    <div class="health-hero">
+    <div class="health-hero hero-section inv-hero">
         <div class="container">
-            <h1><span class="pulse-indicator pulse-healthy" id="mainStatusPulse"></span> System Health Dashboard</h1>
-            <p>Real-time infrastructure monitoring, IPFS node status, and Blockchain sync metrics</p>
-            <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 8px;" id="lastUpdated">Loading...</p>
+            <h1><span class="pulse-indicator pulse-healthy" id="mainStatusPulse"></span> System Health</h1>
+            <p class="hero-subtitle">Real-time infrastructure monitoring, IPFS node status, and blockchain sync metrics</p>
+            <p style="font-size: 0.9rem; color: rgba(255,255,255,.85); margin-top: 8px;" id="lastUpdated">Loading...</p>
             <button class="refresh-btn" onclick="fetchMetrics()">
                 <i data-lucide="refresh-cw" id="refreshIcon"></i> Refresh Metrics
             </button>
         </div>
+        <svg class="fp-deco" style="right:10px;bottom:-46px;width:160px;height:160px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
     </div>
 
     <div class="container" style="max-width: 1400px; padding-bottom: 60px;">
@@ -339,5 +343,6 @@
             lucide.createIcons();
         }
     </script>
+    <script src="investigator-theme.js"></script>
 </body>
 </html>
