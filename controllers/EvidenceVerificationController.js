@@ -435,7 +435,7 @@ const compareEvidence = async (req, res) => {
 
     const { data: evidenceItems, error } = (await supabase
       .from('evidence')
-      .select('id, title, name, case_id, type, timestamp, hash, blockchain_tx_hash, ipfs_cid, file_name, file_size, mime_type, status, submitted_by, description')
+      .select('id, title, name, case_id, type, timestamp, hash, blockchain_tx_hash, ipfs_cid, file_name, file_size, mime_type:file_type, status, submitted_by, description')
       .in('id', evidenceIds)) || {};
 
     if (error) throw error;
