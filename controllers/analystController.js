@@ -534,7 +534,7 @@ const saveReport = async (req, res) => {
 
     const { data: taskRows, error: taskError } = (await supabase
       .from('analysis_tasks')
-      .select('id, evidence_id, case_id, status')
+      .select('id, evidence_id, case_id, status, requested_by, analysis_type')
       .eq('id', taskId)
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
       .limit(1)) || {};
@@ -619,6 +619,23 @@ const saveReport = async (req, res) => {
       report_hash: reportHash.slice(0, 16) + '…',
       submit,
     });
+
+    // S8: tell the requester their analysis is done (in-app + email).
+    if (submit && task.requested_by) {
+      try {
+        const { notifyUser } = require('../services/notificationService');
+        const analystName = analyst.full_name || analyst.email || 'The analyst';
+        await notifyUser(
+          task.requested_by,
+          'Analysis complete',
+          `${analystName} submitted the ${task.analysis_type || 'forensic'} analysis report for evidence #${task.evidence_id}. The report is ready to review.`,
+          'analysis_complete',
+          { task_id: taskId, report_id: reportId, evidence_id: task.evidence_id, case_id: task.case_id }
+        );
+      } catch (e) {
+        console.error('analysis complete notification failed:', e.message);
+      }
+    }
 
     res.json({
       success: true,
