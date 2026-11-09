@@ -39,8 +39,8 @@
         }
 
         .evidence-card.selected {
-            border-color: #007bff;
-            background-color: #f8f9ff;
+            border-color: #b71c1c;
+            background-color: #fdf3f3;
         }
 
         .evidence-checkbox {
@@ -67,13 +67,15 @@
         }
 
         .btn-primary {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #b71c1c, #d32f2f);
             color: white;
+            box-shadow: 0 4px 14px rgba(183,28,28,.3);
         }
 
         .btn-secondary {
-            background-color: #6c757d;
-            color: white;
+            background-color: #fff;
+            color: #b71c1c;
+            border: 1px solid #d9a3a3;
         }
 
         .btn:disabled {
@@ -82,9 +84,9 @@
         }
 
         .watermark-info {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 5px;
+            background: #fdeeee;
+            border: 1px solid #f0c9c9;
+            border-radius: 12px;
             padding: 10px;
             margin: 15px 0;
             font-size: 12px;
@@ -148,17 +150,17 @@
 
         <div class="export-actions">
             <button class="btn btn-primary" id="downloadSingleBtn" onclick="downloadSelected()" disabled>
-                📥 Download Selected File
+                Download Selected File
             </button>
             <button class="btn btn-primary" id="bulkExportBtn" onclick="bulkExport()" disabled>
-                📦 Export as ZIP Archive
+                Export as ZIP Archive
             </button>
             <button class="btn btn-primary" id="courtExportBtn" onclick="courtExport()" disabled
                 title="Original files + signed hash manifest, custody log, blockchain proofs and report PDF">
-                ⚖️ Court-Ready Package
+                Court-Ready Package
             </button>
             <button class="btn btn-secondary" onclick="viewDownloadHistory()">
-                📊 View Download History
+                View Download History
             </button>
         </div>
 
@@ -252,7 +254,7 @@
                     <div><strong>Submitted:</strong> ${evidence.timestamp ? new Date(evidence.timestamp).toLocaleString() : 'N/A'}</div>
                     <div style="margin-top: 10px;">
                         <button class="btn btn-primary" onclick="downloadSingle(${evidence.id})" style="font-size: 12px; padding: 5px 10px;">
-                            📥 Download
+                            Download
                         </button>
                     </div>
                 `;
@@ -411,7 +413,7 @@
                 alert('Failed to build court package: ' + error.message);
             } finally {
                 btn.disabled = false;
-                btn.textContent = '⚖️ Court-Ready Package';
+                btn.textContent = 'Court-Ready Package';
             }
         }
 
