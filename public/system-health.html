@@ -322,10 +322,9 @@
             
             if (!alerts || alerts.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 30px; color: #22c55e;">
-                        <i data-lucide="check-circle" style="width: 48px; height: 48px; margin-bottom: 12px;"></i>
-                        <h3>All Systems Operational</h3>
-                        <p>No active alerts or warnings across the infrastructure.</p>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 2px; color: #22c55e;">
+                        <i data-lucide="check-circle" style="width: 20px; height: 20px; flex: none;"></i>
+                        <span><strong>All Systems Operational</strong> <span style="color:#64748b;">- no active alerts or warnings across the infrastructure.</span></span>
                     </div>
                 `;
                 lucide.createIcons();
