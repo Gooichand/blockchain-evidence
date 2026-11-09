@@ -238,6 +238,7 @@
 
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
+    <link rel="stylesheet" href="investigator-theme.css">
 </head>
 
 <body>
@@ -247,28 +248,65 @@
     <div class="investigator-hero">
         <div class="container">
             <div class="hero-content">
-                <h1>🕵️ Investigator Dashboard</h1>
-                <p>Manage investigations with blockchain-secured evidence integrity</p>
+                <div class="hero-title-row">
+                    <svg class="hero-badge" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                        <defs><linearGradient id="heroShieldGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#a41212"/></linearGradient></defs>
+                        <circle cx="60" cy="60" r="54" stroke="rgba(255,150,150,.4)" stroke-width="1.5" stroke-dasharray="3 7"/>
+                        <path d="M60 16 L96 29 V62 C96 88 80 101 60 108 C40 101 24 88 24 62 V29 Z" fill="url(#heroShieldGrad)" stroke="rgba(255,255,255,.85)" stroke-width="2.5"/>
+                        <rect x="46" y="54" width="28" height="24" rx="4.5" fill="#fff"/>
+                        <path d="M51 54 v-6 a9 9 0 0 1 18 0 v6" stroke="#fff" stroke-width="5" fill="none"/>
+                        <circle cx="60" cy="64" r="3.4" fill="#c62b2b"/><rect x="58.6" y="66" width="2.8" height="7" rx="1.4" fill="#c62b2b"/>
+                    </svg>
+                    <div>
+                        <div class="inv-eyebrow"><span class="dot"></span> Live Dashboard</div>
+                        <h1>Investigator Dashboard</h1>
+                        <p>Manage investigations with blockchain-secured evidence integrity</p>
+                    </div>
+                </div>
                 <div class="hero-stats">
                     <div class="stat-card">
-                        <span class="stat-number" id="activeCases">-</span>
-                        <span>Active Cases</span>
+                        <span class="stat-ic"><i data-lucide="folder"></i></span>
+                        <span class="stat-txt"><span class="stat-number" id="activeCases">-</span><span>Active Cases</span></span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="evidenceItems">-</span>
-                        <span>Evidence Items</span>
+                        <span class="stat-ic"><i data-lucide="file-text"></i></span>
+                        <span class="stat-txt"><span class="stat-number" id="evidenceItems">-</span><span>Evidence Items</span></span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="pendingReviews">-</span>
-                        <span>Pending Reviews</span>
+                        <span class="stat-ic"><i data-lucide="clock"></i></span>
+                        <span class="stat-txt"><span class="stat-number" id="pendingReviews">-</span><span>Pending Reviews</span></span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-number" id="integrityAlerts">-</span>
-                        <span>Integrity Alerts</span>
+                        <span class="stat-ic"><i data-lucide="alert-triangle"></i></span>
+                        <span class="stat-txt"><span class="stat-number" id="integrityAlerts">-</span><span>Integrity Alerts</span></span>
                     </div>
                 </div>
             </div>
+            <div class="hero-visual">
+                <div class="hv-panel">
+                    <div class="hv-title"><span class="hv-live-dot"></span> Live Chain Status</div>
+                    <div class="hv-row"><span>Hash verification</span><b id="inv-hv-hash"><i data-lucide="loader"></i>Checking</b></div>
+                    <div class="hv-row"><span>Custody chain</span><b id="inv-hv-custody"><i data-lucide="loader"></i>Checking</b></div>
+                    <div class="hv-row"><span>Blockchain anchor</span><b id="inv-hv-anchor"><i data-lucide="loader"></i>Checking</b></div>
+                    <div class="hv-row"><span>Last scan</span><b id="inv-hv-scan"><i data-lucide="loader"></i>Checking</b></div>
+                </div>
+                <div class="hv-panel">
+                    <div class="hv-title">Custody events &middot; 7 days <span id="inv-spark-total" style="margin-left:auto"></span></div>
+                    <div id="inv-sparkline"></div>
+                </div>
+            </div>
         </div>
+        <svg class="fp-deco" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="100" cy="100" r="20" stroke-dasharray="40 26" transform="rotate(0 100 100)"/>
+            <circle cx="100" cy="100" r="32" stroke-dasharray="54 36" transform="rotate(27 100 100)"/>
+            <circle cx="100" cy="100" r="44" stroke-dasharray="68 46" transform="rotate(54 100 100)"/>
+            <circle cx="100" cy="100" r="56" stroke-dasharray="82 56" transform="rotate(81 100 100)"/>
+            <circle cx="100" cy="100" r="68" stroke-dasharray="96 66" transform="rotate(108 100 100)"/>
+            <circle cx="100" cy="100" r="80" stroke-dasharray="110 76" transform="rotate(135 100 100)"/>
+            <circle cx="100" cy="100" r="92" stroke-dasharray="124 86" transform="rotate(162 100 100)"/>
+            <circle cx="100" cy="100" r="9" stroke-dasharray="20 12"/>
+        </svg>
     </div>
 
     <div class="container">
@@ -281,42 +319,42 @@
             <div class="card-body">
                 <div class="quick-actions">
                     <div class="action-card" onclick="createNewCase()">
-                        <span class="action-icon">📁</span>
+                        <div class="action-ic"><i data-lucide="folder-plus"></i></div>
                         <h3>Create New Case</h3>
                         <p>Start a new investigation with secure case management</p>
                     </div>
                     <div class="action-card" onclick="uploadEvidence()">
-                        <span class="action-icon">📤</span>
+                        <div class="action-ic"><i data-lucide="upload-cloud"></i></div>
                         <h3>Upload Evidence</h3>
                         <p>Add digital evidence with blockchain verification</p>
                     </div>
                     <div class="action-card" onclick="window.location.href='/field-capture.html'">
-                        <span class="action-icon">📱</span>
+                        <div class="action-ic"><i data-lucide="camera"></i></div>
                         <h3>Field Capture</h3>
                         <p>Phone-ready capture: on-device hashing, works offline, uploads when back online</p>
                     </div>
                     <div class="action-card" onclick="searchCases()">
-                        <span class="action-icon">🔍</span>
+                        <div class="action-ic"><i data-lucide="globe"></i></div>
                         <h3>Global Search</h3>
                         <p>Cases, evidence, notes, tags, exhibit # or SHA-256</p>
                     </div>
                     <div class="action-card" onclick="openTransfersInbox()">
-                        <span class="action-icon">🔁</span>
+                        <div class="action-ic"><i data-lucide="repeat"></i></div>
                         <h3>Evidence Transfers</h3>
                         <p>Hand evidence to a colleague - they accept to take custody</p>
                     </div>
                     <div class="action-card" onclick="generateReport()">
-                        <span class="action-icon">📊</span>
+                        <div class="action-ic"><i data-lucide="file-text"></i></div>
                         <h3>Generate Report</h3>
                         <p>Create comprehensive investigation reports</p>
                     </div>
                     <div class="action-card" onclick="window.location.href='evidence-comparison.html'">
-                        <span class="action-icon">🔍</span>
+                        <div class="action-ic"><i data-lucide="git-compare"></i></div>
                         <h3>Compare Evidence</h3>
                         <p>Side-by-side forensic evidence comparison tool</p>
                     </div>
                     <div class="action-card" onclick="window.location.href='evidence-tagging.html'">
-                        <span class="action-icon">🏷️</span>
+                        <div class="action-ic"><i data-lucide="tag"></i></div>
                         <h3>Tag Evidence</h3>
                         <p>Organize and categorize evidence with smart tagging</p>
                     </div>
@@ -364,7 +402,7 @@
                 </a>
             </div>
             <div class="card-body">
-                <div id="recentCustodyList"><div class="no-data">Loading custody activity...</div></div>
+                <div id="recentCustodyList" class="inv-timeline"><div class="no-data">Loading custody activity...</div></div>
             </div>
         </div>
 
@@ -2276,6 +2314,7 @@
             navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
     </script>
+    <script src="investigator-theme.js"></script>
 </body>
 
     </html>
