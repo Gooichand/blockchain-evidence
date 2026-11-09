@@ -573,3 +573,13 @@ window.navbarManager = {
     logout: () => fixedNavbarManager?.logout(),
     navigateTo: (href, event) => fixedNavbarManager?.navigateTo(href, event)
 };
+
+// S8: mount the notification bell on every page that uses this navbar.
+(function loadNotificationBell() {
+    if (document.querySelector('script[data-notification-bell]')) return;
+    const s = document.createElement('script');
+    s.src = 'notification-bell.js';
+    s.defer = true;
+    s.dataset.notificationBell = 'true';
+    document.head.appendChild(s);
+})();
