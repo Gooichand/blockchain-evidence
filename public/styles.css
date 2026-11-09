@@ -2938,9 +2938,9 @@ tbody tr:hover { background: var(--p-blush) !important; }
 /* health-hero status pulse dot stays visible on light bg */
 .health-hero .pulse-healthy { box-shadow: 0 0 0 4px rgba(34,197,94,0.25) !important; }
 .health-hero .refresh-btn {
-    background: rgba(183,28,28,0.08) !important;
-    color: #b71c1c !important;
-    border: 1px solid rgba(183,28,28,0.18) !important;
+    background: rgba(255,255,255,0.18) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.45) !important;
 }
 .health-hero .refresh-btn:hover {
     background: rgba(183,28,28,0.14) !important;
