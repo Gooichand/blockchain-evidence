@@ -209,7 +209,7 @@
     $('queue').innerHTML = items.map((it) => {
       const thumb = it.mime && it.mime.startsWith('image/')
         ? `<img class="thumb" src="${it.objectUrl || ''}" alt="">`
-        : `<div class="icon-thumb">${it.mime && it.mime.startsWith('video/') ? '🎥' : it.mime && it.mime.startsWith('audio/') ? '🎵' : '📄'}</div>`;
+        : `<div class="icon-thumb" style="font-size:10px;font-weight:700;letter-spacing:.04em;color:#8c1d1d;">${it.mime && it.mime.startsWith('video/') ? 'VIDEO' : it.mime && it.mime.startsWith('audio/') ? 'AUDIO' : 'FILE'}</div>`;
       const stCls = 'st-' + it.status;
       const label = { queued: 'Queued - waiting for connection', uploading: 'Uploading ' + (it.progress || 0) + '%', uploaded: 'Uploaded ✓ Evidence #' + it.evidenceId, duplicate: 'Already stored (Evidence #' + it.evidenceId + ')', error: 'Will retry: ' + (it.lastError || ''), auth: 'Sign-in expired - open the dashboard and sign in again' }[it.status] || it.status;
       const bar = it.status === 'uploading' ? `<div class="bar"><div style="width:${it.progress || 0}%"></div></div>` : '';
