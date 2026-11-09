@@ -79,6 +79,12 @@
             cursor: pointer;
         }
 
+        .selected-tags #selectedTags:empty::after {
+            content: "None selected - pick tags from the list below";
+            color: #94a3b8;
+            font-weight: normal;
+        }
+
         .tag-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -404,6 +410,7 @@
                     <input type="text" id="tagSearch" placeholder="Type to search tags...">
                 </div>
                 <div id="tagSuggestions" class="tag-suggestions"></div>
+                <p style="margin-top: 14px; color: #64748b; font-size: 0.9rem;">Matches appear as you type. The full tag list is shown in All Tags below.</p>
             </div>
         </div>
 
