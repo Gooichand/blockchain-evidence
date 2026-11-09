@@ -11,20 +11,28 @@
 <style>
   :root { --red: #b71c1c; --ink: #1a1a1a; --muted: #666; --line: #e5e0e0; --bg: #faf7f7; }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
-  header { position: sticky; top: 0; z-index: 10; background: var(--red); color: #fff; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; display: flex; align-items: center; gap: 10px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); background-image: radial-gradient(rgba(183,28,28,.05) 1px, transparent 1px); background-size: 22px 22px; color: var(--ink); min-height: 100vh; }
+  header { position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #6e0c0c 0%, #b71c1c 55%, #d32f2f 100%); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 14px 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 18px rgba(140,10,10,.35); overflow: hidden; }
+  header::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 2px, transparent 2px 26px); pointer-events: none; }
+  header > * { position: relative; }
   header img { width: 30px; height: 30px; border-radius: 6px; background: #fff; }
-  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
-  #netPill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #2e7d32; color: #fff; }
-  #netPill.off { background: #616161; }
+  header h1 { font-size: 17px; font-weight: 800; flex: 1; letter-spacing: .01em; }
+  header h1 small { display: block; font-size: 10px; font-weight: 600; opacity: .85; letter-spacing: .12em; text-transform: uppercase; }
+  #netPill { font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); backdrop-filter: blur(6px); color: #fff; display: inline-flex; align-items: center; gap: 5px; }
+  #netPill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #69db7c; box-shadow: 0 0 6px #69db7c; }
+  #netPill.off::before { background: #ffc9c9; box-shadow: none; }
   main { max-width: 640px; margin: 0 auto; padding: 14px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
-  .card h2 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+  .card { background: rgba(255,255,255,.92); border: 1px solid #efe4e4; border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 6px 20px rgba(120,20,20,.06); }
+  .card h2 { font-size: 12px; color: #8c1d1d; text-transform: uppercase; letter-spacing: .09em; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card h2::before { content: ''; width: 4px; height: 14px; border-radius: 2px; background: linear-gradient(180deg, #d32f2f, #8c1010); }
   select, input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
   .capture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .cap-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 8px; border: 2px dashed var(--red); border-radius: 12px; background: #fff; color: var(--red); font-size: 15px; font-weight: 700; cursor: pointer; }
-  .cap-btn:active { background: #fdecec; }
-  .cap-btn span:first-child { font-size: 26px; }
+  .cap-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 8px; border: 2px dashed #d68a8a; border-radius: 14px; background: #fff; color: var(--red); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+  .cap-btn:active { background: #fdecec; transform: scale(.98); }
+  .cap-btn .ic { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #b71c1c, #d32f2f); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(183,28,28,.35); }
+  .cap-btn .ic svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .cap-btn.wide .ic { background: #f3e4e4; box-shadow: none; }
+  .cap-btn.wide .ic svg { stroke: #8c1d1d; }
   .cap-btn.wide { grid-column: 1 / -1; border-style: solid; border-color: var(--line); color: var(--ink); font-weight: 600; }
   .hash-line { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
   .item { display: flex; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; align-items: flex-start; }
@@ -41,7 +49,7 @@
   .bar { height: 5px; background: #f0e8e8; border-radius: 3px; margin-top: 6px; overflow: hidden; }
   .bar > div { height: 100%; background: var(--red); width: 0%; transition: width .2s; }
   .btn { display: inline-block; padding: 12px 16px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
-  .btn-primary { background: var(--red); color: #fff; width: 100%; }
+  .btn-primary { background: linear-gradient(135deg, #b71c1c, #d32f2f); color: #fff; width: 100%; box-shadow: 0 4px 14px rgba(183,28,28,.3); }
   .btn-outline { background: #fff; color: var(--red); border: 1px solid var(--red); }
   .btn:disabled { opacity: .5; }
   .row { display: flex; gap: 10px; }
@@ -55,7 +63,7 @@
 <body>
 <header>
   <img src="/icon-192.png" alt="EVID-DGC">
-  <h1>Field Capture</h1>
+  <h1>Field Capture<small>Offline-ready evidence intake</small></h1>
   <span id="netPill">checking…</span>
 </header>
 <main>
@@ -74,9 +82,9 @@
     <div class="card">
       <h2>Capture</h2>
       <div class="capture-grid">
-        <button class="cap-btn" id="btnPhoto"><span>📷</span><span>Photo</span></button>
-        <button class="cap-btn" id="btnVideo"><span>🎥</span><span>Video</span></button>
-        <button class="cap-btn wide" id="btnBrowse"><span>📁</span><span>Choose from files</span></button>
+        <button class="cap-btn" id="btnPhoto"><span class="ic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span><span>Photo</span></button>
+        <button class="cap-btn" id="btnVideo"><span class="ic"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span><span>Video</span></button>
+        <button class="cap-btn wide" id="btnBrowse"><span class="ic"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><span>Choose from files</span></button>
       </div>
       <input type="file" id="inPhoto" accept="image/*" capture="environment" class="hidden">
       <input type="file" id="inVideo" accept="video/*" capture="environment" class="hidden">
