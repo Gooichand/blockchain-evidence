@@ -50,11 +50,11 @@ async function loadEvidence(id) {
   return data;
 }
 
+// S8: in-app + email via the shared notifier (evidence_transfer is an emailed type).
 async function notify(userSid, title, message, data) {
   try {
-    await supabase.from('notifications').insert({
-      user_wallet: userSid, title, message, type: 'evidence_transfer', data: data || {}, is_read: false,
-    });
+    const { notifyUser } = require('../services/notificationService');
+    await notifyUser(userSid, title, message, 'evidence_transfer', data || {});
   } catch (e) {
     console.error('transfer notification failed:', e);
   }
