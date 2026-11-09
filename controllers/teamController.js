@@ -43,10 +43,8 @@ async function resolveUser(ref) {
 
 async function notify(userSid, title, message, data, type) {
   try {
-    const { error } = await supabase.from('notifications').insert({
-      user_wallet: userSid, title, message, type: type || 'case_team', data: data || {}, is_read: false,
-    });
-    if (error) console.error('team notification failed:', error);
+    const { notifyUser } = require('../services/notificationService');
+    await notifyUser(userSid, title, message, type || 'case_team', data || {});
   } catch (e) {
     console.error('team notification failed:', e);
   }
