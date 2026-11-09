@@ -313,7 +313,7 @@
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">
-                <h2>🚀 Quick Actions</h2>
+                <h2><i data-lucide="rocket" style="width:17px;height:17px;vertical-align:-3px"></i> Quick Actions</h2>
                 <p>Essential investigator tools and functions</p>
             </div>
             <div class="card-body">
@@ -365,7 +365,7 @@
         <!-- Recent Cases -->
         <div class="card">
             <div class="card-header">
-                <h2>📋 Recent Cases</h2>
+                <h2><i data-lucide="clipboard-list" style="width:17px;height:17px;vertical-align:-3px"></i> Recent Cases</h2>
                 <button class="btn btn-outline btn-sm" onclick="refreshCases()">
                     <i data-lucide="refresh-cw"></i>
                     Refresh
@@ -381,7 +381,7 @@
         <!-- Integrity Watch (M5) -->
         <div class="card" id="integrityWatchCard" style="display:none;">
             <div class="card-header">
-                <h2>🛡️ Integrity Watch</h2>
+                <h2><i data-lucide="shield-check" style="width:17px;height:17px;vertical-align:-3px"></i> Integrity Watch</h2>
                 <button class="btn btn-outline btn-sm" onclick="runIntegrityScan()">
                     <i data-lucide="shield-check"></i>
                     Run Scan
@@ -395,7 +395,7 @@
 
         <div class="card" id="recentCustodyCard" style="display:none;">
             <div class="card-header">
-                <h2>🧾 Recent Custody Activity</h2>
+                <h2><i data-lucide="receipt" style="width:17px;height:17px;vertical-align:-3px"></i> Recent Custody Activity</h2>
                 <a class="btn btn-outline btn-sm" href="case-timeline.html">
                     <i data-lucide="clock"></i>
                     Full Timeline
@@ -409,7 +409,7 @@
         <!-- Evidence Management -->
         <div class="card">
             <div class="card-header">
-                <h2>🔬 Evidence Management</h2>
+                <h2><i data-lucide="microscope" style="width:17px;height:17px;vertical-align:-3px"></i> Evidence Management</h2>
                 <p>Blockchain-secured evidence tracking</p>
             </div>
             <div class="card-body">
@@ -505,7 +505,7 @@
             const roleName = currentUser.role || 'investigator';
 
             if (document.getElementById('userRole')) {
-                document.getElementById('userRole').textContent = `🕵️ ${userName} (${roleName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())})`;
+                document.getElementById('userRole').textContent = `${userName} (${roleName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())})`;
             }
 
             const wallet = currentUser.walletAddress || currentUser.wallet_address;
@@ -657,7 +657,7 @@
                 <div style="padding:16px;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:8px;margin-bottom:12px;background:#fef2f2;">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
                         <div>
-                            <strong style="color:#991b1b;">⚠ Integrity mismatch - Evidence #${a.evidence_id}</strong>
+                            <strong style="color:#991b1b;">Integrity mismatch - Evidence #${a.evidence_id}</strong>
                             <div style="font-size:0.85rem;color:#7f1d1d;margin-top:6px;">
                                 The stored file no longer matches its recorded SHA-256. This item should be treated as suspect.
                             </div>
@@ -743,7 +743,7 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h3>📁 Case Details - ${escapeHtml(caseData.case_number || caseData.id)}</h3>
+                            <h3><i data-lucide="folder" style="width:15px;height:15px;vertical-align:-2px"></i> Case Details - ${escapeHtml(caseData.case_number || caseData.id)}</h3>
                             <button class="modal-close" onclick="this.closest('.modal').remove()">
                                 <i data-lucide="x"></i>
                             </button>
@@ -852,7 +852,7 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>📤 Add Evidence to ${caseId}</h3>
+                        <h3><i data-lucide="upload" style="width:15px;height:15px;vertical-align:-2px"></i> Add Evidence to ${caseId}</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">
                             <i data-lucide="x"></i>
                         </button>
@@ -881,7 +881,7 @@
                             <div class="form-group">
                                 <label>Evidence Files <span style="font-weight:400; color:#888;">(drop one or many)</span></label>
                                 <div id="evDropZone" class="ev-dropzone">
-                                    <span style="font-size:26px;">📤</span>
+                                    <span style="font-size:26px;color:#b91c1c;"><i data-lucide="upload" style="width:26px;height:26px;vertical-align:-2px"></i></span>
                                     <p style="margin:6px 0;"><strong>Drag &amp; drop files here</strong> or <span style="color:#b71c1c; text-decoration:underline;">browse</span></p>
                                     <p class="ev-dropzone-hint">PDF, images, video, audio, Office docs, text, ZIP/RAR. Size limits by file type (10 MB - 500 MB, free tier). Files over 25 MB upload in resumable chunks - progress survives network drops.</p>
                                 </div>
@@ -1498,7 +1498,7 @@
             const cam = (m.model && m.make && String(m.model).toLowerCase().startsWith(String(m.make).toLowerCase()))
                 ? m.model
                 : [m.make, m.model].filter(Boolean).join(' ');
-            if (cam) bits.push('📷 ' + escapeHtml(cam));
+            if (cam) bits.push(escapeHtml(cam));
             if (m.takenAt) bits.push('taken ' + new Date(m.takenAt).toLocaleString());
             if (m.gps) bits.push('GPS ' + m.gps.lat + ', ' + m.gps.lon);
             if (m.software) bits.push('software: ' + escapeHtml(m.software));
@@ -1512,7 +1512,7 @@
             let html = '';
             if (bits.length) html += '<br><small style="color:#475569;">' + bits.join(' · ') + '</small>';
             flags.forEach(f => {
-                html += '<br><small style="color:#b91c1c;font-weight:600;">⚠ ' + escapeHtml(f.message || f.code) + '</small>';
+                html += '<br><small style="color:#b91c1c;font-weight:600;">' + escapeHtml(f.message || f.code) + '</small>';
             });
             return html;
         }
@@ -1602,14 +1602,14 @@
 
             const reqHtml = requests.length === 0
                 ? ''
-                : `<h4 style="margin-top:20px;">🔬 Analysis requests</h4>` + requests.map(q => `
+                : `<h4 style="margin-top:20px;"><i data-lucide="microscope" style="width:15px;height:15px;vertical-align:-2px"></i> Analysis requests</h4>` + requests.map(q => `
                     <div style="padding:6px 0; border-bottom:1px solid #f3f4f6;">
                         Evidence #${q.evidence_id} - ${escapeHtml(q.analysis_type || 'general')} -
                         <strong>${escapeHtml(q.status)}</strong> <small style="color:#6b7280;">(${escapeHtml(q.priority)})</small>
                     </div>`).join('');
 
             const teamHtml = !team ? '' : `
-                <h4 style="margin-top:20px;">👥 Case team</h4>
+                <h4 style="margin-top:20px;"><i data-lucide="users" style="width:15px;height:15px;vertical-align:-2px"></i> Case team</h4>
                 <div id="caseTeamList">
                     ${team.owner ? `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;"><strong>${escapeHtml(team.owner.name || team.owner.user)}</strong> <span style="color:#b91c1c;font-size:12px;font-weight:600;">OWNER</span></div>` : ''}
                     ${(team.members || []).map(m => `
@@ -1631,13 +1631,13 @@
                     <button class="btn btn-primary btn-sm" onclick="addTeamMember(${caseId})">Add to team</button>
                 </div>` : ''}`;
 
-            const phaseIcons = { identify: '🔍', collect: '📥', acquire: '💾', preserve: '🔒' };
+            const phaseIcons = { identify: 'search', collect: 'download', acquire: 'hard-drive', preserve: 'lock' };
             const checklistHtml = !checklist ? '' : `
-                <h4 style="margin-top:20px;">🧭 Collection checklist (${checklist.summary.done}/${checklist.summary.total})</h4>
+                <h4 style="margin-top:20px;"><i data-lucide="compass" style="width:15px;height:15px;vertical-align:-2px"></i> Collection checklist (${checklist.summary.done}/${checklist.summary.total})</h4>
                 <div style="height:6px;background:#f3f4f6;border-radius:3px;margin-bottom:10px;"><div style="height:6px;border-radius:3px;background:${checklist.summary.complete ? '#047857' : '#b91c1c'};width:${Math.round(100 * checklist.summary.done / checklist.summary.total)}%;"></div></div>
                 ${['identify', 'collect', 'acquire', 'preserve'].map(p => `
                     <div style="margin-bottom:10px;">
-                        <div style="font-weight:600;font-size:13px;color:#374151;margin-bottom:4px;">${phaseIcons[p]} ${p.charAt(0).toUpperCase() + p.slice(1)} <span style="color:#9ca3af;font-weight:400;">(${checklist.summary.phases[p].done}/${checklist.summary.phases[p].total})</span></div>
+                        <div style="font-weight:600;font-size:13px;color:#374151;margin-bottom:4px;"><i data-lucide="${phaseIcons[p]}" style="width:13px;height:13px;vertical-align:-2px"></i> ${p.charAt(0).toUpperCase() + p.slice(1)} <span style="color:#9ca3af;font-weight:400;">(${checklist.summary.phases[p].done}/${checklist.summary.phases[p].total})</span></div>
                         ${checklist.items.filter(i => i.phase === p).map(i => `
                             <div style="padding:5px 0 5px 8px;border-bottom:1px solid #f9fafb;">
                                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
@@ -1651,7 +1651,7 @@
             `;
 
             const commentsHtml = `
-                <h4 style="margin-top:20px;">💬 Discussion (${comments.length})</h4>
+                <h4 style="margin-top:20px;"><i data-lucide="message-square" style="width:15px;height:15px;vertical-align:-2px"></i> Discussion (${comments.length})</h4>
                 <div id="caseCommentsList">
                     ${comments.length === 0 ? '<div class="no-data">No comments yet. Start the discussion below.</div>' : comments.map(c => `
                         <div style="border-left:3px solid #0ea5e9; padding:6px 10px; margin-bottom:8px;">
@@ -1665,9 +1665,9 @@
                 </div>`;
 
             root.innerHTML = `
-                <h4>📦 Evidence (${evidence.length})</h4>
+                <h4><i data-lucide="package" style="width:15px;height:15px;vertical-align:-2px"></i> Evidence (${evidence.length})</h4>
                 ${evHtml}
-                <h4 style="margin-top:20px;">📝 Case notes</h4>
+                <h4 style="margin-top:20px;"><i data-lucide="file-text" style="width:15px;height:15px;vertical-align:-2px"></i> Case notes</h4>
                 <div id="caseNotesList">${notesHtml}</div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
                     <input type="text" id="newCaseNote" class="form-control" placeholder="Add a timestamped note to this case" style="flex:1;">
@@ -1730,7 +1730,7 @@
                 if (v.valid) {
                     showToast('✅ Integrity verified: stored hash matches. Result recorded in the custody log.', 'success');
                 } else {
-                    showToast('⚠️ Verification FAILED or incomplete: ' + escapeHtml((v.errors || []).map(e => e.error || e).join('; ') || 'see details'), 'error');
+                    showToast('Verification FAILED or incomplete: ' + escapeHtml((v.errors || []).map(e => e.error || e).join('; ') || 'see details'), 'error');
                 }
             } catch (e) {
                 showToast('Verification failed: ' + escapeHtml(e.message || e), 'error');
@@ -1745,7 +1745,7 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>🔬 Request forensic analysis - evidence #${evidenceId}</h3>
+                        <h3><i data-lucide="microscope" style="width:15px;height:15px;vertical-align:-2px"></i> Request forensic analysis - evidence #${evidenceId}</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body">
@@ -1805,7 +1805,7 @@
                 const r = await window.apiClient.post(`/cases/${caseId}/notes`, { content });
                 if (!r.success) throw new Error(r.error || 'Failed to add note');
                 input.value = '';
-                showToast('📝 Note added.', 'success');
+                showToast('Note added.', 'success');
                 loadCaseWorkspace(caseId);
             } catch (e) {
                 showToast('Failed to add note: ' + escapeHtml(e.message || e), 'error');
@@ -1857,7 +1857,7 @@
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:520px;">
                     <div class="modal-header">
-                        <h3>📁 New Case</h3>
+                        <h3><i data-lucide="folder" style="width:15px;height:15px;vertical-align:-2px"></i> New Case</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body">
@@ -1954,7 +1954,7 @@
                 modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>📤 Upload Evidence - Select Case</h3>
+                        <h3><i data-lucide="upload" style="width:15px;height:15px;vertical-align:-2px"></i> Upload Evidence - Select Case</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body">
@@ -2109,7 +2109,7 @@
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:520px;">
                     <div class="modal-header">
-                        <h3>🔁 Transfer evidence #${evidenceId}</h3>
+                        <h3><i data-lucide="repeat" style="width:15px;height:15px;vertical-align:-2px"></i> Transfer evidence #${evidenceId}</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body">
@@ -2158,7 +2158,7 @@
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:640px;">
                     <div class="modal-header">
-                        <h3>🔁 Evidence Transfers</h3>
+                        <h3><i data-lucide="repeat" style="width:15px;height:15px;vertical-align:-2px"></i> Evidence Transfers</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()"><i data-lucide="x"></i></button>
                     </div>
                     <div class="modal-body" id="transfersBody"><div class="no-data">Loading transfers...</div></div>
