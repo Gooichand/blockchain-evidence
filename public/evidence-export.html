@@ -290,6 +290,7 @@
             document.getElementById('selectedCount').textContent = count;
             document.getElementById('downloadSingleBtn').disabled = count !== 1;
             document.getElementById('bulkExportBtn').disabled = count === 0;
+            document.getElementById('courtExportBtn').disabled = count === 0;
         }
 
         async function downloadSingle(evidenceId) {
@@ -345,6 +346,63 @@
 
             const evidenceId = Array.from(selectedEvidence)[0];
             await downloadSingle(evidenceId);
+        }
+
+        // A4: court-ready export package (originals + signed manifest + custody + proofs + report)
+        async function courtExport() {
+            if (selectedEvidence.size === 0) {
+                alert('Please select at least one evidence file');
+                return;
+            }
+            const btn = document.getElementById('courtExportBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Building package...';
+            try {
+                const signedHeaders = await window.apiClient.getAuthHeaders();
+                const response = await fetch('/api/evidence/court-export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...signedHeaders
+                    },
+                    body: JSON.stringify({
+                        evidenceIds: Array.from(selectedEvidence)
+                    })
+                });
+
+                if (!response.ok) {
+                    let message = 'Court export failed';
+                    try {
+                        const error = await response.json();
+                        if (error && error.error) message = error.error;
+                    } catch (_) { /* non-JSON error body */ }
+                    throw new Error(message);
+                }
+
+                const contentDisposition = response.headers.get('Content-Disposition');
+                const filename = contentDisposition ?
+                    contentDisposition.split('filename=')[1].replace(/"/g, '') :
+                    'court_package.zip';
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                alert(`Court-ready package built for ${selectedEvidence.size} item(s): originals, signed manifest, custody log, blockchain proofs and report PDF`);
+                clearSelection();
+            } catch (error) {
+                console.error('Court export error:', error);
+                alert('Failed to build court package: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚖️ Court-Ready Package';
+            }
         }
 
         async function bulkExport() {
