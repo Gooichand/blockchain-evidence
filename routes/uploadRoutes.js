@@ -23,4 +23,16 @@ router.put('/uploads/:id/chunks/:index', requireAuth, rawChunk, putChunk);
 router.post('/uploads/:id/complete', requireAuth, completeUpload);
 router.delete('/uploads/:id', requireAuth, cancelUpload);
 
+// A body bigger than one chunk trips the raw parser's limit before the
+// controller runs; answer with a clear 413 instead of the generic 500.
+router.use('/uploads', (err, req, res, next) => {
+  if (err && err.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      error: `Chunk too large. Send exactly one chunk per request (${CHUNK_SIZE / 1024 / 1024}MB, smaller for the final chunk).`,
+    });
+  }
+  next(err);
+});
+
 module.exports = router;
