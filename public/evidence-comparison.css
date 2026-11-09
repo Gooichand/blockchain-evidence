@@ -1,14 +1,14 @@
 /* Evidence Comparison Tool Styles */
 
 :root {
-    --primary-color: #2563eb;
-    --secondary-color: #64748b;
+    --primary-color: #b71c1c;
+    --secondary-color: #8a5a5a;
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --danger-color: #ef4444;
     --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-tertiary: #f1f5f9;
+    --bg-secondary: #faf5f5;
+    --bg-tertiary: #f5ecec;
     --text-primary: #1e293b;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
