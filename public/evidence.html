@@ -59,20 +59,32 @@
         .state-box i { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5; }
         .state-box.error { color: var(--primary-red); }
     </style>
+    <link rel="stylesheet" href="investigator-theme.css">
 </head>
 
 <body>
     <!-- Navbar injected by fixed-navbar.js -->
 
     <div class="container">
-        <div class="hero-section" style="margin: 40px 0; text-align: left;">
-            <h1>Evidence</h1>
-            <p class="hero-subtitle">Search, filter and review evidence across your cases</p>
+        <div class="hero-section inv-hero" data-inv-chips="evidence,verified,anchored" style="text-align: left;">
+            <div>
+                <h1>Evidence</h1>
+                <p class="hero-subtitle">Search, filter and review evidence across your cases</p>
+            </div>
+            <svg class="fp-deco" style="right:-10px;bottom:-60px;width:170px;height:170px" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="100" cy="100" r="20" stroke-dasharray="40 26"/>
+                <circle cx="100" cy="100" r="32" stroke-dasharray="54 36" transform="rotate(27 100 100)"/>
+                <circle cx="100" cy="100" r="44" stroke-dasharray="68 46" transform="rotate(54 100 100)"/>
+                <circle cx="100" cy="100" r="56" stroke-dasharray="82 56" transform="rotate(81 100 100)"/>
+                <circle cx="100" cy="100" r="68" stroke-dasharray="96 66" transform="rotate(108 100 100)"/>
+                <circle cx="100" cy="100" r="80" stroke-dasharray="110 76" transform="rotate(135 100 100)"/>
+                <circle cx="100" cy="100" r="9" stroke-dasharray="20 12"/>
+            </svg>
         </div>
 
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-body">
-                <div class="ev-filters">
+                <div class="ev-filters inv-filters" data-inv-filter-icons='{"fSearch":"search","fType":"layers","fStatus":"filter","fTag":"tag","fFrom":"calendar","fTo":"calendar"}'>
                     <div>
                         <label for="fSearch">Search</label>
                         <input type="text" id="fSearch" class="form-control" placeholder="Title, file name or hash...">
@@ -122,7 +134,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="table-container">
-                    <table class="user-table ev-table" style="width: 100%;">
+                    <table class="user-table ev-table" data-inv-table style="width: 100%;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -288,6 +300,7 @@
         });
     </script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
