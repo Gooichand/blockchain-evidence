@@ -9,6 +9,9 @@
     <title>Evidence Tagging System - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="fixed-navbar.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="api-client.js"></script>
     <script src="session-manager.js"></script>
@@ -354,11 +357,15 @@
 
 <body>
     <div class="tagging-container">
-        <div class="tagging-header">
-            <h1>🏷️ Evidence Tagging System</h1>
-            <button onclick="window.location.href='dashboard.html'" class="btn btn-secondary">
-                Back to Dashboard
-            </button>
+        <div class="tagging-header hero-section inv-hero" data-inv-chips="evidence,verified">
+            <div>
+                <h1>Evidence Tagging</h1>
+                <p class="hero-subtitle">Organize and retrieve evidence with case-wide tags</p>
+            </div>
+            <svg class="fp-deco" style="right:0;bottom:-40px;width:150px;height:150px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
         </div>
 
         <div id="messageContainer"></div>
@@ -463,6 +470,7 @@
 
     <script src="config.js"></script>
     <script src="evidence-tagging.js"></script>
+    <script src="investigator-theme.js"></script>
     <script>
         // Load real evidence data once the class instance exists (it is
         // created on DOMContentLoaded inside evidence-tagging.js)
