@@ -494,6 +494,27 @@ const verifyEvidence = async (req, res) => {
     const safe = sanitizeEvidence(evidence);
     const hashed = Boolean(evidence.hash);
 
+    // A1: minimal custody summary for the matched public record.
+    // Counts, action types and timestamps only - never actor names or IPs.
+    let custody = null;
+    try {
+      const { data: custodyRows, error: custodyErr } = (await supabase
+        .from('custody_log')
+        .select('action, created_at')
+        .eq('evidence_id', evidence.id)
+        .order('created_at', { ascending: true })) || {};
+      if (!custodyErr && custodyRows) {
+        custody = {
+          entries: custodyRows.length,
+          actions: [...new Set(custodyRows.map((r) => r.action).filter(Boolean))],
+          first_at: custodyRows.length ? custodyRows[0].created_at : null,
+          last_at: custodyRows.length ? custodyRows[custodyRows.length - 1].created_at : null,
+        };
+      }
+    } catch (_) {
+      custody = null; // best-effort on the public path
+    }
+
     let explorer_url = null;
     if (evidence.blockchain_tx_hash) {
       try {
@@ -525,6 +546,7 @@ const verifyEvidence = async (req, res) => {
           },
           recorded_at: safe.timestamp,
           explorer_url,
+          custody,
         },
         verification_timestamp: new Date().toISOString(),
       },
