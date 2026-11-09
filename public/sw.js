@@ -9,8 +9,8 @@
 // until connectivity returns. iOS Safari has no Background Sync, so queue
 // draining is driven by the page (online event + interval), not the SW.
 
-const SHELL_CACHE = 'eviddgc-shell-v1';
-const API_CACHE = 'eviddgc-api-v1';
+const SHELL_CACHE = 'eviddgc-shell-v2';
+const API_CACHE = 'eviddgc-api-v2';
 
 const PRECACHE = [
   '/field-capture.html',
@@ -71,7 +71,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // static shell: cache-first, then network (and keep the runtime copy)
+  // HTML pages: network-first so deploys reach users immediately; the cache
+  // is only the offline fallback. Other shell assets stay cache-first.
+  if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(SHELL_CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(async () => {
+          const cached = await caches.match(req);
+          if (cached) return cached;
+          return caches.match('/field-capture.html');
+        })
+    );
+    return;
+  }
+
+  // static shell assets: cache-first, then network (and keep the runtime copy)
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
@@ -86,7 +107,6 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
       return network.then((res) => {
         if (res) return res;
-        if (req.mode === 'navigate') return caches.match('/field-capture.html');
         return Response.error();
       });
     })
