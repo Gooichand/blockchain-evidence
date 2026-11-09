@@ -134,6 +134,12 @@ app.use('/api/', verifySignature);
 const registerRoutes = require('./routes');
 registerRoutes(app);
 
+// A1: pretty verifier links (/verify/<hash|id|tx>) land on the public verifier page
+app.get('/verify/:ref', (req, res) => {
+  const ref = encodeURIComponent(String(req.params.ref || ''));
+  res.redirect('/verify.html?ref=' + ref);
+});
+
 // -- Error handling (ORDER: 404 handler BEFORE generic error handler) --
 
 // 404 handler (must come BEFORE error handler - this is a regular middleware)
