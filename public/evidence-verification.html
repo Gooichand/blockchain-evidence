@@ -95,7 +95,7 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .verif-grid .verification-details { margin: 0; height: 100%; }
+        .verif-grid .verification-details { margin: 0; }
         .verification-container > .verification-details { margin: 20px 0 0; }
 
         .btn-verify {
@@ -215,6 +215,7 @@
             <button onclick="verifyBulkFiles()" class="btn-verify" id="bulkVerifyBtn" disabled>
                 Verify All Files
             </button>
+            <p style="margin-top: 14px; color: #64748b; font-size: 0.9rem;">Select several files to recompute each hash and confirm them against their anchored records in one run. Per-file results appear below.</p>
             <div id="bulkResults"></div>
         </div>
         </div><!-- /verif-grid -->
