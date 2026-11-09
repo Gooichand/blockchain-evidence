@@ -188,6 +188,10 @@
                 if (preselect && cases.some(c => String(c.id) === String(preselect))) {
                     sel.value = preselect;
                     loadTimeline(preselect);
+                } else {
+                    // Auto-select the most recent case so the page opens with real data
+                    sel.value = cases[0].id;
+                    loadTimeline(cases[0].id);
                 }
             } catch (e) {
                 if (String(e && e.message || '').includes('401')) { window.location.href = 'index.html'; return; }
