@@ -615,15 +615,31 @@
                 list.innerHTML = '<div class="no-data">No custody events recorded yet. Uploads, views, downloads and status changes will appear here.</div>';
                 return;
             }
-            list.innerHTML = entries.map(e => `
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f3e8e8;border-radius:8px;margin-bottom:8px;">
-                    <div>
-                        <strong>${escapeHtml(String(e.action || '').replace(/_/g, ' '))}</strong>
-                        ${e.evidence_id != null ? ' - evidence #' + e.evidence_id : ''}
-                        <div style="font-size:0.8rem;color:#6b7280;">${escapeHtml(caseTitle[String(e.case_id)] || (e.case_id != null ? 'Case #' + e.case_id : 'No case'))} - ${escapeHtml(e.actor_name || e.actor || 'unknown')}</div>
+            const ACTION_ICONS = { upload: 'upload-cloud', created: 'plus-circle', view: 'eye', viewed: 'eye', download: 'download', verify: 'shield-check', verified: 'shield-check', transfer: 'repeat', transferred: 'repeat', status: 'flag', status_change: 'flag', delete: 'trash-2', deleted: 'trash-2', hash: 'hash', anchored: 'link', note: 'file-text' };
+            const seen = new Set();
+            const sorted = [...entries]
+                .filter(e => { const k = e.id != null ? 'i' + e.id : (e.created_at + '|' + e.action + '|' + e.evidence_id); if (seen.has(k)) return false; seen.add(k); return true; })
+                .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            const fmtIST = (d) => d ? new Date(d).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+            const fmtISTDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric' }) : '';
+            list.innerHTML = sorted.map((e, idx) => {
+                const act = String(e.action || 'activity').replace(/_/g, ' ');
+                const icon = ACTION_ICONS[String(e.action || '').toLowerCase()] || 'activity';
+                const when = fmtIST(e.created_at);
+                const yr = fmtISTDate(e.created_at);
+                return `
+                <div class="tl-item${idx === 0 ? ' latest' : ''}">
+                    <div class="tl-dot"><i data-lucide="${icon}"></i></div>
+                    <div class="tl-card">
+                        <div>
+                            <div class="tl-action">${escapeHtml(act)}${e.evidence_id != null ? ' · evidence #' + e.evidence_id : ''}</div>
+                            <div class="tl-meta">${escapeHtml(caseTitle[String(e.case_id)] || (e.case_id != null ? 'Case #' + e.case_id : 'No case'))} · ${escapeHtml(e.actor_name || e.actor || 'unknown')}</div>
+                        </div>
+                        <div class="tl-time">${when}${yr ? '<br>' + yr : ''}</div>
                     </div>
-                    <small style="color:#9ca3af;white-space:nowrap;">${e.created_at ? new Date(e.created_at).toLocaleString() : ''}</small>
-                </div>`).join('');
+                </div>`;
+            }).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
         function renderIntegrityAlerts(alerts) {
