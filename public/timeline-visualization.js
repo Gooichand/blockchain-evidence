@@ -151,7 +151,7 @@ function updateTimeline() {
     if (emptyEl) emptyEl.style.display = timelineItems.length ? 'none' : 'flex';
     
     if (timeline) {
-        timeline.setData(new vis.DataSet(timelineItems));
+        timeline.setItems(new vis.DataSet(timelineItems));
         
         // Fit timeline to show all items
         if (timelineItems.length > 0) {
