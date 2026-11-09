@@ -284,7 +284,7 @@ body {
 .card-body { padding: 14px 20px !important; }
 
 /* ---------- Quick actions ---------- */
-.quick-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px !important; }
+.quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px !important; }
 .action-card {
   background: rgba(255, 255, 255, 0.85) !important;
   border: 1px solid rgba(211, 47, 47, 0.10) !important;
