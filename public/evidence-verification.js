@@ -43,7 +43,7 @@ function handleFileSelect(event) {
     // Update upload zone
     const uploadText = document.getElementById('uploadText');
     uploadText.innerHTML = `
-        <h3>✅ File Selected: ${file.name}</h3>
+        <h3><span style="color:#166534">✓</span> File Selected: ${file.name}</h3>
         <p>Size: ${formatFileSize(file.size)} | Type: ${file.type || 'Unknown'}</p>
         <p>Click "Verify File Integrity" to check against blockchain records</p>
     `;
@@ -101,7 +101,7 @@ async function verifyFile() {
     
     const verifyBtn = document.getElementById('verifyBtn');
     verifyBtn.disabled = true;
-    verifyBtn.textContent = '🔄 Verifying...';
+    verifyBtn.textContent = 'Verifying...';
     
     try {
         // Calculate file hash
@@ -141,7 +141,7 @@ async function verifyFile() {
         showError('Verification failed: ' + (error.message || 'Please try again.'));
     } finally {
         verifyBtn.disabled = false;
-        verifyBtn.textContent = '🔍 Verify File Integrity';
+        verifyBtn.textContent = 'Verify File Integrity';
     }
 }
 
@@ -151,7 +151,7 @@ async function verifyBulkFiles() {
     
     const bulkVerifyBtn = document.getElementById('bulkVerifyBtn');
     bulkVerifyBtn.disabled = true;
-    bulkVerifyBtn.textContent = '🔄 Verifying...';
+    bulkVerifyBtn.textContent = 'Verifying...';
     
     const bulkResults = document.getElementById('bulkResults');
     bulkResults.innerHTML = '<h3>Bulk Verification Results:</h3>';
@@ -172,7 +172,7 @@ async function verifyBulkFiles() {
             
             const data = unwrapVerification(result);
             const resultClass = data.verified ? 'result-verified' : 'result-tampered';
-            const resultIcon = data.verified ? '✅' : '❌';
+            const resultIcon = data.verified ? '✓' : '✗';
             const resultText = data.verified ? 'Verified' : 'Tampered';
             
             if (data.verified) verified++;
@@ -188,7 +188,7 @@ async function verifyBulkFiles() {
         } catch (error) {
             bulkResults.innerHTML += `
                 <div class="verification-result result-tampered">
-                    <strong>❌ ${file.name}</strong> - Error: ${error.message}
+                    <strong>✗ ${file.name}</strong> - Error: ${error.message}
                 </div>
             `;
             tampered++;
@@ -202,7 +202,7 @@ async function verifyBulkFiles() {
     `;
     
     bulkVerifyBtn.disabled = false;
-    bulkVerifyBtn.textContent = '🔍 Verify All Files';
+    bulkVerifyBtn.textContent = 'Verify All Files';
 }
 
 // Display verification result
@@ -211,7 +211,7 @@ function displayVerificationResult(result, calculatedHash) {
     resultDiv.style.display = 'block';
     
     const isVerified = result.verified;    const resultClass = isVerified ? 'result-verified' : 'result-tampered';
-    const resultIcon = isVerified ? '✅' : '❌';
+    const resultIcon = isVerified ? '✓' : '✗';
     const resultText = isVerified ? 'VERIFIED' : 'TAMPERED';
     
     resultDiv.className = `verification-result ${resultClass}`;
@@ -233,8 +233,8 @@ function displayVerificationResult(result, calculatedHash) {
         ` : ''}
         
         <div style="margin-top: 15px;">
-            <button onclick="downloadCertificate()" class="btn-download">📄 Download Certificate</button>
-            <button onclick="emailResults()" class="btn-download">📧 Email Results</button>
+            <button onclick="downloadCertificate()" class="btn-download">Download Certificate</button>
+            <button onclick="emailResults()" class="btn-download">Email Results</button>
         </div>
         
         ${result.evidence ? `
@@ -343,7 +343,7 @@ function loadVerificationHistory() {
     }
     
     historyDiv.innerHTML = verificationHistory.map(entry => {
-        const resultIcon = entry.result === 'verified' ? '✅' : '❌';
+        const resultIcon = entry.result === 'verified' ? '✓' : '✗';
         const resultClass = entry.result === 'verified' ? 'result-verified' : 'result-tampered';
         
         return `
@@ -380,7 +380,7 @@ function showError(message) {
     resultDiv.style.display = 'block';
     resultDiv.className = 'verification-result result-tampered';
     resultDiv.innerHTML = `
-        <h2>❌ Error</h2>
+        <h2>Error</h2>
         <p>${message}</p>
     `;
 }
