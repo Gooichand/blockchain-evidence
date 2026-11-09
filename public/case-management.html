@@ -15,6 +15,7 @@
 
     <script src="device-detector.js"></script>
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
+    <link rel="stylesheet" href="investigator-theme.css">
 </head>
 
 <body>
@@ -52,21 +53,28 @@
 
     <div class="case-management-container">
         <!-- Page Header -->
-        <div class="page-header">
-            <div class="header-content">
+        <div class="hero-section inv-hero" data-inv-chips="cases,evidence,verified">
+            <div>
                 <h1>Case Management</h1>
                 <p>Manage cases with comprehensive status workflow and role-based permissions</p>
             </div>
-            <div class="header-actions">
+            <div class="header-actions" style="position:relative;z-index:2;display:flex;gap:10px">
                 <button class="btn btn-primary" onclick="showCreateCaseModal()">
                     <i data-lucide="plus"></i>
                     Create New Case
                 </button>
-                <button class="btn btn-outline" onclick="showStatisticsModal()">
+                <button class="btn btn-secondary" onclick="showStatisticsModal()">
                     <i data-lucide="bar-chart-3"></i>
                     Statistics
                 </button>
             </div>
+            <svg class="scales-deco" viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                <line x1="60" y1="14" x2="60" y2="96"/><line x1="22" y1="30" x2="98" y2="30"/>
+                <circle cx="60" cy="12" r="4"/><line x1="46" y1="100" x2="74" y2="100"/>
+                <line x1="22" y1="30" x2="12" y2="56"/><line x1="22" y1="30" x2="32" y2="56"/>
+                <path d="M6 56 a6 10 0 0 0 32 0 Z"/><line x1="98" y1="30" x2="88" y2="56"/><line x1="98" y1="30" x2="108" y2="56"/>
+                <path d="M82 56 a6 10 0 0 0 32 0 Z"/>
+            </svg>
         </div>
 
         <!-- Filters Section -->
@@ -462,6 +470,7 @@
         });
     </script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
