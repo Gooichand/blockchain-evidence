@@ -1,5 +1,5 @@
 const { supabase } = require('../config');
-const { createNotification } = require('./notificationService');
+const { notifyUser } = require('./notificationService');
 
 // Helper function to create status change notifications
 async function createStatusChangeNotification(caseId, fromStatusId, toStatusId, changedBy) {
@@ -7,7 +7,7 @@ async function createStatusChangeNotification(caseId, fromStatusId, toStatusId, 
     // Get case details
     const { data: caseData } = (await supabase
       .from('cases')
-      .select('title, case_number, assigned_investigator, assigned_prosecutor, assigned_judge')
+      .select('title, case_number, created_by, assigned_investigator, assigned_prosecutor, assigned_judge')
       .eq('id', caseId)
       .single()) || {};
 
@@ -28,15 +28,24 @@ async function createStatusChangeNotification(caseId, fromStatusId, toStatusId, 
 
     const message = `Case "${caseData.title}" (${caseData.case_number}) status changed to ${toStatus.status_name}`;
 
-    // Notify assigned users
-    const assignedUsers = [
+    // S8: notify the owner, assigned staff and active team members (S7),
+    // keyed by stable user id, in-app plus email ('case_status' type).
+    const { data: teamRows } = (await supabase
+      .from('case_assignments')
+      .select('assigned_to')
+      .eq('case_id', caseId)
+      .eq('is_active', true)) || {};
+
+    const assignedUsers = [...new Set([
+      caseData.created_by,
       caseData.assigned_investigator,
       caseData.assigned_prosecutor,
       caseData.assigned_judge,
-    ].filter((user) => user && user !== changedBy);
+      ...(teamRows || []).map((r) => r.assigned_to),
+    ].filter((user) => user && user !== changedBy))];
 
     for (const userWallet of assignedUsers) {
-      await createNotification(userWallet, 'Case Status Update', message, 'system', {
+      await notifyUser(userWallet, 'Case status update', message, 'case_status', {
         case_id: caseId,
         from_status: fromStatus?.status_name,
         to_status: toStatus.status_name,
