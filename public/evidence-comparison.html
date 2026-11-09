@@ -50,11 +50,11 @@
             <div class="selector-controls">
                 <div class="search-box">
                     <input type="text" id="evidenceSearch" placeholder="Search evidence by title, case ID, or hash...">
-                    <button id="searchBtn" class="btn btn-icon">🔍</button>
+                    <button id="searchBtn" class="btn btn-icon"><i data-lucide="search" style="width:16px;height:16px"></i></button>
                 </div>
                 <div class="layout-selector">
-                    <button id="duplicatesBtn" class="btn btn-secondary" title="Group evidence with identical SHA-256 hashes">🔁 Duplicates</button>
-                    <button id="showAllBtn" class="btn btn-secondary" title="Show all evidence">📋 All</button>
+                    <button id="duplicatesBtn" class="btn btn-secondary" title="Group evidence with identical SHA-256 hashes">Duplicates</button>
+                    <button id="showAllBtn" class="btn btn-secondary" title="Show all evidence">All</button>
                     <label>Layout:</label>
                     <select id="layoutMode">
                         <option value="grid-2">2 Column Grid</option>
@@ -84,22 +84,22 @@
         <section id="comparisonView" class="comparison-view" style="display: none;">
             <div class="comparison-controls">
                 <button id="syncScrollBtn" class="btn btn-secondary">
-                    🔗 Sync Scrolling: ON
+                    Sync Scrolling: ON
                 </button>
                 <button id="showMetadataBtn" class="btn btn-secondary">
-                    📊 Show Metadata
+                    Show Metadata
                 </button>
                 <button id="resetViewBtn" class="btn btn-secondary">
-                    🔄 Reset View
+                    Reset View
                 </button>
                 <button id="changeSelectionBtn" class="btn btn-secondary">
-                    ← Change Selection
+                    Change Selection
                 </button>
             </div>
 
             <!-- Metadata Comparison Table -->
             <div id="metadataSection" class="metadata-section">
-                <h3>📊 Metadata Comparison</h3>
+                <h3>Metadata Comparison</h3>
                 <div class="metadata-table-container">
                     <table id="metadataTable" class="metadata-table">
                         <thead>
