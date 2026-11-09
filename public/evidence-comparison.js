@@ -56,6 +56,8 @@ class EvidenceComparisonTool {
             this.renderDuplicates();
         });
         document.getElementById('showAllBtn')?.addEventListener('click', () => {
+            document.getElementById('comparisonView').style.display = 'none';
+            document.querySelector('.evidence-selector').style.display = 'block';
             this.renderEvidenceList(this.allEvidence);
         });
 
@@ -267,6 +269,9 @@ class EvidenceComparisonTool {
 
     // S12: duplicate detection - group the accessible evidence list by hash
     renderDuplicates() {
+        // return to the selector view when invoked from the comparison view
+        document.getElementById('comparisonView').style.display = 'none';
+        document.querySelector('.evidence-selector').style.display = 'block';
         const groups = {};
         this.allEvidence.forEach((e) => {
             if (e.hash) (groups[e.hash] = groups[e.hash] || []).push(e);
