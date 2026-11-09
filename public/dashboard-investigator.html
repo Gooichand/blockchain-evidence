@@ -821,7 +821,7 @@
                                 <div id="evDropZone" class="ev-dropzone">
                                     <span style="font-size:26px;">📤</span>
                                     <p style="margin:6px 0;"><strong>Drag &amp; drop files here</strong> or <span style="color:#b71c1c; text-decoration:underline;">browse</span></p>
-                                    <p class="ev-dropzone-hint">PDF, images, video, audio, Office docs, text, ZIP/RAR. Size limits by file type (10 MB - 500 MB).</p>
+                                    <p class="ev-dropzone-hint">PDF, images, video, audio, Office docs, text, ZIP/RAR. Size limits by file type (10 MB - 500 MB, free tier). Files over 25 MB upload in resumable chunks - progress survives network drops.</p>
                                 </div>
                                 <input type="file" id="evidenceFile" multiple style="display:none;">
                                 <div id="evUploadQueue" class="ev-upload-queue"></div>
@@ -1081,6 +1081,7 @@
                     </div>
                     <div class="evq-bar"><div class="evq-bar-fill" style="width:${it.progress || 0}%"></div></div>
                     ${it.needsConfirm ? `<button class="evq-confirm" onclick="confirmDangerousUpload(${i}, window.__evCaseId)">Upload anyway - I confirm this is evidence</button>` : ''}
+                    ${it.done && it.stateCls === 'err' && !it.needsConfirm ? `<button class="evq-confirm" onclick="retryQueueItem(${i})">Retry - already-sent chunks are kept</button>` : ''}
                     ${it.done ? '' : `<button class="evq-remove" onclick="evQueue.splice(${i},1); renderUploadQueue();" title="Remove">&times;</button>`}
                 </div>`).join('');
         }
@@ -1107,6 +1108,96 @@
             ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('drag-over'); }));
             ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('drag-over'); }));
             dz.addEventListener('drop', e => addFilesToQueue(e.dataTransfer.files));
+        }
+
+        // ===== S10: resumable chunked upload for large files =====
+        // Files above the threshold are sliced into 8MB chunks that upload
+        // one at a time (each retried up to 4 times). The server stores the
+        // chunks on disk, so a dropped connection or a retried file only
+        // re-sends the chunks that are still missing - never the whole file.
+        // After the last chunk, the server assembles the file and streams a
+        // SHA-256 over it, which we compare with the browser-computed hash.
+        const CHUNKED_THRESHOLD = 25 * 1024 * 1024;
+
+        function xhrPutChunk(uploadId, index, blob, token, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', `/api/uploads/${uploadId}/chunks/${index}`);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+                xhr.timeout = 120000;
+                xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+                xhr.onload = () => {
+                    let j;
+                    try { j = JSON.parse(xhr.responseText); } catch (e) { j = {}; }
+                    if (xhr.status >= 200 && xhr.status < 300) resolve(j);
+                    else reject(new Error(j.error || ('Chunk upload failed (HTTP ' + xhr.status + ')')));
+                };
+                xhr.onerror = () => reject(new Error('Network error'));
+                xhr.ontimeout = () => reject(new Error('Chunk upload timed out'));
+                xhr.send(blob);
+            });
+        }
+
+        // Returns { uploadId, sha256 } once the whole file is assembled server-side.
+        // Safe to call again after a failure: it reuses it.uploadId and asks the
+        // server which chunks it already holds.
+        async function uploadFileChunked(it, onProgress) {
+            const token = localStorage.getItem('authToken');
+            if (!it.uploadId) {
+                const r = await fetch('/api/uploads', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: it.file.name, size: it.file.size, mimeType: it.file.type || 'application/octet-stream' }),
+                });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.success) throw new Error(j.error || ('Could not start the upload session (HTTP ' + r.status + ')'));
+                it.uploadId = j.uploadId;
+            }
+            const st = await fetch(`/api/uploads/${it.uploadId}`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const stj = await st.json().catch(() => ({}));
+            if (!st.ok || !stj.success) {
+                it.uploadId = null; // session expired or lost - next retry starts fresh
+                throw new Error(stj.error || 'Upload session expired - press Retry to start a new one');
+            }
+            const have = new Set(stj.received || []);
+            const chunkSize = stj.chunkSize;
+            const total = stj.totalChunks;
+            for (let i = 0; i < total; i++) {
+                if (have.has(i)) { onProgress((i + 1) / total); continue; }
+                const blob = it.file.slice(i * chunkSize, Math.min((i + 1) * chunkSize, it.file.size));
+                let lastErr = null, sent = false;
+                for (let attempt = 1; attempt <= 4 && !sent; attempt++) {
+                    try {
+                        await xhrPutChunk(it.uploadId, i, blob, token, (f) => onProgress((i + f) / total));
+                        sent = true;
+                    } catch (e) {
+                        lastErr = e;
+                        if (attempt < 4) await new Promise(r => setTimeout(r, 1000 * attempt));
+                    }
+                }
+                if (!sent) throw new Error(`Chunk ${i + 1}/${total} failed after 4 attempts (${lastErr ? lastErr.message : 'unknown'}). Press Retry - chunks already sent are kept.`);
+                onProgress((i + 1) / total);
+            }
+            const cr = await fetch(`/api/uploads/${it.uploadId}/complete`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+            });
+            const cj = await cr.json().catch(() => ({}));
+            if (!cr.ok || !cj.success) throw new Error(cj.error || ('Could not finalize the upload (HTTP ' + cr.status + ')'));
+            return { uploadId: it.uploadId, sha256: cj.sha256 };
+        }
+
+        function retryQueueItem(i) {
+            const it = evQueue[i];
+            if (!it) return;
+            it.done = false;
+            it.progress = 0;
+            it.status = 'Queued';
+            it.stateCls = '';
+            it.needsConfirm = false;
+            renderUploadQueue();
+            submitEvidence(window.__evCaseId);
         }
 
         // XHR instead of fetch so we get real upload progress events
@@ -1149,10 +1240,24 @@
                 try {
                     it.status = 'Hashing...'; renderUploadQueue();
                     const clientHash = await sha256File(it.file);
-                    it.status = 'Uploading'; renderUploadQueue();
 
-                    const fd = buildEvidenceFormData(it, caseId);
-                    const res = await uploadFileWithProgress(fd, p => { it.progress = Math.round(p * 100); renderUploadQueue(); });
+                    let fd;
+                    if (it.file.size > CHUNKED_THRESHOLD) {
+                        // S10: resumable path - chunks first, then attach by uploadId
+                        it.status = 'Uploading (resumable chunks)'; renderUploadQueue();
+                        const up = await uploadFileChunked(it, (f) => { it.progress = Math.round(f * 100); renderUploadQueue(); });
+                        if (up.sha256 && up.sha256.toLowerCase() !== clientHash.toLowerCase()) {
+                            throw new Error('Assembled file hash does not match the local hash - upload corrupted, press Retry');
+                        }
+                        fd = buildEvidenceFormData(it, caseId);
+                        fd.delete('file');
+                        fd.append('uploadId', up.uploadId);
+                        it.status = 'Registering evidence...'; renderUploadQueue();
+                    } else {
+                        it.status = 'Uploading'; renderUploadQueue();
+                        fd = buildEvidenceFormData(it, caseId);
+                    }
+                    const res = await uploadFileWithProgress(fd, p => { if (!fd.has('uploadId')) { it.progress = Math.round(p * 100); renderUploadQueue(); } });
                     it.progress = 100; it.done = true;
                     if (res.__status === 409) {
                         dup++;
