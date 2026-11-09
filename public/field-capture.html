@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Field Capture - EVID-DGC</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#b71c1c">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico">
+<style>
+  :root { --red: #b71c1c; --ink: #1a1a1a; --muted: #666; --line: #e5e0e0; --bg: #faf7f7; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  header { position: sticky; top: 0; z-index: 10; background: var(--red); color: #fff; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; display: flex; align-items: center; gap: 10px; }
+  header img { width: 30px; height: 30px; border-radius: 6px; background: #fff; }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  #netPill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #2e7d32; color: #fff; }
+  #netPill.off { background: #616161; }
+  main { max-width: 640px; margin: 0 auto; padding: 14px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+  .card h2 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+  select, input[type=text] { width: 100%; padding: 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .capture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cap-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 8px; border: 2px dashed var(--red); border-radius: 12px; background: #fff; color: var(--red); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .cap-btn:active { background: #fdecec; }
+  .cap-btn span:first-child { font-size: 26px; }
+  .cap-btn.wide { grid-column: 1 / -1; border-style: solid; border-color: var(--line); color: var(--ink); font-weight: 600; }
+  .hash-line { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
+  .item { display: flex; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .item img.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; background: #eee; flex-shrink: 0; }
+  .item .icon-thumb { width: 56px; height: 56px; border-radius: 8px; background: #f3eaea; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-name { font-weight: 700; font-size: 14px; word-break: break-word; }
+  .item-meta { font-size: 12px; color: var(--muted); margin: 2px 0; }
+  .item-status { font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .st-queued { color: #9a6a00; }
+  .st-uploading { color: #1565c0; }
+  .st-uploaded { color: #2e7d32; }
+  .st-error, .st-duplicate, .st-auth { color: var(--red); }
+  .bar { height: 5px; background: #f0e8e8; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--red); width: 0%; transition: width .2s; }
+  .btn { display: inline-block; padding: 12px 16px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-primary { background: var(--red); color: #fff; width: 100%; }
+  .btn-outline { background: #fff; color: var(--red); border: 1px solid var(--red); }
+  .btn:disabled { opacity: .5; }
+  .row { display: flex; gap: 10px; }
+  .row .btn { flex: 1; }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .hidden { display: none !important; }
+  #loginCard a { color: var(--red); font-weight: 700; }
+  .case-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <img src="/icon-192.png" alt="EVID-DGC">
+  <h1>Field Capture</h1>
+  <span id="netPill">checking…</span>
+</header>
+<main>
+  <div id="loginCard" class="card hidden">
+    <h2>Sign in required</h2>
+    <p class="muted">You need an active EVID-DGC session on this device. <a href="/index.html">Sign in</a> first (connectivity needed once), then return here - captures afterwards work fully offline.</p>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="card">
+      <h2>Case</h2>
+      <select id="caseSelect"></select>
+      <p class="case-note" id="caseNote"></p>
+    </div>
+
+    <div class="card">
+      <h2>Capture</h2>
+      <div class="capture-grid">
+        <button class="cap-btn" id="btnPhoto"><span>📷</span><span>Photo</span></button>
+        <button class="cap-btn" id="btnVideo"><span>🎥</span><span>Video</span></button>
+        <button class="cap-btn wide" id="btnBrowse"><span>📁</span><span>Choose from files</span></button>
+      </div>
+      <input type="file" id="inPhoto" accept="image/*" capture="environment" class="hidden">
+      <input type="file" id="inVideo" accept="video/*" capture="environment" class="hidden">
+      <input type="file" id="inBrowse" multiple class="hidden">
+      <p class="case-note">Every capture is SHA-256 hashed on this device the moment it is taken. With no connection, evidence waits encrypted-free but tamper-evident in this device queue and uploads itself when you are back online.</p>
+    </div>
+
+    <div class="card">
+      <h2>Evidence queue <span id="qCount"></span></h2>
+      <div id="queue"></div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn btn-primary" id="btnUploadAll">Upload now</button>
+        <button class="btn btn-outline" id="btnClearDone">Clear completed</button>
+      </div>
+      <p class="case-note" id="queueNote"></p>
+    </div>
+
+    <p class="muted" style="text-align:center;"><a href="/dashboard-investigator.html" style="color:var(--red);">Open full dashboard</a> (larger screens)</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  const CHUNKED_THRESHOLD = 25 * 1024 * 1024;
+  const $ = (id) => document.getElementById(id);
+  const token = () => localStorage.getItem('authToken');
+  let cases = [];
+  let gpsCache = null;
+
+  // ---------- online/offline ----------
+  function setPill() {
+    const on = navigator.onLine;
+    const pill = $('netPill');
+    pill.textContent = on ? 'online' : 'offline - queueing';
+    pill.classList.toggle('off', !on);
+  }
+  window.addEventListener('online', () => { setPill(); drainQueue(); });
+  window.addEventListener('offline', setPill);
+
+  // ---------- IndexedDB queue ----------
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('eviddgc-field', 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const tx = async (mode, fn) => {
+    const db = await dbp;
+    return new Promise((res, rej) => {
+      const t = db.transaction('queue', mode);
+      const out = fn(t.objectStore('queue'));
+      t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  const qAdd = async (item) => {
+    const db = await dbp;
+    return new Promise((res, rej) => {
+      const rq = db.transaction('queue', 'readwrite').objectStore('queue').add(item);
+      rq.onsuccess = () => res(rq.result); // the auto-increment id
+      rq.onerror = () => rej(rq.error);
+    });
+  };
+  const qAll = () => new Promise(async (res, rej) => {
+    const db = await dbp;
+    const rq = db.transaction('queue', 'readonly').objectStore('queue').getAll();
+    rq.onsuccess = () => res(rq.result || []);
+    rq.onerror = () => rej(rq.error);
+  });
+  const qPut = (item) => tx('readwrite', (s) => s.put(item));
+  const qDel = (id) => tx('readwrite', (s) => s.delete(id));
+
+  // ---------- helpers ----------
+  const fmtBytes = (n) => n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : n < 1073741824 ? (n / 1048576).toFixed(1) + ' MB' : (n / 1073741824).toFixed(2) + ' GB';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  async function sha256File(file) {
+    const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  const evidenceTypeFor = (mime) => mime.startsWith('image/') ? 'Photo' : mime.startsWith('video/') ? 'Video' : mime.startsWith('audio/') ? 'Audio' : 'Document';
+
+  function refreshGps() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { gpsCache = { lat: pos.coords.latitude.toFixed(6), lon: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) }; },
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  }
+
+  // ---------- case picker ----------
+  async function loadCases() {
+    const sel = $('caseSelect');
+    try {
+      const r = await fetch('/api/cases', { headers: { Authorization: 'Bearer ' + token() } });
+      const d = await r.json();
+      if (r.status === 401) { showLogin(); return; }
+      cases = d.cases || d.data || [];
+      localStorage.setItem('fc_cases', JSON.stringify(cases));
+      $('caseNote').textContent = cases.length + ' case(s) synced for offline use.';
+    } catch (e) {
+      const cached = localStorage.getItem('fc_cases');
+      cases = cached ? JSON.parse(cached) : [];
+      $('caseNote').textContent = cases.length ? 'Offline - showing the last synced case list.' : 'Offline and no synced case list yet.';
+    }
+    const last = localStorage.getItem('fc_case');
+    sel.innerHTML = cases.map((c) => `<option value="${c.id}">${esc(c.case_number || 'CASE-' + c.id)} - ${esc(c.title || 'Untitled')}</option>`).join('');
+    if (last && cases.some((c) => String(c.id) === last)) sel.value = last;
+    sel.onchange = () => localStorage.setItem('fc_case', sel.value);
+  }
+
+  // ---------- queue rendering ----------
+  async function render() {
+    const items = (await qAll()).sort((a, b) => b.capturedAt - a.capturedAt);
+    $('qCount').textContent = items.length ? '(' + items.length + ')' : '';
+    const pending = items.filter((i) => i.status === 'queued' || i.status === 'error' || i.status === 'auth').length;
+    $('queueNote').textContent = pending ? pending + ' item(s) waiting - they upload automatically when online.' : '';
+    $('queue').innerHTML = items.map((it) => {
+      const thumb = it.mime && it.mime.startsWith('image/')
+        ? `<img class="thumb" src="${it.objectUrl || ''}" alt="">`
+        : `<div class="icon-thumb">${it.mime && it.mime.startsWith('video/') ? '🎥' : it.mime && it.mime.startsWith('audio/') ? '🎵' : '📄'}</div>`;
+      const stCls = 'st-' + it.status;
+      const label = { queued: 'Queued - waiting for connection', uploading: 'Uploading ' + (it.progress || 0) + '%', uploaded: 'Uploaded ✓ Evidence #' + it.evidenceId, duplicate: 'Already stored (Evidence #' + it.evidenceId + ')', error: 'Will retry: ' + (it.lastError || ''), auth: 'Sign-in expired - open the dashboard and sign in again' }[it.status] || it.status;
+      const bar = it.status === 'uploading' ? `<div class="bar"><div style="width:${it.progress || 0}%"></div></div>` : '';
+      return `<div class="item" data-id="${it.id}">
+        ${thumb}
+        <div class="item-body">
+          <div class="item-name">${esc(it.name)}</div>
+          <div class="item-meta">${fmtBytes(it.size)} · ${new Date(it.capturedAt).toLocaleString()}</div>
+          <div class="hash-line">SHA-256: ${it.hash}</div>
+          <div class="item-status ${stCls}">${esc(label)}</div>
+          ${bar}
+        </div>
+      </div>`;
+    }).join('') || '<p class="muted">Nothing captured yet. Use the camera buttons above.</p>';
+    // restore object URLs for thumbs
+    items.forEach(async (it) => {
+      if (it.mime && it.mime.startsWith('image/')) {
+        const el = document.querySelector(`.item[data-id="${it.id}"] img.thumb`);
+        if (el && !el.src) el.src = URL.createObjectURL(it.blob);
+      }
+    });
+  }
+
+  // ---------- capture ----------
+  async function takeFiles(fileList) {
+    refreshGps();
+    for (const file of fileList) {
+      const hash = await sha256File(file); // hash at capture time, on-device
+      const item = {
+        blob: file,
+        name: file.name || ('capture-' + Date.now()),
+        mime: file.type || 'application/octet-stream',
+        size: file.size,
+        hash,
+        capturedAt: Date.now(),
+        caseId: $('caseSelect').value,
+        gps: gpsCache,
+        status: 'queued',
+        progress: 0,
+        attempts: 0,
+      };
+      item.id = await qAdd(item);
+    }
+    await render();
+    drainQueue();
+  }
+
+  // ---------- upload ----------
+  let draining = false;
+  async function drainQueue() {
+    if (draining || !navigator.onLine || !token()) return;
+    draining = true;
+    try {
+      const items = (await qAll()).filter((i) => ['queued', 'error', 'auth'].includes(i.status));
+      for (const it of items) {
+        try {
+          it.status = 'uploading'; it.progress = 0; await qPut(it); await render();
+          const res = await uploadItem(it);
+          if (res.ok) {
+            it.status = 'uploaded'; it.evidenceId = res.evidenceId; it.progress = 100;
+          } else if (res.duplicate) {
+            it.status = 'duplicate'; it.evidenceId = res.evidenceId;
+          } else if (res.auth) {
+            it.status = 'auth'; it.lastError = res.error;
+          } else {
+            it.status = 'error'; it.lastError = res.error; it.attempts++;
+          }
+        } catch (e) {
+          it.status = 'error'; it.lastError = e.message || String(e); it.attempts++;
+        }
+        await qPut(it); await render();
+        if (it.status === 'auth') break; // no point hammering without a session
+      }
+    } finally {
+      draining = false;
+    }
+  }
+
+  function xhrSend(method, url, body, headers, onProgress) {
+    return new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open(method, url);
+      Object.entries(headers || {}).forEach(([k, v]) => x.setRequestHeader(k, v));
+      x.timeout = 300000;
+      if (onProgress) x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+      x.onload = () => {
+        let j = {};
+        try { j = JSON.parse(x.responseText); } catch (e) {}
+        j.__status = x.status;
+        resolve(j);
+      };
+      x.onerror = () => reject(new Error('Network error'));
+      x.ontimeout = () => reject(new Error('Timed out'));
+      x.send(body);
+    });
+  }
+
+  async function uploadItem(it) {
+    const auth = { Authorization: 'Bearer ' + token() };
+    const baseFd = () => {
+      const fd = new FormData();
+      fd.append('caseId', it.caseId);
+      fd.append('type', evidenceTypeFor(it.mime));
+      fd.append('title', it.name.replace(/\.[^.]+$/, ''));
+      const gps = it.gps ? ` | GPS ${it.gps.lat},${it.gps.lon} (±${it.gps.acc}m)` : '';
+      fd.append('description', `Captured in the field on ${new Date(it.capturedAt).toISOString()} via EVID-DGC Field Capture. On-device SHA-256 at capture: ${it.hash}${gps}`);
+      if (it.gps) fd.append('location', `${it.gps.lat}, ${it.gps.lon}`);
+      return fd;
+    };
+
+    if (it.size <= CHUNKED_THRESHOLD) {
+      const fd = baseFd();
+      fd.append('file', it.blob, it.name);
+      const res = await xhrSend('POST', '/api/evidence/upload', fd, auth, async (f) => { it.progress = Math.round(f * 100); await qPut(it); render(); });
+      if (res.__status === 401) return { auth: true, error: res.error || 'session expired' };
+      if (res.__status === 409) return { duplicate: true, evidenceId: res.existingEvidenceId };
+      if (res.success) {
+        const serverHash = res.data && res.data.hash;
+        if (serverHash && serverHash.toLowerCase() !== it.hash.toLowerCase()) return { error: 'server hash mismatch - capture integrity in doubt' };
+        return { ok: true, evidenceId: res.data && res.data.id };
+      }
+      return { error: res.error || ('upload failed (HTTP ' + res.__status + ')') };
+    }
+
+    // chunked path (S10 protocol): init -> chunks -> complete -> attach
+    const init = await xhrSend('POST', '/api/uploads', JSON.stringify({ filename: it.name, size: it.size, mimeType: it.mime }), { ...auth, 'Content-Type': 'application/json' });
+    if (init.__status === 401) return { auth: true, error: init.error || 'session expired' };
+    if (!init.success) return { error: init.error || 'could not start upload session' };
+    const upId = init.uploadId, cs = init.chunkSize, total = init.totalChunks;
+    for (let i = 0; i < total; i++) {
+      const blob = it.blob.slice(i * cs, Math.min((i + 1) * cs, it.size));
+      let sent = false, lastErr = null;
+      for (let attempt = 1; attempt <= 4 && !sent; attempt++) {
+        try {
+          const r = await xhrSend('PUT', `/api/uploads/${upId}/chunks/${i}`, blob, { ...auth, 'Content-Type': 'application/octet-stream' }, async (f) => { it.progress = Math.round(((i + f) / total) * 100); await qPut(it); render(); });
+          if (r.__status === 401) return { auth: true, error: r.error || 'session expired' };
+          if (r.__status >= 200 && r.__status < 300) sent = true;
+          else lastErr = new Error(r.error || ('HTTP ' + r.__status));
+        } catch (e) { lastErr = e; }
+        if (!sent && attempt < 4) await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+      if (!sent) throw lastErr || new Error('chunk ' + i + ' failed');
+    }
+    const done = await xhrSend('POST', `/api/uploads/${upId}/complete`, null, auth);
+    if (!done.success) return { error: done.error || 'could not finalize upload' };
+    if (done.sha256 && done.sha256.toLowerCase() !== it.hash.toLowerCase()) return { error: 'assembled hash does not match the capture hash' };
+    const fd = baseFd();
+    fd.append('uploadId', upId);
+    const attach = await xhrSend('POST', '/api/evidence/upload', fd, auth);
+    if (attach.__status === 401) return { auth: true, error: attach.error || 'session expired' };
+    if (attach.__status === 409) return { duplicate: true, evidenceId: attach.existingEvidenceId };
+    if (attach.success) return { ok: true, evidenceId: attach.data && attach.data.id };
+    return { error: attach.error || 'attach failed' };
+  }
+
+  // ---------- wire up ----------
+  function showLogin() { $('loginCard').classList.remove('hidden'); $('app').classList.add('hidden'); }
+  $('btnPhoto').onclick = () => $('inPhoto').click();
+  $('btnVideo').onclick = () => $('inVideo').click();
+  $('btnBrowse').onclick = () => $('inBrowse').click();
+  $('inPhoto').onchange = (e) => { takeFiles(e.target.files); e.target.value = ''; };
+  $('inVideo').onchange = (e) => { takeFiles(e.target.files); e.target.value = ''; };
+  $('inBrowse').onchange = (e) => { takeFiles(e.target.files); e.target.value = ''; };
+  $('btnUploadAll').onclick = drainQueue;
+  $('btnClearDone').onclick = async () => {
+    const done = (await qAll()).filter((i) => ['uploaded', 'duplicate'].includes(i.status));
+    for (const it of done) await qDel(it.id);
+    render();
+  };
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  setPill();
+  if (!token()) { showLogin(); }
+  else {
+    $('app').classList.remove('hidden');
+    loadCases().then(render);
+    refreshGps();
+    setInterval(() => { setPill(); drainQueue(); }, 30000);
+    drainQueue();
+  }
+})();
+</script>
+</body>
+</html>
