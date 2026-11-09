@@ -337,20 +337,42 @@ body {
 .case-progress-lbl { font-size: 0.68rem; color: var(--inv-muted); margin-top: 3px; }
 
 /* ---------- Custody timeline ---------- */
-.inv-timeline { position: relative; padding-left: 18px; }
+/* ---------- Custody timeline (v3: line + icon dots perfectly centered) ---------- */
+.inv-timeline { position: relative; padding: 4px 0 2px; }
 .inv-timeline::before {
   content: "";
-  position: absolute; left: 5px; top: 6px; bottom: 6px;
+  position: absolute; left: 15px; top: 20px; bottom: 20px;
   width: 2px; border-radius: 2px;
-  background: linear-gradient(180deg, rgba(211, 47, 47, 0.35), rgba(211, 47, 47, 0.06));
+  background: linear-gradient(180deg, rgba(211, 47, 47, 0.45), rgba(211, 47, 47, 0.10));
 }
-.inv-timeline > * { position: relative; padding: 7px 0; border-bottom: 1px dashed rgba(211, 47, 47, 0.10); }
-.inv-timeline > *::before {
-  content: "";
-  position: absolute; left: -16px; top: 13px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #fff; border: 2.5px solid var(--inv-red);
+.inv-timeline .tl-item { position: relative; padding-left: 46px; margin-bottom: 14px; }
+.inv-timeline .tl-item:last-child { margin-bottom: 4px; }
+.inv-timeline .tl-dot {
+  position: absolute; left: 0; top: 4px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #fff; border: 2px solid #d32f2f;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(140, 16, 16, 0.14);
+  z-index: 1;
 }
+.inv-timeline .tl-dot svg, .inv-timeline .tl-dot i { width: 15px; height: 15px; stroke: #b71c1c; }
+.inv-timeline .tl-item.latest .tl-dot {
+  background: linear-gradient(135deg, #b71c1c, #d32f2f); border-color: #b71c1c;
+  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.16), 0 0 14px rgba(211, 47, 47, 0.55);
+}
+.inv-timeline .tl-item.latest .tl-dot svg, .inv-timeline .tl-item.latest .tl-dot i { stroke: #fff; }
+.inv-timeline .tl-card {
+  background: rgba(255, 255, 255, 0.86); backdrop-filter: blur(8px);
+  border: 1px solid #f0e2e2; border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 14px rgba(120, 20, 20, 0.06);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+.inv-timeline .tl-item.latest .tl-card { border-color: #e6b8b8; }
+.inv-timeline .tl-action { font-weight: 700; font-size: 0.9rem; color: #5c1616; text-transform: capitalize; }
+.inv-timeline .tl-meta { font-size: 0.78rem; color: #7a5a5a; margin-top: 3px; line-height: 1.45; }
+.inv-timeline .tl-time { font-size: 0.72rem; font-weight: 700; color: #a05555; white-space: nowrap; text-align: right; line-height: 1.5; }
+.inv-timeline .no-data { padding-left: 0; }
 
 /* ---------- Integrity donut ---------- */
 .integrity-wrap { display: flex; gap: 18px; align-items: center; }
