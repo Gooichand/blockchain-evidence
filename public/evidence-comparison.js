@@ -110,7 +110,7 @@ class EvidenceComparisonTool {
         if (!evidenceList || evidenceList.length === 0) {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b;">
-                    <p style="font-size: 1.2rem;">📁 No evidence found</p>
+                    <p style="font-size: 1.2rem;">No evidence found</p>
                     <p style="margin-top: 8px;">Upload evidence to start comparing</p>
                 </div>
             `;
@@ -126,13 +126,13 @@ class EvidenceComparisonTool {
                     <div class="evidence-item-type">${this.getFileTypeIcon(evidence.type)} ${evidence.type}</div>
                 </div>
                 <div class="evidence-item-meta">
-                    <div>📋 Case: ${this.escapeHtml(evidence.case_id || 'N/A')}</div>
-                    <div>📅 ${new Date(evidence.timestamp).toLocaleDateString()}</div>
-                    <div>👤 ${this.escapeHtml(evidence.submitted_by?.substring(0, 10) || 'Unknown')}...</div>
-                    <div>📦 ${this.formatFileSize(evidence.file_size)}</div>
+                    <div>Case: ${this.escapeHtml(evidence.case_id || 'N/A')}</div>
+                    <div>${new Date(evidence.timestamp).toLocaleDateString()}</div>
+                    <div>${this.escapeHtml(evidence.submitted_by?.substring(0, 10) || 'Unknown')}...</div>
+                    <div>${this.formatFileSize(evidence.file_size)}</div>
                 </div>
                 <div class="evidence-item-hash">
-                    🔐 ${evidence.hash?.substring(0, 32)}...
+                    ${evidence.hash?.substring(0, 32)}...
                 </div>
             </div>
         `).join('');
@@ -281,7 +281,7 @@ class EvidenceComparisonTool {
         if (!dups.length) {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b;">
-                    <p style="font-size: 1.2rem;">✅ No duplicates</p>
+                    <p style="font-size: 1.2rem;">No duplicates</p>
                     <p style="margin-top: 8px;">No two evidence items share the same SHA-256 across your accessible cases.</p>
                 </div>`;
             return;
@@ -292,7 +292,7 @@ class EvidenceComparisonTool {
                     <div class="evidence-item-title">${this.getFileTypeIcon(g[0].type)} ${g.length} identical copies - ${this.escapeHtml(g[0].title || 'Untitled')}</div>
                     <div class="evidence-item-type">${this.formatFileSize(g[0].file_size)}</div>
                 </div>
-                <div class="evidence-item-hash">🔐 ${this.escapeHtml(g[0].hash)}</div>
+                <div class="evidence-item-hash">${this.escapeHtml(g[0].hash)}</div>
                 <div class="evidence-item-meta" style="margin: 8px 0;">
                     ${g.map((e) => `<div>#${e.id} - ${this.escapeHtml(e.title || 'Untitled')} · Case ${e.case_id} · ${new Date(e.timestamp).toLocaleDateString()}</div>`).join('')}
                 </div>
@@ -394,7 +394,7 @@ class EvidenceComparisonTool {
                 <div class="evidence-preview">
                     <img src="${src}" alt="${this.escapeHtml(evidence.title)}" />
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                        <p><strong>🔍 Image Analysis</strong></p>
+                        <p><strong>Image Analysis</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                             Dimensions: Auto-detected<br>
                             Format: ${evidence.type}<br>
@@ -411,7 +411,7 @@ class EvidenceComparisonTool {
                         Your browser does not support video playback.
                     </video>
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                        <p><strong>🎥 Video Analysis</strong></p>
+                        <p><strong>Video Analysis</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                             Format: ${evidence.type}<br>
                             ${anchorLine}
@@ -424,7 +424,7 @@ class EvidenceComparisonTool {
                 <div class="evidence-preview">
                     <iframe src="${src}" style="width: 100%; height: 500px; border: none; border-radius: 8px;"></iframe>
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                        <p><strong>📄 PDF Document</strong></p>
+                        <p><strong>PDF Document</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                             ${anchorLine}
                         </p>
@@ -437,7 +437,7 @@ class EvidenceComparisonTool {
 ${evidence.description || 'No text content available'}
                 </div>
                 <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                    <p><strong>📝 Text Document</strong></p>
+                    <p><strong>Text Document</strong></p>
                     <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                         ${anchorLine}
                     </p>
@@ -446,7 +446,7 @@ ${evidence.description || 'No text content available'}
         } else {
             return `
                 <div class="evidence-unsupported">
-                    <p style="font-size: 3rem;">📦</p>
+                    <p style="font-size: 3rem;"><i data-lucide="package" style="width:40px;height:40px"></i></p>
                     <p style="margin-top: 16px; font-size: 1.1rem; color: #1e293b;">Unsupported File Type</p>
                     <p style="margin-top: 8px; color: #64748b;">
                         File: ${this.escapeHtml(evidence.file_name)}<br>
@@ -454,7 +454,7 @@ ${evidence.description || 'No text content available'}
                         Size: ${this.formatFileSize(evidence.file_size)}
                     </p>
                     <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                        <p><strong>🔐 ${anchorLine}</strong></p>
+                        <p><strong>${anchorLine}</strong></p>
                         ${src ? '' : noInline}
                         <p style="margin-top: 8px; font-family: monospace; font-size: 0.8rem; word-break: break-all;">
                             SHA-256: ${evidence.hash}
@@ -490,7 +490,7 @@ ${evidence.description || 'No text content available'}
     toggleSyncScroll() {
         this.syncScrolling = !this.syncScrolling;
         const btn = document.getElementById('syncScrollBtn');
-        btn.textContent = `🔗 Sync Scrolling: ${this.syncScrolling ? 'ON' : 'OFF'}`;
+        btn.textContent = `Sync Scrolling: ${this.syncScrolling ? 'ON' : 'OFF'}`;
         this.renderEvidencePanels();
     }
 
@@ -525,7 +525,7 @@ ${evidence.description || 'No text content available'}
 
             // Add blockchain verification
             pdf.setFontSize(10);
-            pdf.text('🔐 Blockchain Verified Evidence', 20, 45);
+            pdf.text('Blockchain Verified Evidence', 20, 45);
 
             let yPos = 55;
 
@@ -585,11 +585,11 @@ ${evidence.description || 'No text content available'}
 
     getFileTypeIcon(type) {
         const t = type?.toLowerCase() || '';
-        if (t.includes('image')) return '🖼️';
-        if (t.includes('video')) return '🎥';
-        if (t.includes('pdf')) return '📄';
-        if (t.includes('text')) return '📝';
-        return '📦';
+        if (t.includes('image')) return '<i data-lucide="image" style="width:11px;height:11px"></i>';
+        if (t.includes('video')) return '<i data-lucide="video" style="width:11px;height:11px"></i>';
+        if (t.includes('pdf')) return '<i data-lucide="file-text" style="width:11px;height:11px"></i>';
+        if (t.includes('text')) return '<i data-lucide="file-text" style="width:11px;height:11px"></i>';
+        return '<i data-lucide="package" style="width:11px;height:11px"></i>';
     }
 
     escapeHtml(text) {
