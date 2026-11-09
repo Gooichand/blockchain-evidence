@@ -9,6 +9,9 @@
     <title>Evidence Integrity Verification - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="fixed-navbar.js"></script>
     <style>
         .verification-container {
             max-width: 800px;
@@ -130,7 +133,16 @@
 
 <body>
     <div class="verification-container">
-        <h1>🔍 Evidence Integrity Verification</h1>
+        <div class="hero-section inv-hero" data-inv-chips="evidence,verified,anchored">
+            <div>
+                <h1>Integrity Verification</h1>
+                <p class="hero-subtitle">Recompute hashes and confirm every item still matches its anchored record</p>
+            </div>
+            <svg class="fp-deco" style="right:0;bottom:-40px;width:150px;height:150px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+            </svg>
+        </div>
 
         <!-- Public Verification Portal -->
         <div class="public-portal">
@@ -201,6 +213,7 @@
     <script src="api-client.js"></script>
     <script src="evidence-verification.js"></script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
