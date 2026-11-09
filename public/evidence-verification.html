@@ -14,17 +14,28 @@
     <script src="fixed-navbar.js"></script>
     <style>
         .verification-container {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 24px;
         }
+
+        .verif-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .verif-grid { grid-template-columns: 1fr; }
+        }
+        #verificationResult, #fileInfo, #qrSection { grid-column: 1 / -1; }
 
         .upload-zone {
             border: 2px dashed #dfa8a8;
             border-radius: 14px;
-            padding: 40px;
+            padding: 26px;
             text-align: center;
-            margin: 20px 0;
+            margin: 14px 0;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -80,11 +91,12 @@
 
         .verification-details {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            margin: 20px 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+        .verif-grid .verification-details { margin: 0; height: 100%; }
+        .verification-container > .verification-details { margin: 20px 0 0; }
 
         .btn-verify {
             background: linear-gradient(135deg, #b71c1c, #d32f2f);
@@ -123,9 +135,14 @@
             background: #fdeeee;
             border: 1px solid #f0c9c9;
             border-radius: 14px;
-            padding: 20px;
-            margin: 20px 0;
+            padding: 14px 20px;
+            margin: 0 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
+        .public-portal h2 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+        .public-portal p { margin: 0; color: #7a4a4a; font-size: 0.9rem; }
     </style>
 
     <script src="device-detector.js"></script>
@@ -147,29 +164,30 @@
 
         <!-- Public Verification Portal -->
         <div class="public-portal">
-            <h2>🌐 Public Verification Portal</h2>
+            <h2><i data-lucide="globe" style="width:18px;height:18px"></i> Public Verification Portal</h2>
             <p>Verify evidence authenticity without login - accessible to courts, auditors, and third parties</p>
         </div>
 
+        <div class="verif-grid">
         <!-- File Upload Section -->
         <div class="verification-details">
             <h2>Upload File for Verification</h2>
             <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
                 <div id="uploadText">
-                    <h3>📁 Drop file here or click to select</h3>
+                    <h3 style="display:flex;align-items:center;justify-content:center;gap:8px;"><i data-lucide="upload" style="width:18px;height:18px"></i> Drop file here or click to select</h3>
                     <p>Upload any file to verify its integrity against blockchain records</p>
                 </div>
             </div>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
 
             <!-- Evidence ID Input -->
-            <div style="margin: 20px 0;">
+            <div style="margin: 14px 0;">
                 <label for="evidenceId">Evidence ID (optional):</label>
                 <input type="text" id="evidenceId" placeholder="Enter evidence ID to verify against specific record">
             </div>
 
             <button id="verifyBtn" class="btn-verify" onclick="verifyFile()" disabled>
-                🔍 Verify File Integrity
+                Verify File Integrity
             </button>
         </div>
 
@@ -192,13 +210,14 @@
             <input type="file" id="bulkFileInput" multiple style="display: none;"
                 onchange="handleBulkFileSelect(event)">
             <button onclick="document.getElementById('bulkFileInput').click()" class="btn btn-secondary">
-                📂 Select Multiple Files
+                Select Multiple Files
             </button>
             <button onclick="verifyBulkFiles()" class="btn-verify" id="bulkVerifyBtn" disabled>
-                🔍 Verify All Files
+                Verify All Files
             </button>
             <div id="bulkResults"></div>
         </div>
+        </div><!-- /verif-grid -->
 
         <!-- Verification History -->
         <div class="verification-details">
