@@ -4,6 +4,8 @@
    Loaded only on Investigator-role pages. Other roles are untouched.
    ========================================================================== */
 
+/* build marker 2026-11-09-spacing-emoji */
+
 :root {
   --inv-red: #d32f2f;
   --inv-red-dark: #a41f1f;
