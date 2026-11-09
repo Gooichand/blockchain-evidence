@@ -467,6 +467,11 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(211, 47, 47, 0.28); border-radius: 8px; border: 2px solid #f7f7f9; }
 
+/* ---------- Big screens: use the width instead of empty side margins ---------- */
+@media (min-width: 1600px) {
+  .container { max-width: 1640px !important; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
   .investigator-hero .container { grid-template-columns: 1fr; }
