@@ -398,12 +398,20 @@ const getVerificationHistory = async (req, res) => {
 };
 
 // Get multiple evidence items for comparison
+// S12: comparison is for investigators too. The old gate used
+// req.authenticatedWallet (only set on the wallet-signature path), so every
+// email/JWT session - including admins - got a 401 and the endpoint was dead.
+// Now: any authenticated user, with each item checked against case access.
 const compareEvidence = async (req, res) => {
   try {
     const { ids } = req.query;
 
-    const user = await authorizeAdminOrAuditor(req, res);
-    if (!user) return;
+    const { getAuthUser } = require('../middleware/identity');
+    const { canAccessCase } = require('../middleware/caseAccess');
+    const user = await getAuthUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
 
     if (!ids) {
       return res.status(400).json({ success: false, error: 'Evidence IDs are required' });
@@ -427,13 +435,35 @@ const compareEvidence = async (req, res) => {
 
     const { data: evidenceItems, error } = (await supabase
       .from('evidence')
-      .select('id, title, case_id, type, timestamp, hash, blockchain_tx_hash, ipfs_cid')
+      .select('id, title, name, case_id, type, timestamp, hash, blockchain_tx_hash, ipfs_cid, file_name, file_size, mime_type, status, submitted_by, description')
       .in('id', evidenceIds)) || {};
 
     if (error) throw error;
 
     if (!evidenceItems || evidenceItems.length === 0) {
       return res.status(404).json({ success: false, error: 'No evidence found with provided IDs' });
+    }
+
+    if (evidenceItems.length < evidenceIds.length) {
+      const found = new Set(evidenceItems.map((i) => i.id));
+      return res.status(404).json({
+        success: false,
+        error: 'Some evidence items were not found',
+        missingEvidenceIds: evidenceIds.filter((id) => !found.has(id)),
+      });
+    }
+
+    // Every selected item must sit in a case the caller can access
+    const denied = [];
+    for (const item of evidenceItems) {
+      if (!(await canAccessCase(user, item.case_id))) denied.push(item.id);
+    }
+    if (denied.length > 0) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have access to every selected item',
+        deniedEvidenceIds: denied,
+      });
     }
 
     const enrichedEvidence = evidenceItems.map((item) => ({
