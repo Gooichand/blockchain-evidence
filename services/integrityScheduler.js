@@ -54,6 +54,16 @@ async function notifyUsers(wallets, title, message, data) {
   }));
   const { error } = await supabase.from('notifications').insert(rows);
   if (error) throw error;
+  // S8: integrity failures are also emailed. Email failures must not undo the
+  // in-app inserts above.
+  try {
+    const { sendUserEmail } = require('./emailService');
+    for (const w of unique) {
+      await sendUserEmail(w, `[EVID-DGC] ${title}`, `${message}\n\nSign in to review: ${process.env.APP_BASE_URL || 'https://blockchain-evidence.onrender.com'}`);
+    }
+  } catch (e) {
+    console.error('integrity alert email hook failed:', e.message);
+  }
   return unique.length;
 }
 
