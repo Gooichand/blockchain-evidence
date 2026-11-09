@@ -62,20 +62,30 @@
         .state-box i { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5; }
         .state-box.error { color: var(--primary-red); }
     </style>
+    <link rel="stylesheet" href="investigator-theme.css">
 </head>
 
 <body>
     <!-- Navbar injected by fixed-navbar.js -->
 
     <div class="container">
-        <div class="hero-section" style="margin: 40px 0; text-align: left;">
-            <h1>Cases & Investigations</h1>
-            <p class="hero-subtitle">Search, filter and manage your evidence cases</p>
+        <div class="hero-section inv-hero" data-inv-chips="cases,evidence,verified" style="text-align: left;">
+            <div>
+                <h1>Cases &amp; Investigations</h1>
+                <p class="hero-subtitle">Search, filter and manage your evidence cases</p>
+            </div>
+            <svg class="scales-deco" viewBox="0 0 120 120" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                <line x1="60" y1="14" x2="60" y2="96"/><line x1="22" y1="30" x2="98" y2="30"/>
+                <circle cx="60" cy="12" r="4"/><line x1="46" y1="100" x2="74" y2="100"/>
+                <line x1="22" y1="30" x2="12" y2="56"/><line x1="22" y1="30" x2="32" y2="56"/>
+                <path d="M6 56 a6 10 0 0 0 32 0 Z"/><line x1="98" y1="30" x2="88" y2="56"/><line x1="98" y1="30" x2="108" y2="56"/>
+                <path d="M82 56 a6 10 0 0 0 32 0 Z"/>
+            </svg>
         </div>
 
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-body">
-                <div class="cases-filters">
+                <div class="cases-filters" data-inv-filter-icons='{"fSearch":"search","fStatus":"filter","fType":"layers","fFrom":"calendar","fTo":"calendar"}'>
                     <div>
                         <label for="fSearch">Search</label>
                         <input type="text" id="fSearch" class="form-control" placeholder="Title, case number or description...">
@@ -116,7 +126,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="table-container">
-                    <table class="user-table cases-table" style="width: 100%;">
+                    <table class="user-table cases-table" data-inv-table style="width: 100%;">
                         <thead>
                             <tr>
                                 <th data-sort="case_number">Case Number <span class="sort-ind" data-ind="case_number"></span></th>
@@ -276,6 +286,7 @@
         });
     </script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
