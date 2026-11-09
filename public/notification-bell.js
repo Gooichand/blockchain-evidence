@@ -18,7 +18,9 @@
       if (!current) return null;
       const userData = JSON.parse(localStorage.getItem('evidUser_' + current) || '{}');
       const wallet = userData.wallet_address || userData.walletAddress;
-      if (wallet) return wallet;
+      // Only a real wallet address is a wallet key - email sessions often store
+      // the email in the wallet field. Those users key on `user_<id>`.
+      if (/^0x[a-fA-F0-9]{40}$/.test(wallet || '')) return wallet;
       if (userData.id) return 'user_' + userData.id;
       // Some sessions store the key itself (already wallet or user_<id>)
       if (/^(0x[a-fA-F0-9]{40}|user_\d+)$/.test(current)) return current;
