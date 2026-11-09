@@ -261,7 +261,12 @@
         </div>
 
         <!-- Timeline Wrapper -->
-        <div class="timeline-wrapper desktop-timeline">
+        <div class="timeline-wrapper desktop-timeline" style="position:relative;">
+            <div id="timelineEmpty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#8a5a5a;pointer-events:none;z-index:5;">
+                <i data-lucide="calendar-clock" style="width:34px;height:34px;color:#c98a8a"></i>
+                <div style="font-weight:600;">Select a case to view its timeline</div>
+                <div style="font-size:0.85rem;color:#b08a8a">Every custody event for the case will appear here in chronological order</div>
+            </div>
             <div id="timeline"></div>
 
             <!-- Timeline Controls -->
