@@ -117,6 +117,17 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// S10: chunked-upload session creation (one session = one eventual file;
+// chunk writes themselves are bounded by the session's declared size)
+const chunkInitLimiter = rateLimit({
+  keyGenerator: userOrIpKey,
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  message: { success: false, error: 'Upload session limit exceeded. Maximum 60 upload sessions per hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Verification rate limiting
 const verificationLimiter = rateLimit({
   keyGenerator: userOrIpKey,
@@ -145,6 +156,7 @@ module.exports = {
   policyPageLimiter,
   blockchainLimiter,
   uploadLimiter,
+  chunkInitLimiter,
   verificationLimiter,
   analystLimiter,
 };
