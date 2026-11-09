@@ -9,6 +9,9 @@
     <title>Case Evidence Timeline - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="fixed-navbar.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css">
     <style>
         .timeline-container {
@@ -182,7 +185,16 @@
 
 <body>
     <div class="timeline-container">
-        <h1>📊 Case Evidence Timeline</h1>
+        <div class="hero-section inv-hero" data-inv-chips="cases,evidence,verified">
+            <div>
+                <h1>Evidence Timeline</h1>
+                <p class="hero-subtitle">Chronological view of every custody event in a case</p>
+            </div>
+            <svg class="fp-deco" style="right:0;bottom:-44px;width:150px;height:150px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
 
         <!-- Timeline Controls -->
         <div class="timeline-controls">
@@ -295,6 +307,7 @@
     <script src="config.js"></script>
     <script src="api-client.js"></script>
     <script src="timeline-visualization.js"></script>
+    <script src="investigator-theme.js"></script>
     <script src="footer.js"></script>
 </body>
 
