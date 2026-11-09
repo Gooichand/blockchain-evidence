@@ -9,6 +9,13 @@
     <title>Evidence Export - EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="config.js"></script>
+    <script src="api-client.js"></script>
+    <script src="storage.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="fixed-navbar.js"></script>
     <style>
         .export-container {
             max-width: 1200px;
@@ -96,21 +103,22 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <h1>🔐 EVID-DGC - Evidence Export</h1>
-        </div>
-        <div class="nav-links">
-            <a href="dashboard.html">← Back to Dashboard</a>
-        </div>
-    </nav>
+    <!-- Navbar injected by fixed-navbar.js -->
 
     <div class="export-container">
-        <div class="header-section">
-            <h2>Evidence Export & Download</h2>
-            <p>Download individual evidence files or export multiple files as a ZIP archive. All downloads include
-                watermarking and audit logging.</p>
+        <div class="header-section hero-section inv-hero" data-inv-chips="evidence,verified,anchored">
+            <div>
+                <h1>Evidence Export</h1>
+                <p class="hero-subtitle">Download individual files or export a ZIP archive - every download is watermarked and audit-logged</p>
+            </div>
+            <svg class="fp-deco" style="right:-6px;bottom:-46px;width:150px;height:150px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+        </div>
 
+        <div class="header-section" style="padding-top: 4px;">
             <div class="watermark-info">
                 <strong>🔒 Security Features:</strong>
                 <ul>
@@ -160,8 +168,6 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="api-client.js"></script>
     <script>
         let selectedEvidence = new Set();
         let currentUser = null;
@@ -510,6 +516,7 @@
         }
     </script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
