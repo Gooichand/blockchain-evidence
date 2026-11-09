@@ -196,7 +196,13 @@ function explorerFor(ev) {
   return '';
 }
 
-function canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes }) {
+async function loadChecklist(caseId) {
+  const { data } = (await supabase
+    .from('case_checklists').select('items, updated_at').eq('case_id', caseId).limit(1)) || {};
+  return data && data.length ? data[0] : null;
+}
+
+function canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes, checklist }) {
   return JSON.stringify({
     report_type: reportType,
     generated_at: generatedAt,
@@ -234,6 +240,14 @@ function canonicalPayload({ reportType, generatedAt, generator, caseRow, evidenc
       created_at: n.created_at,
       content: n.content,
     })),
+    checklist: checklist ? checklist.items.map((i) => ({
+      key: i.key,
+      phase: i.phase,
+      done: i.done,
+      value: i.value || null,
+      done_by: i.done_by || null,
+      done_at: i.done_at || null,
+    })) : null,
   });
 }
 
@@ -255,8 +269,8 @@ function drawEvidenceBlock(w, ev) {
   w.space(4);
 }
 
-async function buildReport({ reportType, caseRow, evidence, custody, notes, generator, generatedAt }) {
-  const payload = canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes });
+async function buildReport({ reportType, caseRow, evidence, custody, notes, checklist, generator, generatedAt }) {
+  const payload = canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes, checklist });
   const reportHash = crypto.createHash('sha256').update(payload).digest('hex');
 
   const doc = await PDFDocument.create();
@@ -324,6 +338,35 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, gene
   w.space(2);
   w.rule();
 
+  // Collection checklist (S9, ISO 27037 phases) - case reports only
+  if (reportType === 'case') {
+    if (!checklist || !Array.isArray(checklist.items) || checklist.items.length === 0) {
+      w.heading('Collection checklist');
+      w.text('No collection checklist recorded for this case.', { color: GREY });
+    } else {
+      const done = checklist.items.filter((i) => i.done).length;
+      w.heading(`Collection checklist (${done}/${checklist.items.length} complete)`);
+      const phases = ['identify', 'collect', 'acquire', 'preserve'];
+      for (const p of phases) {
+        const pi = checklist.items.filter((i) => i.phase === p);
+        if (!pi.length) continue;
+        w.ensure(30);
+        w.text(p.toUpperCase(), { size: 10, font: 'bold', gap: 2 });
+        for (const i of pi) {
+          const mark = i.done ? '[x]' : '[ ]';
+          const extra = i.value ? ` - ${safeText(i.value)}` : '';
+          w.text(`${mark} ${safeText(i.label)}${extra}`, { size: 9.5, indent: 10, gap: 1 });
+          if (i.done && i.done_by) {
+            w.text(`completed by ${i.done_by}${i.done_at ? ` at ${fmtTime(i.done_at)}` : ''}`, { size: 8, color: LIGHT, indent: 22, gap: 2 });
+          }
+        }
+        w.space(3);
+      }
+    }
+    w.space(2);
+    w.rule();
+  }
+
   // Notes
   w.heading(`Investigator notes (${notes.length})`);
   if (notes.length === 0) {
@@ -344,7 +387,7 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, gene
   w.text('Report SHA-256', { size: 10, font: 'bold', gap: 2 });
   w.text(reportHash, { size: 9, color: GREY });
   w.space(2);
-  w.text('This hash is computed over the canonical record set printed in this report (case, evidence hashes, custody entries and notes, with the generation timestamp). Recomputing it from the system records verifies that this report has not been altered.', { size: 8.5, color: GREY });
+  w.text('This hash is computed over the canonical record set printed in this report (case, evidence hashes, custody entries, collection checklist and notes, with the generation timestamp). Recomputing it from the system records verifies that this report has not been altered.', { size: 8.5, color: GREY });
   w.space(10);
 
   w.heading('Signature');
@@ -387,15 +430,16 @@ const getCaseReportPdf = async (req, res) => {
     }
     const caseRow = await loadCaseOr404(res, cid);
     if (!caseRow) return;
-    const [evidence, custody, notes, generator] = await Promise.all([
+    const [evidence, custody, notes, checklist, generator] = await Promise.all([
       loadEvidenceForCase(cid),
       loadCustody({ caseId: cid }),
       loadNotes(cid, null),
+      loadChecklist(cid),
       loadGenerator(req.user),
     ]);
     const generatedAt = new Date().toISOString();
     const { pdfBytes, reportHash } = await buildReport({
-      reportType: 'case', caseRow, evidence, custody, notes, generator, generatedAt,
+      reportType: 'case', caseRow, evidence, custody, notes, checklist, generator, generatedAt,
     });
     await logAudit(req, {
       userId: req.user.id,
