@@ -416,26 +416,26 @@
                 <div class="evidence-stats"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                     <div class="stat-item"
-                        style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #3b82f6;">📸</div>
+                        style="text-align: center; padding: 20px; background: rgba(255,255,255,.9); border:1px solid #f0e2e2; border-radius: 14px; box-shadow:0 4px 14px rgba(120,20,20,.06);">
+                        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#b71c1c,#d32f2f);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(183,28,28,.3);"><i data-lucide="camera" style="width:24px;height:24px;stroke:#fff;color:#fff;"></i></div>
                         <div id="statPhotos" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Photos</div>
                     </div>
                     <div class="stat-item"
-                        style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #10b981;">📄</div>
+                        style="text-align: center; padding: 20px; background: rgba(255,255,255,.9); border:1px solid #f0e2e2; border-radius: 14px; box-shadow:0 4px 14px rgba(120,20,20,.06);">
+                        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#b71c1c,#d32f2f);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(183,28,28,.3);"><i data-lucide="file-text" style="width:24px;height:24px;stroke:#fff;color:#fff;"></i></div>
                         <div id="statDocs" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Documents</div>
                     </div>
                     <div class="stat-item"
-                        style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #f59e0b;">🎥</div>
+                        style="text-align: center; padding: 20px; background: rgba(255,255,255,.9); border:1px solid #f0e2e2; border-radius: 14px; box-shadow:0 4px 14px rgba(120,20,20,.06);">
+                        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#b71c1c,#d32f2f);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(183,28,28,.3);"><i data-lucide="video" style="width:24px;height:24px;stroke:#fff;color:#fff;"></i></div>
                         <div id="statVideos" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0</div>
                         <div>Videos</div>
                     </div>
                     <div class="stat-item"
-                        style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <div style="font-size: 2rem; color: #ef4444;">🔒</div>
+                        style="text-align: center; padding: 20px; background: rgba(255,255,255,.9); border:1px solid #f0e2e2; border-radius: 14px; box-shadow:0 4px 14px rgba(120,20,20,.06);">
+                        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#b71c1c,#d32f2f);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(183,28,28,.3);"><i data-lucide="shield-check" style="width:24px;height:24px;stroke:#fff;color:#fff;"></i></div>
                         <div id="statVerified" style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">0%</div>
                         <div>Verified</div>
                     </div>
@@ -615,7 +615,7 @@
                 list.innerHTML = '<div class="no-data">No custody events recorded yet. Uploads, views, downloads and status changes will appear here.</div>';
                 return;
             }
-            const ACTION_ICONS = { upload: 'upload-cloud', created: 'plus-circle', view: 'eye', viewed: 'eye', download: 'download', verify: 'shield-check', verified: 'shield-check', transfer: 'repeat', transferred: 'repeat', status: 'flag', status_change: 'flag', delete: 'trash-2', deleted: 'trash-2', hash: 'hash', anchored: 'link', note: 'file-text' };
+            const ACTION_ICONS = { upload: 'upload-cloud', uploaded: 'upload-cloud', created: 'plus-circle', view: 'eye', viewed: 'eye', download: 'download', downloaded: 'download', verify: 'shield-check', verified: 'shield-check', verification: 'shield-check', transfer: 'repeat', transferred: 'repeat', status: 'flag', status_change: 'flag', status_changed: 'flag', delete: 'trash-2', deleted: 'trash-2', hash: 'hash', hashed: 'hash', anchored: 'link', anchor: 'link', note: 'file-text', noted: 'file-text', updated: 'edit-3', update: 'edit-3' };
             const seen = new Set();
             const sorted = [...entries]
                 .filter(e => { const k = e.id != null ? 'i' + e.id : (e.created_at + '|' + e.action + '|' + e.evidence_id); if (seen.has(k)) return false; seen.add(k); return true; })
