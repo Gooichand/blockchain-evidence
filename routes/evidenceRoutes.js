@@ -7,6 +7,7 @@ const {
   downloadEvidence,
   previewEvidence,
   bulkExport,
+  courtExport,
   getDownloadHistory,
   getAllEvidence,
   getEvidenceById,
@@ -45,6 +46,7 @@ const { requireOptionalAuth } = require('../middleware/requireOptionalAuth');
 router.get('/evidence', requireAuth, getAllEvidence);
 router.post('/evidence/upload', requireAuth, uploadLimiter, upload.single('file'), uploadEvidence);
 router.post('/evidence/bulk-export', requireAuth, bulkExport);
+router.post('/evidence/court-export', requireAuth, courtExport);
 router.post('/evidence/bulk-retention', requireAuth, bulkRetentionPolicy);
 router.post('/evidence/check-expiry', requireAuth, checkExpiry);
 
