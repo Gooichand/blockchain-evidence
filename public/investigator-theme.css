@@ -470,3 +470,16 @@ input:focus, select:focus, textarea:focus {
   .hero-section.inv-hero { flex-direction: column; align-items: flex-start; }
 }
 .investigator-hero .hero-content { text-align: left !important; }
+
+/* ---------- buttons inside the red hero (glass style, readable on red) ---------- */
+.hero-section.inv-hero .btn-primary,
+.hero-section.inv-hero .btn-secondary,
+.hero-section.inv-hero .btn {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(6px);
+  box-shadow: none !important;
+}
+.hero-section.inv-hero .btn:hover { background: rgba(255, 255, 255, 0.28) !important; }
+.hero-section.inv-hero .btn:disabled { opacity: .55; }
