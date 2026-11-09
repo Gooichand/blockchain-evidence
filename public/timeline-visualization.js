@@ -22,6 +22,11 @@ async function loadCases() {
                 result.cases.map(case_ => 
                     `<option value="${case_.id}">${case_.title} (${case_.id})</option>`
                 ).join('');
+            // Auto-select the most recent case so the timeline opens with real data
+            if (result.cases.length > 0) {
+                caseSelect.value = result.cases[0].id;
+                loadCaseEvidence();
+            }
         }
     } catch (error) {
         console.error('Error loading cases:', error);
