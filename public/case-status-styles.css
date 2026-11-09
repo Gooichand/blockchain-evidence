@@ -19,10 +19,19 @@
 }
 
 .filters-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 16px;
+}
+
+.filters-grid .filter-group {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.filters-grid .filter-group:last-child {
+    flex-grow: 3;
 }
 
 .filter-group {
@@ -61,12 +70,16 @@
     padding-left: 40px;
 }
 
-.search-box i {
+.search-box i,
+.search-box svg {
     position: absolute;
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #6b7280;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
 }
 
 .filter-actions {
@@ -78,7 +91,7 @@
 
 .case-list-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 24px;
     margin-bottom: 32px;
 }
