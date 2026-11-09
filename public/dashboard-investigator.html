@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investigator | EVID-DGC</title>
     <link rel="icon" href="favicon.png" type="image/png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#b71c1c">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
@@ -286,6 +289,11 @@
                         <span class="action-icon">📤</span>
                         <h3>Upload Evidence</h3>
                         <p>Add digital evidence with blockchain verification</p>
+                    </div>
+                    <div class="action-card" onclick="window.location.href='/field-capture.html'">
+                        <span class="action-icon">📱</span>
+                        <h3>Field Capture</h3>
+                        <p>Phone-ready capture: on-device hashing, works offline, uploads when back online</p>
                     </div>
                     <div class="action-card" onclick="searchCases()">
                         <span class="action-icon">🔍</span>
@@ -2262,6 +2270,12 @@
         button.ev-tag-add { cursor:pointer; }
         button.ev-tag-add:hover { opacity:.75; }
     </style>
+    <script>
+        // S11: field-ready PWA - cache the app shell so Field Capture opens offline
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
 </body>
 
     </html>
