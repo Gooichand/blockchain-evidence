@@ -160,3 +160,18 @@ class FooterManager {
 
 // Initialize
 const footerManager = new FooterManager();
+
+// S14: Esc closes the topmost visible modal anywhere this shared script runs
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    const openModals = [...document.querySelectorAll('.modal')].filter((m) => {
+        const cs = getComputedStyle(m);
+        return cs.display !== 'none' && cs.visibility !== 'hidden';
+    });
+    const top = openModals[openModals.length - 1];
+    if (!top) return;
+    const closeBtn = top.querySelector('.modal-close, [data-close-modal], .close');
+    if (closeBtn) closeBtn.click();
+    else if (top.style.display) top.style.display = 'none';
+    else top.classList.remove('show', 'open', 'active');
+});
