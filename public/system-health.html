@@ -259,7 +259,7 @@
                     </div>
                     <div class="metric-row">
                         <span class="metric-label">Wallet Balance</span>
-                        <span class="metric-value">${metrics.blockchain.walletBalance} MATIC</span>
+                        <span class="metric-value">${(metrics.blockchain.walletBalance === undefined || metrics.blockchain.walletBalance === null) ? 'Not connected' : metrics.blockchain.walletBalance + ' MATIC'}</span>
                     </div>
                 </div>
 
