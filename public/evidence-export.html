@@ -18,16 +18,16 @@
     <script src="fixed-navbar.js"></script>
     <style>
         .export-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 24px;
         }
 
         .evidence-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
         }
 
         .evidence-card {
@@ -87,10 +87,19 @@
             background: #fdeeee;
             border: 1px solid #f0c9c9;
             border-radius: 12px;
-            padding: 10px;
-            margin: 15px 0;
+            padding: 10px 16px;
+            margin: 12px 0;
             font-size: 12px;
         }
+        .watermark-info strong { display: inline-flex; align-items: center; gap: 6px; }
+        .watermark-info ul {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 24px;
+            margin: 6px 0 2px;
+            padding-left: 18px;
+        }
+        @media (max-width: 800px) { .watermark-info ul { grid-template-columns: 1fr; } }
 
         .download-history {
             margin-top: 20px;
@@ -122,7 +131,7 @@
 
         <div class="header-section" style="padding-top: 4px;">
             <div class="watermark-info">
-                <strong>🔒 Security Features:</strong>
+                <strong><i data-lucide="lock" style="width:13px;height:13px"></i> Security Features:</strong>
                 <ul>
                     <li>Automatic watermarking with your wallet ID and timestamp</li>
                     <li>Embedded metadata including blockchain hash and chain of custody</li>
@@ -133,7 +142,7 @@
         </div>
 
         <div class="controls-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;">
                 <div>
                     <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
                     <button class="btn btn-secondary" onclick="clearSelection()">Clear Selection</button>
