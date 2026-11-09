@@ -9,6 +9,9 @@
     <title>Compare | EVID-DGC</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-improvements.css">
+    <link rel="stylesheet" href="investigator-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="fixed-navbar.js"></script>
     <link rel="stylesheet" href="evidence-comparison.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="api-client.js"></script>
@@ -22,19 +25,23 @@
 <body>
     <div class="comparison-container">
         <!-- Header -->
-        <header class="comparison-header">
+        <header class="comparison-header hero-section inv-hero" data-inv-chips="evidence,verified">
             <div class="header-content">
-                <h1>🔍 Evidence Comparison Tool</h1>
-                <p>Forensic-grade side-by-side evidence analysis with blockchain verification</p>
+                <h1>Evidence Comparison</h1>
+                <p class="hero-subtitle">Forensic-grade side-by-side analysis with blockchain verification</p>
             </div>
             <div class="header-actions">
                 <button id="exportPdfBtn" class="btn btn-primary" disabled>
-                    📄 Export Report
+                    Export Report
                 </button>
                 <button id="backBtn" class="btn btn-secondary">
-                    ← Back to Dashboard
+                    Back to Dashboard
                 </button>
             </div>
+            <svg class="fp-deco" style="right:220px;bottom:-40px;width:140px;height:140px" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="18" rx="1"/>
+                <rect x="14" y="3" width="7" height="18" rx="1"/>
+            </svg>
         </header>
 
         <!-- Evidence Selector -->
@@ -128,6 +135,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="evidence-comparison.js"></script>
     <script src="footer.js"></script>
+    <script src="investigator-theme.js"></script>
 </body>
 
 </html>
