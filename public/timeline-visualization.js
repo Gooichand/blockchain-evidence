@@ -142,6 +142,8 @@ function populateFilters() {
 function updateTimeline() {
     const filteredEvidence = getFilteredEvidence();
     const timelineItems = createTimelineItems(filteredEvidence);
+    const emptyEl = document.getElementById('timelineEmpty');
+    if (emptyEl) emptyEl.style.display = timelineItems.length ? 'none' : 'flex';
     
     if (timeline) {
         timeline.setData(new vis.DataSet(timelineItems));
@@ -524,6 +526,8 @@ function exportTimelineData() {
 
 // Utility functions
 function clearTimeline() {
+    const emptyEl = document.getElementById('timelineEmpty');
+    if (emptyEl) emptyEl.style.display = 'flex';
     if (timeline) {
         timeline.setData(new vis.DataSet([]));
     }
