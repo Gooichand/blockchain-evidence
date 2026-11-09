@@ -172,6 +172,14 @@ document.addEventListener('keydown', (e) => {
     if (!top) return;
     const closeBtn = top.querySelector('.modal-close, [data-close-modal], .close');
     if (closeBtn) closeBtn.click();
-    else if (top.style.display) top.style.display = 'none';
-    else top.classList.remove('show', 'open', 'active');
+    // Belt and braces: if the modal is still visible after the button's own
+    // handler (missing or erroring close callback), hide it directly
+    setTimeout(() => {
+        if (!top.isConnected) return;
+        const cs = getComputedStyle(top);
+        if (cs.display !== 'none' && cs.visibility !== 'hidden') {
+            top.classList.remove('show', 'open', 'active');
+            if (top.style.display) top.style.display = 'none';
+        }
+    }, 100);
 });
