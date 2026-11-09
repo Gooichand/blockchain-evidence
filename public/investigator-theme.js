@@ -8,7 +8,13 @@
 
     /* ---------- lucide icons (load if the page does not have them) ---------- */
     function refreshIcons() {
-        if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+        if (!(window.lucide && window.lucide.createIcons)) return;
+        window.lucide.createIcons();
+        // createIcons() swaps every <i data-lucide> for an <svg> that KEEPS the
+        // data-lucide attribute, so a second call would replace those SVGs again,
+        // generating endless DOM mutations (which re-fire our table observer).
+        // Strip the attribute from created SVGs so repeat calls are no-ops.
+        document.querySelectorAll('svg[data-lucide]').forEach(svg => svg.removeAttribute('data-lucide'));
     }
     if (!window.lucide) {
         const s = document.createElement('script');
@@ -199,6 +205,7 @@
     /* ---------- table pill badges (opt-in) ---------- */
     const ICON_CELL = { case_number: 'shield', created_date: 'calendar', created_at: 'calendar', evidence: 'file-text', evidence_count: 'file-text' };
     function pillTable(table) {
+        let insertedIcon = false;
         const heads = [...table.querySelectorAll('thead th')].map(th => th.getAttribute('data-sort') || th.textContent.trim().toLowerCase());
         table.querySelectorAll('tbody tr').forEach(tr => {
             const tds = [...tr.children];
@@ -209,7 +216,7 @@
                 const txt = td.textContent.trim();
                 if (!txt) return;
                 if (ICON_CELL[key] && !td.querySelector('svg')) {
-                    td.innerHTML = `<i data-lucide="${ICON_CELL[key]}" class="cell-ic"></i>${td.innerHTML}`;
+                    td.innerHTML = `<i data-lucide="${ICON_CELL[key]}" class="cell-ic"></i>${td.innerHTML}`; insertedIcon = true;
                 } else if (key === 'status' && !td.querySelector('.pill')) {
                     td.innerHTML = `<span class="pill pill-status">${txt}</span>`;
                 } else if (key === 'priority_level' && !td.querySelector('.pill')) {
@@ -219,18 +226,23 @@
                 } else if (i === tds.length - 1) {
                     const btn = td.querySelector('button, a');
                     if (btn && !btn.querySelector('i') && !btn.querySelector('svg')) {
-                        btn.insertAdjacentHTML('afterbegin', '<i data-lucide="settings"></i>');
+                        btn.insertAdjacentHTML('afterbegin', '<i data-lucide="settings"></i>'); insertedIcon = true;
                     }
                 }
             });
         });
-        refreshIcons();
+        if (insertedIcon) refreshIcons();
     }
     function watchTables() {
+        let pilling = false;
         document.querySelectorAll('table[data-inv-table]').forEach(t => {
             pillTable(t);
             const body = t.querySelector('tbody');
-            if (body) new MutationObserver(() => pillTable(t)).observe(body, { childList: true, subtree: true });
+            if (body) new MutationObserver(() => {
+                if (pilling) return;
+                pilling = true;
+                try { pillTable(t); } finally { pilling = false; }
+            }).observe(body, { childList: true, subtree: true });
         });
     }
 
