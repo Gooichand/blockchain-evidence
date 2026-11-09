@@ -55,7 +55,7 @@ router.get('/evidence/manager-stats', requireAuth, getManagerStats);
 router.get('/evidence/expiry', requireAuth, getEvidenceExpiry);
 router.get('/evidence/expiring', requireOptionalAuth, getEvidenceExpiring);
 router.post('/evidence/archive', requireOptionalAuth, archiveEvidence);
-router.get('/evidence/compare', compareEvidence);
+router.get('/evidence/compare', requireAuth, compareEvidence);
 router.get('/evidence/verification-history', getVerificationHistory);
 router.post('/evidence/verify-integrity', verificationLimiter, verifyIntegrity);
 router.post('/evidence/verification-certificate', requireAuth, generateVerificationCertificate);
