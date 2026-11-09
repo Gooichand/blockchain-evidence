@@ -21,6 +21,17 @@
             text-align: left;
         }
 
+        /* The shared .container glass card + auto margins center a narrow box
+           inside the hero - strip it so hero content spans the full width. */
+        .health-hero .container {
+            margin: 0;
+            max-width: none;
+            padding: 0;
+            background: none;
+            border-radius: 0;
+            backdrop-filter: none;
+        }
+
         .health-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -125,7 +136,7 @@
     <script>if (!DeviceDetector.isDesktopAllowed()) { window.location.replace('desktop-only.html'); }</script>
 </head>
 <body>
-    <div class="health-hero hero-section inv-hero">
+    <div class="health-hero hero-section inv-hero" data-inv-chips="evidence,verified">
         <div class="container">
             <h1><span class="pulse-indicator pulse-healthy" id="mainStatusPulse"></span> System Health</h1>
             <p class="hero-subtitle">Real-time infrastructure monitoring, IPFS node status, and blockchain sync metrics</p>
