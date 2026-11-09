@@ -19,11 +19,10 @@ class EvidenceComparisonTool {
     }
 
     checkUserRole() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        // Role check handled by session-manager or backend, 
-        // but we ensure wallet is present for comparison logic
-        if (!currentUser.walletAddress && !currentUser.wallet_address) {
-            alert('Please login with your wallet to access the Evidence Comparison Tool');
+        // S12 crash fix: currentUser is a plain string (wallet or email), not
+        // JSON - JSON.parse threw on every load for email sessions. Access is
+        // enforced server-side per evidence item; here we only need a session.
+        if (!localStorage.getItem('authToken')) {
             window.location.href = 'index.html';
         }
     }
@@ -50,6 +49,14 @@ class EvidenceComparisonTool {
         // Compare button
         document.getElementById('compareBtn').addEventListener('click', () => {
             this.showComparisonView();
+        });
+
+        // S12: duplicate detection across accessible cases
+        document.getElementById('duplicatesBtn')?.addEventListener('click', () => {
+            this.renderDuplicates();
+        });
+        document.getElementById('showAllBtn')?.addEventListener('click', () => {
+            this.renderEvidenceList(this.allEvidence);
         });
 
         // Comparison controls
@@ -185,27 +192,114 @@ class EvidenceComparisonTool {
         const filtered = this.allEvidence.filter(evidence => {
             const term = searchTerm.toLowerCase();
             return (
-                evidence.title?.toLowerCase().includes(term) ||
-                evidence.case_id?.toLowerCase().includes(term) ||
-                evidence.hash?.toLowerCase().includes(term) ||
-                evidence.type?.toLowerCase().includes(term)
+                (evidence.title || '').toLowerCase().includes(term) ||
+                String(evidence.case_id ?? '').toLowerCase().includes(term) ||
+                (evidence.hash || '').toLowerCase().includes(term) ||
+                (evidence.type || '').toLowerCase().includes(term)
             );
         });
 
         this.renderEvidenceList(filtered);
     }
 
-    showComparisonView() {
+    async showComparisonView() {
         if (this.selectedEvidence.length < 2) {
             this.showError('Please select at least 2 evidence items to compare');
             return;
         }
 
+        // S12: pull the authoritative records (server checks case access per
+        // item) before rendering the verdict
+        this.showLoading(true);
+        try {
+            const ids = this.selectedEvidence.map((e) => e.id).join(',');
+            const res = await window.apiClient.get(`/evidence/compare?ids=${ids}`);
+            const byId = {};
+            (res.data || []).forEach((d) => { byId[d.id] = d; });
+            this.selectedEvidence = this.selectedEvidence.map((e) => ({ ...e, ...(byId[e.id] || {}) }));
+        } catch (e) {
+            this.showLoading(false);
+            this.showError('Comparison failed: ' + (e.message || e));
+            return;
+        }
+        this.showLoading(false);
+
         document.querySelector('.evidence-selector').style.display = 'none';
         document.getElementById('comparisonView').style.display = 'block';
         document.getElementById('exportPdfBtn').disabled = false;
 
+        this.renderVerdictBanner();
         this.renderComparisonView();
+    }
+
+    // Hash/size/metadata verdict across the selection
+    verdictForSelection() {
+        const items = this.selectedEvidence;
+        const sameHash = items.every((e) => e.hash && e.hash === items[0].hash);
+        const sameSize = items.every((e) => e.file_size === items[0].file_size);
+        const sameType = items.every((e) => e.type === items[0].type);
+        if (sameHash) {
+            return { cls: 'ok', text: 'IDENTICAL - every selected item has the same SHA-256. These are duplicate copies of the same file.' };
+        }
+        if (sameSize && sameType) {
+            return { cls: 'warn', text: 'POSSIBLE VARIANT - same file type and byte size, but different SHA-256. The content differs (re-save, edit or tampering).' };
+        }
+        return { cls: 'diff', text: `DIFFERENT FILES - the selected items have different SHA-256 hashes${sameSize ? ' (byte sizes happen to match)' : ''}.` };
+    }
+
+    renderVerdictBanner() {
+        let el = document.getElementById('verdictBanner');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'verdictBanner';
+            const view = document.getElementById('comparisonView');
+            view.insertBefore(el, view.children[1] || null);
+        }
+        const v = this.verdictForSelection();
+        const styles = {
+            ok: 'background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;',
+            warn: 'background:#fff8e1;color:#8d6e00;border:1px solid #ffe082;',
+            diff: 'background:#e3f2fd;color:#0d47a1;border:1px solid #90caf9;',
+        };
+        el.style.cssText = 'margin:0 0 14px;padding:12px 16px;border-radius:10px;font-weight:600;' + styles[v.cls];
+        el.textContent = v.text;
+    }
+
+    // S12: duplicate detection - group the accessible evidence list by hash
+    renderDuplicates() {
+        const groups = {};
+        this.allEvidence.forEach((e) => {
+            if (e.hash) (groups[e.hash] = groups[e.hash] || []).push(e);
+        });
+        const dups = Object.values(groups).filter((g) => g.length > 1);
+        const container = document.getElementById('evidenceList');
+        if (!dups.length) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b;">
+                    <p style="font-size: 1.2rem;">✅ No duplicates</p>
+                    <p style="margin-top: 8px;">No two evidence items share the same SHA-256 across your accessible cases.</p>
+                </div>`;
+            return;
+        }
+        container.innerHTML = dups.map((g) => `
+            <div class="evidence-item" style="grid-column: 1/-1;">
+                <div class="evidence-item-header">
+                    <div class="evidence-item-title">${this.getFileTypeIcon(g[0].type)} ${g.length} identical copies - ${this.escapeHtml(g[0].title || 'Untitled')}</div>
+                    <div class="evidence-item-type">${this.formatFileSize(g[0].file_size)}</div>
+                </div>
+                <div class="evidence-item-hash">🔐 ${this.escapeHtml(g[0].hash)}</div>
+                <div class="evidence-item-meta" style="margin: 8px 0;">
+                    ${g.map((e) => `<div>#${e.id} - ${this.escapeHtml(e.title || 'Untitled')} · Case ${e.case_id} · ${new Date(e.timestamp).toLocaleDateString()}</div>`).join('')}
+                </div>
+                <button class="btn btn-primary" onclick="comparisonTool.compareGroup('${g[0].hash}')">Compare this group</button>
+            </div>`).join('');
+    }
+
+    compareGroup(hash) {
+        this.selectedEvidence = this.allEvidence.filter((e) => e.hash === hash).slice(0, 4);
+        this.updateSelectedDisplay();
+        this.renderEvidenceList(this.allEvidence);
+        this.showComparisonView();
     }
 
     renderComparisonView() {
@@ -232,7 +326,8 @@ class EvidenceComparisonTool {
             { label: 'Case ID', key: 'case_id' },
             { label: 'Submitted By', key: 'submitted_by', format: (v) => v?.substring(0, 20) + '...' },
             { label: 'Timestamp', key: 'timestamp', format: (v) => new Date(v).toLocaleString() },
-            { label: 'Blockchain Hash', key: 'hash', isHash: true },
+            { label: 'SHA-256 Hash', key: 'hash', isHash: true },
+            { label: 'Anchored on-chain', key: 'blockchain_tx_hash', format: (v) => (v ? 'Yes' : 'No') },
             { label: 'Status', key: 'status' }
         ];
 
@@ -279,45 +374,54 @@ class EvidenceComparisonTool {
 
     renderEvidenceContent(evidence) {
         const type = evidence.type?.toLowerCase();
+        // S12: honest anchoring state (was a hardcoded "Blockchain Verified: ✅")
+        const anchored = !!(evidence.blockchain_tx_hash || evidence.has_blockchain_tx);
+        const anchorLine = anchored
+            ? `Anchored on-chain (tx ${String(evidence.blockchain_tx_hash).slice(0, 12)}...)`
+            : 'Not anchored on-chain';
+        // Previews only work when the file is stored inline as a data URI;
+        // large files are not - say so instead of rendering a broken viewer
+        const src = (typeof evidence.file_data === 'string' && evidence.file_data.startsWith('data:')) ? evidence.file_data : null;
+        const noInline = '<p style="padding:24px;color:#64748b;">Preview is not stored inline for this item. Open it from the dashboard for the full preview and download.</p>';
 
-        if (type?.includes('image') || type?.includes('jpg') || type?.includes('png') || type?.includes('jpeg')) {
+        if ((type?.includes('image') || type?.includes('jpg') || type?.includes('png') || type?.includes('jpeg')) && src) {
             return `
                 <div class="evidence-preview">
-                    <img src="${evidence.file_data}" alt="${this.escapeHtml(evidence.title)}" />
+                    <img src="${src}" alt="${this.escapeHtml(evidence.title)}" />
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                         <p><strong>🔍 Image Analysis</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                             Dimensions: Auto-detected<br>
                             Format: ${evidence.type}<br>
-                            Blockchain Verified: ✅
+                            ${anchorLine}
                         </p>
                     </div>
                 </div>
             `;
-        } else if (type?.includes('video')) {
+        } else if (type?.includes('video') && src) {
             return `
                 <div class="evidence-preview">
                     <video controls>
-                        <source src="${evidence.file_data}" type="${evidence.type}">
+                        <source src="${src}" type="${evidence.mime_type || 'video/mp4'}">
                         Your browser does not support video playback.
                     </video>
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                         <p><strong>🎥 Video Analysis</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
                             Format: ${evidence.type}<br>
-                            Blockchain Verified: ✅
+                            ${anchorLine}
                         </p>
                     </div>
                 </div>
             `;
-        } else if (type?.includes('pdf')) {
+        } else if (type?.includes('pdf') && src) {
             return `
                 <div class="evidence-preview">
-                    <iframe src="${evidence.file_data}" style="width: 100%; height: 500px; border: none; border-radius: 8px;"></iframe>
+                    <iframe src="${src}" style="width: 100%; height: 500px; border: none; border-radius: 8px;"></iframe>
                     <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                         <p><strong>📄 PDF Document</strong></p>
                         <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
-                            Blockchain Verified: ✅
+                            ${anchorLine}
                         </p>
                     </div>
                 </div>
@@ -330,7 +434,7 @@ ${evidence.description || 'No text content available'}
                 <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px;">
                     <p><strong>📝 Text Document</strong></p>
                     <p style="margin-top: 8px; color: #64748b; font-size: 0.9rem;">
-                        Blockchain Verified: ✅
+                        ${anchorLine}
                     </p>
                 </div>
             `;
@@ -345,9 +449,10 @@ ${evidence.description || 'No text content available'}
                         Size: ${this.formatFileSize(evidence.file_size)}
                     </p>
                     <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-                        <p><strong>🔐 Blockchain Verified</strong></p>
+                        <p><strong>🔐 ${anchorLine}</strong></p>
+                        ${src ? '' : noInline}
                         <p style="margin-top: 8px; font-family: monospace; font-size: 0.8rem; word-break: break-all;">
-                            ${evidence.hash}
+                            SHA-256: ${evidence.hash}
                         </p>
                     </div>
                 </div>
@@ -448,8 +553,9 @@ ${evidence.description || 'No text content available'}
             pdf.setFontSize(14);
             pdf.text('Comparison Findings', 20, 20);
             pdf.setFontSize(10);
-            pdf.text('All evidence items have been verified on the blockchain.', 20, 30);
-            pdf.text('Chain of custody maintained throughout comparison.', 20, 37);
+            const verdict = this.verdictForSelection().text;
+            pdf.text(pdf.splitTextToSize('Verdict: ' + verdict, 170), 20, 30);
+            pdf.text('Anchoring state per item is listed in the metadata table (Anchored on-chain row).', 20, 44);
 
             // Save PDF
             pdf.save(`evidence-comparison-${Date.now()}.pdf`);
