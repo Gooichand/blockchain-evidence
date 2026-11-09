@@ -1353,7 +1353,11 @@
         async function loadCaseWorkspace(caseId) {
             const root = document.getElementById('caseWorkspace');
             if (!root) return;
-            let evidence = [], notes = [], requests = [], custodians = {}, team = null, comments = [];
+            let evidence = [], notes = [], requests = [], custodians = {}, team = null, comments = [], checklist = null;
+            try {
+                const r = await window.apiClient.get(`/cases/${caseId}/checklist`, { skipWalletAuth: true });
+                checklist = r;
+            } catch (e) { console.error('workspace checklist load failed', e); }
             try {
                 const r = await window.apiClient.get(`/cases/${caseId}/custodians`, { skipWalletAuth: true });
                 custodians = r.custodians || {};
@@ -1460,6 +1464,25 @@
                     <button class="btn btn-primary btn-sm" onclick="addTeamMember(${caseId})">Add to team</button>
                 </div>` : ''}`;
 
+            const phaseIcons = { identify: '🔍', collect: '📥', acquire: '💾', preserve: '🔒' };
+            const checklistHtml = !checklist ? '' : `
+                <h4 style="margin-top:20px;">🧭 Collection checklist (${checklist.summary.done}/${checklist.summary.total})</h4>
+                <div style="height:6px;background:#f3f4f6;border-radius:3px;margin-bottom:10px;"><div style="height:6px;border-radius:3px;background:${checklist.summary.complete ? '#047857' : '#b91c1c'};width:${Math.round(100 * checklist.summary.done / checklist.summary.total)}%;"></div></div>
+                ${['identify', 'collect', 'acquire', 'preserve'].map(p => `
+                    <div style="margin-bottom:10px;">
+                        <div style="font-weight:600;font-size:13px;color:#374151;margin-bottom:4px;">${phaseIcons[p]} ${p.charAt(0).toUpperCase() + p.slice(1)} <span style="color:#9ca3af;font-weight:400;">(${checklist.summary.phases[p].done}/${checklist.summary.phases[p].total})</span></div>
+                        ${checklist.items.filter(i => i.phase === p).map(i => `
+                            <div style="padding:5px 0 5px 8px;border-bottom:1px solid #f9fafb;">
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                                    <input type="checkbox" ${i.done ? 'checked' : ''} onchange="toggleChecklistItem(${caseId}, '${i.key}', this.checked)">
+                                    <span style="${i.done ? 'text-decoration:line-through;color:#9ca3af;' : ''}">${escapeHtml(i.label)}</span>
+                                </label>
+                                ${i.valueLabel ? `<input type="text" class="form-control" style="margin:4px 0 2px 24px;font-size:12px;padding:4px 8px;max-width:420px;" placeholder="${escapeHtml(i.valueLabel)}" value="${escapeHtml(i.value || '')}" onchange="saveChecklistValue(${caseId}, '${i.key}', this.value)">` : ''}
+                                ${i.done && i.done_by ? `<small style="color:#9ca3af;margin-left:24px;">done by ${escapeHtml(i.done_by)}${i.done_at ? ' - ' + new Date(i.done_at).toLocaleString() : ''}</small>` : ''}
+                            </div>`).join('')}
+                    </div>`).join('')}
+            `;
+
             const commentsHtml = `
                 <h4 style="margin-top:20px;">💬 Discussion (${comments.length})</h4>
                 <div id="caseCommentsList">
@@ -1484,6 +1507,7 @@
                     <button class="btn btn-primary btn-sm" onclick="addCaseNote(${caseId})">Add note</button>
                 </div>
                 ${reqHtml}
+                ${checklistHtml}
                 ${teamHtml}
                 ${commentsHtml}
             `;
@@ -1852,6 +1876,26 @@
             };
             modal.querySelector('#caseSearchGo').onclick = runSearch;
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+        }
+
+        // S9: collection checklist
+        async function toggleChecklistItem(caseId, key, done) {
+            try {
+                await window.apiClient.put(`/cases/${caseId}/checklist/items/${key}`, { done }, { skipWalletAuth: true });
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Could not update checklist: ' + (e.message || e), 'error');
+            }
+        }
+
+        async function saveChecklistValue(caseId, key, value) {
+            try {
+                await window.apiClient.put(`/cases/${caseId}/checklist/items/${key}`, { value }, { skipWalletAuth: true });
+                showToast('Checklist detail saved', 'success');
+                loadCaseWorkspace(caseId);
+            } catch (e) {
+                showToast('Could not save checklist detail: ' + (e.message || e), 'error');
+            }
         }
 
         // S7: case team + comments
