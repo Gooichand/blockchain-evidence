@@ -78,7 +78,7 @@
       "id": "compression",
       "name": "Compression Analysis",
       "strictYes": false,
-      "reason": "JPEG tables only, no double-compression detection."
+      "reason": "Original JPEG AC coefficients/histograms and narrow aligned lattice-enrichment candidates now work. Still No: only2 synthetic positive combinations,5 documented genuine-double misses, no independent real-photo benchmark or calibrated classifier. No candidate does not mean single compression."
     },
     {
       "category": "Image Forensics",

@@ -1,0 +1,1 @@
+Original synthetic JPEG examples generated with Pillow by scripts/generate-double-jpeg-samples.py. Apache-2.0 with repository. Some genuine double-encoded fixtures do not trigger this narrow aligned-lattice method; those misses are recorded, not treated as single compression. No claim of prior exact quality identification or authenticity.

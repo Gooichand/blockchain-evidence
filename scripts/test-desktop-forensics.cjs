@@ -887,6 +887,20 @@ async function run() {
     });
     fs.writeFileSync(path.join(screenshotDir,'acoustic-landmark-validation.json'),JSON.stringify(acousticMatrix,null,2));
     console.log('PASS real worker acoustic landmark matching: WAV, MP3 trim, AAC resample, gain/noise; different/reordered negatives');
+    const retainedBeforeJPEG=await page.evaluate(()=>ForensicLab.getState().file.name);
+    await openTool('image','compression');
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(b=>b.textContent.includes('Try example')).click());
+    await page.waitForFunction(()=>document.querySelector('#flWorkspace pre')?.textContent.includes('ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE'));
+    assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),retainedBeforeJPEG);
+    await capture('image-double-jpeg-candidate');
+    const jpegMatrix=await page.evaluate(async()=>{
+      const out=[];for(const name of ['double-75-95.jpg','double-85-95.jpg','single-50.jpg','single-95.jpg','single-progressive95.jpg','double-50-95.jpg','double-65-95.jpg','double-95-50.jpg','double-75-75.jpg','shifted-double85-95.jpg','flat95.jpg']){
+        const file=await(await fetch('/samples/image/double-jpeg/'+name)).blob();const r=await new Promise((resolve,reject)=>{const w=new Worker('/double-jpeg-worker.js');const timer=setTimeout(()=>{w.terminate();reject(Error('JPEG worker timeout.'));},25000);w.onmessage=({data})=>{clearTimeout(timer);w.terminate();data.ok?resolve(data.result):reject(Error(data.error));};w.postMessage(file);});
+        const positive=['double-75-95.jpg','double-85-95.jpg'].includes(name);if((r.state==='ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE')!==positive)throw Error('JPEG case '+name+' unexpected.');out.push({file:name,result:r});
+      }return out;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'double-jpeg-validation.json'),JSON.stringify(jpegMatrix,null,2));
+    console.log('PASS actual coefficient worker JPEG positives, single negatives and5 documented genuine-double misses');
     await openTool('network','dns-lookup');
     await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
     await page.click('[aria-label="Try live DNS example"]');

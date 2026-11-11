@@ -23,8 +23,8 @@
       'Counts decoded red, green and blue pixel values in 256 bins. Run on an image and inspect the chart and counts. A histogram describes tone distribution, not whether an image is authentic.',
     ],
     compression: [
-      'JPEG Encoding Inspector',
-      'Reads JPEG dimensions and quantization tables from file bytes and reports file size. Select a JPEG and inspect the tables. Quantization tables do not prove double compression, editing or the original encoder.',
+      'JPEG Double-Quantization Measurements',
+      'Parses original quantized JPEG AC coefficients, shows their histograms/current quantizers, and tests strong aligned lower-quality-then-higher-quality lattice artifacts against standard-luma-table hypotheses20-95. A candidate needs at least4 supported frequencies with>=150 nonzero samples,>=86% lattice fit and>=25% enrichment over allowed-bin density. This narrow method misses genuine double compression, including many strong recompressions, equal-quality/grid-shift/resize/custom matrices. Hypothesized quality is not a recovered encoding history or calibrated probability. No candidate does NOT mean single compression.20MiB,4MP,192MiB parser allocation,25second local worker. Candidate artifacts, not proof of editing/authenticity. No AI or upload.',
     ],
     'color-channels': [
       'RGB Channel Viewer',
@@ -286,7 +286,27 @@
     } else if (id === 'compression') {
       result.summary.jpegQuantizationTables = jpegTables(await file.arrayBuffer());
       result.summary.bytes = file.size;
-      result.summary.limit = 'Encoding tables only. No double-compression verdict.';
+      if (!root.Worker) throw Error('JPEG coefficient worker unavailable.');
+      result.summary.doubleQuantization = await new Promise((resolve, reject) => {
+        const worker = new root.Worker('/double-jpeg-worker.js'),
+          timer = setTimeout(() => {
+            worker.terminate();
+            reject(Error('JPEG coefficient analysis exceeded25seconds.'));
+          }, 25000);
+        const finish = () => {
+          clearTimeout(timer);
+          worker.terminate();
+        };
+        worker.onmessage = ({ data }) => {
+          finish();
+          data.ok ? resolve(data.result) : reject(Error(data.error));
+        };
+        worker.onerror = () => {
+          finish();
+          reject(Error('JPEG coefficient worker failed.'));
+        };
+        worker.postMessage(file);
+      });
     } else if (id === 'img-metadata') {
       if (!root.exifr) throw new Error('Metadata parser unavailable. Reload the page.');
       result.summary.metadata = (await root.exifr.parse(await file.arrayBuffer(), true)) || {};
@@ -357,7 +377,9 @@
     ws.appendChild(
       node(
         'p',
-        'Local processing only. Supported: browser-decodable JPEG, PNG and WebP; max 20 MiB / 12 MP. Analysis scales to 1024 px.',
+        tool.id === 'compression'
+          ? 'Local coefficient analysis: JPEG only,20MiB/4MP. Original unscaled coefficient blocks. Preview may scale; no JPEG re-encoding.'
+          : 'Local processing only. Supported: browser-decodable JPEG, PNG and WebP; max 20 MiB / 12 MP. Analysis scales to 1024 px.',
       ),
     );
     const run = node('button', 'Analyze selected image', {
@@ -394,9 +416,11 @@
           const name =
             tool.id === 'clone-detect'
               ? 'copy-move/rotated-scaled.jpg'
-              : tool.id === 'ela'
-                ? 'edited.jpg'
-                : 'original.jpg';
+              : tool.id === 'compression'
+                ? 'double-jpeg/double-85-95.jpg'
+                : tool.id === 'ela'
+                  ? 'edited.jpg'
+                  : 'original.jpg';
           const r = await fetch(
             (tool.id === 'clone-detect' ? '/samples/images/' : '/samples/image/') + name,
           );
@@ -412,6 +436,51 @@
           out.appendChild(
             node('strong', 'DEMO SAMPLE - real tool output; your evidence is unchanged.'),
           );
+        if (tool.id === 'compression') {
+          const r = result.summary.doubleQuantization;
+          out.appendChild(
+            node(
+              'h3',
+              r.state === 'ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE'
+                ? 'Aligned double-quantization candidate'
+                : 'No supported aligned lattice candidate',
+            ),
+          );
+          out.appendChild(
+            node(
+              'p',
+              'Candidate artifacts only, not a recovered history or proof of editing. Genuine double compression can return no candidate.',
+            ),
+          );
+          const frequency = r.examinedFrequencies[0],
+            canvas = document.createElement('canvas');
+          canvas.width = 800;
+          canvas.height = 260;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, 800, 260);
+          ctx.fillStyle = '#0f172a';
+          ctx.font = '16px sans-serif';
+          ctx.fillText(
+            'Original luma AC coefficient1: absolute values2-60 (zero/one omitted)',
+            16,
+            24,
+          );
+          const hist = new Map(frequency.histogram),
+            max = Math.max(1, ...hist.values());
+          for (let k = 2; k <= 60; k++) {
+            const h = ((hist.get(k) || 0) / max) * 170;
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(18 + (k - 2) * 13, 215 - h, 10, h);
+          }
+          ctx.fillStyle = '#0f172a';
+          ctx.fillText('2', 16, 240);
+          ctx.fillText('60', 758, 240);
+          result.visuals.unshift([
+            'Quantized coefficient histogram (counts, not a probability)',
+            canvas,
+          ]);
+        }
         result.visuals.forEach(([label, c]) => {
           out.appendChild(node('h3', label));
           c.style.maxWidth = '100%';

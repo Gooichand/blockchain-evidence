@@ -18,7 +18,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Image Forensics | Noise Analysis | No | Residual visualization, no sensor/camera attribution. |
 | Image Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Image Forensics | Histogram Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
-| Image Forensics | Compression Analysis | No | JPEG tables only, no double-compression detection. |
+| Image Forensics | Compression Analysis | No | Original JPEG AC coefficients/histograms and narrow aligned lattice candidates work. Still No:2 synthetic positive combinations,5 genuine-double misses, no independent photo benchmark or calibrated accuracy. No candidate does not mean single compression. |
 | Image Forensics | Color Channel Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Image Forensics | Edge Detection | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Image Forensics | AI Tampering Detection | No | No validated model; no result fabricated. |

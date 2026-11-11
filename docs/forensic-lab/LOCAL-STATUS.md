@@ -46,3 +46,6 @@ Vendored dependencies carry licenses/notices. PDF.js 4.10.38 is used with dynami
 ## Validation
 
 Run `npm test -- --runInBand` for unit and existing regression tests. The desktop smoke runner documented alongside this file uses installed Chrome and performs real parsing/decoding/crypto. Backend RPC unit tests use mocks. A separate real in-memory EVM deployment/storage/sealing check also passes, but neither is public-chain proof. Local UI fixtures do not establish that a production deployment has been updated.
+
+
+Nov12 batch9:47/67strict unchanged. JPEG actual originalAC histograms/lattice candidates added but Compression Analysis remainsNo (5genuine-double misses, synthetic-only calibration).35suites237tests +48Chromeexamples/extended matrices. Nothing pushed. See STRICT-UPGRADES-2026-11-12.md.

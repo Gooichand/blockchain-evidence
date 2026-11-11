@@ -1,0 +1,1 @@
+{"name":"dgc-jpeg-vendor-build","version":"1.0.0","private":true,"dependencies":{"jpeg-js":"0.4.4"},"devDependencies":{"esbuild":"0.28.2"}}
