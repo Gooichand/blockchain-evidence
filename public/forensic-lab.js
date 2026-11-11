@@ -26,11 +26,11 @@
       desc: 'Cryptographic hashing and file integrity verification.',
       formats: ['SHA-256', 'SHA-1', 'MD5', 'BIN', 'TXT'],
       tools: [
-        { id: 'sha256', name: 'SHA-256 Generator', icon: 'hash', status: 'available', desc: 'Generate SHA-256 hashes for evidence integrity.' },
-        { id: 'hash-compare', name: 'Hash Comparison', icon: 'git-compare', status: 'available', desc: 'Compare evidence hashes against verified records.' },
-        { id: 'integrity-check', name: 'File Integrity Checker', icon: 'file-check', status: 'available', desc: 'Detect alterations in collected evidence files.' },
-        { id: 'blockchain-verify', name: 'Blockchain Verification', icon: 'link', status: 'beta', desc: 'Verify hash anchoring on the Polygon blockchain.' },
-        { id: 'multi-hash', name: 'Multi Hash Generator', icon: 'layers', status: 'available', desc: 'Generate multiple digest algorithms at once.' },
+        { id: 'sha256', name: 'SHA-256 Generator', icon: 'hash', status: 'available', desc: 'Generate SHA-256 hashes for evidence integrity.', guide: 'This tool creates a SHA-256 fingerprint of a file. Add a file to the Evidence Vault, click Generate hashes, then copy the digest for your records. The same bytes produce the same digest, but generating a hash alone does not prove authenticity or verify an original record.' },
+        { id: 'hash-compare', name: 'Hash Comparison', icon: 'git-compare', status: 'available', desc: 'Compare evidence hashes against verified records.', guide: 'This tool checks whether two hexadecimal hashes are identical. Paste both hashes from the same algorithm and click Compare hashes; MATCH means they are equal and MISMATCH means they differ. A match does not prove where the hashes came from, and MD5 or SHA-1 should not be used as sole proof of authenticity.' },
+        { id: 'integrity-check', name: 'File Integrity Checker', icon: 'file-check', status: 'available', desc: 'Detect alterations in collected evidence files.', guide: 'This tool checks a file against an original SHA-256 baseline. Add the file to the Evidence Vault, paste the original 64-character hash, then click Check integrity. MATCH means the file matches that baseline and MISMATCH means it does not, but the tool cannot confirm whether your baseline is trustworthy.' },
+        { id: 'blockchain-verify', name: 'Blockchain Verification', icon: 'link', status: 'beta', desc: 'Verify hash anchoring on the Polygon blockchain.', guide: 'This tool checks whether a file hash is recorded in the configured Polygon Amoy testnet contract. Add the file to the Evidence Vault and click Verify on blockchain; only its SHA-256 digest is sent for a read-only lookup. ANCHORED means a matching contract record was found, NOT FOUND means none was found, and an unavailable error confirms neither; testnet anchoring does not prove authenticity or legal admissibility.' },
+        { id: 'multi-hash', name: 'Multi Hash Generator', icon: 'layers', status: 'available', desc: 'Generate multiple digest algorithms at once.', guide: 'This tool generates MD5, SHA-1, SHA-256, SHA-384 and SHA-512 fingerprints of one file. Add a file to the Evidence Vault, click Generate hashes, then copy the digest you need. MD5 and SHA-1 are for legacy compatibility; these results do not prove authenticity or blockchain anchoring.' },
       ],
     },
     {
@@ -201,37 +201,64 @@
 
   const ForensicServices = {
     HashToolService: {
-      run: async (tool, file) => {
-        if (tool.id === 'sha256' && file) {
-          try {
-            const hash = await computeSHA256(file);
-            return {
-              status: 'completed',
-              message: 'SHA-256 hash computed successfully.',
-              module: SVC.hash.module,
-              version: SVC.hash.version,
-              service: SVC.hash.name,
-              estimate: 'Complete',
-              tool: tool.name,
-              file: file.name,
-              hash: hash,
-              algorithm: 'SHA-256',
-              size: file.size,
-              type: file.type,
-            };
-          } catch (e) {
-            return {
-              status: 'error',
-              message: 'Failed to compute SHA-256 hash: ' + e.message,
-              module: SVC.hash.module,
-              version: SVC.hash.version,
-              service: SVC.hash.name,
-              tool: tool.name,
-              file: file.name,
-            };
+      run: async (tool, file, options = {}) => {
+        const normalize = (value) => String(value || '').trim().toLowerCase();
+        if (tool.id === 'hash-compare') {
+          const left = normalize(options.left);
+          const right = normalize(options.right);
+          const lengths = { 32: 'MD5', 40: 'SHA-1', 64: 'SHA-256', 96: 'SHA-384', 128: 'SHA-512' };
+          if (!lengths[left.length] || !/^[0-9a-f]+$/.test(left) ||
+              !lengths[right.length] || !/^[0-9a-f]+$/.test(right)) {
+            throw new Error('Enter two complete hexadecimal MD5, SHA-1, SHA-256, SHA-384 or SHA-512 hashes.');
           }
+          if (left.length !== right.length) throw new Error('Both hashes must use the same algorithm.');
+          return { status: 'completed', algorithm: lengths[left.length], match: left === right,
+            left, right, message: left === right ? 'Hashes match.' : 'Hashes do not match.',
+            note: 'A match does not prove authenticity or blockchain anchoring. MD5 and SHA-1 are legacy algorithms.' };
         }
-        return mockResponse(tool, SVC.hash, file);
+        if (tool.id === 'blockchain-verify') {
+          if (!file) throw new Error('Select an evidence file first.');
+          if (file.size > 50 * 1024 * 1024) throw new Error('Use a file of 50 MiB or less for browser hashing.');
+          const hash = await computeSHA256(file);
+          const response = await fetch('/api/blockchain/verify-hash/' + hash, { credentials: 'same-origin', signal: AbortSignal.timeout(20000) });
+          const result = await response.json();
+          if (!response.ok || result.success !== true || typeof result.anchored !== 'boolean' || result.hash !== hash || result.chainId !== 80002) {
+            throw new Error(result.error || 'Blockchain verification unavailable. No result was confirmed.');
+          }
+          return { ...result, status: 'completed', file: file.name, size: file.size,
+            digests: { 'SHA-256': hash },
+            message: result.anchored ? 'Hash found in the Polygon Amoy contract.' : 'Hash not found in the Polygon Amoy contract.' };
+        }
+        if (!['sha256', 'multi-hash', 'integrity-check'].includes(tool.id)) return mockResponse(tool, SVC.hash, file);
+        if (!file) throw new Error('Select an evidence file first.');
+        if (file.size > 50 * 1024 * 1024) throw new Error('Use a file of 50 MiB or less for browser hashing.');
+        let expected;
+        if (tool.id === 'integrity-check') {
+          expected = normalize(options.expected);
+          if (!/^[0-9a-f]{64}$/.test(expected)) throw new Error('Enter the original 64-character SHA-256 hash.');
+        }
+        const bytes = await file.arrayBuffer();
+        const algorithms = tool.id === 'multi-hash' ? ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'] : ['SHA-256'];
+        const digests = {};
+        for (const algorithm of algorithms) {
+          const digest = await crypto.subtle.digest(algorithm, bytes);
+          digests[algorithm] = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+        }
+        if (tool.id === 'multi-hash') {
+          if (!window.SparkMD5 || !window.SparkMD5.ArrayBuffer) throw new Error('MD5 engine unavailable. Reload the page and retry.');
+          digests.MD5 = window.SparkMD5.ArrayBuffer.hash(bytes);
+        }
+        const result = { status: 'completed', file: file.name, size: file.size,
+          digests, message: 'Hash computation complete.',
+          note: 'Computed locally. A digest alone does not verify authenticity, custody or blockchain anchoring.' };
+        if (expected !== undefined) {
+          result.expected = expected;
+          result.match = expected === digests['SHA-256'];
+          result.message = result.match ? 'File matches the supplied SHA-256 baseline.' : 'File does not match the supplied SHA-256 baseline.';
+          result.note = 'This compares bytes with the baseline you supplied. It does not authenticate that baseline.';
+        }
+        if (tool.id === 'multi-hash') result.note += ' MD5 and SHA-1 are legacy algorithms for forensic compatibility, not suitable as sole proof of authenticity. Prefer SHA-256 or stronger for new records.';
+        return result;
       }
     },
     ImageForensicsService: { run: (tool, file) => Promise.resolve(mockResponse(tool, SVC.image, file)) },
@@ -337,6 +364,40 @@
   function clearTimers() {
     state.timers.forEach((t) => clearTimeout(t));
     state.timers = [];
+  }
+
+  const chainHealth = { state: 'unchecked', checkedAt: null, timer: null, checking: false };
+  function paintChainHealth() {
+    const dot = document.querySelector('[data-tool="blockchain-verify"] .fl-dot');
+    const labels = { unchecked: 'Read-only blockchain lookup not checked', checking: 'Checking read-only blockchain lookup...',
+      ready: 'Read-only lookup available on Polygon Amoy testnet', unavailable: 'Read-only lookup unavailable; recheck RPC and contract',
+      stale: 'Read-only check expired; recheck before relying on availability' };
+    const text = labels[chainHealth.state] + (chainHealth.checkedAt ? ' | Checked: ' + chainHealth.checkedAt : '');
+    if (dot) {
+      dot.className = 'fl-dot ' + (chainHealth.state === 'ready' ? 'available' : 'beta');
+      dot.title = text;
+      dot.setAttribute('role', 'status');
+      dot.setAttribute('aria-label', text);
+    }
+    const status = document.getElementById('flChainHealthText');
+    if (status) status.textContent = text + '. Availability is not evidence anchoring.';
+  }
+  async function checkChainHealth() {
+    if (chainHealth.checking) return;
+    chainHealth.checking = true;
+    clearTimeout(chainHealth.timer);
+    chainHealth.state = 'checking';
+    paintChainHealth();
+    try {
+      const response = await fetch('/api/blockchain/verification-health', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000) });
+      const result = await response.json();
+      if (!response.ok || result.success !== true || result.chainId !== 80002 || !Number.isInteger(result.blockNumber) ||
+          !/^0x[0-9a-fA-F]{40}$/.test(result.contractAddress) || !Number.isFinite(Date.parse(result.checkedAt))) throw new Error('Unavailable');
+      chainHealth.state = 'ready';
+      chainHealth.checkedAt = result.checkedAt;
+      chainHealth.timer = setTimeout(() => { chainHealth.state = 'stale'; paintChainHealth(); }, 60000);
+    } catch (_) { chainHealth.state = 'unavailable'; chainHealth.checkedAt = null; }
+    finally { chainHealth.checking = false; paintChainHealth(); }
   }
 
   /* ------------------------------------------------------------- sidebar */
@@ -561,10 +622,121 @@
     }
   }
 
+  // Opt-in guide text lives on each catalog entry so new tools can reuse it.
+  function renderToolGuide(tool) {
+    if (!tool.guide) return null;
+    return el('section', { class: 'fl-tool-guide', 'aria-label': 'What this tool does and how to use it',
+      style: 'margin:0 0 20px;padding:16px;border:1px solid var(--fl-line);border-radius:12px;background:var(--fl-bg-soft);line-height:1.6;' },
+      el('h3', { text: 'What it does and how to use it', style: 'margin:0 0 8px;font-size:0.95rem;' }),
+      el('p', { text: tool.guide, style: 'margin:0;font-size:0.875rem;color:var(--fl-body);' }));
+  }
+
+  // Completed hash tools have their own truthful, local-only workspace.
+  // Other categories keep their existing rendering and service behavior.
+  function renderHashWorkspace(ws, cat, tool) {
+    state.lastRun = null;
+    state.analyzing = false;
+    const isComparison = tool.id === 'hash-compare';
+    const isIntegrity = tool.id === 'integrity-check';
+    const home = () => { state.currentCat = null; state.currentTool = null; renderWelcome(ws); };
+    ws.appendChild(breadcrumb(cat, tool, home));
+    ws.appendChild(el('div', { class: 'fl-ws-head' }, el('div', {},
+      el('h2', { text: tool.name }),
+      el('p', { text: isComparison ? 'Compare two hexadecimal digests using the same algorithm.' : tool.desc }),
+      el('p', { text: tool.id === 'blockchain-verify' ? 'The file stays in your browser. Its SHA-256 digest is sent to the server for a read-only contract lookup. No wallet transaction or payment.' : 'Local browser processing. Files and hashes are not uploaded.' }))));
+    ws.appendChild(renderToolGuide(tool));
+    if (tool.id === 'blockchain-verify') {
+      const recheck = el('button', { type: 'button', class: 'fl-btn fl-btn-ghost', text: 'Recheck connection' });
+      recheck.addEventListener('click', checkChainHealth);
+      ws.appendChild(el('section', { style: 'margin:0 0 16px;', 'aria-label': 'Read-only connection status' },
+        el('p', { id: 'flChainHealthText', role: 'status' }), recheck));
+      paintChainHealth();
+    }
+    const form = el('form', { class: 'fl-panel', style: 'padding:20px;' });
+    const inputs = {};
+    const addInput = (key, label, placeholder) => {
+      const id = 'flHash-' + key;
+      inputs[key] = el('textarea', { id, name: key, rows: '3', required: 'required',
+        placeholder, spellcheck: 'false', autocomplete: 'off',
+        style: 'display:block;width:100%;box-sizing:border-box;margin:8px 0 16px;padding:10px;font-family:monospace;resize:vertical;overflow-wrap:anywhere;' });
+      form.appendChild(el('label', { for: id, text: label }));
+      form.appendChild(inputs[key]);
+    };
+    if (isComparison) {
+      addInput('left', 'First hash', 'Paste a complete hexadecimal digest');
+      addInput('right', 'Second hash', 'Paste another digest of the same algorithm');
+    } else {
+      form.appendChild(el('p', { text: state.file ? 'Evidence: ' + state.file.name + ' (' + fmtBytes(state.file.size) + ')' : 'Add a file in the Evidence Vault first. Maximum: 50 MiB.' }));
+      if (isIntegrity) addInput('expected', 'Original SHA-256 baseline', '64 hexadecimal characters from a trusted original record');
+    }
+    const btn = el('button', { type: 'submit', id: 'flAnalyzeBtn', class: 'fl-btn fl-btn-primary',
+      text: isComparison ? 'Compare hashes' : isIntegrity ? 'Check integrity' : tool.id === 'blockchain-verify' ? 'Verify on blockchain' : 'Generate hashes' });
+    if (!isComparison && !state.file) btn.disabled = true;
+    form.appendChild(btn);
+    const output = el('section', { id: 'flHashResults', class: 'fl-panel', role: 'status', 'aria-live': 'polite', style: 'margin-top:16px;padding:20px;overflow-wrap:anywhere;' });
+    output.appendChild(el('p', { text: 'Results will appear here after you run the tool.' }));
+    // Invalidate old results as soon as either input changes.
+    form.addEventListener('input', () => {
+      state.lastRun = null;
+      clear(output);
+      output.appendChild(el('p', { text: 'Inputs changed. Run the tool again.' }));
+    });
+    let sequence = 0;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const run = ++sequence;
+      const file = state.file;
+      const options = Object.fromEntries(Object.entries(inputs).map(([key, node]) => [key, node.value]));
+      btn.disabled = true;
+      Object.values(inputs).forEach(node => { node.disabled = true; });
+      clear(output);
+      output.appendChild(el('p', { text: 'Processing...' }));
+      try {
+        const result = await ForensicServices.HashToolService.run(tool, file, options);
+        // A tool switch or evidence replacement must not publish a stale result.
+        if (run !== sequence || !ws.contains(output)) return;
+        state.lastRun = result;
+        clear(output);
+        output.appendChild(el('h3', { text: result.message }));
+        if (result.match !== undefined) output.appendChild(el('strong', { text: result.match ? 'MATCH' : 'MISMATCH', style: 'color:' + (result.match ? '#166534' : '#b91c1c') }));
+        if (result.anchored !== undefined) {
+          output.appendChild(el('strong', { text: result.anchored ? 'ANCHORED (TESTNET)' : 'NOT FOUND (TESTNET)' }));
+          output.appendChild(el('p', { text: 'Chain: ' + result.chainId + ' | Contract: ' + result.contractAddress + ' | Block: ' + result.blockNumber + (result.evidenceId ? ' | Evidence ID: ' + result.evidenceId : '') }));
+        }
+        const rows = result.digests || { [result.algorithm + ' - first']: result.left, [result.algorithm + ' - second']: result.right };
+        Object.entries(rows).forEach(([algorithm, digest]) => {
+          const copy = el('button', { type: 'button', class: 'fl-btn fl-btn-ghost', text: 'Copy', 'aria-label': 'Copy ' + algorithm });
+          copy.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(digest); copy.textContent = 'Copied'; }
+            catch (_) { copy.textContent = 'Copy failed. Select the hash to copy.'; }
+          });
+          output.appendChild(el('div', { style: 'margin:16px 0;' }, el('h4', { text: algorithm === 'MD5' ? 'MD5 - legacy / forensic compatibility' : algorithm }),
+            el('code', { text: digest, style: 'display:block;overflow-wrap:anywhere;white-space:normal;margin:8px 0;' }), copy));
+        });
+        if (result.expected) output.appendChild(el('p', { text: 'Supplied baseline: ' + result.expected }));
+        output.appendChild(el('p', { text: result.note }));
+      } catch (error) {
+        if (!ws.contains(output)) return;
+        state.lastRun = null;
+        clear(output);
+        output.appendChild(el('p', { role: 'alert', text: error.message || 'Hash processing failed. Please retry.' }));
+      } finally {
+        btn.disabled = !isComparison && !state.file;
+        Object.values(inputs).forEach(node => { node.disabled = false; });
+      }
+    });
+    ws.appendChild(form);
+    ws.appendChild(output);
+  }
+
   function renderWorkspace(cat, tool) {
     const ws = document.getElementById('flWorkspace');
     if (!ws) return;
     clear(ws);
+    if (cat.id === 'hash') {
+      renderHashWorkspace(ws, cat, tool);
+      return;
+    }
 
     const home = () => { state.currentCat = null; state.currentTool = null; clearTimers(); state.analyzing = false; renderWelcome(ws); };
     const svc = serviceFor(tool);
@@ -654,6 +826,8 @@
 
     ws.appendChild(breadcrumb(cat, tool, home));
     ws.appendChild(head);
+    const guide = renderToolGuide(tool);
+    if (guide) ws.appendChild(guide);
     ws.appendChild(statusBanner);
     ws.appendChild(evidenceHint);
     ws.appendChild(actions);
@@ -1113,6 +1287,7 @@
     state.currentTool = tool;
     clearTimers();
     renderWorkspace(cat, tool);
+    if (tool.id === 'blockchain-verify') checkChainHealth();
     document.querySelectorAll('.fl-tool-item').forEach((b) => {
       b.classList.toggle('active', b.dataset.tool === toolId);
     });
@@ -1134,6 +1309,7 @@
     renderSidebar(sidebar);
     renderVault(vault);
     renderWelcome(ws);
+    checkChainHealth();
   }
 
   window.ForensicLab = {
