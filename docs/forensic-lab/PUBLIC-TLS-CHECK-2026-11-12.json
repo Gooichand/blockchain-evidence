@@ -1,0 +1,285 @@
+{
+  "positiveActualUI": {
+    "host": "example.com",
+    "port": 443,
+    "checkedAt": "2026-11-11T22:06:24.196Z",
+    "connectedAddress": "172.66.147.243",
+    "addressFamily": 4,
+    "negotiated": {
+      "state": "CONNECTED",
+      "protocol": "TLSv1.3",
+      "cipher": {
+        "name": "TLS_AES_256_GCM_SHA384",
+        "standardName": "TLS_AES_256_GCM_SHA384",
+        "version": "TLSv1.3"
+      },
+      "alpn": "h2",
+      "ephemeralKey": {},
+      "sessionReused": false,
+      "nodeDefaultTrustAuthorized": true,
+      "authorizationError": null,
+      "hostnameMatches": true,
+      "hostnameError": null,
+      "certificateChain": [
+        {
+          "subject": "CN=example.com",
+          "issuer": "C=US\nO=SSL Corporation\nCN=Cloudflare TLS Issuing ECC CA 3",
+          "subjectAltName": "DNS:example.com, DNS:*.example.com",
+          "validFrom": "Sep 26 22:49:11 2026 GMT",
+          "validTo": "Dec 25 22:56:35 2026 GMT",
+          "serialNumber": "01EEE6AABB521D5E14FC315FD9985690",
+          "fingerprint256": "85:CA:6A:B0:68:E9:BC:CE:88:B6:C4:AA:3C:47:F7:D1:72:28:13:4A:45:7F:87:0D:38:00:E6:22:3A:0D:F0:7A",
+          "publicKeyType": "ec",
+          "ca": false,
+          "validAtCheck": true,
+          "pem": "-----BEGIN CERTIFICATE-----\nMIID5jCCA42gAwIBAgIQAe7mqrtSHV4U/DFf2ZhWkDAKBggqhkjOPQQDAjBRMQsw\nCQYDVQQGEwJVUzEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMSgwJgYDVQQDDB9D\nbG91ZGZsYXJlIFRMUyBJc3N1aW5nIEVDQyBDQSAzMB4XDTI2MDkyNjIyNDkxMVoX\nDTI2MTIyNTIyNTYzNVowFjEUMBIGA1UEAwwLZXhhbXBsZS5jb20wWTATBgcqhkjO\nPQIBBggqhkjOPQMBBwNCAARqadExWzxTJ4S3LSzKIzAAeyF09q0Qt0F0XmLiZiaJ\nSD0SQPhVK36pUKlM55TUstJnrU7f+7elE0kZESKzzcbto4ICgDCCAnwwDAYDVR0T\nAQH/BAIwADAfBgNVHSMEGDAWgBSDA/3n9vVKTRVB9O0iFtMyCj7KZjBsBggrBgEF\nBQcBAQRgMF4wOQYIKwYBBQUHMAKGLWh0dHA6Ly9pLmNmLWkuc3NsLmNvbS9DbG91\nZGZsYXJlLVRMUy1JLUUzLmNlcjAhBggrBgEFBQcwAYYVaHR0cDovL28uY2YtaS5z\nc2wuY29tMCUGA1UdEQQeMByCC2V4YW1wbGUuY29tgg0qLmV4YW1wbGUuY29tMCMG\nA1UdIAQcMBowCAYGZ4EMAQIBMA4GDCsGAQQBgqkwAQMBATATBgNVHSUEDDAKBggr\nBgEFBQcDATBTBgNVHR8ETDBKMEigRqBEhkJodHRwOi8vYy5jZi1pLnNzbC5jb20v\nYWU4MDFlZDFjNTViYjU3OWQ3OTIwOGIwZDc3MmFjZmI4Y2MzYTIwOC5jcmwwDgYD\nVR0PAQH/BAQDAgeAMA8GCSsGAQQBgtpLLAQCBQAwggEEBgorBgEEAdZ5AgQCBIH1\nBIHyAPAAdgCUTkOH+uzB74HzGSQmqBhlAcfTXzgCAT9yZ31VNy4Z2AAAAaDf8a1i\nAAAEAwBHMEUCIQCuCUahRazwOcqj3A77y8eXdQBpLlGCjv9D/xvXd3X7hAIgbc0K\nMS+MsANY5WLGpHgTk3Uxk0g1VWTQB78vYRMga1EAdgDLOPcViXyEoURfW8Hd+8lu\n8ppZzUcKaQWFsMsUwxRY5wAAAaDf8a1+AAAEAwBHMEUCIB2YN/lZP6eSBMtV0BTr\nGD7KSyKVu/i68Zza97li96FcAiEA1mtvTnM8zbNKj6ArUpWmgTRURDDgOC4R1C2W\n5cSK6fIwCgYIKoZIzj0EAwIDRwAwRAIgNGlXxWLTTqn5+XQOkP06fTgaEbjDMAHU\nILmIapx8i5sCIAeTI/xpafGZNB9HwNfEeU05yh+aSv95pD8SNtIAWNr0\n-----END CERTIFICATE-----\n",
+          "signatureMatchesSuppliedIssuer": true
+        },
+        {
+          "subject": "C=US\nO=SSL Corporation\nCN=Cloudflare TLS Issuing ECC CA 3",
+          "issuer": "C=US\nO=SSL Corporation\nCN=SSL.com TLS Transit ECC CA R2",
+          "subjectAltName": null,
+          "validFrom": "May 29 19:49:45 2025 GMT",
+          "validTo": "May 27 19:49:44 2035 GMT",
+          "serialNumber": "31EEE88AFB87CD9EF8336604743F9B27",
+          "fingerprint256": "F1:5F:29:AB:EF:73:AA:4D:D9:AB:75:4B:AE:AE:36:85:BD:D3:87:4B:46:B5:25:07:11:77:62:86:85:71:80:26",
+          "publicKeyType": "ec",
+          "ca": true,
+          "validAtCheck": true,
+          "pem": "-----BEGIN CERTIFICATE-----\nMIIC4jCCAmmgAwIBAgIQMe7oivuHzZ74M2YEdD+bJzAKBggqhkjOPQQDAzBPMQsw\nCQYDVQQGEwJVUzEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMSYwJAYDVQQDDB1T\nU0wuY29tIFRMUyBUcmFuc2l0IEVDQyBDQSBSMjAeFw0yNTA1MjkxOTQ5NDVaFw0z\nNTA1MjcxOTQ5NDRaMFExCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9y\nYXRpb24xKDAmBgNVBAMMH0Nsb3VkZmxhcmUgVExTIElzc3VpbmcgRUNDIENBIDMw\nWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAT9HRQUjiNCkybPcNCJ17Eecqw+XVlS\ngd8c9dYludZ3B4ULjRKxKz9AuR9yBuD/QFIKk0n4yXGwfu7go0VRGER0o4IBIzCC\nAR8wEgYDVR0TAQH/BAgwBgEB/wIBADAfBgNVHSMEGDAWgBQyosfYWIv/f8A88lVp\nM+zOzB+8lzBIBggrBgEFBQcBAQQ8MDowOAYIKwYBBQUHMAKGLGh0dHA6Ly9jZXJ0\nLnNzbC5jb20vU1NMLmNvbS1UTFMtVC1FQ0MtUjIuY2VyMBEGA1UdIAQKMAgwBgYE\nVR0gADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwPQYDVR0fBDYwNDAy\noDCgLoYsaHR0cDovL2NybHMuc3NsLmNvbS9TU0wuY29tLVRMUy1ULUVDQy1SMi5j\ncmwwHQYDVR0OBBYEFIMD/ef29UpNFUH07SIW0zIKPspmMA4GA1UdDwEB/wQEAwIB\nhjAKBggqhkjOPQQDAwNnADBkAjBkW/dgTArl36px6LVMWzfHLv0pFD+P9BoOYzir\nZ2aS2IwsQPHb0rQdZMY5NghTTk4CMCiwDU71fhtYVRulUc575HJroLXgj+BkpkBu\nbdHnb2+aPpCH7LP6QNQ/Xm9NiqdxAw==\n-----END CERTIFICATE-----\n",
+          "signatureMatchesSuppliedIssuer": true
+        },
+        {
+          "subject": "C=US\nO=SSL Corporation\nCN=SSL.com TLS Transit ECC CA R2",
+          "issuer": "C=US\nO=SSL Corporation\nCN=SSL.com TLS ECC Root CA 2022",
+          "subjectAltName": null,
+          "validFrom": "Oct 21 17:02:23 2022 GMT",
+          "validTo": "Oct 17 17:02:22 2037 GMT",
+          "serialNumber": "604D8AF8D00BA8748B955853172C5F2E",
+          "fingerprint256": "5D:1B:C3:99:27:4E:64:9E:1C:72:69:7D:E9:1A:54:AD:72:50:88:C5:22:1C:B6:1E:17:EE:9C:29:0B:C4:2A:92",
+          "publicKeyType": "ec",
+          "ca": true,
+          "validAtCheck": true,
+          "pem": "-----BEGIN CERTIFICATE-----\nMIIDNDCCArmgAwIBAgIQYE2K+NALqHSLlVhTFyxfLjAKBggqhkjOPQQDAzBOMQsw\nCQYDVQQGEwJVUzEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMSUwIwYDVQQDDBxT\nU0wuY29tIFRMUyBFQ0MgUm9vdCBDQSAyMDIyMB4XDTIyMTAyMTE3MDIyM1oXDTM3\nMTAxNzE3MDIyMlowTzELMAkGA1UEBhMCVVMxGDAWBgNVBAoMD1NTTCBDb3Jwb3Jh\ndGlvbjEmMCQGA1UEAwwdU1NMLmNvbSBUTFMgVHJhbnNpdCBFQ0MgQ0EgUjIwdjAQ\nBgcqhkjOPQIBBgUrgQQAIgNiAARk532ZA1NckR7q+NgjraG/LOJjie8oaPbt1/Ds\nq2iudyvkdpcbUOvbWSgtb7g2uauNl8pMIp7uidkCP/16czqQjSvMLzo3g9oNtC1F\nG3NyCWVfeCE954tmP0f9CSnWFA+jggFZMIIBVTASBgNVHRMBAf8ECDAGAQH/AgEB\nMB8GA1UdIwQYMBaAFImPL6PoK6AUVHvzVrgmX2c4C5zQMEwGCCsGAQUFBwEBBEAw\nPjA8BggrBgEFBQcwAoYwaHR0cDovL2NlcnQuc3NsLmNvbS9TU0xjb20tVExTLVJv\nb3QtMjAyMi1FQ0MuY2VyMD8GA1UdIAQ4MDYwNAYEVR0gADAsMCoGCCsGAQUFBwIB\nFh5odHRwczovL3d3dy5zc2wuY29tL3JlcG9zaXRvcnkwHQYDVR0lBBYwFAYIKwYB\nBQUHAwIGCCsGAQUFBwMBMEEGA1UdHwQ6MDgwNqA0oDKGMGh0dHA6Ly9jcmxzLnNz\nbC5jb20vU1NMY29tLVRMUy1Sb290LTIwMjItRUNDLmNybDAdBgNVHQ4EFgQUMqLH\n2FiL/3/APPJVaTPszswfvJcwDgYDVR0PAQH/BAQDAgGGMAoGCCqGSM49BAMDA2kA\nMGYCMQC4SkI+e2cts1nTN9MCRil97z624WxLAp94hT7tNZGPZLe9YiLIyzgKqW/b\nE0b2h9ACMQCvV5XMRcunAylQaCQc4J/GwR1p7yrPC0DRWWeyLAkQWi5Ylta9DxlX\n74QFFksFCP0=\n-----END CERTIFICATE-----\n",
+          "signatureMatchesSuppliedIssuer": true
+        },
+        {
+          "subject": "C=US\nO=SSL Corporation\nCN=SSL.com TLS ECC Root CA 2022",
+          "issuer": "C=GB\nST=Greater Manchester\nL=Salford\nO=Comodo CA Limited\nCN=AAA Certificate Services",
+          "subjectAltName": null,
+          "validFrom": "Aug  1 00:00:00 2025 GMT",
+          "validTo": "Dec 31 23:59:59 2028 GMT",
+          "serialNumber": "173DCA60EA9F8E1026DAFCD72810E48E",
+          "fingerprint256": "BA:06:D3:D3:E3:48:FC:E7:47:8C:C8:4B:42:2D:0E:63:8E:9E:22:1E:F1:A0:B5:3A:DC:14:CC:70:E0:4B:8A:B8",
+          "publicKeyType": "ec",
+          "ca": true,
+          "validAtCheck": true,
+          "pem": "-----BEGIN CERTIFICATE-----\nMIIEPjCCAyagAwIBAgIQFz3KYOqfjhAm2vzXKBDkjjANBgkqhkiG9w0BAQsFADB7\nMQswCQYDVQQGEwJHQjEbMBkGA1UECAwSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYD\nVQQHDAdTYWxmb3JkMRowGAYDVQQKDBFDb21vZG8gQ0EgTGltaXRlZDEhMB8GA1UE\nAwwYQUFBIENlcnRpZmljYXRlIFNlcnZpY2VzMB4XDTI1MDgwMTAwMDAwMFoXDTI4\nMTIzMTIzNTk1OVowTjELMAkGA1UEBhMCVVMxGDAWBgNVBAoMD1NTTCBDb3Jwb3Jh\ndGlvbjElMCMGA1UEAwwcU1NMLmNvbSBUTFMgRUNDIFJvb3QgQ0EgMjAyMjB2MBAG\nByqGSM49AgEGBSuBBAAiA2IABEUpNXP6wrgjzhR9qLFNoFs27iosU8NgCTWyJGYm\nacCzldZdkkAZDsalE3D07xJRKF3nzL35PIXBz5SQySvOkkJYWWf9lCcQZIxPBLFN\nSeR7T5v15wj4A4j3p8OSSxlUgaOCAZcwggGTMB8GA1UdIwQYMBaAFKARCiM+lvEH\n7OKvKe+CpX/QMKS0MB0GA1UdDgQWBBSJjy+j6CugFFR781a4Jl9nOAuc0DAOBgNV\nHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBAjAdBgNVHSUEFjAUBggrBgEF\nBQcDAQYIKwYBBQUHAwIwgZIGA1UdIASBijCBhzAHBgVngQwBATAIBgZngQwBAgEw\nCAYGZ4EMAQICMAgGBmeBDAECAzAOBgwrBgEEAYKpMAEDAQEwDgYMKwYBBAGCqTAB\nAwECMA4GDCsGAQQBgqkwAQMBAzAOBgwrBgEEAYKpMAEDAQQwDgYMKwYBBAGCqTAB\nAwEFMA4GDCsGAQQBgqkwAQMBBjBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3Js\nLmNvbW9kb2NhLmNvbS9BQUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDA0BggrBgEF\nBQcBAQQoMCYwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTAN\nBgkqhkiG9w0BAQsFAAOCAQEAQ+Vw+0vuJDzwOCiGy95GwysrnGBYAFdba+jQTkXY\nvkJWGtID1xfyUhKf8tZupwURpkOoVB+9ZvsR15BZ8OSZrRw8Uh32Qz6bYale3PZ8\n0izAhlAwSWR0PD7MQxMUxY9b2GsCvSb8z1XgJxfMoZSRRCTVgWDhua7WB2MBdtN+\nA88zoXdY/PhVnox0NZbMxXdCSWc2yojUEO3AwcGEcTL9+I1w6A89onNQ0SKfGXs/\nXz6UajT8m0gH1BtdUUbur3aB3+n0zJ/U7u35DKiGv5mmNG81ldZrWjBTJ1T9fxVI\nWmmbTVzZvygNMtUumSs5DelljhlJAidAsTc+5iCBJmqRFg==\n-----END CERTIFICATE-----\n"
+        }
+      ],
+      "chainSource": "Peer-reported chain, may include a root from the local trust store; not evidence the server sent a root."
+    },
+    "versionProbes": {
+      "TLSv1.2": {
+        "state": "CONNECTED",
+        "protocol": "TLSv1.2",
+        "code": null
+      },
+      "TLSv1.3": {
+        "state": "CONNECTED",
+        "protocol": "TLSv1.3",
+        "code": null
+      }
+    },
+    "trustStore": "Node.js runtime default CA roots at time of check, not the browser/user trust store.",
+    "note": "Up to3 explicit TLS handshakes on public port443 only. No HTTP request, credentials, redirect, port scan or private-address connection. Per-connection observations, not a complete cipher-suite/vulnerability scan. Version probe failure is not proof that a version is disabled. No revocation/OCSP/CT or long-term trust guarantee."
+  },
+  "invalidActualPublicHandshakes": [
+    {
+      "host": "wrong.host.badssl.com",
+      "port": 443,
+      "checkedAt": "2026-11-11T22:06:35.038Z",
+      "connectedAddress": "104.154.89.105",
+      "addressFamily": 4,
+      "negotiated": {
+        "state": "CONNECTED",
+        "protocol": "TLSv1.2",
+        "cipher": {
+          "name": "ECDHE-RSA-AES128-GCM-SHA256",
+          "standardName": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+          "version": "TLSv1.2"
+        },
+        "alpn": "http/1.1",
+        "ephemeralKey": {
+          "type": "ECDH",
+          "name": "prime256v1",
+          "size": 256
+        },
+        "sessionReused": false,
+        "nodeDefaultTrustAuthorized": false,
+        "authorizationError": "ERR_TLS_CERT_ALTNAME_INVALID",
+        "hostnameMatches": false,
+        "hostnameError": "ERR_TLS_CERT_ALTNAME_INVALID",
+        "certificateChain": [
+          {
+            "subject": "CN=*.badssl.com",
+            "issuer": "C=US\nO=Let's Encrypt\nCN=YR1",
+            "subjectAltName": "DNS:*.badssl.com, DNS:badssl.com",
+            "validFrom": "Sep 29 20:02:56 2026 GMT",
+            "validTo": "Dec 28 20:02:55 2026 GMT",
+            "serialNumber": "065C62C1D5361BD7E6951263A67064063934",
+            "fingerprint256": "10:11:54:81:3E:8F:DA:B6:BA:4F:AB:57:51:85:C1:A1:39:44:BC:EC:1D:84:9A:E2:CD:94:A0:73:49:49:97:E3",
+            "publicKeyType": "rsa",
+            "ca": false,
+            "validAtCheck": true,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIE/zCCA+egAwIBAgISBlxiwdU2G9fmlRJjpnBkBjk0MA0GCSqGSIb3DQEBCwUA\nMDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQD\nEwNZUjEwHhcNMjYwOTI5MjAwMjU2WhcNMjYxMjI4MjAwMjU1WjAXMRUwEwYDVQQD\nDAwqLmJhZHNzbC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCu\nGPM37Z6OgQLd6QRN4TUVvc8NxZ1+EtR8M+EWbVWb+2v4LERvxRvN3ByvCAAZTR2O\nyMBRb1xbiqmfQt1xzZgFVygC2d8MHiKSfOTXec47ligR62A2fPmeUcMopFNemJzd\nSJ2q4RB1sdCutv2eXLEJGtbLsKFCoTBjYNOfg8O4PHI5AL/YATgxLMSieY2mTv6/\nfftVZ8lVNa65SwGR9ICtdTGhBy7iifyvcLaDUwvXucpKH6pepYjEUTFLtjws+Q51\n5i4RHh0xrqY97P9WG/Vj+Gsm+qYV0FHs/sE+qGJhyEt6teKUIXp8AmRjuJLSylxr\n68N2qJiQaGbsBYbXBk2PAgMBAAGjggInMIICIzAOBgNVHQ8BAf8EBAMCBaAwEwYD\nVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUS+OeWa3e\niWsz0wtEFKK0ww+P/pcwHwYDVR0jBBgwFoAUHy81vkYUgs1Asa55LFV4+vfUaPsw\nMwYIKwYBBQUHAQEEJzAlMCMGCCsGAQUFBzAChhdodHRwOi8veXIxLmkubGVuY3Iu\nb3JnLzAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wEwYDVR0g\nBAwwCjAIBgZngQwBAgEwLgYDVR0fBCcwJTAjoCGgH4YdaHR0cDovL3lyMS5jLmxl\nbmNyLm9yZy81My5jcmwwggENBgorBgEEAdZ5AgQCBIH+BIH7APkAdwDCMX5XRRmj\nRe5/ON6ykEHrx8IhWiK/f9W1rXaa2Q5SzQAAAaDu+O+2AAAEAwBIMEYCIQCltbzV\nPre77XfQ7IQXoMW7gL5Klry1UzpTIQxeuLEAxgIhAMSFGiTYkIrojZDTl980aZzL\nVO05nug+qoq9H2XtUv4yAH4AJuNkblhpISO8ND9HJDWbN5LNJFqI2BXTkzP9mRir\nRyMAAAGg7vjllwAIAAAFAEfwr6MEAwBHMEUCIQDT0xNru0iThHMzOb35RezPBcXW\n1xYQIQf67RbwBQ+8VQIgIW/gtjqJZDzMdjSI7iMfy8OGRlDR+5/ennx2I5xCXVQw\nDQYJKoZIhvcNAQELBQADggEBAE8xDKe9IJf2o4dDS5yG3I8jYxY9EDp583WtCObO\nYvpeLM9lRTunOxD4vGra+5pax687K3NXCIQZS8MjQcNq6NuEqZybtvH06iuRh8s5\nAS5qaZYp1QkSQ1SyOzZp93yz7QGG8DMajV3HKkhXQt/Ft0KggqikeaetlHbYcP6b\nnT/glbm0cYFNLBesXWSB13/TRyidU6SdWS9vLgFp16e7Fl+QlqnfpsyPwz+dILNz\nzg40tolJzZ7yMMIOa0oP3SZUYBNmYtzlVfPHf4f6z5pdydVBqiKQRzxgAX4huw5r\nfm/lmKJw34kjJqiPFoi9A07j47PJZ6QptTcVNiP29cdsIAc=\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          },
+          {
+            "subject": "C=US\nO=Let's Encrypt\nCN=YR1",
+            "issuer": "C=US\nO=ISRG\nCN=Root YR",
+            "subjectAltName": null,
+            "validFrom": "Sep  3 00:00:00 2025 GMT",
+            "validTo": "Sep  2 23:59:59 2028 GMT",
+            "serialNumber": "A20253F15F2691C05DC1CE13B9BCCA4E",
+            "fingerprint256": "13:94:96:34:D9:9C:D6:FD:6A:A8:0B:C0:34:FE:FA:CC:EB:19:69:FE:EF:98:65:86:71:3E:CD:BB:05:75:8D:3F",
+            "publicKeyType": "rsa",
+            "ca": true,
+            "validAtCheck": true,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIE2zCCAsOgAwIBAgIRAKICU/FfJpHAXcHOE7m8yk4wDQYJKoZIhvcNAQELBQAw\nLjELMAkGA1UEBhMCVVMxDTALBgNVBAoTBElTUkcxEDAOBgNVBAMTB1Jvb3QgWVIw\nHhcNMjUwOTAzMDAwMDAwWhcNMjgwOTAyMjM1OTU5WjAzMQswCQYDVQQGEwJVUzEW\nMBQGA1UEChMNTGV0J3MgRW5jcnlwdDEMMAoGA1UEAxMDWVIxMIIBIjANBgkqhkiG\n9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoVi8X2xCYgMXvJxNPKp/oF13UMgmPABB07VC\nLNDtoXmt9luEZNJSBV10VyT1Pz6LD8Zq1d2gc43WNl1AdRrj4sEnazbOiz0nPpmG\nBp2hui49oZtDIY6wdKeZAi5BbNU20CH6RSBBMLSQ9cXrH8dxdv4PAJ45ssGML68U\nSE3BsjC2a6cAN9L5CgXVIQi5tfNiTPoFZZ3S0OlXqLmmtdV95udWAb5b6e/F49Di\nCsH0Y00Ag72BVIb1hzynmKe+X0mERBTtsb3BwmpV9ipeBjMLoR/D9cHxHQCWoi5l\nTmXwY015J5rGelz1nZjJuxc2kioaX29XJBnhMkP531rSdG5uMwIDAQABo4HuMIHr\nMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAKBggrBgEFBQcDATASBgNVHRMBAf8E\nCDAGAQH/AgEAMB0GA1UdDgQWBBQfLzW+RhSCzUCxrnksVXj699Ro+zAfBgNVHSME\nGDAWgBTe51tg0CJtQCh9Pw0B/qS1UrRRlDAyBggrBgEFBQcBAQQmMCQwIgYIKwYB\nBQUHMAKGFmh0dHA6Ly95ci5pLmxlbmNyLm9yZy8wEwYDVR0gBAwwCjAIBgZngQwB\nAgEwJwYDVR0fBCAwHjAcoBqgGIYWaHR0cDovL3lyLmMubGVuY3Iub3JnLzANBgkq\nhkiG9w0BAQsFAAOCAgEA0+zvMq3kHig1ddTmmm+RibTr9/RpX7k4buanMMRqbV/y\nIvP82zAHN3mvaw+cASuVsdpd0ikjhr4hnhJQLQOzOp2ccKrsdGOAgo0vddeISFAq\nEWEV4lmUM3vFF796up+bSgmJ1u6RupDCMxDgF8M3eLvGuj6L0lu3zkQ0KuQLnKxL\ntB0oQqn1Idg5CuuGpMvQzk29Pa3D/qHurc0EIM9SxukQuJqq63lxsYyRQFU8yMBO\nhq1w5LbfaWNRrz1uklOfI/pYkAb2E2MTZrAMQkBIE2S8Jt1F8gRc96o/xOsrgvSk\na84AisX6xq1lz1Z7jGvrnXc4TMcjxZTjiTaihcYI1JIXZiLtEMSCa5l3cu8YWd6z\ndLRQlqRdclVjuQfNHawRJ6GWlkK0QJosivTKwdBw3KxEtzGo8yMHERbsy57gP1UX\nHOMcmZYQC0gtyR3SxfenIM/MxC3Ia2Ypab/kQ/CTnlIn2KQ5JUC6NYrGCbhFN9bp\n5lKJStEwCUnLpntcrXk5XVDCNv/5RyWpRThkGOV7GetKkQ0qAY8hCzWK6oqnAhDZ\ncjlYVdWfqOw3DIOX6EDNBgAqHarRVxyF9QZdOaXSyPJ0ueD2BYJEBgaCGQ8rAaU/\nQc123V5LTXDZW4CcsPBDyhy4v+c8hClAyw/IkJlfBqxB9D+/wvIMHgECZ4ptP6o=\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          },
+          {
+            "subject": "C=US\nO=ISRG\nCN=Root YR",
+            "issuer": "C=US\nO=Internet Security Research Group\nCN=ISRG Root X1",
+            "subjectAltName": null,
+            "validFrom": "May 13 00:00:00 2026 GMT",
+            "validTo": "Sep  2 23:59:59 2032 GMT",
+            "serialNumber": "F24B6D17F9D9AD7CB1C9FEA78782699F",
+            "fingerprint256": "07:26:39:D0:B1:40:D5:BF:FA:E1:6A:D9:C3:F6:CC:60:86:04:06:21:F5:1E:E6:1A:6D:46:A8:91:5C:07:CF:76",
+            "publicKeyType": "rsa",
+            "ca": true,
+            "validAtCheck": true,
+            "pem": "-----BEGIN CERTIFICATE-----\n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\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          },
+          {
+            "subject": "C=US\nO=Internet Security Research Group\nCN=ISRG Root X1",
+            "issuer": "C=US\nO=Internet Security Research Group\nCN=ISRG Root X1",
+            "subjectAltName": null,
+            "validFrom": "Jun  4 11:04:38 2015 GMT",
+            "validTo": "Jun  4 11:04:38 2035 GMT",
+            "serialNumber": "8210CFB0D240E3594463E0BB63828B00",
+            "fingerprint256": "96:BC:EC:06:26:49:76:F3:74:60:77:9A:CF:28:C5:A7:CF:E8:A3:C0:AA:E1:1A:8F:FC:EE:05:C0:BD:DF:08:C6",
+            "publicKeyType": "rsa",
+            "ca": true,
+            "validAtCheck": true,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\nTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\ncmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4\nWhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu\nZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY\nMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc\nh77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+\n0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U\nA5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW\nT8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH\nB5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC\nB5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv\nKBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn\nOlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn\njh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw\nqHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI\nrU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV\nHRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq\nhkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL\nubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ\n3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK\nNFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5\nORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur\nTkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC\njNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc\noyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq\n4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA\nmRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d\nemyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          }
+        ],
+        "chainSource": "Peer-reported chain, may include a root from the local trust store; not evidence the server sent a root."
+      },
+      "versionProbes": {
+        "TLSv1.2": {
+          "state": "CONNECTED",
+          "protocol": "TLSv1.2",
+          "code": null
+        },
+        "TLSv1.3": {
+          "state": "UNAVAILABLE",
+          "protocol": null,
+          "code": "ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE"
+        }
+      },
+      "trustStore": "Node.js runtime default CA roots at time of check, not the browser/user trust store.",
+      "note": "Up to3 explicit TLS handshakes on public port443 only. No HTTP request, credentials, redirect, port scan or private-address connection. Per-connection observations, not a complete cipher-suite/vulnerability scan. Version probe failure is not proof that a version is disabled. No revocation/OCSP/CT or long-term trust guarantee."
+    },
+    {
+      "host": "expired.badssl.com",
+      "port": 443,
+      "checkedAt": "2026-11-11T22:06:35.398Z",
+      "connectedAddress": "104.154.89.105",
+      "addressFamily": 4,
+      "negotiated": {
+        "state": "CONNECTED",
+        "protocol": "TLSv1.2",
+        "cipher": {
+          "name": "ECDHE-RSA-AES128-GCM-SHA256",
+          "standardName": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+          "version": "TLSv1.2"
+        },
+        "alpn": "http/1.1",
+        "ephemeralKey": {
+          "type": "ECDH",
+          "name": "prime256v1",
+          "size": 256
+        },
+        "sessionReused": false,
+        "nodeDefaultTrustAuthorized": false,
+        "authorizationError": "CERT_HAS_EXPIRED",
+        "hostnameMatches": true,
+        "hostnameError": null,
+        "certificateChain": [
+          {
+            "subject": "OU=Domain Control Validated\nOU=PositiveSSL Wildcard\nCN=*.badssl.com",
+            "issuer": "C=GB\nST=Greater Manchester\nL=Salford\nO=COMODO CA Limited\nCN=COMODO RSA Domain Validation Secure Server CA",
+            "subjectAltName": "DNS:*.badssl.com, DNS:badssl.com",
+            "validFrom": "Apr  9 00:00:00 2015 GMT",
+            "validTo": "Apr 12 23:59:59 2015 GMT",
+            "serialNumber": "4AE79549FA9ABE3F100F17A478E16909",
+            "fingerprint256": "BA:10:5C:E0:2B:AC:76:88:8E:CE:E4:7C:D4:EB:79:41:65:3E:9A:C9:93:B6:1B:2E:B3:DC:C8:20:14:D2:1B:4F",
+            "publicKeyType": "rsa",
+            "ca": false,
+            "validAtCheck": false,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIFSzCCBDOgAwIBAgIQSueVSfqavj8QDxekeOFpCTANBgkqhkiG9w0BAQsFADCB\nkDELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G\nA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNV\nBAMTLUNPTU9ETyBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBD\nQTAeFw0xNTA0MDkwMDAwMDBaFw0xNTA0MTIyMzU5NTlaMFkxITAfBgNVBAsTGERv\nbWFpbiBDb250cm9sIFZhbGlkYXRlZDEdMBsGA1UECxMUUG9zaXRpdmVTU0wgV2ls\nZGNhcmQxFTATBgNVBAMUDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2PmzA\nS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMWhyef\ndOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3AxPxT\nuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqveww9H\ndFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SYQCeF\nxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaOCAdUwggHRMB8GA1Ud\nIwQYMBaAFJCvajqUWgvYkOoSVnPfQ7Q6KNrnMB0GA1UdDgQWBBSd7sF7gQs6R2lx\nGH0RN5O8pRs/+zAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNVHSUE\nFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwTwYDVR0gBEgwRjA6BgsrBgEEAbIxAQIC\nBzArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8uY29tL0NQUzAI\nBgZngQwBAgEwVAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5jb21vZG9jYS5j\nb20vQ09NT0RPUlNBRG9tYWluVmFsaWRhdGlvblNlY3VyZVNlcnZlckNBLmNybDCB\nhQYIKwYBBQUHAQEEeTB3ME8GCCsGAQUFBzAChkNodHRwOi8vY3J0LmNvbW9kb2Nh\nLmNvbS9DT01PRE9SU0FEb21haW5WYWxpZGF0aW9uU2VjdXJlU2VydmVyQ0EuY3J0\nMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wIwYDVR0RBBww\nGoIMKi5iYWRzc2wuY29tggpiYWRzc2wuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQBq\nevHa/wMHcnjFZqFPRkMOXxQhjHUa6zbgH6QQFezaMyV8O7UKxwE4PSf9WNnM6i1p\nOXy+l+8L1gtY54x/v7NMHfO3kICmNnwUW+wHLQI+G1tjWxWrAPofOxkt3+IjEBEH\nfnJ/4r+3ABuYLyw/zoWaJ4wQIghBK4o+gk783SHGVnRwpDTysUCeK1iiWQ8dSO/r\nET7BSp68ZVVtxqPv1dSWzfGuJ/ekVxQ8lEEFeouhN0fX9X3c+s5vMaKwjOrMEpsi\n8TRwz311SotoKQwe6Zaoz7ASH1wq7mcvf71z81oBIgxw+s1F73hczg36TuHvzmWf\nRwxPuzZEaFZcVlmtqoq8\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          },
+          {
+            "subject": "C=GB\nST=Greater Manchester\nL=Salford\nO=COMODO CA Limited\nCN=COMODO RSA Domain Validation Secure Server CA",
+            "issuer": "C=GB\nST=Greater Manchester\nL=Salford\nO=COMODO CA Limited\nCN=COMODO RSA Certification Authority",
+            "subjectAltName": null,
+            "validFrom": "Feb 12 00:00:00 2014 GMT",
+            "validTo": "Feb 11 23:59:59 2029 GMT",
+            "serialNumber": "2B2E6EEAD975366C148A6EDBA37C8C07",
+            "fingerprint256": "02:AB:57:E4:E6:7A:0C:B4:8D:D2:FF:34:83:0E:8A:C4:0F:44:76:FB:08:CA:6B:E3:F5:CD:84:6F:64:68:40:F0",
+            "publicKeyType": "rsa",
+            "ca": true,
+            "validAtCheck": true,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIGCDCCA/CgAwIBAgIQKy5u6tl1NmwUim7bo3yMBzANBgkqhkiG9w0BAQwFADCB\nhTELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G\nA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxKzApBgNV\nBAMTIkNPTU9ETyBSU0EgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTQwMjEy\nMDAwMDAwWhcNMjkwMjExMjM1OTU5WjCBkDELMAkGA1UEBhMCR0IxGzAZBgNVBAgT\nEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMR\nQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNVBAMTLUNPTU9ETyBSU0EgRG9tYWluIFZh\nbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEP\nADCCAQoCggEBAI7CAhnhoFmk6zg1jSz9AdDTScBkxwtiBUUWOqigwAwCfx3M28Sh\nbXcDow+G+eMGnD4LgYqbSRutA776S9uMIO3Vzl5ljj4Nr0zCsLdFXlIvNN5IJGS0\nQa4Al/e+Z96e0HqnU4A7fK31llVvl0cKfIWLIpeNs4TgllfQcBhglo/uLQeTnaG6\nytHNe+nEKpooIZFNb5JPJaXyejXdJtxGpdCsWTWM/06RQ1A/WZMebFEh7lgUq/51\nUHg+TLAchhP6a5i84DuUHoVS3AOTJBhuyydRReZw3iVDpA3hSqXttn7IzW3uLh0n\nc13cRTCAquOyQQuvvUSH2rnlG51/ruWFgqUCAwEAAaOCAWUwggFhMB8GA1UdIwQY\nMBaAFLuvfgI9+qbxPISOre44mOzZMjLUMB0GA1UdDgQWBBSQr2o6lFoL2JDqElZz\n30O0Oija5zAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNV\nHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwGwYDVR0gBBQwEjAGBgRVHSAAMAgG\nBmeBDAECATBMBgNVHR8ERTBDMEGgP6A9hjtodHRwOi8vY3JsLmNvbW9kb2NhLmNv\nbS9DT01PRE9SU0FDZXJ0aWZpY2F0aW9uQXV0aG9yaXR5LmNybDBxBggrBgEFBQcB\nAQRlMGMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9E\nT1JTQUFkZFRydXN0Q0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21v\nZG9jYS5jb20wDQYJKoZIhvcNAQEMBQADggIBAE4rdk+SHGI2ibp3wScF9BzWRJ2p\nmj6q1WZmAT7qSeaiNbz69t2Vjpk1mA42GHWx3d1Qcnyu3HeIzg/3kCDKo2cuH1Z/\ne+FE6kKVxF0NAVBGFfKBiVlsit2M8RKhjTpCipj4SzR7JzsItG8kO3KdY3RYPBps\nP0/HEZrIqPW1N+8QRcZs2eBelSaz662jue5/DJpmNXMyYE7l3YphLG5SEXdoltMY\ndVEVABt0iN3hxzgEQyjpFv3ZBdRdRydg1vs4O2xyopT4Qhrf7W8GjEXCBgCq5Ojc\n2bXhc3js9iPc0d1sjhqPpepUfJa3w/5Vjo1JXvxku88+vZbrac2/4EjxYoIQ5QxG\nV/Iz2tDIY+3GH5QFlkoakdH368+PUq4NCNk+qKBR6cGHdNXJ93SrLlP7u3r7l+L4\nHyaPs9Kg4DdbKDsx5Q5XLVq4rXmsXiBmGqW5prU5wfWYQ//u+aen/e7KJD2AFsQX\nj4rBYKEMrltDR5FL1ZoXX/nUh8HCjLfn4g8wGTeGrODcQgPmlKidrv0PJFGUzpII\n0fxQ8ANAe4hZ7Q7drNJ3gjTcBpUC2JD5Leo31Rpg0Gcg19hCC0Wvgmje3WYkN5Ap\nlBlGGSW4gNfL1IYoakRwJiNiqZ+Gb7+6kHDSVneFeO/qJakXzlByjAA6quPbYzSf\n+AZxAeKCINT+b72x\n-----END CERTIFICATE-----\n",
+            "signatureMatchesSuppliedIssuer": true
+          },
+          {
+            "subject": "C=GB\nST=Greater Manchester\nL=Salford\nO=COMODO CA Limited\nCN=COMODO RSA Certification Authority",
+            "issuer": "C=SE\nO=AddTrust AB\nOU=AddTrust External TTP Network\nCN=AddTrust External CA Root",
+            "subjectAltName": null,
+            "validFrom": "May 30 10:48:38 2000 GMT",
+            "validTo": "May 30 10:48:38 2020 GMT",
+            "serialNumber": "2766EE56EB49F38EABD770A2FC84DE22",
+            "fingerprint256": "4F:32:D5:DC:00:F7:15:25:0A:BC:C4:86:51:1E:37:F5:01:A8:99:DE:B3:BF:7E:A8:AD:BB:D3:AE:F1:C4:12:DA",
+            "publicKeyType": "rsa",
+            "ca": true,
+            "validAtCheck": false,
+            "pem": "-----BEGIN CERTIFICATE-----\nMIIFdDCCBFygAwIBAgIQJ2buVutJ846r13Ci/ITeIjANBgkqhkiG9w0BAQwFADBv\nMQswCQYDVQQGEwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFk\nZFRydXN0IEV4dGVybmFsIFRUUCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBF\neHRlcm5hbCBDQSBSb290MB4XDTAwMDUzMDEwNDgzOFoXDTIwMDUzMDEwNDgzOFow\ngYUxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO\nBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMSswKQYD\nVQQDEyJDT01PRE8gUlNBIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MIICIjANBgkq\nhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAkehUktIKVrGsDSTdxc9EZ3SZKzejfSNw\nAHG8U9/E+ioSj0t/EFa9n3Byt2F/yUsPF6c947AEYe7/EZfH9IY+Cvo+XPmT5jR6\n2RRr55yzhaCCenavcZDX7P0N+pxs+t+wgvQUfvm+xKYvT3+Zf7X8Z0NyvQwA1onr\nayzT7Y+YHBSrfuXjbvzYqOSSJNpDa2K4Vf3qwbxstovzDo2a5JtsaZn4eEgwRdWt\n4Q08RWD8MpZRJ7xnw8outmvqRsfHIKCxH2XeSAi6pE6p8oNGN4Tr6MyBSENnTnIq\nm1y9TBsoilwie7SrmNnu4FGDwwlGTm0+mfqVF9p8M1dBPI1R7Qu2XK8sYxrfV8g/\nvOldxJuvRZnio1oktLqpVj3Pb6r/SVi+8Kj/9Lit6Tf7urj0Czr56ENCHonYhMsT\n8dm74YlguIwoVqwUHZwK53Hrzw7dPamWoUi9PPevtQ0iTMARgexWO/bTouJbt7IE\nIlKVgJNp6I5MZfGRAy1wdALqi2cVKWlSArvX31BqVUa/oKMoYX9w0MOiqiwhqkfO\nKJwGRXa/ghgntNWutMtQ5mv0TIZxMOmm3xaG4Nj/QN370EKIf6MzOi5cHkERgWPO\nGHFrK+ymircxXDpqR+DDeVnWIBqv8mqYqnK8V0rSS527EPywTEHl7R09XiidnMy/\ns1Hap0flhFMCAwEAAaOB9DCB8TAfBgNVHSMEGDAWgBStvZh6NLQm9/rEJlTvA73g\nJMtUGjAdBgNVHQ4EFgQUu69+Aj36pvE8hI6t7jiY7NkyMtQwDgYDVR0PAQH/BAQD\nAgGGMA8GA1UdEwEB/wQFMAMBAf8wEQYDVR0gBAowCDAGBgRVHSAAMEQGA1UdHwQ9\nMDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4dGVy\nbmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6\nLy9vY3NwLnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQEMBQADggEBAGS/g/FfmoXQ\nzbihKVcN6Fr30ek+8nYEbvFScLsePP9NDXRqzIGCJdPDoCpdTPW6i6FtxFQJdcfj\nJw5dhHk3QBN39bSsHNA7qxcS1u80GH4r6XnTq1dFDK8o+tDb5VCViLvfhVdpfZLY\nUspzgb8c8+a4bmYRBbMelC1/kZWSWfFMzqORcUx8Rww7Cxn2obFshj5cqsQugsv5\nB5a6SE2Q8pTIqXOi6wZ7I53eovNNVZ96YUWYGGjHXkBrI/V5eu+MtWuLt29G9Hvx\nPUsE2JOAWVrgQSQdso8VYFhH2+9uRv0V9dlfmrPb2LjkQLPNlzmuhbsdjrzch5vR\npu/xO28QOG8=\n-----END CERTIFICATE-----\n"
+          }
+        ],
+        "chainSource": "Peer-reported chain, may include a root from the local trust store; not evidence the server sent a root."
+      },
+      "versionProbes": {
+        "TLSv1.2": {
+          "state": "CONNECTED",
+          "protocol": "TLSv1.2",
+          "code": null
+        },
+        "TLSv1.3": {
+          "state": "UNAVAILABLE",
+          "protocol": null,
+          "code": "ERR_SSL_SSL/TLS_ALERT_HANDSHAKE_FAILURE"
+        }
+      },
+      "trustStore": "Node.js runtime default CA roots at time of check, not the browser/user trust store.",
+      "note": "Up to3 explicit TLS handshakes on public port443 only. No HTTP request, credentials, redirect, port scan or private-address connection. Per-connection observations, not a complete cipher-suite/vulnerability scan. Version probe failure is not proof that a version is disabled. No revocation/OCSP/CT or long-term trust guarantee."
+    }
+  ],
+  "scope": "Actual local UI HTTP adapter and real public TLS service, not deployed authenticated website."
+}

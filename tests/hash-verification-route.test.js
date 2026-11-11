@@ -77,3 +77,17 @@ test('authenticated network lookup rejects private and injected queries before e
     spy.mockRestore();
   }
 });
+test('public TLS route rejects anonymous and private host before network access', async () => {
+  const spy = jest.spyOn(require('../services/publicTLSService'), 'inspect');
+  try {
+    await request(dnsApp).get('/api/network/tls?host=example.com').expect(401);
+    const token = jwt.sign({ userId: 1 }, process.env.JWT_SECRET);
+    await request(dnsApp)
+      .get('/api/network/tls?host=127.0.0.1')
+      .set('Authorization', 'Bearer ' + token)
+      .expect(400);
+    expect(spy).not.toHaveBeenCalled();
+  } finally {
+    spy.mockRestore();
+  }
+});

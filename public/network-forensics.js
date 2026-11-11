@@ -33,7 +33,7 @@
       'The page has no permission or native service for reading operating-system socket states.',
     ],
     'ssl-inspect': [
-      'Offline TLS Hello and Certificate Inspection',
+      'TLS Certificate and Configuration Inspection',
       'Reads supplied complete ClientHello/ServerHello records and optional ordered PEM certificate signatures. No live server scan, handshake authentication, reassembly, trusted roots, hostname or revocation validation.',
     ],
   };

@@ -162,6 +162,7 @@
     return result;
   }
   function mount(ws) {
+    if (root.PublicTLS) root.PublicTLS.mount(ws);
     const n = (tag, text, attrs = {}) => {
       const e = document.createElement(tag);
       if (text !== undefined) e.textContent = text;

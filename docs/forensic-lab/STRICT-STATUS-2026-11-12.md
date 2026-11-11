@@ -1,6 +1,6 @@
 # Strict tool status, November 12 local checkpoint
 
-46 yes / 67 catalog tools. Updated after local upgrade batch 6; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
+47 yes / 67 catalog tools. Updated after local upgrade batch 7; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
 Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. Batch 2 adds public read-only confirmation for transaction, block and hash lookup controllers. Custody/provenance promises remain incomplete; IPFS gateway retrieval remains unconfirmed.
 
@@ -68,7 +68,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Networking Tools | DNS / WHOIS Lookup | Yes | Live A/AAAA/MX/NS/TXT/SOA/CAA and public IPv4/IPv6 PTR plus IANA-bootstrapped HTTPS RDAP registration reads. Actual example.com registry and dns.google PTR checks passed Nov12 02:45-02:47 IST. RDAP replaces legacy WHOIS; no DNSSEC, private registration data or ownership claim. Not deployed. |
 | Networking Tools | Traceroute / Path Analysis | No | No live/native execution service. |
 | Networking Tools | Connection Monitor | No | No live/native execution service. |
-| Networking Tools | SSL/TLS Inspector | No | Offline Hello/chain signatures, no live server configuration/trust scan. |
+| Networking Tools | SSL/TLS Inspector | Yes | Actual fixed-port public TLS handshakes inspect peer certificate chain/signatures, Node-default-root authorization, hostname/validity, negotiated cipher/ALPN and TLS1.2/1.3 attempts. Real example.com positive and wrong-host/expired negatives pass. Not revocation, full cipher/vulnerability scan or browser trust. Private DNS answers blocked/pinned. |
 | Networking Tools | Traffic Flow Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Networking Tools | Protocol Decoder | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | AI Assistant | AI Investigation Assistant | No | No validated model; no result fabricated. |

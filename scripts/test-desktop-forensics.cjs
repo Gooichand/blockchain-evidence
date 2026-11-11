@@ -23,6 +23,11 @@ const mime = {
 };
 const server = http.createServer((req, res) => {
   res.setHeader('Content-Security-Policy', csp);
+  if (process.env.LIVE_TLS_QA === '1' && req.url.startsWith('/api/network/tls?')) {
+    const host = new URL(req.url, 'http://127.0.0.1').searchParams.get('host');
+    require('../services/publicTLSService').inspect(host).then(result => {res.writeHead(200, {'Content-Type':'application/json'});res.end(JSON.stringify(result));}).catch(()=>{res.writeHead(503, {'Content-Type':'application/json'});res.end(JSON.stringify({error:'Real TLS check unavailable.'}));});
+    return;
+  }
   if (process.env.LIVE_DNS_QA === '1' && req.url.startsWith('/api/network/dns?')) {
     const query = new URL(req.url, 'http://127.0.0.1').searchParams.get('query');
     require('../services/dnsRegistrationService').lookup(query).then(result => {
@@ -890,6 +895,18 @@ async function run() {
     }else{
       await page.waitForSelector('#flWorkspace [role=alert]');
       assert((await page.$eval('#flWorkspace',e=>e.textContent)).includes('unavailable'));
+    }
+    if(process.env.LIVE_TLS_QA==='1'){
+      await openTool('network','ssl-inspect');
+      await page.$eval('[aria-label="Public TLS hostname"]',e=>e.value='preserve-typed.example.net');
+      await page.click('[aria-label="Try live TLS example"]');
+      await page.waitForSelector('#flWorkspace pre');
+      const result=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+      assert.equal(result.negotiated.state,'CONNECTED');assert.equal(result.negotiated.nodeDefaultTrustAuthorized,true);assert.equal(result.negotiated.hostnameMatches,true);assert(result.negotiated.certificateChain.length>=2);
+      assert.equal(await page.$eval('[aria-label="Public TLS hostname"]',e=>e.value),'preserve-typed.example.net');
+      fs.writeFileSync(path.join(screenshotDir,'public-tls-validation.json'),JSON.stringify(result,null,2));
+      await page.evaluate(()=>{const p=document.createElement('p');p.textContent='LOCAL QA: actual UI and live TLS service through a test HTTP adapter, not the deployed authenticated website. Auth/invalid-certificate handling tested separately.';p.style='padding:12px;background:#fff0cc;';document.querySelector('#flWorkspace').prepend(p);});
+      await capture('network-public-tls');console.log('PASS actual public TLS certificate chain/default roots/hostname/cipher/protocol UI');
     }
     assert.deepEqual(errors, [], 'Unexpected JavaScript exception(s)');
     console.log(
