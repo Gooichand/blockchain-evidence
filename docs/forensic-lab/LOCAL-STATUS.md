@@ -1,3 +1,11 @@
+# Local upgrade checkpoint, November 12 02:12 IST
+
+Current local branch local/strict-upgrades-20261112 adds four validated tools to the published stack: 38/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
+
+RSA now checks supported private-key arithmetic/CRT/probable primes and an OAEP roundtrip. Frame extraction is exact for supported MP4/H.264 samples using WebCodecs. PDF metadata includes preserved incremental revisions. PDF signature verification now checks supported detached CMS signatures against signed bytes, NOT certificate trust/revocation/legal validity or later unsigned content.
+
+The following is the earlier overnight scope record. Its statements about approximate-only extraction, marker-only PDF signatures and property-only PDF metadata are superseded by the upgrade checkpoint above; other limits remain.
+
 # Desktop forensic lab: local implementation status
 
 No result is a general authenticity or legal-admissibility verdict. All new examples use original synthetic material and call the actual tools. Processing is local except explicitly labeled read-only Amoy lookups. No mobile tests, paid services or uploads to external AI. The November 12 extension adds offline Networking only; no live capture, scans or sockets. See OVERNIGHT-2026-11-12.md for the latest validation checkpoint.

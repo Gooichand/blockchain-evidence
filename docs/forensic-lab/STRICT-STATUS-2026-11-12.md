@@ -1,6 +1,6 @@
 # Strict tool status, November 12 local checkpoint
 
-34 yes / 67 catalog tools. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
+38 yes / 67 catalog tools. Updated after local upgrade batch 1; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
 Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. Message: wamid.HBgMOTE4MzA5NjcwNDE2FQIAEhgUM0JGODUyRDYwNjNCOUFGMTc2QzgA. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. The five newer Blockchain tools have no such live confirmation.
 
@@ -26,10 +26,10 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Document Forensics | Metadata Viewer | No | Modern properties/embedded DOCX revisions; no full history or legacy formats. |
 | Document Forensics | OCR Engine | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Document Forensics | Hidden Text Detector | No | Limited white/invisible text signals, not all concealment methods. |
-| Document Forensics | Signature Verification | No | PDF signature structure markers, not CMS cryptographic verification. |
+| Document Forensics | Signature Verification | Yes | Real detached CMS signed-byte verification for supported SHA-256/384/512 PDF signatures, tamper failures and older signed-revision/unsigned-append distinction. No trust/revocation/timestamp/permission-policy or legal-validity claim. |
 | Document Forensics | Document Comparison | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Video Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
-| Video Forensics | Frame Extraction | No | Browser seeking is approximate, not frame-exact. |
+| Video Forensics | Frame Extraction | Yes | Exact MP4/H.264 WebCodecs sample extraction with presentation index/PTS/edit adjustment; real B-frame/CFR/VFR checks and independent FFmpeg pixel comparison. Unsupported codecs/edits/rotations fail closed; browser color conversion differs. |
 | Video Forensics | Timeline Viewer | No | Six sampled thumbnails, not full visual event reconstruction. |
 | Video Forensics | Keyframe Analysis | No | MP4 sync flags only; no anomaly method. |
 | Video Forensics | Video Inspector | No | MP4 structure only, no all-stream/all-frame integrity validation. |
@@ -44,7 +44,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Blockchain | Chain of Custody | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
 | Blockchain | Evidence Provenance | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
 | Cryptography | AES Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
-| Cryptography | RSA Analysis | No | Public arithmetic/SPKI import checks, not complete key/private validation. |
+| Cryptography | RSA Analysis | Yes | Public RSA checks plus two-prime private JWK/PKCS8 arithmetic, 32-round probable-prime checks, CRT consistency and actual OAEP roundtrip; tested 2048/4096 bits. Not randomness/security certification. |
 | Cryptography | JWT Decoder | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Cryptography | Certificate Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Cryptography | Digital Signature | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
@@ -52,7 +52,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Metadata | GPS Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Metadata | Camera Information | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Metadata | Office Metadata | No | Modern properties and embedded DOCX revisions; no complete Office history/legacy formats. |
-| Metadata | PDF Metadata | No | Editable properties only, no historical revisions. |
+| Metadata | PDF Metadata | Yes | Current properties plus preserved Prev-linked incremental revision snapshots/property changes and hashes, including standard xref tables/streams. Rewritten-away history is not recovered; author/date claims remain unverified. |
 | Timeline | Evidence Timeline | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Timeline | Investigation Timeline | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Timeline | Chain of Custody Timeline | No | Imported claims, no verified signed handoffs. |

@@ -19,8 +19,8 @@
       'Inspects PDF text operators for invisible rendering mode or white fill color. Select a PDF and inspect the candidate text. White text may be visible on dark backgrounds, other concealment methods can be missed, and findings are not proof of deception.',
     ],
     signature: [
-      'PDF Signature Structure Inspector',
-      'Inspects PDF bytes for signature fields, ByteRange and Contents entries. Select a PDF and inspect the structure report. This does not cryptographically validate CMS signatures, certificate trust, revocation or signed revisions; a real verification verdict is unavailable.',
+      'PDF Cryptographic Signature Verification',
+      'Select a PDF and run to verify supported detached CMS signatures against actual signed byte ranges. Supports adbe.pkcs7.detached / ETSI.CAdES.detached with SHA-256/384/512 and one CMS signer per signature. Valid means signature-byte integrity for the reported revision only. Certificate trust, revocation, trusted signing time, legal validity, full PAdES rules and modification permissions are NOT checked. Later unsigned updates are reported separately; they are not covered by an older signature. Encrypted/hybrid PDFs and unsupported signatures remain unverified. Local worker: 15 MiB, 20 signatures, 30 revisions, 25 seconds.',
     ],
     'doc-compare': [
       'Document Text and Visual Comparison',
@@ -164,6 +164,23 @@
       if (left) await left.destroy();
       if (right) await right.destroy();
     }
+  }
+  async function pdfEvidence(file, operation) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker('/pdf-evidence-worker.js');
+      const finish = (error, result) => {
+        clearTimeout(timer);
+        worker.terminate();
+        error ? reject(Error(error)) : resolve(result);
+      };
+      const timer = setTimeout(() => finish('PDF evidence worker exceeded 25 seconds.'), 25000);
+      worker.onmessage = (e) =>
+        e.data.ok
+          ? finish(null, e.data.result)
+          : finish(e.data.error || 'PDF evidence inspection failed.');
+      worker.onerror = () => finish('PDF evidence worker failed.');
+      worker.postMessage({ file, operation });
+    });
   }
   function signatureStructure(bytes) {
     const text = new TextDecoder('latin1').decode(bytes);
@@ -441,7 +458,7 @@
     }
     if (!/\.pdf$/i.test(file.name))
       throw new Error('This tool requires a PDF (metadata also accepts DOCX/XLSX/PPTX).');
-    if (id === 'signature') return signatureStructure(await file.arrayBuffer());
+    if (id === 'signature') return pdfEvidence(file, 'signatures');
     const result = await pdfInfo(file, id === 'hidden-text');
     if (id === 'pdf-inspector')
       return {
@@ -456,7 +473,7 @@
   }
   function ready(id) {
     if (id === 'ocr') return false;
-    if (id === 'signature') return false;
+    if (id === 'signature') return !!root.Worker && !!root.crypto?.subtle;
     return !!root.pdfjsLib;
   }
   function mount(ws, tool, getFile) {
@@ -466,7 +483,7 @@
       dot.className = 'fl-dot ' + (ready(tool.id) ? 'available' : 'beta');
       dot.title =
         tool.id === 'signature'
-          ? 'Structure inspection only; cryptographic verifier unavailable'
+          ? 'Local detached CMS verifier; trust and revocation NOT checked'
           : 'Local parser dependency ' + (ready(tool.id) ? 'loaded' : 'unavailable');
     }
     ws.appendChild(n('h2', title));
@@ -521,7 +538,13 @@
           other = second;
         if (example) {
           const filename =
-            tool.id === 'ocr' ? 'ocr.png' : tool.id === 'doc-compare' ? 'original.txt' : 'demo.pdf';
+            tool.id === 'signature'
+              ? 'signatures/valid.pdf'
+              : tool.id === 'ocr'
+                ? 'ocr.png'
+                : tool.id === 'doc-compare'
+                  ? 'original.txt'
+                  : 'demo.pdf';
           const load = async (name) => {
             const r = await fetch('/samples/document/' + name);
             if (!r.ok) throw new Error('Example unavailable.');
@@ -608,6 +631,7 @@
     pixelDifference,
     comparePDFs,
     signatureStructure,
+    pdfEvidence,
     guides,
   };
   root.DocumentForensics = api;

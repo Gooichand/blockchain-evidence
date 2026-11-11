@@ -1,0 +1,1 @@
+{"name":"forensic-cms-vendor-build","private":true,"scripts":{"build":"node bundle.cjs"},"dependencies":{"pkijs":"3.3.3","asn1js":"3.0.6"},"devDependencies":{"esbuild":"0.28.2"}}

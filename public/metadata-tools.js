@@ -19,8 +19,8 @@
       'Reads DOCX/XLSX/PPTX core, app and custom XML properties and embedded DOCX tracked insertions, deletions, moves and comments. These author/date/text claims are editable, not a complete or verified revision history. XLSX/PPTX historical revisions and legacy DOC/XLS/PPT are unsupported.',
     ],
     'pdf-metadata': [
-      'PDF Property Inspector',
-      'Reads PDF properties and page count through PDF.js. Select a PDF and run. Fields can be edited or forged, and modification dates do not establish a complete history.',
+      'PDF Properties and Preserved Revision History',
+      'Select a PDF and run to read current properties and actual preserved incremental revisions linked by Prev cross-reference pointers. Shows oldest-to-newest property snapshots, changed values, page counts, byte boundaries and SHA-256 hashes. Supports ordinary xref tables and streams, maximum 30 revisions/15 MiB; encrypted and hybrid-reference PDFs are rejected. A rewritten file may contain no older revisions. This is embedded history, not recovery of deleted history or verified authorship: names and dates are editable claims.',
     ],
   };
   function cameraFields(tags) {
@@ -51,7 +51,11 @@
     }
     if (id === 'pdf-metadata') {
       if (!/\.pdf$/i.test(file.name)) throw Error('Select a PDF.');
-      return root.DocumentForensics.analyze('doc-metadata', file);
+      const current = await root.DocumentForensics.analyze('doc-metadata', file);
+      return {
+        ...current,
+        revisionHistory: await root.DocumentForensics.pdfEvidence(file, 'history'),
+      };
     }
     if (!root.exifr) throw Error('EXIF parser unavailable.');
     if (!/\.(jpe?g|png)$/i.test(file.name)) throw Error('Image metadata supports JPEG/PNG.');
@@ -103,7 +107,9 @@
       return new File([await z.generateAsync({ type: 'uint8array' })], 'Demo.docx');
     }
     const path =
-      id === 'pdf-metadata' ? '/samples/document/demo.pdf' : '/samples/metadata/location-demo.jpg';
+      id === 'pdf-metadata'
+        ? '/samples/document/signatures/two-updates.pdf'
+        : '/samples/metadata/location-demo.jpg';
     const r = await fetch(path);
     if (!r.ok) throw Error('Example unavailable.');
     return new File([await r.arrayBuffer()], id === 'pdf-metadata' ? 'Demo.pdf' : 'Demo.jpg');
@@ -142,7 +148,9 @@
           out.appendChild(
             n(
               'strong',
-              'DEMO SAMPLE - original synthetic metadata; coordinates are fictional. Your evidence is unchanged.',
+              tool.id === 'gps'
+                ? 'DEMO SAMPLE - original synthetic metadata; coordinates are fictional. Your evidence is unchanged.'
+                : 'DEMO SAMPLE - real parser output from original synthetic files. Your evidence is unchanged.',
             ),
           );
         out.appendChild(

@@ -139,6 +139,95 @@ async function run() {
         captureBeyondViewport: true,
       });
     }
+    // Exact decoder is independently compared with FFmpeg-generated reference pixels.
+    const exactChecks = await page.evaluate(async () => {
+      const bytes = await (await fetch('/samples/video/exact/b-frames.mp4')).arrayBuffer();
+      const file = new File([bytes], 'b-frames.mp4', { type: 'video/mp4' }),
+        checks = [];
+      for (const [index, expected] of [
+        [0, 1],
+        [5, 2],
+        [23, 3],
+      ]) {
+        const r = await VideoForensics.analyze('frame-extract', file, 0, index);
+        const image = await createImageBitmap(
+          await (await fetch('/samples/video/exact/expected-' + expected + '.png')).blob(),
+        );
+        const c = document.createElement('canvas');
+        c.width = image.width;
+        c.height = image.height;
+        c.getContext('2d').drawImage(image, 0, 0);
+        image.close();
+        const a = r.frames[0].canvas.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        const b = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        let sum = 0,
+          max = 0;
+        for (let i = 0; i < a.length; i++)
+          if (i % 4 !== 3) {
+            sum += Math.abs(a[i] - b[i]);
+            max = Math.max(max, Math.abs(a[i] - b[i]));
+          }
+        checks.push({
+          index,
+          actual: r.summary.presentationFrameIndex,
+          mae: sum / (c.width * c.height * 3),
+          max,
+          timestamp: r.summary.presentationSeconds,
+        });
+      }
+      const vfr = new File(
+        [await (await fetch('/samples/video/exact/vfr.mp4')).arrayBuffer()],
+        'vfr.mp4',
+      );
+      const variable = await VideoForensics.analyze('frame-extract', vfr, 0, 18);
+      if (
+        variable.summary.presentationFrameIndex !== 18 ||
+        Math.abs(variable.summary.presentationSeconds - 2) > 0.0001
+      )
+        throw Error('VFR presentation mapping failed.');
+      const vfrByTime = await VideoForensics.analyze('frame-extract', vfr, 2.05);
+      if (vfrByTime.summary.presentationFrameIndex !== 18) throw Error('VFR time mapping failed.');
+      const byTime = await VideoForensics.analyze('frame-extract', file, 0.46);
+      if (byTime.summary.presentationFrameIndex !== 5)
+        throw Error('Time did not select covering B-frame.');
+      let rejected = false;
+      try {
+        await VideoForensics.analyze('frame-extract', file, 0, 24);
+      } catch (e) {
+        rejected = true;
+      }
+      if (!rejected) throw Error('Out-of-range index accepted.');
+      return checks;
+    });
+    console.log('Exact pixel comparison diagnostics', JSON.stringify(exactChecks));
+    for (const c of exactChecks) {
+      assert.equal(c.index, c.actual);
+      assert(c.mae < 4, 'FFmpeg frame comparison MAE ' + c.mae);
+    }
+    console.log(
+      'PASS exact AVC first/B/last frames vs FFmpeg RGB reference',
+      JSON.stringify(exactChecks),
+    );
+    const privateChecks = await page.evaluate(async () => {
+      const { value } = await CryptoTools.example('rsa'),
+        j = JSON.parse(value),
+        r = await CryptoTools.validateRSA(value);
+      if (r.validation !== 'PRIVATE CONSISTENCY CHECKS PASS' || !r.oaepRoundTrip)
+        throw Error('Private RSA failed.');
+      for (const k of ['d', 'p', 'q', 'dp', 'dq', 'qi'])
+        if (JSON.stringify(r).includes(j[k])) throw Error('Private RSA value leaked to results.');
+      const b = CryptoTools.un64(j.qi);
+      b[b.length - 1] ^= 2;
+      j.qi = CryptoTools.b64(b);
+      const bad = await CryptoTools.validateRSA(JSON.stringify(j));
+      if (bad.validation !== 'FAILED' || bad.privateChecks.qInverseMatches)
+        throw Error('Bad CRT accepted.');
+      return { valid: r.validation, oaep: r.oaepRoundTrip, changedCRT: bad.validation };
+    });
+    console.log(
+      'PASS real Chrome private RSA pair and negative CRT',
+      JSON.stringify(privateChecks),
+    );
     let completed = 0;
     for (const [category, ids] of Object.entries(groups)) {
       for (const id of ids) {
@@ -176,7 +265,11 @@ async function run() {
         if (id === 'ocr') assert(r.text.includes('DGC DEMO'));
         if (id === 'hidden-text')
           assert(r.pages[0].candidates.some((x) => x.text.includes('INVISIBLE')));
-        if (id === 'signature') assert.equal(r.cryptographicVerification, 'NOT PERFORMED');
+        if (id === 'signature') {
+          assert.equal(r.signatures[0].cryptographicSignature, 'VALID FOR SIGNED BYTE RANGES');
+          assert.equal(r.signatures[0].certificateTrust, 'NOT CHECKED');
+        }
+        if (id === 'pdf-metadata') assert.equal(r.revisionHistory.preservedRevisionCount, 3);
         if (category === 'video') {
           assert.equal(r.width, 480);
           assert.equal(r.durationSeconds, 3);
@@ -270,6 +363,58 @@ async function run() {
         completed++;
         console.log('PASS', category, id);
       }
+    }
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (
+      await page.$('#flFileInput')
+    ).uploadFile(path.join(root, 'samples/video/exact/b-frames.mp4'));
+    await page.waitForFunction(() => ForensicLab.getState().file?.name === 'b-frames.mp4');
+    await openTool('video', 'frame-extract');
+    await page.$eval('[aria-label="Exact frame index"]', (e) => (e.value = '5'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((x) => x.textContent === 'Analyze selected video')
+        .click(),
+    );
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#flWorkspace pre') ||
+        document.querySelector('#flWorkspace [role=alert]'),
+    );
+    const bFrame = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(bFrame.presentationFrameIndex, 5);
+    assert.equal(bFrame.extraction, 'EXACT DECODED SAMPLE');
+    assert(
+      (await page.$eval('#flWorkspace', (e) => e.textContent)).includes(
+        'Exact presentation frame 5 at 0.416667 s',
+      ),
+    );
+    await capture('video-exact-bframe');
+    for (const [name, expected] of [
+      ['tampered', 'INVALID'],
+      ['later-update', 'VALID FOR SIGNED BYTE RANGES'],
+    ]) {
+      if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+      await (
+        await page.$('#flFileInput')
+      ).uploadFile(path.join(root, 'samples/document/signatures/' + name + '.pdf'));
+      await page.waitForFunction((n) => ForensicLab.getState().file?.name === n, {}, name + '.pdf');
+      await openTool('document', 'signature');
+      await page.evaluate(() =>
+        [...document.querySelectorAll('#flWorkspace button')]
+          .find((x) => x.textContent === 'Analyze selected document')
+          .click(),
+      );
+      await page.waitForFunction(
+        () =>
+          document.querySelector('#flWorkspace pre') ||
+          document.querySelector('#flWorkspace [role=alert]'),
+      );
+      const r = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+      assert.equal(r.signatures[0].cryptographicSignature, expected);
+      if (name === 'later-update') assert.equal(r.signatures[0].coversCurrentFile, false);
+      await capture('document-signature-' + name);
+      console.log('PASS real uploaded PDF signature', name, expected);
     }
     if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
     await page.waitForSelector('#flFileInput');

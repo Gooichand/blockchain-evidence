@@ -17,6 +17,16 @@
       "sha256": "3d1fa9f5dfb8c4fd3c403867bb5e79b007c347d698db1e691cd4f7e3698e24b0"
     },
     {
+      "path": "public/vendor/cms-THIRD-PARTY-NOTICES.txt",
+      "bytes": 8152,
+      "sha256": "f984457e3bde01eb42775065ff8ab5a2c7ed346b9c9b63429808c1113938274f"
+    },
+    {
+      "path": "public/vendor/cms-bundle.js",
+      "bytes": 853694,
+      "sha256": "53215568300e76b5ce9890004d6c33dbb06487352a66cd70791f0cebb83342c2"
+    },
+    {
       "path": "public/vendor/exifr-7.1.3.umd.js",
       "bytes": 75848,
       "sha256": "2bd05117781c12ddd965dee846de3b3f986b5ecb4c7f6a78f2d2ec1db7c65ae7"
