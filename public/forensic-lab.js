@@ -244,6 +244,10 @@
           const digest = await crypto.subtle.digest(algorithm, bytes);
           digests[algorithm] = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
         }
+        if (tool.id === 'multi-hash') {
+          if (!window.SparkMD5 || !window.SparkMD5.ArrayBuffer) throw new Error('MD5 engine unavailable. Reload the page and retry.');
+          digests.MD5 = window.SparkMD5.ArrayBuffer.hash(bytes);
+        }
         const result = { status: 'completed', file: file.name, size: file.size,
           digests, message: 'Hash computation complete.',
           note: 'Computed locally. A digest alone does not verify authenticity, custody or blockchain anchoring.' };
@@ -253,7 +257,7 @@
           result.message = result.match ? 'File matches the supplied SHA-256 baseline.' : 'File does not match the supplied SHA-256 baseline.';
           result.note = 'This compares bytes with the baseline you supplied. It does not authenticate that baseline.';
         }
-        if (tool.id === 'multi-hash') result.note += ' SHA-1 is legacy; prefer SHA-256 or stronger for new records. MD5 is not generated.';
+        if (tool.id === 'multi-hash') result.note += ' MD5 and SHA-1 are legacy algorithms for forensic compatibility, not suitable as sole proof of authenticity. Prefer SHA-256 or stronger for new records.';
         return result;
       }
     },
@@ -655,7 +659,7 @@
             try { await navigator.clipboard.writeText(digest); copy.textContent = 'Copied'; }
             catch (_) { copy.textContent = 'Copy failed. Select the hash to copy.'; }
           });
-          output.appendChild(el('div', { style: 'margin:16px 0;' }, el('h4', { text: algorithm }),
+          output.appendChild(el('div', { style: 'margin:16px 0;' }, el('h4', { text: algorithm === 'MD5' ? 'MD5 - legacy / forensic compatibility' : algorithm }),
             el('code', { text: digest, style: 'display:block;overflow-wrap:anywhere;white-space:normal;margin:8px 0;' }), copy));
         });
         if (result.expected) output.appendChild(el('p', { text: 'Supplied baseline: ' + result.expected }));
