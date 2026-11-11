@@ -7,8 +7,8 @@
       'Recompresses a JPEG at quality 90 and displays amplified absolute RGB differences. Select a JPEG and run, or try the synthetic example. Bright differences can arise from normal encoding or texture and do not prove tampering.',
     ],
     'clone-detect': [
-      'Exact Repeated Block Search',
-      'Finds identical non-uniform 16 x 16 pixel tiles on a fixed grid. Run on a PNG or JPEG and inspect highlighted pairs. This limited exact-match search misses rotated, resized, shifted or recompressed clones and can flag naturally repeated patterns.',
+      'Copy-Move Feature Comparison',
+      'Finds nonlocal ORB visual-feature correspondences, filters Hamming-distance matches and groups them with homography RANSAC. Select an image and run, then inspect source/target bounds and connecting points. Supports tested translated, rotated, scaled and JPEG-recompressed copied regions with enough texture. These are candidate repeated regions, not proof of an edit or authenticity: natural repeated patterns can match. Small, smooth or heavily altered copies may be missed. Classical features only, no trained model. Up to1200 features, three groups, 30-second local worker. Coordinates are on the scaled analysis image, not original pixels. The example is an original synthetic transformed copy, not a real-image accuracy benchmark.',
     ],
     'noise-analysis': [
       'Luminance Residual Analysis',
@@ -231,16 +231,58 @@
       ]);
       if (id === 'noise-analysis') result.summary.residualStdDev = r.stddev;
     } else if (id === 'clone-detect') {
-      const pairs = repeatedBlocks(data, w, h),
-        overlay = canvas(w, h),
+      if (!root.Worker) throw Error('Local feature worker unavailable.');
+      const matches = await new Promise((resolve, reject) => {
+        const worker = new root.Worker('/copy-move-worker.js'),
+          copy = new Uint8Array(data);
+        const timer = setTimeout(() => {
+          worker.terminate();
+          reject(Error('Clone comparison exceeded30-second limit.'));
+        }, 30000);
+        const finish = () => {
+          clearTimeout(timer);
+          worker.terminate();
+        };
+        worker.onmessage = ({ data: message }) => {
+          finish();
+          message.ok ? resolve(message.result) : reject(Error(message.error));
+        };
+        worker.onerror = () => {
+          finish();
+          reject(Error('Classical feature engine unavailable.'));
+        };
+        worker.postMessage({ pixels: copy.buffer, width: w, height: h }, [copy.buffer]);
+      });
+      const overlay = canvas(w, h),
         o = overlay.getContext('2d');
       o.drawImage(c, 0, 0);
-      o.strokeStyle = '#ff2020';
       o.lineWidth = 2;
-      for (const pair of pairs) for (const [x, y] of pair) o.strokeRect(x, y, 16, 16);
-      result.visuals.push(['Exact repeated tiles (up to 40 pairs)', overlay]);
-      result.summary.exactTilePairs = pairs;
-      result.summary.limit = 'Fixed-grid exact pixel matches only, not a general clone detector.';
+      for (const model of matches.models) {
+        for (const [bounds, color] of [
+          [model.sourceBounds, '#ff2020'],
+          [model.targetBounds, '#00ddff'],
+        ]) {
+          o.strokeStyle = color;
+          o.strokeRect(
+            bounds.left,
+            bounds.top,
+            bounds.right - bounds.left,
+            bounds.bottom - bounds.top,
+          );
+        }
+        o.strokeStyle = 'rgba(255,210,0,.6)';
+        for (const pair of model.pairs) {
+          o.beginPath();
+          o.moveTo(pair.source.x, pair.source.y);
+          o.lineTo(pair.target.x, pair.target.y);
+          o.stroke();
+        }
+      }
+      result.visuals.push([
+        'Candidate corresponding regions: red source, cyan target, yellow feature links. Not an edit verdict.',
+        overlay,
+      ]);
+      result.summary.featureComparison = matches;
     } else if (id === 'compression') {
       result.summary.jpegQuantizationTables = jpegTables(await file.arrayBuffer());
       result.summary.bytes = file.size;
@@ -280,6 +322,7 @@
   }
   function ready(id) {
     if (id === 'ai-tamper') return false;
+    if (id === 'clone-detect' && !root.Worker) return false;
     try {
       return !!(
         root.createImageBitmap &&
@@ -350,11 +393,13 @@
         if (example) {
           const name =
             tool.id === 'clone-detect'
-              ? 'repeated-blocks.png'
+              ? 'copy-move/rotated-scaled.jpg'
               : tool.id === 'ela'
                 ? 'edited.jpg'
                 : 'original.jpg';
-          const r = await fetch('/samples/image/' + name);
+          const r = await fetch(
+            (tool.id === 'clone-detect' ? '/samples/images/' : '/samples/image/') + name,
+          );
           if (!r.ok) throw new Error('Example unavailable.');
           file = new File([await r.arrayBuffer()], 'Demo - ' + name, {
             type: name.endsWith('png') ? 'image/png' : 'image/jpeg',

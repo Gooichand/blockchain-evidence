@@ -1,6 +1,6 @@
 # Strict tool status, November 12 local checkpoint
 
-43 yes / 67 catalog tools. Updated after local upgrade batch 4; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
+44 yes / 67 catalog tools. Updated after local upgrade batch 5; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
 Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. Batch 2 adds public read-only confirmation for transaction, block and hash lookup controllers. Custody/provenance promises remain incomplete; IPFS gateway retrieval remains unconfirmed.
 
@@ -14,7 +14,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Hash & Integrity | Blockchain Verification | Yes | User confirmed live read-only Amoy lookup availability Nov11 15:54:46 IST; not proof that a supplied hash is anchored. |
 | Hash & Integrity | Multi Hash Generator | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Image Forensics | Error Level Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
-| Image Forensics | Clone Detection | No | Exact fixed-grid repeats only; no general clone matching. |
+| Image Forensics | Clone Detection | Yes | Actual nonlocal ORB/Hamming correspondences and homography RANSAC groups in a CSP-safe local worker. Off-grid translation, rotation/scale and JPEG-recompression positives; unique/flat negatives pass. Candidate repeated regions, not edit/authenticity proof; natural repetitions can match and low texture/heavy changes can be missed. |
 | Image Forensics | Noise Analysis | No | Residual visualization, no sensor/camera attribution. |
 | Image Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Image Forensics | Histogram Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |

@@ -1,5 +1,5 @@
 {
-  "strictYes": 43,
+  "strictYes": 44,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -49,8 +49,8 @@
       "category": "Image Forensics",
       "id": "clone-detect",
       "name": "Clone Detection",
-      "strictYes": false,
-      "reason": "Exact fixed-grid repeats only; no general clone matching."
+      "strictYes": true,
+      "reason": "Actual nonlocal ORB/Hamming correspondences and homography RANSAC groups in a CSP-safe local worker. Off-grid translation, rotation/scale and JPEG-recompression positives; unique/flat negatives pass. Candidate repeated regions, not edit/authenticity proof; natural repetitions can match and low texture/heavy changes can be missed."
     },
     {
       "category": "Image Forensics",

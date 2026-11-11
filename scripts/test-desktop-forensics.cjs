@@ -264,7 +264,7 @@ async function run() {
             512 * 384,
           );
         if (id === 'img-metadata') assert.equal(r.metadata.Make, 'DGC Demo');
-        if (id === 'clone-detect') assert(r.exactTilePairs.length > 0);
+        if (id === 'clone-detect') {assert.equal(r.featureComparison.state,'CANDIDATE_REPEATED_REGIONS');assert(r.featureComparison.models[0].inlierCount>=8);}
         if (id === 'pdf-inspector') {
           assert(r.objectInventory.objectCount > 0);
           assert(r.objectInventory.objects.some((o) => o.dictionary));
@@ -817,6 +817,19 @@ async function run() {
     await page.waitForSelector('#flFileInput');
     await (await page.$('#flFileInput')).uploadFile(retainedFile);
     await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    const copyMatrix=await page.evaluate(async()=>{
+      const actualWorker=window.Worker;
+      window.Worker=class{constructor(){setTimeout(()=>this.onerror({message:'controlled test failure'}),0);}postMessage(){}terminate(){}};
+      try{const r=await fetch('/samples/images/copy-move/unique.png');let failed=false;try{await ImageForensics.analyze('clone-detect',new File([await r.arrayBuffer()],'unique.png'));}catch(e){failed=e.message==='Classical feature engine unavailable.';}if(!failed)throw Error('Worker failure not handled.');}finally{window.Worker=actualWorker;}
+      const checks=[];
+      for(const [name,expected] of [['translated.png',true],['recompressed.jpg',true],['rotated-scaled.jpg',true],['unique.png',false],['flat.png',false]]){
+        const response=await fetch('/samples/images/copy-move/'+name);if(!response.ok)throw Error('Copy-move fixture missing.');
+        const result=await ImageForensics.analyze('clone-detect',new File([await response.arrayBuffer()],name));
+        const r=result.summary.featureComparison;if((r.models.length>0)!==expected)throw Error(name+' unexpected feature result');checks.push({file:name,expected,result:r});
+      }return checks;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'copy-move-validation.json'),JSON.stringify(copyMatrix,null,2));
+    console.log('PASS actual CSP-safe ORB worker: off-grid translation, JPEG, rotation/scale; unique/flat negatives');
     const acousticMatrix = await page.evaluate(async()=>{
       async function file(name){const r=await fetch('/samples/audio/landmarks/'+name);if(!r.ok)throw Error('Fixture unavailable.');return new File([await r.arrayBuffer()],name);}
       const first=await file('original.wav'),checks=[];

@@ -127,6 +127,16 @@
       "sha256": "aca1229639fc9907d86f96e825955a2b7c5716d17f3bc3acd71f9c7ab66181fc"
     },
     {
+      "path": "public/vendor/opencv-THIRD-PARTY-NOTICES.txt",
+      "bytes": 42767,
+      "sha256": "267e49d5d095fb6467fb79bfc52ea733c298e722e295faeec9a138894db1a234"
+    },
+    {
+      "path": "public/vendor/opencv.js",
+      "bytes": 12137604,
+      "sha256": "8eab495933cc9cfc1f65997e163f8ccc5d521eef005a9fa803d88717b4d4e786"
+    },
+    {
       "path": "public/vendor/pdf-lib-1.17.1.min.js",
       "bytes": 525099,
       "sha256": "0f9a5cad07941f0826586c94e089d89b918c46e5c17cf2d5a3c6f666e3bc694f"
