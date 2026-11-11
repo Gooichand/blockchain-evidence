@@ -180,7 +180,7 @@
       video: window.VideoForensics, audio: window.AudioForensics,
       blockchain: window.BlockchainInspection, crypto: window.CryptoTools,
       metadata: window.MetadataTools, timeline: window.TimelineTools,
-      utility: window.UtilityTools, network: undefined, ai: undefined}[catId];
+      utility: window.UtilityTools, network: window.NetworkForensics, ai: window.AIReadiness}[catId];
   }
   function runtimeStatus(catId, tool) {
     const module = localModule(catId);
@@ -817,6 +817,14 @@
     const ws = document.getElementById('flWorkspace');
     if (!ws) return;
     clear(ws);
+    if (cat.id === 'network' && window.NetworkForensics) {
+      window.NetworkForensics.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'ai' && window.AIReadiness) {
+      window.AIReadiness.mount(ws, tool);
+      return;
+    }
     if (cat.id === 'utility' && window.UtilityTools) {
       window.UtilityTools.mount(ws, tool, () => state.file);
       return;

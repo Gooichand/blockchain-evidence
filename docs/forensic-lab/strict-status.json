@@ -1,0 +1,477 @@
+{
+  "strictYes": 34,
+  "catalogCount": 67,
+  "boundedDesktop": 52,
+  "tools": [
+    {
+      "category": "Hash & Integrity",
+      "id": "sha256",
+      "name": "SHA-256 Generator",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Hash & Integrity",
+      "id": "hash-compare",
+      "name": "Hash Comparison",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Hash & Integrity",
+      "id": "integrity-check",
+      "name": "File Integrity Checker",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Hash & Integrity",
+      "id": "blockchain-verify",
+      "name": "Blockchain Verification",
+      "strictYes": true,
+      "reason": "User confirmed live read-only Amoy/contract availability Nov11 15:54:46 IST. Availability does not prove a particular file hash is anchored."
+    },
+    {
+      "category": "Hash & Integrity",
+      "id": "multi-hash",
+      "name": "Multi Hash Generator",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "ela",
+      "name": "Error Level Analysis",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "clone-detect",
+      "name": "Clone Detection",
+      "strictYes": false,
+      "reason": "Exact fixed-grid repeats only; no general clone matching."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "noise-analysis",
+      "name": "Noise Analysis",
+      "strictYes": false,
+      "reason": "Residual visualization, no sensor/camera attribution."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "img-metadata",
+      "name": "Metadata Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "histogram",
+      "name": "Histogram Analysis",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "compression",
+      "name": "Compression Analysis",
+      "strictYes": false,
+      "reason": "JPEG tables only, no double-compression detection."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "color-channels",
+      "name": "Color Channel Analysis",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "edge-detect",
+      "name": "Edge Detection",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Image Forensics",
+      "id": "ai-tamper",
+      "name": "AI Tampering Detection",
+      "strictYes": false,
+      "reason": "No validated model; no result fabricated."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "pdf-inspector",
+      "name": "PDF Inspector",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "doc-metadata",
+      "name": "Metadata Viewer",
+      "strictYes": false,
+      "reason": "Modern properties/embedded DOCX revisions; no full history or legacy formats."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "ocr",
+      "name": "OCR Engine",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "hidden-text",
+      "name": "Hidden Text Detector",
+      "strictYes": false,
+      "reason": "Limited white/invisible text signals, not all concealment methods."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "signature",
+      "name": "Signature Verification",
+      "strictYes": false,
+      "reason": "PDF signature structure markers, not CMS cryptographic verification."
+    },
+    {
+      "category": "Document Forensics",
+      "id": "doc-compare",
+      "name": "Document Comparison",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Video Forensics",
+      "id": "vid-metadata",
+      "name": "Metadata Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Video Forensics",
+      "id": "frame-extract",
+      "name": "Frame Extraction",
+      "strictYes": false,
+      "reason": "Browser seeking is approximate, not frame-exact."
+    },
+    {
+      "category": "Video Forensics",
+      "id": "vid-timeline",
+      "name": "Timeline Viewer",
+      "strictYes": false,
+      "reason": "Six sampled thumbnails, not full visual event reconstruction."
+    },
+    {
+      "category": "Video Forensics",
+      "id": "keyframe",
+      "name": "Keyframe Analysis",
+      "strictYes": false,
+      "reason": "MP4 sync flags only; no anomaly method."
+    },
+    {
+      "category": "Video Forensics",
+      "id": "video-inspector",
+      "name": "Video Inspector",
+      "strictYes": false,
+      "reason": "MP4 structure only, no all-stream/all-frame integrity validation."
+    },
+    {
+      "category": "Audio Forensics",
+      "id": "waveform",
+      "name": "Waveform Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Audio Forensics",
+      "id": "spectrogram",
+      "name": "Spectrogram",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Audio Forensics",
+      "id": "aud-metadata",
+      "name": "Metadata Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Audio Forensics",
+      "id": "fingerprint",
+      "name": "Audio Fingerprinting",
+      "strictYes": false,
+      "reason": "Coarse spectral similarity, not unique acoustic fingerprint matching."
+    },
+    {
+      "category": "Blockchain",
+      "id": "tx-verify",
+      "name": "Transaction Verification",
+      "strictYes": false,
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+    },
+    {
+      "category": "Blockchain",
+      "id": "evidence-verify",
+      "name": "Evidence Verification",
+      "strictYes": false,
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+    },
+    {
+      "category": "Blockchain",
+      "id": "block-explorer",
+      "name": "Block Explorer",
+      "strictYes": false,
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+    },
+    {
+      "category": "Blockchain",
+      "id": "ipfs-viewer",
+      "name": "IPFS Viewer",
+      "strictYes": false,
+      "reason": "Local raw-block CID only, no gateway/UnixFS object retrieval."
+    },
+    {
+      "category": "Blockchain",
+      "id": "chain-custody",
+      "name": "Chain of Custody",
+      "strictYes": false,
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+    },
+    {
+      "category": "Blockchain",
+      "id": "provenance",
+      "name": "Evidence Provenance",
+      "strictYes": false,
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+    },
+    {
+      "category": "Cryptography",
+      "id": "aes",
+      "name": "AES Analysis",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Cryptography",
+      "id": "rsa",
+      "name": "RSA Analysis",
+      "strictYes": false,
+      "reason": "Public arithmetic/SPKI import checks, not complete key/private validation."
+    },
+    {
+      "category": "Cryptography",
+      "id": "jwt",
+      "name": "JWT Decoder",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Cryptography",
+      "id": "cert-viewer",
+      "name": "Certificate Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Cryptography",
+      "id": "digisig",
+      "name": "Digital Signature",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Metadata",
+      "id": "exif",
+      "name": "EXIF Viewer",
+      "strictYes": false,
+      "reason": "Supported embedded tags only, not universal full-format extraction."
+    },
+    {
+      "category": "Metadata",
+      "id": "gps",
+      "name": "GPS Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Metadata",
+      "id": "camera-info",
+      "name": "Camera Information",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Metadata",
+      "id": "office-metadata",
+      "name": "Office Metadata",
+      "strictYes": false,
+      "reason": "Modern properties and embedded DOCX revisions; no complete Office history/legacy formats."
+    },
+    {
+      "category": "Metadata",
+      "id": "pdf-metadata",
+      "name": "PDF Metadata",
+      "strictYes": false,
+      "reason": "Editable properties only, no historical revisions."
+    },
+    {
+      "category": "Timeline",
+      "id": "evidence-timeline",
+      "name": "Evidence Timeline",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Timeline",
+      "id": "invest-timeline",
+      "name": "Investigation Timeline",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Timeline",
+      "id": "custody-timeline",
+      "name": "Chain of Custody Timeline",
+      "strictYes": false,
+      "reason": "Imported claims, no verified signed handoffs."
+    },
+    {
+      "category": "Utilities",
+      "id": "base64",
+      "name": "Base64",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "url-encoder",
+      "name": "URL Encoder",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "hex-viewer",
+      "name": "Hex Viewer",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "uuid",
+      "name": "UUID Generator",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "timestamp",
+      "name": "Timestamp Converter",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "qr-generator",
+      "name": "QR Generator",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Utilities",
+      "id": "qr-scanner",
+      "name": "QR Scanner",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "packet-capture",
+      "name": "PCAP Analyzer",
+      "strictYes": false,
+      "reason": "Offline PCAP/PCAPNG parsing; no live capture."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "port-scanner",
+      "name": "Port Scanner",
+      "strictYes": false,
+      "reason": "No live/native execution service."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "dns-lookup",
+      "name": "DNS / WHOIS Lookup",
+      "strictYes": false,
+      "reason": "No live/native execution service."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "traceroute",
+      "name": "Traceroute / Path Analysis",
+      "strictYes": false,
+      "reason": "No live/native execution service."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "netstat",
+      "name": "Connection Monitor",
+      "strictYes": false,
+      "reason": "No live/native execution service."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "ssl-inspect",
+      "name": "SSL/TLS Inspector",
+      "strictYes": false,
+      "reason": "Offline Hello/chain signatures, no live server configuration/trust scan."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "traffic-analysis",
+      "name": "Traffic Flow Analysis",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "Networking Tools",
+      "id": "protocol-decode",
+      "name": "Protocol Decoder",
+      "strictYes": true,
+      "reason": "Working within stated formats/limits; see tool guide and overnight validation notes."
+    },
+    {
+      "category": "AI Assistant",
+      "id": "ai-assistant",
+      "name": "AI Investigation Assistant",
+      "strictYes": false,
+      "reason": "No validated model; no result fabricated."
+    },
+    {
+      "category": "AI Assistant",
+      "id": "ai-summary",
+      "name": "AI Evidence Summary",
+      "strictYes": false,
+      "reason": "No validated model; no result fabricated."
+    },
+    {
+      "category": "AI Assistant",
+      "id": "ai-report",
+      "name": "AI Report Generator",
+      "strictYes": false,
+      "reason": "No validated model; no result fabricated."
+    },
+    {
+      "category": "AI Assistant",
+      "id": "ai-tamper",
+      "name": "AI Tampering Detection",
+      "strictYes": false,
+      "reason": "No validated model; no result fabricated."
+    }
+  ],
+  "boundedTotalIncludingUserConfirmedLiveHash": 53
+}
