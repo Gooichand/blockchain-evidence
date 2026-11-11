@@ -214,6 +214,16 @@ function textCell(value) {
     return td;
 }
 
+function hashCell(value) {
+    const td = document.createElement('td');
+    const span = document.createElement('span');
+    span.className = 'hash-cell';
+    span.textContent = value;
+    span.title = value;
+    td.appendChild(span);
+    return td;
+}
+
 function badgeCell(text, cls) {
     const td = document.createElement('td');
     const span = document.createElement('span');
@@ -298,13 +308,13 @@ function priorityClass(priority) {
 // Auto-initialize when DOM is ready; analyst-dashboard.js can also call
 // window.analystEvidence.init() again on refresh.
 let analystEvidence;
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        analystEvidence = new AnalystEvidenceDisplay();
-        analystEvidence.init();
-    });
-} else {
+function bootAnalystEvidence() {
     analystEvidence = new AnalystEvidenceDisplay();
+    window.analystEvidence = analystEvidence;
     analystEvidence.init();
 }
-window.analystEvidence = analystEvidence;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAnalystEvidence);
+} else {
+    bootAnalystEvidence();
+}
