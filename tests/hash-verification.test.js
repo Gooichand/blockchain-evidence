@@ -1,9 +1,9 @@
-jest.mock('../services/blockchain/blockchainService', () => ({
+jest.mock('../services/blockchain/readOnlyVerificationService', () => ({
   initialize: jest.fn(),
   provider: { getNetwork: jest.fn(), getBlockNumber: jest.fn(), getCode: jest.fn() },
   contract: { verifyHash: jest.fn(), getEvidence: jest.fn(), getAddress: jest.fn() },
 }));
-const service = require('../services/blockchain/blockchainService');
+const service = require('../services/blockchain/readOnlyVerificationService');
 const { verifyFileHash } = require('../controllers/hashVerificationController');
 const hash = 'a'.repeat(64);
 const call = async (value = hash) => {
@@ -55,4 +55,38 @@ test('RPC failure never becomes successful verification', async () => {
 test('configuration failure never becomes successful verification', async () => {
   service.initialize.mockRejectedValue(new Error('missing config'));
   expect((await call()).status).toHaveBeenCalledWith(503);
+});
+
+const { verificationHealth } = require('../controllers/hashVerificationController');
+const health = async () => {
+  const res = { set: jest.fn(), status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
+  await verificationHealth({}, res);
+  return res;
+};
+test('health requires chain, bytecode and contract reads at one block', async () => {
+  const res = await health();
+  expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true, chainId: 80002, blockNumber: 123 }));
+  expect(service.contract.verifyHash).toHaveBeenCalledWith('0'.repeat(64), { blockTag: 123 });
+  expect(res.set).toHaveBeenCalledWith('Cache-Control', 'no-store');
+});
+test('health never green on wrong chain or no deployed code', async () => {
+  service.provider.getNetwork.mockResolvedValue({ chainId: 137n });
+  expect((await health()).status).toHaveBeenCalledWith(503);
+  service.provider.getNetwork.mockResolvedValue({ chainId: 80002n });
+  service.provider.getCode.mockResolvedValue('0x');
+  expect((await health()).status).toHaveBeenCalledWith(503);
+});
+test('health never green on contract interface failure and hides private RPC details', async () => {
+  service.contract.verifyHash.mockRejectedValue(new Error('https://rpc.invalid/private-api-key'));
+  const res = await health();
+  expect(res.status).toHaveBeenCalledWith(503);
+  expect(JSON.stringify(res.json.mock.calls)).not.toContain('private-api-key');
+});
+test('health timeout returns unavailable rather than leaving a green result', async () => {
+  jest.useFakeTimers();
+  service.initialize.mockImplementation(() => new Promise(() => {}));
+  const pending = health();
+  await jest.advanceTimersByTimeAsync(12000);
+  expect((await pending).status).toHaveBeenCalledWith(503);
+  jest.useRealTimers();
 });

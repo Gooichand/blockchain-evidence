@@ -366,6 +366,40 @@
     state.timers = [];
   }
 
+  const chainHealth = { state: 'unchecked', checkedAt: null, timer: null, checking: false };
+  function paintChainHealth() {
+    const dot = document.querySelector('[data-tool="blockchain-verify"] .fl-dot');
+    const labels = { unchecked: 'Read-only blockchain lookup not checked', checking: 'Checking read-only blockchain lookup...',
+      ready: 'Read-only lookup available on Polygon Amoy testnet', unavailable: 'Read-only lookup unavailable; recheck RPC and contract',
+      stale: 'Read-only check expired; recheck before relying on availability' };
+    const text = labels[chainHealth.state] + (chainHealth.checkedAt ? ' | Checked: ' + chainHealth.checkedAt : '');
+    if (dot) {
+      dot.className = 'fl-dot ' + (chainHealth.state === 'ready' ? 'available' : 'beta');
+      dot.title = text;
+      dot.setAttribute('role', 'status');
+      dot.setAttribute('aria-label', text);
+    }
+    const status = document.getElementById('flChainHealthText');
+    if (status) status.textContent = text + '. Availability is not evidence anchoring.';
+  }
+  async function checkChainHealth() {
+    if (chainHealth.checking) return;
+    chainHealth.checking = true;
+    clearTimeout(chainHealth.timer);
+    chainHealth.state = 'checking';
+    paintChainHealth();
+    try {
+      const response = await fetch('/api/blockchain/verification-health', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000) });
+      const result = await response.json();
+      if (!response.ok || result.success !== true || result.chainId !== 80002 || !Number.isInteger(result.blockNumber) ||
+          !/^0x[0-9a-fA-F]{40}$/.test(result.contractAddress) || !Number.isFinite(Date.parse(result.checkedAt))) throw new Error('Unavailable');
+      chainHealth.state = 'ready';
+      chainHealth.checkedAt = result.checkedAt;
+      chainHealth.timer = setTimeout(() => { chainHealth.state = 'stale'; paintChainHealth(); }, 60000);
+    } catch (_) { chainHealth.state = 'unavailable'; chainHealth.checkedAt = null; }
+    finally { chainHealth.checking = false; paintChainHealth(); }
+  }
+
   /* ------------------------------------------------------------- sidebar */
   function renderSidebar(root) {
     clear(root);
@@ -611,6 +645,13 @@
       el('p', { text: isComparison ? 'Compare two hexadecimal digests using the same algorithm.' : tool.desc }),
       el('p', { text: tool.id === 'blockchain-verify' ? 'The file stays in your browser. Its SHA-256 digest is sent to the server for a read-only contract lookup. No wallet transaction or payment.' : 'Local browser processing. Files and hashes are not uploaded.' }))));
     ws.appendChild(renderToolGuide(tool));
+    if (tool.id === 'blockchain-verify') {
+      const recheck = el('button', { type: 'button', class: 'fl-btn fl-btn-ghost', text: 'Recheck connection' });
+      recheck.addEventListener('click', checkChainHealth);
+      ws.appendChild(el('section', { style: 'margin:0 0 16px;', 'aria-label': 'Read-only connection status' },
+        el('p', { id: 'flChainHealthText', role: 'status' }), recheck));
+      paintChainHealth();
+    }
     const form = el('form', { class: 'fl-panel', style: 'padding:20px;' });
     const inputs = {};
     const addInput = (key, label, placeholder) => {
@@ -1246,6 +1287,7 @@
     state.currentTool = tool;
     clearTimers();
     renderWorkspace(cat, tool);
+    if (tool.id === 'blockchain-verify') checkChainHealth();
     document.querySelectorAll('.fl-tool-item').forEach((b) => {
       b.classList.toggle('active', b.dataset.tool === toolId);
     });
@@ -1267,6 +1309,7 @@
     renderSidebar(sidebar);
     renderVault(vault);
     renderWelcome(ws);
+    checkChainHealth();
   }
 
   window.ForensicLab = {
