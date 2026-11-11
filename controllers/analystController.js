@@ -439,7 +439,10 @@ const startAnalysis = async (req, res) => {
       const { error: updateError } = (await supabase
         .from('analysis_tasks')
         .update({
-          status: existing[0].status === 'completed' ? 'in_progress' : existing[0].status,
+          // Starting analysis always moves the task to in_progress; a pending
+          // task gets its started_at stamp, a reopened completed task keeps its
+          // original start time.
+          status: 'in_progress',
           started_at: existing[0].status === 'pending' ? new Date().toISOString() : undefined,
           priority,
           estimated_time_minutes,
@@ -447,25 +450,11 @@ const startAnalysis = async (req, res) => {
         .eq('id', taskId)) || {};
       if (updateError) throw updateError;
     } else {
-      const safeCaseId = parseInt(caseId, 10) || null;
-      const { data: newTask, error: insertError } = (await supabase
-        .from('analysis_tasks')
-        .insert({
-          evidence_id: evidenceId,
-          case_id: safeCaseId,
-          analyst_id: analyst.id,
-          analyst_wallet: analyst.wallet_address || analyst.email,
-          status: 'in_progress',
-          priority,
-          progress: 0,
-          started_at: new Date().toISOString(),
-          requested_by: analyst.email || analyst.full_name,
-          estimated_time_minutes,
-        })
-        .select('id')
-        .single()) || {};
-      if (insertError) throw insertError;
-      taskId = newTask.id;
+      // Enforcement: analysis may only be started on evidence the analyst has
+      // a pre-existing assignment (analysis_tasks row) for. Creating a task
+      // here for arbitrary evidence would bypass the assignment contract that
+      // every other analyst endpoint enforces ('Evidence not assigned to you').
+      return res.status(403).json({ success: false, error: 'Evidence not assigned to you' });
     }
 
     await logAudit('analysis_started', analyst, { task_id: taskId, evidence_id: evidenceId });
@@ -732,7 +721,7 @@ const searchAll = async (req, res) => {
     const walletMatch = analyst.wallet_address || analyst.email;
     const q = String(req.query.q || '').replace(/[%_.*(),'"]/g, '').trim();
     if (!q) {
-      return res.json({ success: true, data: { tasks: [], reports: [] } });
+      return res.json({ success: true, data: { tasks: [], reports: [], cases: [] } });
     }
 
     const { data: evRows, error: evError } = (await supabase
@@ -743,16 +732,62 @@ const searchAll = async (req, res) => {
     if (evError) throw evError;
     const evIds = (evRows || []).map((e) => e.id);
 
-    const taskPromise =
-      evIds.length > 0
-        ? supabase
-            .from('analysis_tasks')
-            .select(`id, evidence_id, case_id, status, priority, progress, assigned_at`)
-            .in('evidence_id', evIds)
-            .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
-            .order('assigned_at', { ascending: false })
-            .limit(20)
-        : Promise.resolve({ data: [], error: null });
+    // Case matches are scoped to cases where this analyst already has tasks,
+    // preserving the assigned-evidence-only contract.
+    const { data: analystTaskRows, error: acError } = (await supabase
+      .from('analysis_tasks')
+      .select('case_id')
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
+    if (acError) throw acError;
+    const analystCaseIds = [...new Set((analystTaskRows || []).map((t) => t.case_id).filter(Boolean))];
+
+    let caseMatches = [];
+    if (analystCaseIds.length > 0) {
+      const { data: cRows, error: cError } = (await supabase
+        .from('cases')
+        .select('id, case_number, title, status, created_date, priority_level, jurisdiction')
+        .in('id', analystCaseIds)
+        .or(`case_number.ilike.%${q}%,title.ilike.%${q}%`)
+        .limit(20)) || {};
+      if (cError) throw cError;
+      caseMatches = cRows || [];
+    }
+    const matchedCaseIds = caseMatches.map((c) => c.id);
+
+    const taskSelect =
+      'id, evidence_id, case_id, status, priority, progress, assigned_at, evidence!inner(id, name, file_type)';
+    const taskPromises = [];
+    if (evIds.length > 0) {
+      taskPromises.push(
+        supabase
+          .from('analysis_tasks')
+          .select(taskSelect)
+          .in('evidence_id', evIds)
+          .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
+          .order('assigned_at', { ascending: false })
+          .limit(20),
+      );
+    }
+    if (matchedCaseIds.length > 0) {
+      taskPromises.push(
+        supabase
+          .from('analysis_tasks')
+          .select(taskSelect)
+          .in('case_id', matchedCaseIds)
+          .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
+          .order('assigned_at', { ascending: false })
+          .limit(20),
+      );
+    }
+    const taskResults = await Promise.all(taskPromises);
+    for (const r of taskResults) { if (r && r.error) throw r.error; }
+    const seenTaskIds = new Set();
+    const taskRows = taskResults
+      .flatMap((r) => (r && r.data) || [])
+      .filter((t) => (seenTaskIds.has(t.id) ? false : (seenTaskIds.add(t.id), true)))
+      .sort((a, b) => String(b.assigned_at || '').localeCompare(String(a.assigned_at || '')))
+      .slice(0, 20);
+    const taskPromise = Promise.resolve({ data: taskRows, error: null });
 
     const reportPromise = supabase
       .from('analysis_reports')
@@ -771,6 +806,7 @@ const searchAll = async (req, res) => {
       data: {
         tasks: (taskRes.data || []).map(sanitizeTask),
         reports: (reportRes.data || []).map((r) => sanitizeReport(r)),
+        cases: caseMatches,
       },
     });
   } catch (error) {
