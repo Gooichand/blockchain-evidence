@@ -23,6 +23,13 @@ const mime = {
 };
 const server = http.createServer((req, res) => {
   res.setHeader('Content-Security-Policy', csp);
+  if (process.env.LIVE_DNS_QA === '1' && req.url.startsWith('/api/network/dns?')) {
+    const query = new URL(req.url, 'http://127.0.0.1').searchParams.get('query');
+    require('../services/dnsRegistrationService').lookup(query).then(result => {
+      res.writeHead(200, {'Content-Type':'application/json'});res.end(JSON.stringify(result));
+    }).catch(() => {res.writeHead(503, {'Content-Type':'application/json'});res.end(JSON.stringify({error:'Real public lookup failed.'}));});
+    return;
+  }
   if (req.url.startsWith('/api/')) {
     // Never invent a successful live lookup or production record.
     res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -790,6 +797,32 @@ async function run() {
           .includes('unavailable'),
       );
       await capture(category + '-' + id + '-unavailable');
+    }
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(retainedFile);
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    await openTool('network','dns-lookup');
+    await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
+    await page.click('[aria-label="Try live DNS example"]');
+    if(process.env.LIVE_DNS_QA === '1'){
+      await page.waitForSelector('#flWorkspace pre');
+      const dnsResult=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+      assert.equal(dnsResult.records.A.state,'FOUND');assert.equal(dnsResult.registration.state,'FOUND');
+      assert.equal(await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value),'preserve-my-typed-domain.com');
+      assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),'dgc-retained-user-input.bin');
+      fs.writeFileSync(path.join(screenshotDir,'public-dns-domain-result.json'),JSON.stringify(dnsResult,null,2));
+      await page.evaluate(()=>{const e=document.createElement('p');e.textContent='LOCAL QA: actual UI + live DNS/RDAP service. Test HTTP adapter, not the deployed authenticated site. Auth checks are tested separately.';e.style='background:#fff0cc;padding:12px;';document.querySelector('#flWorkspace').prepend(e);});
+      await capture('network-dns-live-domain');
+      await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='8.8.8.8');
+      await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Run public lookup').click());
+      await page.waitForFunction(()=>document.querySelector('#flWorkspace pre')?.textContent.includes('dns.google'));
+      const reverse=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));assert.equal(reverse.reverse.state,'FOUND');
+      fs.writeFileSync(path.join(screenshotDir,'public-dns-reverse-result.json'),JSON.stringify(reverse,null,2));
+      await capture('network-dns-live-reverse');console.log('PASS real public DNS/RDAP domain and PTR UI, typed input and evidence preserved');
+    }else{
+      await page.waitForSelector('#flWorkspace [role=alert]');
+      assert((await page.$eval('#flWorkspace',e=>e.textContent)).includes('unavailable'));
     }
     assert.deepEqual(errors, [], 'Unexpected JavaScript exception(s)');
     console.log(

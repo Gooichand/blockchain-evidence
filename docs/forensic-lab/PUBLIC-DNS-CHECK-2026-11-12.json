@@ -1,0 +1,283 @@
+{
+  "domain": {
+    "query": {
+      "kind": "domain",
+      "value": "example.com"
+    },
+    "checkedAt": "2026-11-11T21:17:13.250Z",
+    "records": {
+      "NS": {
+        "state": "FOUND",
+        "data": [
+          "hera.ns.cloudflare.com",
+          "elliott.ns.cloudflare.com"
+        ]
+      },
+      "MX": {
+        "state": "FOUND",
+        "data": [
+          {
+            "exchange": "",
+            "priority": 0
+          }
+        ]
+      },
+      "SOA": {
+        "state": "FOUND",
+        "data": {
+          "nsname": "elliott.ns.cloudflare.com",
+          "hostmaster": "dns.cloudflare.com",
+          "serial": 2418004112,
+          "refresh": 10000,
+          "retry": 2400,
+          "expire": 604800,
+          "minttl": 1800
+        }
+      },
+      "A": {
+        "state": "FOUND",
+        "data": [
+          "104.20.23.154",
+          "172.66.147.243"
+        ]
+      },
+      "AAAA": {
+        "state": "FOUND",
+        "data": [
+          "2606:4700:10::ac42:93f3",
+          "2606:4700:10::6814:179a"
+        ]
+      },
+      "TXT": {
+        "state": "FOUND",
+        "data": [
+          [
+            "v=spf1 -all"
+          ],
+          [
+            "_k2n1y4vw3qtb4skdx9e7dxt97qrmmq9"
+          ]
+        ]
+      },
+      "CAA": {
+        "state": "UNAVAILABLE",
+        "code": "ENODATA"
+      }
+    },
+    "registration": {
+      "state": "FOUND",
+      "source": "https://rdap.verisign.com/com/v1/domain/example.com",
+      "bootstrapPublication": "2026-10-28T22:00:04Z",
+      "record": {
+        "objectClassName": "domain",
+        "handle": "2336799_DOMAIN_COM-VRSN",
+        "ldhName": "EXAMPLE.COM",
+        "links": [
+          {
+            "value": "https://rdap.verisign.com/com/v1/domain/example.com",
+            "rel": "self",
+            "href": "https://rdap.verisign.com/com/v1/domain/example.com",
+            "type": "application/rdap+json"
+          }
+        ],
+        "status": [
+          "client delete prohibited",
+          "client transfer prohibited",
+          "client update prohibited"
+        ],
+        "entities": [
+          {
+            "objectClassName": "entity",
+            "handle": "376",
+            "roles": [
+              "registrar"
+            ],
+            "publicIds": [
+              {
+                "type": "IANA Registrar ID",
+                "identifier": "376"
+              }
+            ],
+            "vcardArray": [
+              "vcard",
+              [
+                [
+                  "version",
+                  {},
+                  "text",
+                  "4.0"
+                ],
+                [
+                  "fn",
+                  {},
+                  "text",
+                  "RESERVED-Internet Assigned Numbers Authority"
+                ]
+              ]
+            ],
+            "entities": [
+              {
+                "objectClassName": "entity",
+                "roles": [
+                  "abuse"
+                ],
+                "vcardArray": [
+                  "vcard",
+                  [
+                    [
+                      "version",
+                      {},
+                      "text",
+                      "4.0"
+                    ],
+                    [
+                      "fn",
+                      {},
+                      "text",
+                      ""
+                    ],
+                    [
+                      "tel",
+                      {
+                        "type": "voice"
+                      },
+                      "uri",
+                      ""
+                    ],
+                    [
+                      "email",
+                      {},
+                      "text",
+                      ""
+                    ]
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "events": [
+          {
+            "eventAction": "registration",
+            "eventDate": "1995-08-14T04:00:00Z"
+          },
+          {
+            "eventAction": "expiration",
+            "eventDate": "2027-08-13T04:00:00Z"
+          },
+          {
+            "eventAction": "last changed",
+            "eventDate": "2026-08-14T08:01:43Z"
+          },
+          {
+            "eventAction": "last update of RDAP database",
+            "eventDate": "2026-11-11T21:16:48Z"
+          }
+        ],
+        "secureDNS": {
+          "delegationSigned": true,
+          "dsData": [
+            {
+              "keyTag": 2371,
+              "algorithm": 13,
+              "digestType": 2,
+              "digest": "C988EC423E3880EB8DD8A46FE06CA230EE23F35B578D64E78B29C3E1C83D245A"
+            }
+          ]
+        },
+        "nameservers": [
+          {
+            "objectClassName": "nameserver",
+            "ldhName": "ELLIOTT.NS.CLOUDFLARE.COM"
+          },
+          {
+            "objectClassName": "nameserver",
+            "ldhName": "HERA.NS.CLOUDFLARE.COM"
+          }
+        ],
+        "rdapConformance": [
+          "rdap_level_0",
+          "icann_rdap_technical_implementation_guide_1",
+          "icann_rdap_response_profile_1"
+        ],
+        "notices": [
+          {
+            "title": "Terms of Service",
+            "description": [
+              "Service subject to Terms of Use."
+            ],
+            "links": [
+              {
+                "href": "https://www.verisign.com/domain-names/registration-data-access-protocol/terms-service/index.xhtml",
+                "type": "text/html",
+                "value": "https://rdap.verisign.com/com/v1/domain/example.com",
+                "rel": "terms-of-service"
+              }
+            ]
+          },
+          {
+            "title": "Status Codes",
+            "description": [
+              "For more information on domain status codes, please visit https://icann.org/epp"
+            ],
+            "links": [
+              {
+                "href": "https://icann.org/epp",
+                "type": "text/html",
+                "value": "https://rdap.verisign.com/com/v1/domain/example.com",
+                "rel": "glossary"
+              }
+            ]
+          },
+          {
+            "title": "RDDS Inaccuracy Complaint Form",
+            "description": [
+              "URL of the ICANN RDDS Inaccuracy Complaint Form: https://icann.org/wicf"
+            ],
+            "links": [
+              {
+                "href": "https://icann.org/wicf",
+                "type": "text/html",
+                "value": "https://rdap.verisign.com/com/v1/domain/example.com",
+                "rel": "help"
+              }
+            ]
+          }
+        ]
+      },
+      "note": "Public RDAP registration data, the successor to WHOIS. Redaction and provider policy apply. Not proof of ownership or identity."
+    },
+    "note": "Live server-resolver DNS plus registry RDAP. No DNSSEC validation, target connection, raw-port WHOIS, scanning or private data access. Provider errors remain explicit."
+  },
+  "ipv4": {
+    "query": {
+      "kind": "ip",
+      "value": "8.8.8.8",
+      "family": 4
+    },
+    "checkedAt": "2026-11-11T21:17:13.649Z",
+    "reverse": {
+      "state": "FOUND",
+      "names": [
+        "dns.google"
+      ]
+    },
+    "note": "PTR claims from the server resolver, not verified ownership. No target connection."
+  },
+  "ipv6": {
+    "query": {
+      "kind": "ip",
+      "value": "2001:4860:4860::8888",
+      "family": 6
+    },
+    "checkedAt": "2026-11-11T21:14:42.729Z",
+    "reverse": {
+      "state": "FOUND",
+      "names": [
+        "dns.google"
+      ]
+    },
+    "note": "PTR claims from the server resolver, not verified ownership. No target connection."
+  },
+  "validationScope": "Actual service and local UI HTTP adapter, not deployed authenticated site."
+}

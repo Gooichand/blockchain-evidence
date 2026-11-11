@@ -51,3 +51,29 @@ test('anonymous IPFS gateway proxy is denied before retrieval', async () => {
     )
     .expect(401);
 });
+const dnsApp = express();
+dnsApp.use('/api/network', require('../routes/networkReadRoutes'));
+test('anonymous network lookup cannot contact DNS/RDAP', async () => {
+  const spy = jest.spyOn(require('../services/dnsRegistrationService'), 'lookup');
+  try {
+    await request(dnsApp).get('/api/network/dns?query=example.com').expect(401);
+    expect(spy).not.toHaveBeenCalled();
+  } finally {
+    spy.mockRestore();
+  }
+});
+test('authenticated network lookup rejects private and injected queries before external reads', async () => {
+  const token = jwt.sign({ userId: 1 }, process.env.JWT_SECRET);
+  const spy = jest.spyOn(require('../services/dnsRegistrationService'), 'lookup');
+  try {
+    for (const q of ['127.0.0.1', 'https://example.com'])
+      await request(dnsApp)
+        .get('/api/network/dns')
+        .query({ query: q })
+        .set('Authorization', 'Bearer ' + token)
+        .expect(400);
+    expect(spy).not.toHaveBeenCalled();
+  } finally {
+    spy.mockRestore();
+  }
+});

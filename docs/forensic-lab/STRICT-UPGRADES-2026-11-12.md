@@ -34,3 +34,16 @@ IPFS improvement is deliberately NOT another strict count: local multi-block Uni
 Gateway semantics were checked against https://docs.ipfs.tech/reference/http/gateway/ and https://specs.ipfs.tech/http-gateways/trustless-gateway/. CAR header roots are treated as hints, not authority; the actually requested CID and every traversed block/link are verified. Duplicate blocks are accepted after hash verification. Missing linked blocks and changed bytes fail. No symlink opening or content execution. Isolated IPFS dependencies/licenses/notices are pinned separately; production audit reports zero advisories at this checkpoint, not a whole-repository clearance.
 
 Full suite: 28 suites /194 tests pass; all48 real desktop examples plus the existing extended tests pass. Updated real local-EVM deployment/store/seal/read tests pass after the legacy hash fix. Public Amoy test-evidence image and the actual local UnixFS UI were visually inspected. Strict count41/67=61.2%, bounded count53 unchanged. Existing PR381-383 remain untouched at their approved34-tool checkpoint.
+
+
+## Batch 3: live public DNS and registration reads
+
+Strict checkpoint: 42/67 locally, eight additions to the published 34-tool stack. No push or production deployment.
+
+- Exact catalog promise: resolve domains, reverse DNS and WHOIS records. RDAP is the supported current replacement for public gTLD WHOIS, not a claim to recover private/redacted registration details. ICANN sunset notice: https://www.icann.org/en/announcements/details/icann-update-launching-rdap-sunsetting-whois-27-01-2025-en .
+- Server Resolver performs A/AAAA/MX/NS/TXT/SOA/CAA and IPv4/IPv6 PTR; no connection to the queried host, port scanning, packet capture, DNSSEC validation or ownership verdict. Per-type ENODATA/errors stay explicit.
+- Static official IANA HTTPS bootstrap snapshot: https://data.iana.org/rdap/dns.json , publication2026-10-28T22:00:04Z. Sources and refresh requirements preserved in data/README.md. Only an IANA-listed HTTPS origin and normalized domain path are used; redirects disabled, 7-second timeout, 1MiB JSON cap, exact returned-domain cross-check. Stale/unsupported endpoints return errors, not fabricated WHOIS.
+- Authenticated /api/network/dns?query= route, 5/minute limit, no-store response. Private/special-use IPs, local names, URLs, unusual numeric-IP spellings and path/query injection rejected. RDAP data is rendered inert as text.
+- Example uses an actual public example.com lookup; preserves typed query and Evidence Vault. Explicitly discloses that only the requested query goes to server resolver/registry. No automatic query on page load.
+- Real local service and actual UI read example.com DNS and https://rdap.verisign.com/com/v1/domain/example.com successfully; public IPv4 and IPv6 Google-DNS PTR each returned dns.google. Screenshots label the local QA HTTP adapter honestly. Separate actual middleware tests cover anonymous denial and authenticated bad-input rejection. This does not establish deployed production UI/auth availability.
+- 29 suites/202 tests pass; 48 Chrome examples plus extended checks and actual live domain/PTR UI checks pass. Focused lint clean. Raw public source results are in PUBLIC-DNS-CHECK-2026-11-12.json.

@@ -1,4 +1,4 @@
-/* Offline bounded packet inspection. No live capture, scanning or host requests. */
+/* Bounded offline packet inspection; public DNS/RDAP lives in a separate explicit-read UI. */
 (function (root) {
   'use strict';
   const LIMIT = 20 * 1024 * 1024,
@@ -21,8 +21,8 @@
       'No active scanning service is configured. This page never probes a host or port.',
     ],
     'dns-lookup': [
-      'DNS / WHOIS Lookup - unavailable',
-      'No live DNS, reverse-DNS or WHOIS service is configured. Offline DNS packet decoding is available in Protocol Decoder, but is not a live lookup.',
+      'Public DNS / Registration Lookup',
+      'Explicit authenticated public DNS and RDAP registration reads. See the tool for sources, disclosure and limits. No scanning or raw-port WHOIS.',
     ],
     traceroute: [
       'Traceroute / Path Analysis - unavailable',
@@ -615,6 +615,7 @@
     };
   }
   function ready(id) {
+    if (id === 'dns-lookup') return !!root.PublicDNS;
     if (id === 'ssl-inspect') return !!root.LocalTLS;
     return ['packet-capture', 'protocol-decode', 'traffic-analysis'].includes(id);
   }
@@ -625,6 +626,7 @@
     return e;
   }
   function mount(ws, tool, getFile) {
+    if (tool.id === 'dns-lookup' && root.PublicDNS) return root.PublicDNS.mount(ws);
     if (tool.id === 'ssl-inspect' && root.LocalTLS) return root.LocalTLS.mount(ws);
     const [title, guide] = guides[tool.id];
     ws.append(

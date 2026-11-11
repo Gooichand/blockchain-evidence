@@ -1,5 +1,5 @@
 {
-  "strictYes": 41,
+  "strictYes": 42,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -406,8 +406,8 @@
       "category": "Networking Tools",
       "id": "dns-lookup",
       "name": "DNS / WHOIS Lookup",
-      "strictYes": false,
-      "reason": "No live/native execution service."
+      "strictYes": true,
+      "reason": "Live A/AAAA/MX/NS/TXT/SOA/CAA and public IPv4/IPv6 PTR plus IANA-bootstrapped HTTPS RDAP registration reads. Actual example.com registry and dns.google PTR checks passed Nov12 02:45-02:47 IST. RDAP replaces legacy WHOIS; no DNSSEC, private registration data or ownership claim. Not deployed."
     },
     {
       "category": "Networking Tools",
