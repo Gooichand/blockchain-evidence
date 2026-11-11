@@ -141,7 +141,17 @@ async function run() {
     }
     let completed = 0;
     for (const [category, ids] of Object.entries(groups).filter(([category]) =>
-      ['image', 'document', 'video'].includes(category),
+      [
+        'image',
+        'document',
+        'video',
+        'blockchain',
+        'audio',
+        'crypto',
+        'metadata',
+        'timeline',
+        'utility',
+      ].includes(category),
     )) {
       for (const id of ids) {
         await openTool(category, id);
@@ -405,6 +415,21 @@ async function run() {
     assert.equal(officeSafety.custom.properties['docProps/custom.xml'][0].field, 'Case ID');
     assert.equal(officeSafety.custom.properties['docProps/custom.xml'][0].value, 'SYNTHETIC-01');
     console.log('PASS Office XML bounds, malformed/entity rejection, custom properties');
+    await openTool('metadata', 'office-metadata');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root, 'samples/office/tracked.docx'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Read selected metadata')
+        .click(),
+    );
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#flWorkspace pre') ||
+        document.querySelector('#flWorkspace [role=alert]'),
+    );
+    assert((await page.$eval('#flWorkspace pre', (e) => e.textContent)).includes('Amount 101'));
+    await capture('metadata-office-revisions');
     for (const [kind, names] of [
       ['audio', ['tones.mp3', 'tones.flac', 'tones.m4a', 'tones.ogg']],
       ['video', ['clip.avi', 'clip.mkv', 'clip.mov', 'clip.webm']],
@@ -432,6 +457,45 @@ async function run() {
         } else assert.equal(metadata.originalSampleRate, 16000);
         console.log('PASS format metadata', name, metadata.format, metadata.codec);
       }
+    }
+    await openTool('crypto', 'digisig');
+    await page.$eval(
+      '[aria-label="Cryptography input"]',
+      (e) => (e.value = 'Original browser signing test'),
+    );
+    await page.select('[aria-label="Signature operation"]', 'sign');
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Run local tool')
+        .click(),
+    );
+    await page.waitForFunction(() =>
+      document.querySelector('#flWorkspace pre')?.textContent.includes('signatureEncoding'),
+    );
+    const signed = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(signed.text, 'Original browser signing test');
+    assert(!signed.publicKey.d);
+    assert.equal(
+      await page.evaluate(
+        async (r) =>
+          (await CryptoTools.analyze('digisig', JSON.stringify(r), 'verify')).signatureMatches,
+        signed,
+      ),
+      true,
+    );
+    await capture('crypto-signature-generated');
+    for (const id of [
+      'tx-verify',
+      'evidence-verify',
+      'block-explorer',
+      'chain-custody',
+      'provenance',
+    ]) {
+      await openTool('blockchain', id);
+      await page.click('[aria-label="Try blockchain example"]');
+      await page.waitForSelector('#flWorkspace [role=alert]');
+      assert((await page.$eval('#flWorkspace', (e) => e.textContent)).includes('unavailable'));
+      await capture('blockchain-' + id + '-unavailable');
     }
     assert.deepEqual(errors, [], 'Unexpected JavaScript exception(s)');
     console.log(

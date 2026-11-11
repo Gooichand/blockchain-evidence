@@ -1,0 +1,5 @@
+[
+  {"timestamp":"2026-11-11T14:10:00+05:30","type":"evidence","description":"Synthetic file collected","actor":"Demo A","evidenceId":"DEMO-1"},
+  {"timestamp":"2026-11-11T09:00:00Z","type":"investigation","description":"Synthetic examination started","actor":"Demo Analyst","evidenceId":"DEMO-1"},
+  {"timestamp":"2026-11-11T15:00:00+05:30","type":"custody","description":"Synthetic handoff claimed","actor":"Demo A to Demo B","evidenceId":"DEMO-1"}
+]
