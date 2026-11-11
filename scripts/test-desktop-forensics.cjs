@@ -300,7 +300,7 @@ async function run() {
             ),
           );
         }
-        if (id === 'fingerprint') assert(Math.abs(r.cosineSimilarity - 1) < 1e-8);
+        if (id === 'fingerprint') {assert.equal(r.candidateMatch,true);assert(Math.abs(r.secondMinusFirstOffsetSeconds+0.734)<0.04);}
         if (id === 'rsa') {
           assert.equal(r.modulusBits, 2048);
           assert.equal(r.providerImport, true);
@@ -800,8 +800,35 @@ async function run() {
     }
     if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
     await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/audio/landmarks/original.wav'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='original.wav');
+    await openTool('audio','fingerprint');
+    await (await page.$('[aria-label="Second audio file"]')).uploadFile(path.join(root,'samples/audio/landmarks/different.wav'));
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected audio').click());
+    await page.waitForSelector('#flWorkspace pre');
+    assert.equal(JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent)).candidateMatch,false);
+    await capture('audio-fingerprint-selected-negative');
+    await page.click('[aria-label="Try audio example"]');await page.waitForSelector('#flWorkspace pre');
+    assert.equal(JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent)).candidateMatch,true);
+    assert.equal(await page.$eval('[aria-label="Second audio file"]',e=>e.files[0].name),'different.wav');
+    assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),'original.wav');
+    await capture('audio-fingerprint-landmark-match');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
     await (await page.$('#flFileInput')).uploadFile(retainedFile);
     await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    const acousticMatrix = await page.evaluate(async()=>{
+      async function file(name){const r=await fetch('/samples/audio/landmarks/'+name);if(!r.ok)throw Error('Fixture unavailable.');return new File([await r.arrayBuffer()],name);}
+      const first=await file('original.wav'),checks=[];
+      for(const [name,expected] of [['original.wav',true],['trimmed.mp3',true],['resampled.m4a',true],['noisy.wav',true],['different.wav',false],['reordered.wav',false]]){
+        const r=(await AudioForensics.analyze('fingerprint',first,await file(name))).summary;
+        if(r.candidateMatch!==expected)throw Error(name+' unexpected fingerprint '+JSON.stringify(r));
+        if(name==='trimmed.mp3'&&Math.abs(r.secondMinusFirstOffsetSeconds+.734)>.04)throw Error('Incorrect acoustic offset.');
+        checks.push({file:name,expected,result:r});
+      }return checks;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'acoustic-landmark-validation.json'),JSON.stringify(acousticMatrix,null,2));
+    console.log('PASS real worker acoustic landmark matching: WAV, MP3 trim, AAC resample, gain/noise; different/reordered negatives');
     await openTool('network','dns-lookup');
     await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
     await page.click('[aria-label="Try live DNS example"]');

@@ -1,5 +1,5 @@
 {
-  "strictYes": 42,
+  "strictYes": 43,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -203,8 +203,8 @@
       "category": "Audio Forensics",
       "id": "fingerprint",
       "name": "Audio Fingerprinting",
-      "strictYes": false,
-      "reason": "Coarse spectral similarity, not unique acoustic fingerprint matching."
+      "strictYes": true,
+      "reason": "Actual time-ordered spectral landmark hashes and offset voting in a bounded local worker. WAV/gain/noise, trimmed MP3 and resampled AAC positives, reordered/different/repeated/simple-tone/silence negatives or inconclusives tested. Pairwise candidate acoustic correspondence, no unique identity/database/tamper or broad real-world accuracy claim."
     },
     {
       "category": "Blockchain",

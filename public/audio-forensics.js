@@ -15,8 +15,8 @@
       'Reads original codec/container, duration, sample rate, channels, bitrate and available embedded recording tags through local MediaInfo WASM. Supports WAV, MP3, FLAC, M4A and OGG when recognized by the parser, without relying on browser playback codecs. Metadata is editable and may be absent; no recording-device identity or full history is verified.',
     ],
     fingerprint: [
-      'Coarse Audio Spectral Comparison',
-      'Compares normalized average FFT-band energy from the first 30 seconds of two clips. Select the first clip in the Evidence Vault and a second file, then run. Similarity is a coarse acoustic feature, NOT a unique fingerprint, identity match or tamper score. Different clips with similar tones can score highly; timing/order is discarded.',
+      'Acoustic Landmark Fingerprint Comparison',
+      'Computes time-ordered spectral peaks, hashes pairs and votes for a consistent offset between two recordings. Select a clip in the Evidence Vault and a second file, then run. The first 30 seconds are downmixed and reduced to 8kHz; simple tones/silence/short clips are inconclusive. A candidate match needs at least 20 aligned anchors, 12% anchor coverage, two seconds span and no competing repeated alignment. Tested on original gain/noise/MP3/AAC/trim fixtures, not a broad natural-recording accuracy benchmark. This is NOT a unique fingerprint, speaker/identity, copyright, database or tamper verdict. Speed/pitch changes and heavy noise can fail. All processing stays local in a 25-second worker.',
     ],
   };
   function fftPower(input) {
@@ -140,23 +140,43 @@
     const a = await decode(file);
     if (id === 'fingerprint') {
       const b = await decode(second);
-      if (a.summary.decodedSampleRate !== b.summary.decodedSampleRate)
-        throw new Error('Decoded sample rates differ; spectral comparison unavailable.');
-      return {
-        summary: {
-          cosineSimilarity: cosine(features(a.mono), features(b.mono)),
-          first: a.summary,
-          second: b.summary,
-          limit:
-            'Coarse 32-band average; not a unique fingerprint or identity verdict. Silent clips return null.',
-        },
-      };
+      if (!root.Worker) throw Error('Fingerprint worker unavailable.');
+      const result = await new Promise((resolve, reject) => {
+        const worker = new root.Worker('/acoustic-landmarks-worker.js');
+        const timer = setTimeout(() => {
+          worker.terminate();
+          reject(Error('Fingerprint exceeded25-second limit.'));
+        }, 25000);
+        const finish = () => {
+          clearTimeout(timer);
+          worker.terminate();
+        };
+        worker.onmessage = ({ data }) => {
+          finish();
+          data.ok ? resolve(data.result) : reject(Error(data.error));
+        };
+        worker.onerror = () => {
+          finish();
+          reject(Error('Fingerprint worker failed.'));
+        };
+        worker.postMessage(
+          {
+            first: a.mono.buffer,
+            firstRate: a.summary.decodedSampleRate,
+            second: b.mono.buffer,
+            secondRate: b.summary.decodedSampleRate,
+          },
+          [a.mono.buffer, b.mono.buffer],
+        );
+      });
+      return { summary: { ...result, firstAudio: a.summary, secondAudio: b.summary } };
     }
     if (!guides[id]) throw new Error('Unknown audio tool.');
     return a;
   }
   function ready(id) {
     if (id === 'aud-metadata') return !!root.MediaMetadata;
+    if (id === 'fingerprint' && !root.Worker) return false;
     return !!(root.AudioContext || root.webkitAudioContext);
   }
   function node(tag, text, attrs = {}) {
@@ -292,10 +312,26 @@
         let file = getFile(),
           other = second;
         if (example) {
-          const r = await fetch('/samples/audio/tones.wav');
+          const r = await fetch(
+            tool.id === 'fingerprint'
+              ? '/samples/audio/landmarks/original.wav'
+              : '/samples/audio/tones.wav',
+          );
           if (!r.ok) throw new Error('Example missing.');
-          file = new File([await r.arrayBuffer()], 'Demo - tones.wav', { type: 'audio/wav' });
-          other = file;
+          file = new File(
+            [await r.arrayBuffer()],
+            tool.id === 'fingerprint' ? 'Demo - original synthetic.wav' : 'Demo - tones.wav',
+            { type: 'audio/wav' },
+          );
+          if (tool.id === 'fingerprint') {
+            const secondResponse = await fetch('/samples/audio/landmarks/trimmed.mp3');
+            if (!secondResponse.ok) throw Error('Example missing.');
+            other = new File(
+              [await secondResponse.arrayBuffer()],
+              'Original synthetic trimmed MP3',
+              { type: 'audio/mpeg' },
+            );
+          } else other = file;
         }
         const result = await analyze(tool.id, file, other);
         if (!ws.contains(out)) return;
@@ -304,7 +340,9 @@
           out.appendChild(
             node(
               'strong',
-              'DEMO SAMPLE - original 440 Hz then 880 Hz tones. Your evidence is unchanged.',
+              tool.id === 'fingerprint'
+                ? 'DEMO SAMPLE - original synthetic multi-tone recording compared with a trimmed, quieter MP3. Candidate acoustic alignment only; your evidence and second-file choice are unchanged.'
+                : 'DEMO SAMPLE - original 440 Hz then 880 Hz tones. Your evidence is unchanged.',
             ),
           );
         if (['waveform', 'spectrogram'].includes(tool.id)) {

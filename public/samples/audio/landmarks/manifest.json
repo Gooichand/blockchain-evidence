@@ -1,0 +1,15 @@
+{
+  "originalSource": "Deterministic original synthetic multi-tone envelopes. Not a natural-recording accuracy benchmark.",
+  "seed": 123,
+  "rate": 16000,
+  "seconds": 12,
+  "trimmedOffsetSeconds": -0.734,
+  "files": {
+    "original.wav": "4600ba5eaea56e5f0216f22ff9f23435e2aa2de0269152bbda7d766bd84fdd48",
+    "different.wav": "f9dcfcc514e03ae8e4b8ae19af97fd91f1c829be1ac09cf10617e56a4e90af12",
+    "noisy.wav": "74c57ac6a208e4e9b2a6a4ed2a5da41f5972fe36e4d2244e91a5ea2c77ec80bc",
+    "reordered.wav": "a85a4e6bc1c6bfc0631778d3f80eb0921b3411225fafafe80f14a9d09327c61b",
+    "resampled.m4a": "ff289f106570fdce4292b8bf8e8d9d007731622d6bca88160c60fd9f3450048a",
+    "trimmed.mp3": "c7ffe4f382523a1c3fbffb9513cd19a0da19e246acff851eb21cde36b749353d"
+  }
+}
