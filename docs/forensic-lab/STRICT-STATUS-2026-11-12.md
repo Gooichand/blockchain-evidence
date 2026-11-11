@@ -25,7 +25,7 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Document Forensics | PDF Inspector | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Document Forensics | Metadata Viewer | No | Modern properties/embedded DOCX revisions; no full history or legacy formats. |
 | Document Forensics | OCR Engine | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
-| Document Forensics | Hidden Text Detector | No | Limited white/invisible text signals, not all concealment methods. |
+| Document Forensics | Hidden Text Detector | No | Actual invisible/opacity and rendered-white-region signals with white-on-dark negative; complex clipping/overpainting/masks/Type3/unmatched/extraction-omitted text still incomplete. No extra strict credit. |
 | Document Forensics | Signature Verification | Yes | Real detached CMS signed-byte verification for supported SHA-256/384/512 PDF signatures, tamper failures and older signed-revision/unsigned-append distinction. No trust/revocation/timestamp/permission-policy or legal-validity claim. |
 | Document Forensics | Document Comparison | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Video Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |

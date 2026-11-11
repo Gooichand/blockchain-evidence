@@ -822,6 +822,19 @@ async function run() {
     await page.waitForSelector('#flFileInput');
     await (await page.$('#flFileInput')).uploadFile(retainedFile);
     await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/document/concealed/signals.pdf'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='signals.pdf');
+    await openTool('document','hidden-text');
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected document').click());
+    await page.waitForSelector('#flWorkspace pre');
+    const concealed=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+    const candidates=concealed.pages[0].candidates;
+    for(const label of ['WHITE ON WHITE HIDDEN','INVISIBLE RENDER MODE','ZERO OPACITY TEXT'])assert(candidates.some(x=>x.text===label),JSON.stringify(concealed));
+    assert(!candidates.some(x=>x.text.includes('VISIBLE WHITE ON DARK')||x.text==='VISIBLE BLACK TEXT'||x.text==='VISIBLE AFTER RESTORE'));
+    fs.writeFileSync(path.join(screenshotDir,'concealed-text-validation.json'),JSON.stringify(concealed,null,2));
+    await capture('document-concealed-text-measured');console.log('PASS actual PDF rendered white-region/white-on-dark negative, invisible and zero-opacity signals');
     const videoMeasurements=await page.evaluate(async()=>{
       const results=[];
       for(const name of ['measurement/cuts-gops.mp4','exact/b-frames.mp4','exact/vfr.mp4']){

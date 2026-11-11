@@ -15,8 +15,8 @@
       'Recognizes English printed text from PNG, JPEG or scanned PDF using a locally bundled Tesseract model. Select a file and run or try the synthetic scan. PDFs are rendered at 2x scale, up to 10 pages / 40 million total pixels. Recognition can be wrong: check the source image. Handwriting and non-English text are not supported.',
     ],
     'hidden-text': [
-      'PDF Concealed-Text Signals',
-      'Inspects PDF text operators for invisible rendering mode or white fill color. Select a PDF and inspect the candidate text. White text may be visible on dark backgrounds, other concealment methods can be missed, and findings are not proof of deception.',
+      'PDF Concealed-Text Detector',
+      'Select a PDF and run. Tracks actual text rendering mode, fill color/opacity and save/restore, maps exact matching extracted text runs to rendered-page boxes, then measures those pixels. Reports invisible-mode, near-zero-opacity, outside-page and white-text-on-almost-entirely-white-region candidates. White-on-dark text is not called hidden just because its fill is white.10pages,4MP/page,15second/page render limit. This is not universal hidden-content detection: complex clipping/overpainting/masks/Type3 glyphs/nonwhite low contrast and unmatched text runs can be missed. Unmatched potential runs are reported, not silently claimed visible. Findings do not prove deception or authenticity. Local only, no AI or upload.',
     ],
     signature: [
       'PDF Cryptographic Signature Verification',
@@ -218,38 +218,9 @@
       for (let number = 1; number <= doc.numPages; number++) {
         const page = await doc.getPage(number);
         if (hidden) {
-          const ops = await page.getOperatorList(),
-            found = [];
-          if (ops.fnArray.length > 200000) throw new Error('PDF page operator limit exceeded.');
-          let mode = 0,
-            white = false,
-            stack = [];
-          const O = root.pdfjsLib.OPS;
-          for (let i = 0; i < ops.fnArray.length; i++) {
-            const op = ops.fnArray[i],
-              arg = ops.argsArray[i];
-            if (op === O.save) stack.push([mode, white]);
-            else if (op === O.restore) {
-              [mode, white] = stack.pop() || [0, false];
-            } else if (op === O.setTextRenderingMode) mode = arg[0];
-            else if (op === O.setFillRGBColor) white = arg.every((v) => v >= 250);
-            else if (op === O.setFillGray) white = arg[0] >= 0.99;
-            else if (
-              [O.showText, O.showSpacedText].includes(op) &&
-              (mode === 3 || mode === 7 || white)
-            ) {
-              const text = (arg[0] || []).map((g) => g.unicode || '').join('');
-              if (text)
-                found.push({
-                  text,
-                  signal:
-                    mode === 3 || mode === 7
-                      ? 'invisible rendering mode'
-                      : 'white fill (background not evaluated)',
-                });
-            }
-          }
-          pages.push({ page: number, candidates: found });
+          if (doc.numPages > 10) throw Error('Concealed-text limit10pages.');
+          if (!root.ConcealedText) throw Error('Concealed-text engine unavailable.');
+          pages.push({ page: number, ...(await root.ConcealedText.inspect(page, root.pdfjsLib)) });
         } else {
           const content = await page.getTextContent();
           pages.push({ page: number, text: content.items.map((t) => t.str).join(' ') });
@@ -501,7 +472,9 @@
           ? 'Local processing; no document upload. Maximum 15 MiB / 10 PDF pages, 90 seconds. OCR text must be checked against the source.'
           : tool.id === 'doc-compare'
             ? 'Local processing; no document upload. Maximum 15 MiB per file; visual comparison up to 10 PDF pages. Text equality does not imply visual equality.'
-            : 'Local processing; no document upload. Maximum 15 MiB / 100 PDF pages. Embedded text and metadata are untrusted.',
+            : tool.id === 'hidden-text'
+              ? 'Local only; no upload.15MiB,10pages,4MP/page,15second/page render. Candidate signals, not deception or full hidden-content proof.'
+              : 'Local processing; no document upload. Maximum 15 MiB / 100 PDF pages. Embedded text and metadata are untrusted.',
       ),
     );
     let second = null;
@@ -568,6 +541,23 @@
               'DEMO SAMPLE - real tool output. Your evidence and second file are unchanged.',
             ),
           );
+        if (tool.id === 'hidden-text') {
+          out.appendChild(n('h3', 'Concealed-text candidates'));
+          for (const p of result.pages)
+            out.appendChild(
+              n(
+                'p',
+                'Page ' +
+                  p.page +
+                  ': ' +
+                  (p.candidates.length
+                    ? p.candidates
+                        .map((c) => c.text + ' [' + c.signals.join(', ') + ']')
+                        .join(' | ')
+                    : 'No supported candidate found. This does not establish that no hidden text exists.'),
+              ),
+            );
+        }
         if (result.visual) {
           out.appendChild(
             n(

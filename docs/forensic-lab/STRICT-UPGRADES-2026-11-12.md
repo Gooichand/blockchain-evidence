@@ -95,3 +95,13 @@ Strict47/67 locally, thirteen additions over published34. The SSL/TLS catalog pr
 - Real example.com UI/service: TLS1.3, default roots authorized, hostname match, certificate chain and TLS1.2/1.3 probes successful. Actual public negative examples: wrong.host.badssl.com reports ERR_TLS_CERT_ALTNAME_INVALID/hostnamefalse; expired.badssl.com reports CERT_HAS_EXPIRED while hostname stillmatches. Public test source: https://badssl.com/ and https://github.com/chromium/badssl.com/ . No private keys used.
 - Actual anonymous middleware and authenticated private-host rejection tests pass, as do mixed-privateDNS/pinning, untrusted cert and network-error tests. Actual UI preserves typed hostname and selected evidence. Screenshot clearlylabels local test HTTP adapter, not deployed authenticated production.
 -33suites217tests,48Chromeexamples+extendedactualTLS/video/clone/acoustic matrices pass; focusedlintclean. Public TLS positive/negative matrix: PUBLIC-TLS-CHECK-2026-11-12.json. No push/deployment or money.
+
+
+## Batch 8: improve concealed-text precision, no strict-count credit
+
+Strict remains47/67. Hidden Text Detector staysNo against its unqualified promise because complex clipping/overpainting/masks/Type3 runs/nonwhite low contrast/unmapped or extraction-omitted text can be missed. This batch is a real quality improvement, not an extra completed tool.
+
+- Actual graphics-state parser now tracks save/restore, rendering mode, fillRGB/gray and fillopacity; exact extracted text-run boxes are mapped through viewport/rotation and checked against actual rendered pixels. White fill alone is no longer called hidden: a fill-painting mode plus>=99.5% renderedwhite pixels (RGB>=248) in the mapped region is required. Visible white-on-dark negative passes. Invisible modes3/7 and near-zero fillopacity<=0.01 reported separately; off-page bounds reported only where PDF.js supplies a box. Unsupported/unmapped suspicious runs disclosed; no guesses.
+-10pages,4MP/page,15second/page render cap. Page rendering stays local, no AI/upload. Malformed/unsupportedPDF may fail; partial methods never become universal hidden-content proof.
+- Actual ReportLab original fixture: white-on-white, invisible and zero-opacity positives; visible black, visible white-on-dark and visible-after-state-restore negatives allpass. PDF.js omits the black off-page item from text-content extraction in the real fixture, so no claim to complete off-page detection. Pure tests separately exercise known off-page bounds.
+-34suites221tests and48Chromeexamples+extendedconcealed/video/clone/acoustic tests pass. Actual selected-file output and updated summary inspected. Evidence in CONCEALED-TEXT-CHECK-2026-11-12.json. No new strict credit, push or deployment.

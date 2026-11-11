@@ -1,0 +1,1 @@
+Original ReportLab text fixture. Positives: invisible rendering, white-on-white and zero opacity, outside-page subject to PDF.js extraction. Negatives: visible black, visible white on dark, restored graphics state. Detection is candidate-only, not proof of concealment intent. Apache-2.0 with repository.

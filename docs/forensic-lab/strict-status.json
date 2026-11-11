@@ -127,7 +127,7 @@
       "id": "hidden-text",
       "name": "Hidden Text Detector",
       "strictYes": false,
-      "reason": "Limited white/invisible text signals, not all concealment methods."
+      "reason": "Actual invisible/opacity state and rendered-white-region detection, including white-on-dark negative. Still incomplete for complex clipping/overpainting/masks/Type3/unmatched or extraction-omitted text; no extra strict credit."
     },
     {
       "category": "Document Forensics",

@@ -1,0 +1,113 @@
+{
+  "pageCount": 1,
+  "metadata": {
+    "PDFFormatVersion": "1.4",
+    "Language": null,
+    "EncryptFilterName": null,
+    "IsLinearized": false,
+    "IsAcroFormPresent": false,
+    "IsXFAPresent": false,
+    "IsCollectionPresent": false,
+    "IsSignaturesPresent": false,
+    "Author": "anonymous",
+    "CreationDate": "D:20261112035828+00'00'",
+    "Creator": "ReportLab PDF Library - www.reportlab.com",
+    "Keywords": "",
+    "ModDate": "D:20261112035828+00'00'",
+    "Producer": "ReportLab PDF Library - www.reportlab.com",
+    "Subject": "unspecified",
+    "Title": "Original concealed-text candidate fixture",
+    "Trapped": {
+      "name": "False"
+    }
+  },
+  "pages": [
+    {
+      "page": 1,
+      "candidates": [
+        {
+          "text": "WHITE ON WHITE HIDDEN",
+          "operatorIndex": 18,
+          "signals": [
+            "WHITE_TEXT_ON_RENDERED_WHITE_REGION"
+          ],
+          "signal": "WHITE_TEXT_ON_RENDERED_WHITE_REGION",
+          "renderingMode": 0,
+          "fillRGB": [
+            255,
+            255,
+            255
+          ],
+          "fillOpacity": 1,
+          "renderedBounds": {
+            "left": 60,
+            "right": 413.108,
+            "top": 134.79999999999995,
+            "bottom": 167
+          },
+          "renderedRegion": {
+            "whitePixelFraction": 1,
+            "luminanceRange": 0,
+            "sampledPixels": 11682
+          }
+        },
+        {
+          "text": "INVISIBLE RENDER MODE",
+          "operatorIndex": 36,
+          "signals": [
+            "INVISIBLE_TEXT_RENDERING_MODE"
+          ],
+          "signal": "INVISIBLE_TEXT_RENDERING_MODE",
+          "renderingMode": 3,
+          "fillRGB": [
+            0,
+            0,
+            0
+          ],
+          "fillOpacity": 1,
+          "renderedBounds": {
+            "left": 60,
+            "right": 411.624,
+            "top": 334.8,
+            "bottom": 367
+          },
+          "renderedRegion": {
+            "whitePixelFraction": 1,
+            "luminanceRange": 0,
+            "sampledPixels": 11616
+          }
+        },
+        {
+          "text": "ZERO OPACITY TEXT",
+          "operatorIndex": 43,
+          "signals": [
+            "NEAR_ZERO_FILL_OPACITY"
+          ],
+          "signal": "NEAR_ZERO_FILL_OPACITY",
+          "renderingMode": 0,
+          "fillRGB": [
+            0,
+            0,
+            0
+          ],
+          "fillOpacity": 0,
+          "renderedBounds": {
+            "left": 60,
+            "right": 347.84,
+            "top": 414.8,
+            "bottom": 447
+          },
+          "renderedRegion": {
+            "whitePixelFraction": 1,
+            "luminanceRange": 0,
+            "sampledPixels": 9504
+          }
+        }
+      ],
+      "unmatchedPotentialSignals": [],
+      "examinedTextOperators": 7,
+      "method": "text-operator-state-plus-rendered-white-region-v1",
+      "limit": "Candidate signals only. White-on-dark text is not hidden. Complex clipping, overpainting, masks, Type3 glyphs, inaccessible text, unmatched runs and nonwhite low-contrast text may be missed. Rendered-region whiteness is not proof of deception. No universal hidden-content or authenticity verdict."
+    }
+  ]
+}

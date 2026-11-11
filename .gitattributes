@@ -1,0 +1,3 @@
+
+# PDF byte offsets and signatures require byte-for-byte preservation.
+*.pdf binary
