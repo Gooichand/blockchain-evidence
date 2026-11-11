@@ -1,0 +1,7 @@
+{
+  "source": "Original generated mono PCM16 WAV; first second 440Hz, second 880Hz",
+  "sampleRate": 16000,
+  "durationSeconds": 2,
+  "channels": 1,
+  "samplesPerChannel": 32000
+}
