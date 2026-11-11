@@ -1,6 +1,6 @@
-# Local upgrade checkpoint, November 12 02:12 IST
+# Local upgrade checkpoint, November 12 02:26 IST
 
-Current local branch local/strict-upgrades-20261112 adds four validated tools to the published stack: 38/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
+Current local branch local/strict-upgrades-20261112 adds seven validated tools to the published stack: 41/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
 
 RSA now checks supported private-key arithmetic/CRT/probable primes and an OAEP roundtrip. Frame extraction is exact for supported MP4/H.264 samples using WebCodecs. PDF metadata includes preserved incremental revisions. PDF signature verification now checks supported detached CMS signatures against signed bytes, NOT certificate trust/revocation/legal validity or later unsigned content.
 

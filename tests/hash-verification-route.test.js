@@ -1,8 +1,13 @@
 process.env.JWT_SECRET = 'local-test-only-not-a-real-secret';
 jest.mock('../config', () => ({ supabase: { from: jest.fn() } }));
 jest.mock('../controllers/blockchainController', () => ({
-  getSystemStatus: jest.fn(), getBlockchainConfig: jest.fn(), getBlockchainStats: jest.fn(),
-  getIPFSStats: jest.fn(), verifyTransaction: jest.fn(), estimateGas: jest.fn(), healthCheck: jest.fn(),
+  getSystemStatus: jest.fn(),
+  getBlockchainConfig: jest.fn(),
+  getBlockchainStats: jest.fn(),
+  getIPFSStats: jest.fn(),
+  verifyTransaction: jest.fn(),
+  estimateGas: jest.fn(),
+  healthCheck: jest.fn(),
 }));
 jest.mock('../services/blockchain/readOnlyVerificationService', () => ({ initialize: jest.fn() }));
 const express = require('express');
@@ -22,11 +27,27 @@ test('invalid session is denied before blockchain access', async () => {
   expect(service.initialize).not.toHaveBeenCalled();
 });
 test('authenticated active user reaches hash validation', async () => {
-  supabase.from.mockReturnValue({ select: () => ({ eq: () => ({ single: async () => ({ data: { id: 1, is_active: true, role: 'forensic_analyst' } }) }) }) });
+  supabase.from.mockReturnValue({
+    select: () => ({
+      eq: () => ({
+        single: async () => ({ data: { id: 1, is_active: true, role: 'forensic_analyst' } }),
+      }),
+    }),
+  });
   const token = jwt.sign({ userId: 1 }, process.env.JWT_SECRET);
-  await request(app).get('/api/blockchain/verify-hash/invalid').set('Authorization', 'Bearer ' + token).expect(400);
+  await request(app)
+    .get('/api/blockchain/verify-hash/invalid')
+    .set('Authorization', 'Bearer ' + token)
+    .expect(400);
   expect(service.initialize).not.toHaveBeenCalled();
 });
 test('health endpoint is authenticated', async () => {
   await request(app).get('/api/blockchain/verification-health').expect(401);
+});
+test('anonymous IPFS gateway proxy is denied before retrieval', async () => {
+  await request(app)
+    .get(
+      '/api/blockchain/ipfs/read-car/trustless/bafybeiadxhz57sw4pfraext5gsryatwqjuyuvcpfui2vvdeiutxpc2ss64',
+    )
+    .expect(401);
 });

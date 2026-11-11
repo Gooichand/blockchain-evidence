@@ -1,5 +1,5 @@
 {
-  "strictYes": 38,
+  "strictYes": 41,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -210,29 +210,29 @@
       "category": "Blockchain",
       "id": "tx-verify",
       "name": "Transaction Verification",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual repository receipt/block controller passed public Amoy read-only RPC checks Nov12 02:21 IST and real local-EVM positive/negative tests. Receipt/block hashes agree; execution is not evidence anchoring. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "evidence-verify",
       "name": "Evidence Verification",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual hash controller passed public Amoy present/absent tests Nov12 02:21 IST, including legacy 0x-prefixed SHA-256 index; cross-checks stored record at same block and rejects conflicting indexes. Anchoring is not authenticity/legal provenance. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "block-explorer",
       "name": "Block Explorer",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual repository block/confirmation controller passed public Amoy read-only RPC check at block 52607676 Nov12 02:21 IST. First 100 transaction hashes, chain80002 only; reorgs possible. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "ipfs-viewer",
       "name": "IPFS Viewer",
       "strictYes": false,
-      "reason": "Local raw-block CID only, no gateway/UnixFS object retrieval."
+      "reason": "Multi-block UnixFS CAR/directory verification and reconstruction pass real local fixtures/tampered/missing-block cases. Public CAR gateway attempts timed out; retrieval remains unconfirmed, no strict credit."
     },
     {
       "category": "Blockchain",

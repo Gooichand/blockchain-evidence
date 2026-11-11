@@ -111,3 +111,24 @@ test('raw CID content check hashes actual bytes and rejects changed payload', as
   ).toBe(false);
   await expect(inspectRaw('bad CID', file)).rejects.toThrow();
 });
+
+test('same-origin live reads carry existing session headers without forwarding them to public RPC', async () => {
+  const saved = global.fetch;
+  global.apiClient = { getAuthHeaders: () => ({ Authorization: 'Bearer synthetic-local-test' }) };
+  global.fetch = jest
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => ({ success: true, state: 'TEST_RESPONSE' }) });
+  try {
+    await require('../public/blockchain-inspection').analyze('block-explorer', 'latest');
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/blockchain/inspect/block/latest',
+      expect.objectContaining({
+        credentials: 'same-origin',
+        headers: { Authorization: 'Bearer synthetic-local-test' },
+      }),
+    );
+  } finally {
+    global.fetch = saved;
+    delete global.apiClient;
+  }
+});

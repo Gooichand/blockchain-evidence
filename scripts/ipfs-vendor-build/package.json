@@ -1,0 +1,1 @@
+{"name":"forensic-ipfs-vendor-build","private":true,"scripts":{"build":"node bundle.cjs"},"dependencies":{"@ipld/car":"5.4.2","ipfs-unixfs-exporter":"13.6.2","multiformats":"13.4.1"},"devDependencies":{"esbuild":"0.28.2","ipfs-unixfs-importer":"15.4.0","blockstore-core":"5.0.4"}}

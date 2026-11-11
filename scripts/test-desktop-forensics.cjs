@@ -324,7 +324,13 @@ async function run() {
         if (category === 'timeline') assert.equal(r.displayedCount, 1);
         if (id === 'qr-scanner') assert.equal(r.text, 'DGC original QR demo');
         if (id === 'ipfs-viewer') {
-          assert.equal(r.matchesBlockBytes, true);
+          assert.equal(r.cidVerified, true);
+          assert.equal(
+            r.byteLength,
+            JSON.parse(fs.readFileSync(path.join(root, 'samples/ipfs/example.json'), 'utf8'))
+              .byteLength,
+          );
+          assert(r.verifiedBlockCount > 1);
           assert(r.untrustedUtf8Preview.includes('Original DGC'));
         }
         if (id === 'ssl-inspect') {

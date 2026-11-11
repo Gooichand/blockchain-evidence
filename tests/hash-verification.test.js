@@ -23,13 +23,17 @@ beforeEach(() => {
 });
 test('reads both hash index and stored record at same block', async () => {
   const res = await call();
-  expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ anchored: true, evidenceId: '1', chainId: 80002, blockNumber: 123 }));
+  expect(res.json).toHaveBeenCalledWith(
+    expect.objectContaining({ anchored: true, evidenceId: '1', chainId: 80002, blockNumber: 123 }),
+  );
   expect(service.contract.verifyHash).toHaveBeenCalledWith(hash, { blockTag: 123 });
   expect(service.contract.getEvidence).toHaveBeenCalledWith(1n, { blockTag: 123 });
 });
 test('reports not found, not an error or verified flag', async () => {
   service.contract.verifyHash.mockResolvedValue([false, 0n]);
-  expect((await call()).json).toHaveBeenCalledWith(expect.objectContaining({ anchored: false, evidenceId: null }));
+  expect((await call()).json).toHaveBeenCalledWith(
+    expect.objectContaining({ anchored: false, evidenceId: null }),
+  );
 });
 test('rejects malformed hash without external call', async () => {
   expect((await call('invalid')).status).toHaveBeenCalledWith(400);
@@ -59,13 +63,19 @@ test('configuration failure never becomes successful verification', async () => 
 
 const { verificationHealth } = require('../controllers/hashVerificationController');
 const health = async () => {
-  const res = { set: jest.fn(), status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
+  const res = {
+    set: jest.fn(),
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockReturnThis(),
+  };
   await verificationHealth({}, res);
   return res;
 };
 test('health requires chain, bytecode and contract reads at one block', async () => {
   const res = await health();
-  expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true, chainId: 80002, blockNumber: 123 }));
+  expect(res.json).toHaveBeenCalledWith(
+    expect.objectContaining({ success: true, chainId: 80002, blockNumber: 123 }),
+  );
   expect(service.contract.verifyHash).toHaveBeenCalledWith('0'.repeat(64), { blockTag: 123 });
   expect(res.set).toHaveBeenCalledWith('Cache-Control', 'no-store');
 });
@@ -89,4 +99,23 @@ test('health timeout returns unavailable rather than leaving a green result', as
   await jest.advanceTimersByTimeAsync(12000);
   expect((await pending).status).toHaveBeenCalledWith(503);
   jest.useRealTimers();
+});
+
+test('legacy 0x-prefixed index and stored digest are normalized at one block', async () => {
+  service.contract.verifyHash.mockImplementation(async (value) =>
+    value.startsWith('0x') ? [true, 1n] : [false, 0n],
+  );
+  service.contract.getEvidence.mockResolvedValue(['0x' + hash]);
+  expect((await call()).json).toHaveBeenCalledWith(
+    expect.objectContaining({ anchored: true, evidenceId: '1', storedHashFormat: '0x-prefixed' }),
+  );
+  expect(service.contract.verifyHash).toHaveBeenCalledWith('0x' + hash, { blockTag: 123 });
+});
+test('conflicting bare/prefixed hash indexes are not presented as a unique match', async () => {
+  service.contract.verifyHash.mockImplementation(async (value) => [
+    true,
+    value.startsWith('0x') ? 2n : 1n,
+  ]);
+  expect((await call()).status).toHaveBeenCalledWith(503);
+  expect(service.contract.getEvidence).not.toHaveBeenCalled();
 });

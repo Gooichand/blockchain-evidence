@@ -1,10 +1,10 @@
 # Strict tool status, November 12 local checkpoint
 
-38 yes / 67 catalog tools. Updated after local upgrade batch 1; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
+41 yes / 67 catalog tools. Updated after local upgrade batch 2; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
-Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. Message: wamid.HBgMOTE4MzA5NjcwNDE2FQIAEhgUM0JGODUyRDYwNjNCOUFGMTc2QzgA. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. The five newer Blockchain tools have no such live confirmation.
+Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. Batch 2 adds public read-only confirmation for transaction, block and hash lookup controllers. Custody/provenance promises remain incomplete; IPFS gateway retrieval remains unconfirmed.
 
-52 bounded local desktop implementations = 48 new original-data examples plus 4 old local Hash tools. Add the old user-confirmed live Hash lookup for 53 bounded implementations, NOT 53 complete tools. The five newer Blockchain reads are separately local-EVM tested only, not public-chain confirmed.
+52 bounded local desktop implementations = 48 new original-data examples plus 4 old local Hash tools. Add the old user-confirmed live Hash lookup for 53 bounded implementations, NOT 53 complete tools. All five newer Blockchain reads have local-EVM tests. Transaction, block and hash lookup controllers now also have public-Amoy read checks; custody and provenance remain local-only and incomplete.
 
 | Category | Original catalog tool | Strict yes/no | Reason / limits |
 |---|---|---|---|
@@ -37,10 +37,10 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Audio Forensics | Spectrogram | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Audio Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Audio Forensics | Audio Fingerprinting | No | Coarse spectral similarity, not unique acoustic fingerprint matching. |
-| Blockchain | Transaction Verification | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
-| Blockchain | Evidence Verification | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
-| Blockchain | Block Explorer | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
-| Blockchain | IPFS Viewer | No | Local raw-block CID only, no gateway/UnixFS object retrieval. |
+| Blockchain | Transaction Verification | Yes | Actual repository receipt/block controller passed public Amoy read-only RPC checks Nov12 02:21 IST and real local-EVM positive/negative tests. Receipt/block hashes agree; execution is not evidence anchoring. Not yet published/deployed. |
+| Blockchain | Evidence Verification | Yes | Actual hash controller passed public Amoy present/absent tests Nov12 02:21 IST, including legacy 0x-prefixed SHA-256 index; cross-checks stored record at same block and rejects conflicting indexes. Anchoring is not authenticity/legal provenance. Not yet published/deployed. |
+| Blockchain | Block Explorer | Yes | Actual repository block/confirmation controller passed public Amoy read-only RPC check at block 52607676 Nov12 02:21 IST. First 100 transaction hashes, chain80002 only; reorgs possible. Not yet published/deployed. |
+| Blockchain | IPFS Viewer | No | Multi-block CAR/UnixFS verification now works locally; live gateway retrieval remains unconfirmed. |
 | Blockchain | Chain of Custody | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
 | Blockchain | Evidence Provenance | No | Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. |
 | Cryptography | AES Analysis | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |

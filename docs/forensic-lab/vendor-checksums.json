@@ -37,6 +37,16 @@
       "sha256": "e32a745bc4816c774d8e26bb9f04acde451b54669079e8b728d22fe9805c1225"
     },
     {
+      "path": "public/vendor/ipfs-THIRD-PARTY-NOTICES.txt",
+      "bytes": 122071,
+      "sha256": "efebc0871245a1dc5abeb539de3327494dc6286c9544bc5c79daae6214c095b4"
+    },
+    {
+      "path": "public/vendor/ipfs-bundle.js",
+      "bytes": 462374,
+      "sha256": "9e496ee399dca970ad81a28de63f3f7abda61a3357f34b5a3157fd6f64770da0"
+    },
+    {
       "path": "public/vendor/jszip-3.10.1.min.js",
       "bytes": 97630,
       "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
