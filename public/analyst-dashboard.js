@@ -8,16 +8,17 @@ const AnalystDashboard = (() => {
   const queueState = { items: [], status: '', priority: '', search: '' };
 
   // ---------------------------------------------------------------- helpers
-  function el(tag, attrs = {}, children = []) {
+  function el(tag, attrs = {}, ...children) {
     const node = document.createElement(tag);
     Object.entries(attrs).forEach(([k, v]) => {
-      if (v === null || v === undefined) return;
+      if (v === null || v === undefined || v === false) return;
+      if (v === true) return node.setAttribute(k, '');
       if (k === 'class') return (node.className = v);
       if (k === 'text') return (node.textContent = v);
       if (k.startsWith('on') && typeof v === 'function') return node.addEventListener(k.slice(2), v);
       node.setAttribute(k, v);
     });
-    (Array.isArray(children) ? children : [children]).forEach((c) => {
+    children.flat().forEach((c) => {
       if (c === null || c === undefined) return;
       node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
     });
@@ -246,10 +247,10 @@ const AnalystDashboard = (() => {
   }
 
   // ---------------------------------------------------------------- dashboard
-  async function loadDashboard() {
+  async function loadDashboard(force) {
     const metricsRoot = document.getElementById('analystMetrics');
     if (!metricsRoot) return;
-    if (metricsRoot.dataset.loaded === '1') {
+    if (!force && metricsRoot.dataset.loaded === '1') {
       if (window.analystEvidence) window.analystEvidence.init();
       return;
     }
@@ -260,6 +261,7 @@ const AnalystDashboard = (() => {
       renderStats(res.data);
       renderBlockchain(res.data.blockchain);
       renderActivity(res.data.recent_activity);
+      refreshIcons();
       metricsRoot.dataset.loaded = '1';
       if (window.analystEvidence) window.analystEvidence.init();
     } catch (error) {
@@ -461,7 +463,7 @@ const AnalystDashboard = (() => {
       const reply = await apiPost('/analyst/evidence/' + evidenceId + '/start', { caseId: caseId || null });
       window.alert('Analysis started (task #' + reply.data.task_id + '). Open the workspace to continue.');
       loadQueue();
-      loadDashboard();
+      loadDashboard(true);
       if (window.analystEvidence) window.analystEvidence.init();
     } catch (error) {
       window.alert('Analysis could not be started: ' + (error.message || 'Unknown error'));
@@ -737,7 +739,7 @@ const AnalystDashboard = (() => {
         await apiPut('/analyst/tasks/' + task.id + '/report', { result_summary: summaryInput.value, findings: findingsInput.value, submit: true });
         msg.textContent = 'Report submitted. Task completed.';
         loadQueue();
-        loadDashboard();
+        loadDashboard(true);
         loadWorkspace();
       } catch (err) {
         msg.textContent = 'Submit failed: ' + (err.message || 'unknown error');
@@ -889,21 +891,130 @@ const AnalystDashboard = (() => {
   }
 
   // ---------------------------------------------------------------- global search
+  // Wired to GET /api/analyst/search (tasks + reports + scoped case number/title).
   function initGlobalSearch() {
     const input = document.getElementById('analystGlobalSearch');
     if (!input) return;
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', async (e) => {
       if (e.key !== 'Enter') return;
       const q = input.value.trim();
       if (!q) return;
-      queueState.search = q;
-      queueState.status = '';
-      queueState.priority = '';
-      document.getElementById('queueStatusFilter').value = '';
-      document.getElementById('queuePriorityFilter').value = '';
-      document.getElementById('queueSearch').value = q;
-      showView('queue');
+      const modal = window.analystModal;
+      if (!modal) return;
+      document.getElementById('analystModalTitle').textContent = 'Search: ' + q;
+      modal.setBody(el('p', { class: 'analyst-loading', text: 'Searching tasks, reports and cases…' }));
+      modal.open();
+      try {
+        const res = await apiGet('/analyst/search?q=' + encodeURIComponent(q));
+        const data = (res && res.data) || {};
+        modal.setBody(renderSearchResults(data));
+      } catch (err) {
+        modal.setBody(errorBlock('Search failed. ' + (err && err.message ? err.message : 'Check your connection.')));
+      }
     });
+  }
+
+  function renderSearchResults(data) {
+    const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    const reports = Array.isArray(data.reports) ? data.reports : [];
+    const cases = Array.isArray(data.cases) ? data.cases : [];
+    const wrap = el('div', { class: 'analyst-search-results' });
+    if (tasks.length === 0 && reports.length === 0 && cases.length === 0) {
+      wrap.appendChild(emptyBlock('No matches', 'Nothing in your assigned tasks, reports or cases matched that search.'));
+      return wrap;
+    }
+    if (cases.length > 0) {
+      wrap.appendChild(el('h3', { class: 'analyst-search-heading', text: 'Cases' }));
+      const list = el('div', { class: 'analyst-search-list' });
+      cases.forEach((c) => {
+        list.appendChild(el('div', { class: 'analyst-search-row' },
+          el('span', { class: 'analyst-search-primary', text: (c.case_number ? '#' + c.case_number : 'Case #' + c.id) + ' — ' + (c.title || 'Untitled') }),
+          badge(toTitle(c.status || 'open'), 'badge-status-' + (c.status || 'open')),
+        ));
+      });
+      wrap.appendChild(list);
+    }
+    if (tasks.length > 0) {
+      wrap.appendChild(el('h3', { class: 'analyst-search-heading', text: 'Tasks' }));
+      const list = el('div', { class: 'analyst-search-list' });
+      tasks.forEach((t) => {
+        const ev = t.evidence || {};
+        const open = el('button', {
+          class: 'btn btn-outline btn-sm', type: 'button', text: 'Open',
+          'aria-label': 'Open task ' + t.id,
+          onclick: () => { window.analystModal.close(); openWorkspace(t.id); },
+        });
+        list.appendChild(el('div', { class: 'analyst-search-row' },
+          el('span', { class: 'analyst-search-primary', text: ev.name || 'Evidence #' + t.evidence_id }),
+          badge(toTitle(t.status || 'pending'), 'badge-status-' + (t.status || 'pending')),
+          open,
+        ));
+      });
+      wrap.appendChild(list);
+    }
+    if (reports.length > 0) {
+      wrap.appendChild(el('h3', { class: 'analyst-search-heading', text: 'Reports' }));
+      const list = el('div', { class: 'analyst-search-list' });
+      reports.forEach((r) => {
+        list.appendChild(el('div', { class: 'analyst-search-row' },
+          el('span', { class: 'analyst-search-primary', text: (r.result_summary || 'Report').slice(0, 120) }),
+          badge(toTitle(r.status || 'draft'), 'badge-status-' + (r.status || 'draft')),
+        ));
+      });
+      wrap.appendChild(list);
+    }
+    return wrap;
+  }
+
+  // ---------------------------------------------------------------- start picker
+  // Lists only evidence with a pre-existing assignment (pending analysis task)
+  // for this analyst; the server enforces the same contract on start.
+  async function openStartPicker() {
+    const modal = window.analystModal;
+    if (!modal) return;
+    document.getElementById('analystModalTitle').textContent = 'Start New Analysis';
+    modal.setBody(el('p', { class: 'analyst-loading', text: 'Loading your assigned evidence…' }));
+    modal.open();
+    try {
+      const res = await apiGet('/analyst/queue?status=pending&limit=50');
+      const items = (res && Array.isArray(res.data) ? res.data : (res && res.data && res.data.items)) || [];
+      if (items.length === 0) {
+        modal.setBody(emptyBlock('No assigned evidence waiting', 'Evidence routed to your analysis queue will appear here.'));
+        return;
+      }
+      const list = el('div', { class: 'analyst-search-list' });
+      items.forEach((item) => {
+        const ev = item.evidence || {};
+        const startBtn = el('button', {
+          class: 'btn btn-purple btn-sm', type: 'button', text: 'Start',
+          'aria-label': 'Start analysis on ' + (ev.name || 'evidence #' + item.evidence_id),
+          onclick: async () => {
+            startBtn.disabled = true;
+            startBtn.textContent = 'Starting…';
+            try {
+              await apiPost('/analyst/evidence/' + item.evidence_id + '/start', { priority: item.priority || 'medium', caseId: item.case_id });
+              modal.close();
+              loadDashboard(true);
+              loadQueue();
+              openWorkspace(item.id);
+            } catch (err) {
+              startBtn.disabled = false;
+              startBtn.textContent = 'Start';
+              startBtn.parentNode.appendChild(el('span', { class: 'analyst-search-error', text: ' ' + ((err && err.message) || 'Could not start analysis') }));
+            }
+          },
+        });
+        list.appendChild(el('div', { class: 'analyst-search-row' },
+          el('span', { class: 'analyst-search-primary', text: ev.name || 'Evidence #' + item.evidence_id }),
+          el('span', { class: 'analyst-search-secondary', text: item.case_number ? 'Case #' + item.case_number : '' }),
+          badge(toTitle(item.priority || 'medium'), 'badge-priority-' + (item.priority || 'medium')),
+          startBtn,
+        ));
+      });
+      modal.setBody(list);
+    } catch (err) {
+      modal.setBody(errorBlock('Could not load assigned evidence. ' + (err && err.message ? err.message : 'Check your connection.'), openStartPicker));
+    }
   }
 
   // ---------------------------------------------------------------- hero actions
@@ -911,11 +1022,11 @@ const AnalystDashboard = (() => {
     const start = document.getElementById('heroStartAnalysis');
     const refresh = document.getElementById('heroContinuePending');
     if (start) {
-      start.addEventListener('click', () => showView('queue'));
+      start.addEventListener('click', openStartPicker);
     }
     if (refresh) {
       refresh.addEventListener('click', () => {
-        loadDashboard();
+        loadDashboard(true);
         loadQueue();
       });
     }
