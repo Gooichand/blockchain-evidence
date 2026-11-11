@@ -1,6 +1,6 @@
-# Local upgrade checkpoint, November 12 03:11 IST
+# Local upgrade checkpoint, November 12 03:32 IST
 
-Current local branch local/strict-upgrades-20261112 adds ten validated tools to the published stack: 44/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
+Current local branch local/strict-upgrades-20261112 adds twelve validated tools to the published stack: 46/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
 
 RSA now checks supported private-key arithmetic/CRT/probable primes and an OAEP roundtrip. Frame extraction is exact for supported MP4/H.264 samples using WebCodecs. PDF metadata includes preserved incremental revisions. PDF signature verification now checks supported detached CMS signatures against signed bytes, NOT certificate trust/revocation/legal validity or later unsigned content.
 
@@ -10,7 +10,9 @@ Audio fingerprinting now uses actual time-ordered spectral landmark hashes and c
 
 Clone Detection now groups nonlocal ORB feature correspondences by RANSAC homographies, with translated/rotated/scaled/recompressed fixtures and unique/flat negatives. Candidate repeated regions are not an edit verdict; natural repetitions can match. Classical features only, no trained model.
 
-The following is the earlier overnight scope record, not current capability truth. Statements about approximate-only extraction, marker-only PDF signatures, property-only PDF metadata, local-only blockchain, raw-only IPFS, unavailable DNS/registration and average-only audio comparison and exact-grid-only clone search are superseded by the upgrade checkpoints above and STRICT-UPGRADES-2026-11-12.md; other limits remain.
+Keyframe Analysis now decodes/measures every supported MP4/H264 frame, groups GOPs and reports deterministic anomaly candidates. Timeline Viewer now uses all-frame visual-change measurements, exact segment-start thumbnails and near-black/low-change intervals. Neither provides semantic event understanding or authenticity; Video Inspector remains strictNo because audio/other streams and concealed corruption are not validated.
+
+The following is the earlier overnight scope record, not current capability truth. Statements about approximate-only extraction, marker-only PDF signatures, property-only PDF metadata, local-only blockchain, raw-only IPFS, unavailable DNS/registration and average-only audio comparison and exact-grid-only clone search and sparse-only video timelines/keyframe flags are superseded by the upgrade checkpoints above and STRICT-UPGRADES-2026-11-12.md; other limits remain.
 
 # Desktop forensic lab: local implementation status
 

@@ -1,0 +1,1340 @@
+{
+  "browser": [
+    {
+      "file": "measurement/cuts-gops.mp4",
+      "result": {
+        "file": "measurement/cuts-gops.mp4",
+        "method": "all-decoded-frame-32x18-RGB-histogram-and-GOP-v1",
+        "decodedFrameCount": 40,
+        "syncSampleCount": 4,
+        "medianFrameDurationSeconds": 0.1,
+        "groups": [
+          {
+            "groupIndex": 0,
+            "startDecodeSample": 1,
+            "endDecodeSampleInclusive": 10,
+            "sampleCount": 10,
+            "startPresentationSeconds": 0,
+            "endPresentationSeconds": 1.0000000000000002,
+            "compressedBytes": 883,
+            "syncPresentationSeconds": 0,
+            "flags": [],
+            "visualChangeCandidates": 1
+          },
+          {
+            "groupIndex": 1,
+            "startDecodeSample": 11,
+            "endDecodeSampleInclusive": 13,
+            "sampleCount": 3,
+            "startPresentationSeconds": 1,
+            "endPresentationSeconds": 1.3,
+            "compressedBytes": 80,
+            "syncPresentationSeconds": 1,
+            "flags": [
+              "UNUSUAL_GOP_SAMPLE_COUNT"
+            ],
+            "visualChangeCandidates": 1
+          },
+          {
+            "groupIndex": 2,
+            "startDecodeSample": 14,
+            "endDecodeSampleInclusive": 30,
+            "sampleCount": 17,
+            "startPresentationSeconds": 1.3,
+            "endPresentationSeconds": 3,
+            "compressedBytes": 316,
+            "syncPresentationSeconds": 1.3,
+            "flags": [
+              "UNUSUAL_GOP_SAMPLE_COUNT"
+            ],
+            "visualChangeCandidates": 1
+          },
+          {
+            "groupIndex": 3,
+            "startDecodeSample": 31,
+            "endDecodeSampleInclusive": 40,
+            "sampleCount": 10,
+            "startPresentationSeconds": 3,
+            "endPresentationSeconds": 3.9999999999999996,
+            "compressedBytes": 197,
+            "syncPresentationSeconds": 3,
+            "flags": [],
+            "visualChangeCandidates": 1
+          }
+        ],
+        "scenes": [
+          {
+            "startFrame": 0,
+            "endFrame": 9,
+            "startSeconds": 0,
+            "endSeconds": 1.0000000000000002,
+            "representativeFrame": 0
+          },
+          {
+            "startFrame": 10,
+            "endFrame": 19,
+            "startSeconds": 1,
+            "endSeconds": 2,
+            "representativeFrame": 10
+          },
+          {
+            "startFrame": 20,
+            "endFrame": 29,
+            "startSeconds": 2,
+            "endSeconds": 3,
+            "representativeFrame": 20
+          },
+          {
+            "startFrame": 30,
+            "endFrame": 39,
+            "startSeconds": 3,
+            "endSeconds": 3.9999999999999996,
+            "representativeFrame": 30
+          }
+        ],
+        "events": [
+          {
+            "kind": "ABRUPT_VISUAL_CHANGE_CANDIDATE",
+            "frameIndex": 10,
+            "seconds": 1,
+            "meanAbsoluteRGBDifference": 0.36470588235294027,
+            "histogramDistance": 0.6666666666666666
+          },
+          {
+            "kind": "ABRUPT_VISUAL_CHANGE_CANDIDATE",
+            "frameIndex": 20,
+            "seconds": 2,
+            "meanAbsoluteRGBDifference": 0.3490196078431436,
+            "histogramDistance": 0.3333333333333333
+          },
+          {
+            "kind": "ABRUPT_VISUAL_CHANGE_CANDIDATE",
+            "frameIndex": 30,
+            "seconds": 3,
+            "meanAbsoluteRGBDifference": 0.4522875816993444,
+            "histogramDistance": 0.6666666666666666
+          },
+          {
+            "kind": "NEAR_BLACK_INTERVAL",
+            "startFrame": 10,
+            "endFrame": 19,
+            "startSeconds": 1,
+            "endSeconds": 2,
+            "durationSeconds": 1
+          }
+        ],
+        "frames": [
+          {
+            "presentationIndex": 0,
+            "sampleNumber": 1,
+            "seconds": 0,
+            "durationSeconds": 0.1,
+            "isSync": true,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 1,
+            "sampleNumber": 4,
+            "seconds": 0.09999999999999998,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 2,
+            "sampleNumber": 3,
+            "seconds": 0.2,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 3,
+            "sampleNumber": 5,
+            "seconds": 0.3,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 4,
+            "sampleNumber": 2,
+            "seconds": 0.39999999999999997,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 5,
+            "sampleNumber": 8,
+            "seconds": 0.49999999999999994,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 6,
+            "sampleNumber": 7,
+            "seconds": 0.6000000000000001,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 7,
+            "sampleNumber": 9,
+            "seconds": 0.7,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 8,
+            "sampleNumber": 6,
+            "seconds": 0.8,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 9,
+            "sampleNumber": 10,
+            "seconds": 0.9000000000000001,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 71.37779999999984,
+            "luminanceStddev": 1.9073486328125e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 10,
+            "sampleNumber": 11,
+            "seconds": 1,
+            "durationSeconds": 0.1,
+            "isSync": true,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0.36470588235294027,
+            "histogramDistance": 0.6666666666666666
+          },
+          {
+            "presentationIndex": 11,
+            "sampleNumber": 13,
+            "seconds": 1.1,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 12,
+            "sampleNumber": 12,
+            "seconds": 1.2,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 13,
+            "sampleNumber": 14,
+            "seconds": 1.3,
+            "durationSeconds": 0.1,
+            "isSync": true,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 14,
+            "sampleNumber": 17,
+            "seconds": 1.4000000000000001,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 15,
+            "sampleNumber": 16,
+            "seconds": 1.5,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 16,
+            "sampleNumber": 18,
+            "seconds": 1.6,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 17,
+            "sampleNumber": 15,
+            "seconds": 1.7,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 18,
+            "sampleNumber": 21,
+            "seconds": 1.8,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 19,
+            "sampleNumber": 20,
+            "seconds": 1.9000000000000001,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 0,
+            "luminanceStddev": 0,
+            "blackFraction": 1,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 20,
+            "sampleNumber": 22,
+            "seconds": 2,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0.3490196078431436,
+            "histogramDistance": 0.3333333333333333
+          },
+          {
+            "presentationIndex": 21,
+            "sampleNumber": 19,
+            "seconds": 2.0999999999999996,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 22,
+            "sampleNumber": 25,
+            "seconds": 2.1999999999999997,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 23,
+            "sampleNumber": 24,
+            "seconds": 2.3,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 24,
+            "sampleNumber": 26,
+            "seconds": 2.4,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 25,
+            "sampleNumber": 23,
+            "seconds": 2.5,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 26,
+            "sampleNumber": 29,
+            "seconds": 2.5999999999999996,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 27,
+            "sampleNumber": 28,
+            "seconds": 2.6999999999999997,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 28,
+            "sampleNumber": 30,
+            "seconds": 2.8,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 29,
+            "sampleNumber": 27,
+            "seconds": 2.9,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 28.279399999999793,
+            "luminanceStddev": 2.900487198971853e-06,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 30,
+            "sampleNumber": 31,
+            "seconds": 3,
+            "durationSeconds": 0.1,
+            "isSync": true,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0.4522875816993444,
+            "histogramDistance": 0.6666666666666666
+          },
+          {
+            "presentationIndex": 31,
+            "sampleNumber": 34,
+            "seconds": 3.0999999999999996,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 32,
+            "sampleNumber": 33,
+            "seconds": 3.1999999999999997,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 33,
+            "sampleNumber": 35,
+            "seconds": 3.3,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 34,
+            "sampleNumber": 32,
+            "seconds": 3.4,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 35,
+            "sampleNumber": 38,
+            "seconds": 3.5,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 36,
+            "sampleNumber": 37,
+            "seconds": 3.5999999999999996,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 37,
+            "sampleNumber": 39,
+            "seconds": 3.6999999999999997,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 38,
+            "sampleNumber": 36,
+            "seconds": 3.8,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 39,
+            "sampleNumber": 40,
+            "seconds": 3.8999999999999995,
+            "durationSeconds": 0.1,
+            "isSync": false,
+            "meanLuminance": 78.10119999999948,
+            "luminanceStddev": 1.1718946196980007e-05,
+            "blackFraction": 0,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          }
+        ],
+        "note": "Every supported video frame measured at32x18 resolution. Deterministic candidates only, not semantic event reconstruction, edit proof or authenticity. Similar-looking changes can be missed; motion/exposure/normal GOP encoding can trigger candidates. No audio interpretation.",
+        "codec": "avc1.64000a",
+        "durationSeconds": 4,
+        "width": 160,
+        "height": 96,
+        "editShiftSeconds": -0.2,
+        "ignoredNonVideoTrackCount": 0,
+        "limit": "MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict."
+      }
+    },
+    {
+      "file": "exact/b-frames.mp4",
+      "result": {
+        "file": "exact/b-frames.mp4",
+        "method": "all-decoded-frame-32x18-RGB-histogram-and-GOP-v1",
+        "decodedFrameCount": 24,
+        "syncSampleCount": 2,
+        "medianFrameDurationSeconds": 0.08333333333333333,
+        "groups": [
+          {
+            "groupIndex": 0,
+            "startDecodeSample": 1,
+            "endDecodeSampleInclusive": 12,
+            "sampleCount": 12,
+            "startPresentationSeconds": 0,
+            "endPresentationSeconds": 1,
+            "compressedBytes": 11882,
+            "syncPresentationSeconds": 0,
+            "flags": [],
+            "visualChangeCandidates": 0
+          },
+          {
+            "groupIndex": 1,
+            "startDecodeSample": 13,
+            "endDecodeSampleInclusive": 24,
+            "sampleCount": 12,
+            "startPresentationSeconds": 1,
+            "endPresentationSeconds": 2,
+            "compressedBytes": 11326,
+            "syncPresentationSeconds": 1,
+            "flags": [],
+            "visualChangeCandidates": 0
+          }
+        ],
+        "scenes": [
+          {
+            "startFrame": 0,
+            "endFrame": 23,
+            "startSeconds": 0,
+            "endSeconds": 2,
+            "representativeFrame": 0
+          }
+        ],
+        "events": [],
+        "frames": [
+          {
+            "presentationIndex": 0,
+            "sampleNumber": 1,
+            "seconds": 0,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": true,
+            "meanLuminance": 105.34358402777772,
+            "luminanceStddev": 62.82585021716912,
+            "blackFraction": 0.003472222222222222,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 1,
+            "sampleNumber": 4,
+            "seconds": 0.08333333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.25141840277777,
+            "luminanceStddev": 62.48241610353822,
+            "blackFraction": 0.006944444444444444,
+            "meanAbsoluteRGBDifference": 0.022274419026870048,
+            "histogramDistance": 0.053240740740740734
+          },
+          {
+            "presentationIndex": 2,
+            "sampleNumber": 3,
+            "seconds": 0.16666666666666666,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.03367430555551,
+            "luminanceStddev": 61.98787584566335,
+            "blackFraction": 0.010416666666666666,
+            "meanAbsoluteRGBDifference": 0.027929829339143144,
+            "histogramDistance": 0.03703703703703704
+          },
+          {
+            "presentationIndex": 3,
+            "sampleNumber": 5,
+            "seconds": 0.25,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.30148576388885,
+            "luminanceStddev": 61.0513149787859,
+            "blackFraction": 0.010416666666666666,
+            "meanAbsoluteRGBDifference": 0.0227873093681918,
+            "histogramDistance": 0.032407407407407406
+          },
+          {
+            "presentationIndex": 4,
+            "sampleNumber": 2,
+            "seconds": 0.33333333333333337,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.0863149305556,
+            "luminanceStddev": 60.00383510322495,
+            "blackFraction": 0.015625,
+            "meanAbsoluteRGBDifference": 0.0231935366739289,
+            "histogramDistance": 0.040509259259259266
+          },
+          {
+            "presentationIndex": 5,
+            "sampleNumber": 7,
+            "seconds": 0.41666666666666674,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 104.62529756944443,
+            "luminanceStddev": 59.13707329480238,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.030709876543209946,
+            "histogramDistance": 0.04224537037037038
+          },
+          {
+            "presentationIndex": 6,
+            "sampleNumber": 8,
+            "seconds": 0.5,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.15274444444445,
+            "luminanceStddev": 58.52157494715861,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.028270243282498258,
+            "histogramDistance": 0.046296296296296294
+          },
+          {
+            "presentationIndex": 7,
+            "sampleNumber": 6,
+            "seconds": 0.5833333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.55677430555566,
+            "luminanceStddev": 59.25938428255808,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.026264070442992105,
+            "histogramDistance": 0.0462962962962963
+          },
+          {
+            "presentationIndex": 8,
+            "sampleNumber": 11,
+            "seconds": 0.6666666666666667,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.40810173611116,
+            "luminanceStddev": 60.41550199429008,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.034717683369644224,
+            "histogramDistance": 0.04571759259259258
+          },
+          {
+            "presentationIndex": 9,
+            "sampleNumber": 10,
+            "seconds": 0.75,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.93222534722224,
+            "luminanceStddev": 61.31065884632794,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.031116103848947082,
+            "histogramDistance": 0.038773148148148154
+          },
+          {
+            "presentationIndex": 10,
+            "sampleNumber": 12,
+            "seconds": 0.8333333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.43478854166669,
+            "luminanceStddev": 61.28286925100833,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.027500907770515674,
+            "histogramDistance": 0.048611111111111105
+          },
+          {
+            "presentationIndex": 11,
+            "sampleNumber": 9,
+            "seconds": 0.9166666666666666,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.32022847222225,
+            "luminanceStddev": 61.803866508879274,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03100717138707341,
+            "histogramDistance": 0.04976851851851853
+          },
+          {
+            "presentationIndex": 12,
+            "sampleNumber": 13,
+            "seconds": 1,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": true,
+            "meanLuminance": 107.85220590277774,
+            "luminanceStddev": 61.725938910885,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.034847040668119195,
+            "histogramDistance": 0.057870370370370364
+          },
+          {
+            "presentationIndex": 13,
+            "sampleNumber": 16,
+            "seconds": 1.0833333333333333,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.4182548611111,
+            "luminanceStddev": 61.60041107206737,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.030839233841684882,
+            "histogramDistance": 0.043981481481481496
+          },
+          {
+            "presentationIndex": 14,
+            "sampleNumber": 15,
+            "seconds": 1.1666666666666665,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.70478437500005,
+            "luminanceStddev": 61.381467461478294,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03964687726942623,
+            "histogramDistance": 0.04166666666666666
+          },
+          {
+            "presentationIndex": 15,
+            "sampleNumber": 17,
+            "seconds": 1.25,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.79245451388886,
+            "luminanceStddev": 60.91619160623592,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.032112381989833,
+            "histogramDistance": 0.04861111111111113
+          },
+          {
+            "presentationIndex": 16,
+            "sampleNumber": 14,
+            "seconds": 1.3333333333333333,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.52205763888884,
+            "luminanceStddev": 60.809479456856856,
+            "blackFraction": 0.010416666666666666,
+            "meanAbsoluteRGBDifference": 0.03177650689905596,
+            "histogramDistance": 0.04282407407407406
+          },
+          {
+            "presentationIndex": 17,
+            "sampleNumber": 18,
+            "seconds": 1.4166666666666665,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.04093402777781,
+            "luminanceStddev": 60.82222680802426,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.041049382716049326,
+            "histogramDistance": 0.048032407407407406
+          },
+          {
+            "presentationIndex": 18,
+            "sampleNumber": 20,
+            "seconds": 1.5,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.36153229166668,
+            "luminanceStddev": 60.09756405443815,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.032448257080610124,
+            "histogramDistance": 0.04340277777777776
+          },
+          {
+            "presentationIndex": 19,
+            "sampleNumber": 19,
+            "seconds": 1.5833333333333333,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.38147361111105,
+            "luminanceStddev": 60.34196514771859,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.030049473493101005,
+            "histogramDistance": 0.039930555555555546
+          },
+          {
+            "presentationIndex": 20,
+            "sampleNumber": 22,
+            "seconds": 1.6666666666666665,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.6040972222222,
+            "luminanceStddev": 60.29401610974176,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.041301289034132105,
+            "histogramDistance": 0.04571759259259259
+          },
+          {
+            "presentationIndex": 21,
+            "sampleNumber": 23,
+            "seconds": 1.75,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.49866631944444,
+            "luminanceStddev": 60.27696193962241,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.036828249818445846,
+            "histogramDistance": 0.04687499999999999
+          },
+          {
+            "presentationIndex": 22,
+            "sampleNumber": 21,
+            "seconds": 1.8333333333333333,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.90693402777765,
+            "luminanceStddev": 60.90486674570722,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03406408859840234,
+            "histogramDistance": 0.040509259259259287
+          },
+          {
+            "presentationIndex": 23,
+            "sampleNumber": 24,
+            "seconds": 1.9166666666666667,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.50472013888869,
+            "luminanceStddev": 61.9001435422783,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03655137981118367,
+            "histogramDistance": 0.03761574074074073
+          }
+        ],
+        "note": "Every supported video frame measured at32x18 resolution. Deterministic candidates only, not semantic event reconstruction, edit proof or authenticity. Similar-looking changes can be missed; motion/exposure/normal GOP encoding can trigger candidates. No audio interpretation.",
+        "codec": "avc1.64000a",
+        "durationSeconds": 2,
+        "width": 160,
+        "height": 96,
+        "editShiftSeconds": -0.16666666666666666,
+        "ignoredNonVideoTrackCount": 0,
+        "limit": "MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict."
+      }
+    },
+    {
+      "file": "exact/vfr.mp4",
+      "result": {
+        "file": "exact/vfr.mp4",
+        "method": "all-decoded-frame-32x18-RGB-histogram-and-GOP-v1",
+        "decodedFrameCount": 24,
+        "syncSampleCount": 2,
+        "medianFrameDurationSeconds": 0.08333333333333333,
+        "groups": [
+          {
+            "groupIndex": 0,
+            "startDecodeSample": 1,
+            "endDecodeSampleInclusive": 12,
+            "sampleCount": 12,
+            "startPresentationSeconds": 0,
+            "endPresentationSeconds": 1,
+            "compressedBytes": 12091,
+            "syncPresentationSeconds": 0,
+            "flags": [],
+            "visualChangeCandidates": 0
+          },
+          {
+            "groupIndex": 1,
+            "startDecodeSample": 13,
+            "endDecodeSampleInclusive": 24,
+            "sampleCount": 12,
+            "startPresentationSeconds": 1,
+            "endPresentationSeconds": 3.0833333333333335,
+            "compressedBytes": 12774,
+            "syncPresentationSeconds": 1,
+            "flags": [],
+            "visualChangeCandidates": 0
+          }
+        ],
+        "scenes": [
+          {
+            "startFrame": 0,
+            "endFrame": 23,
+            "startSeconds": 0,
+            "endSeconds": 3.0833333333333335,
+            "representativeFrame": 0
+          }
+        ],
+        "events": [
+          {
+            "kind": "PRESENTATION_GAP_OR_OVERLAP",
+            "frameIndex": 13,
+            "seconds": 1.1666666666666665,
+            "gapSeconds": 0.08333333333333326
+          },
+          {
+            "kind": "PRESENTATION_GAP_OR_OVERLAP",
+            "frameIndex": 17,
+            "seconds": 1.8333333333333333,
+            "gapSeconds": 0.08333333333333348
+          }
+        ],
+        "frames": [
+          {
+            "presentationIndex": 0,
+            "sampleNumber": 1,
+            "seconds": 0,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": true,
+            "meanLuminance": 105.48994756944438,
+            "luminanceStddev": 62.79437698925966,
+            "blackFraction": 0.003472222222222222,
+            "meanAbsoluteRGBDifference": 0,
+            "histogramDistance": 0
+          },
+          {
+            "presentationIndex": 1,
+            "sampleNumber": 4,
+            "seconds": 0.08333333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.35153368055555,
+            "luminanceStddev": 62.450769082284744,
+            "blackFraction": 0.006944444444444444,
+            "meanAbsoluteRGBDifference": 0.022013435003631125,
+            "histogramDistance": 0.05324074074074074
+          },
+          {
+            "presentationIndex": 2,
+            "sampleNumber": 3,
+            "seconds": 0.16666666666666666,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.13134062499995,
+            "luminanceStddev": 62.004775071871066,
+            "blackFraction": 0.010416666666666666,
+            "meanAbsoluteRGBDifference": 0.0278935185185186,
+            "histogramDistance": 0.04166666666666666
+          },
+          {
+            "presentationIndex": 3,
+            "sampleNumber": 5,
+            "seconds": 0.25,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.48221493055549,
+            "luminanceStddev": 61.04259834441401,
+            "blackFraction": 0.012152777777777778,
+            "meanAbsoluteRGBDifference": 0.02278277051561373,
+            "histogramDistance": 0.03587962962962964
+          },
+          {
+            "presentationIndex": 4,
+            "sampleNumber": 2,
+            "seconds": 0.33333333333333337,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.22003888888895,
+            "luminanceStddev": 60.034553854637515,
+            "blackFraction": 0.015625,
+            "meanAbsoluteRGBDifference": 0.023068718228032015,
+            "histogramDistance": 0.042824074074074056
+          },
+          {
+            "presentationIndex": 5,
+            "sampleNumber": 7,
+            "seconds": 0.41666666666666674,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 104.777,
+            "luminanceStddev": 59.07930838153507,
+            "blackFraction": 0.015625,
+            "meanAbsoluteRGBDifference": 0.030709876543209932,
+            "histogramDistance": 0.0445601851851852
+          },
+          {
+            "presentationIndex": 6,
+            "sampleNumber": 8,
+            "seconds": 0.5,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.23899895833341,
+            "luminanceStddev": 58.53572474568667,
+            "blackFraction": 0.013888888888888888,
+            "meanAbsoluteRGBDifference": 0.02817719680464786,
+            "histogramDistance": 0.04166666666666666
+          },
+          {
+            "presentationIndex": 7,
+            "sampleNumber": 6,
+            "seconds": 0.5833333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 105.68877673611107,
+            "luminanceStddev": 59.191451224061694,
+            "blackFraction": 0.017361111111111112,
+            "meanAbsoluteRGBDifference": 0.026295842411038595,
+            "histogramDistance": 0.04976851851851853
+          },
+          {
+            "presentationIndex": 8,
+            "sampleNumber": 11,
+            "seconds": 0.6666666666666667,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.55358090277782,
+            "luminanceStddev": 60.42585796777424,
+            "blackFraction": 0.015625,
+            "meanAbsoluteRGBDifference": 0.034642792302106096,
+            "histogramDistance": 0.045717592592592594
+          },
+          {
+            "presentationIndex": 9,
+            "sampleNumber": 10,
+            "seconds": 0.75,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.00005347222226,
+            "luminanceStddev": 61.4089619385831,
+            "blackFraction": 0.015625,
+            "meanAbsoluteRGBDifference": 0.03146559549745836,
+            "histogramDistance": 0.043981481481481496
+          },
+          {
+            "presentationIndex": 10,
+            "sampleNumber": 12,
+            "seconds": 0.8333333333333334,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.48146527777779,
+            "luminanceStddev": 61.30476911851543,
+            "blackFraction": 0.006944444444444444,
+            "meanAbsoluteRGBDifference": 0.02768473129992746,
+            "histogramDistance": 0.04166666666666668
+          },
+          {
+            "presentationIndex": 11,
+            "sampleNumber": 9,
+            "seconds": 0.9166666666666666,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 107.38315937500003,
+            "luminanceStddev": 61.85933792092629,
+            "blackFraction": 0.006944444444444444,
+            "meanAbsoluteRGBDifference": 0.031061637618010247,
+            "histogramDistance": 0.04629629629629632
+          },
+          {
+            "presentationIndex": 12,
+            "sampleNumber": 13,
+            "seconds": 1,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": true,
+            "meanLuminance": 107.85220590277774,
+            "luminanceStddev": 61.725938910885,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.034499818445897015,
+            "histogramDistance": 0.056134259259259245
+          },
+          {
+            "presentationIndex": 13,
+            "sampleNumber": 16,
+            "seconds": 1.1666666666666665,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 107.41029097222228,
+            "luminanceStddev": 61.65315571080701,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03061683006535954,
+            "histogramDistance": 0.047453703703703706
+          },
+          {
+            "presentationIndex": 14,
+            "sampleNumber": 15,
+            "seconds": 1.3333333333333333,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.74078055555552,
+            "luminanceStddev": 61.418705593962336,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03954248366013064,
+            "histogramDistance": 0.04282407407407406
+          },
+          {
+            "presentationIndex": 15,
+            "sampleNumber": 17,
+            "seconds": 1.5,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.86286493055552,
+            "luminanceStddev": 61.018684793329165,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03220769789397243,
+            "histogramDistance": 0.05266203703703704
+          },
+          {
+            "presentationIndex": 16,
+            "sampleNumber": 14,
+            "seconds": 1.6666666666666665,
+            "durationSeconds": 0.08333333333333333,
+            "isSync": false,
+            "meanLuminance": 106.52508333333336,
+            "luminanceStddev": 60.86884199043011,
+            "blackFraction": 0.010416666666666666,
+            "meanAbsoluteRGBDifference": 0.0315472948438635,
+            "histogramDistance": 0.04745370370370369
+          },
+          {
+            "presentationIndex": 17,
+            "sampleNumber": 18,
+            "seconds": 1.8333333333333333,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.10202743055541,
+            "luminanceStddev": 60.91391245871114,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.04111973493100935,
+            "histogramDistance": 0.045717592592592574
+          },
+          {
+            "presentationIndex": 18,
+            "sampleNumber": 20,
+            "seconds": 1.9999999999999998,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.3573777777777,
+            "luminanceStddev": 60.12634667890044,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.03261392519970958,
+            "histogramDistance": 0.04050925925925926
+          },
+          {
+            "presentationIndex": 19,
+            "sampleNumber": 19,
+            "seconds": 2.166666666666667,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.40540972222225,
+            "luminanceStddev": 60.38358838908582,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.030167483660130803,
+            "histogramDistance": 0.04398148148148147
+          },
+          {
+            "presentationIndex": 20,
+            "sampleNumber": 22,
+            "seconds": 2.3333333333333335,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.63071840277786,
+            "luminanceStddev": 60.34095262603977,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.041528231663035486,
+            "histogramDistance": 0.0451388888888889
+          },
+          {
+            "presentationIndex": 21,
+            "sampleNumber": 23,
+            "seconds": 2.5,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.57575868055547,
+            "luminanceStddev": 60.39391945019114,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.036789669571532325,
+            "histogramDistance": 0.04050925925925929
+          },
+          {
+            "presentationIndex": 22,
+            "sampleNumber": 21,
+            "seconds": 2.666666666666667,
+            "durationSeconds": 0.16666666666666666,
+            "isSync": false,
+            "meanLuminance": 106.9200638888888,
+            "luminanceStddev": 61.01213818428741,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.033909767610748015,
+            "histogramDistance": 0.047453703703703706
+          },
+          {
+            "presentationIndex": 23,
+            "sampleNumber": 24,
+            "seconds": 2.8333333333333335,
+            "durationSeconds": 0.25,
+            "isSync": false,
+            "meanLuminance": 107.5307642361111,
+            "luminanceStddev": 61.97301253254467,
+            "blackFraction": 0.008680555555555556,
+            "meanAbsoluteRGBDifference": 0.036508260711692074,
+            "histogramDistance": 0.04108796296296298
+          }
+        ],
+        "note": "Every supported video frame measured at32x18 resolution. Deterministic candidates only, not semantic event reconstruction, edit proof or authenticity. Similar-looking changes can be missed; motion/exposure/normal GOP encoding can trigger candidates. No audio interpretation.",
+        "codec": "avc1.64000a",
+        "durationSeconds": 2.917,
+        "width": 160,
+        "height": 96,
+        "editShiftSeconds": -0.16666666666666666,
+        "ignoredNonVideoTrackCount": 0,
+        "limit": "MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict."
+      }
+    }
+  ],
+  "independentFFprobeComparison": [
+    {
+      "file": "measurement/cuts-gops.mp4",
+      "ffprobeFrames": 40,
+      "maximumTimestampErrorSeconds": 4.440892098500626e-16,
+      "syncCount": 4
+    },
+    {
+      "file": "exact/b-frames.mp4",
+      "ffprobeFrames": 24,
+      "maximumTimestampErrorSeconds": 3.33333333379926e-07,
+      "syncCount": 2
+    },
+    {
+      "file": "exact/vfr.mp4",
+      "ffprobeFrames": 24,
+      "maximumTimestampErrorSeconds": 3.33333333379926e-07,
+      "syncCount": 2
+    }
+  ]
+}

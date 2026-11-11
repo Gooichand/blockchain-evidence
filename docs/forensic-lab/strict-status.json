@@ -1,5 +1,5 @@
 {
-  "strictYes": 44,
+  "strictYes": 46,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -161,15 +161,15 @@
       "category": "Video Forensics",
       "id": "vid-timeline",
       "name": "Timeline Viewer",
-      "strictYes": false,
-      "reason": "Six sampled thumbnails, not full visual event reconstruction."
+      "strictYes": true,
+      "reason": "All supported H264 frames measured with visual-change segment boundaries, exact segment-start thumbnails and near-black/low-change intervals. Real three-cut/black/freeze fixtures pass; no semantic event, completeness or authenticity claim. MP4/H2641-2000frames only."
     },
     {
       "category": "Video Forensics",
       "id": "keyframe",
       "name": "Keyframe Analysis",
-      "strictYes": false,
-      "reason": "MP4 sync flags only; no anomaly method."
+      "strictYes": true,
+      "reason": "All supported H264 frames decoded and measured, grouped into GOPs with sync thumbnails, deterministic timing/GOP/visual-change/black/low-change candidates. Bframes/VFR counts/timestamps independently match ffprobe. Candidate anomalies, not edit/authenticity proof; audio/other streams not validated."
     },
     {
       "category": "Video Forensics",

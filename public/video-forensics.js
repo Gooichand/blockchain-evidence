@@ -11,12 +11,12 @@
       'Extracts an exact decoded MP4/H.264 sample with WebCodecs, not approximate video-element seeking. Enter a zero-based presentation frame index, or leave it blank and enter seconds to select the sample covering that movie time. Reports sample number, presentation index, original track timestamp, edit-list adjustment and actual decoded timestamp; exports a full-resolution PNG. One video track, one sample description and a single rate-1 media edit (optional leading empty edit), 50 MiB, 10 minutes and at most 2000 dependent samples per request. Unsupported codecs, encrypted/fragmented structures, unusual edits, rotated/non-square-pixel tracks, duplicate timestamps and decode failures are rejected. Pixel color conversion is browser-dependent; PNG is a decoded image, not original compressed bytes or authenticity proof.',
     ],
     'vid-timeline': [
-      'Sampled Video Timeline',
-      'Decodes up to six evenly spaced thumbnails across the clip. Select a video and run to inspect the sampled moments. This is a sparse visual timeline, not event detection, and it can miss content between samples.',
+      'All-Frame Visual Timeline',
+      'Measures every supported MP4/H264 video frame at32x18 resolution, marks abrupt RGB/histogram changes and near-black/low-change intervals, and shows exact160px thumbnails at detected visual-segment starts. JSON lists time/frame bounds for all detected segments and candidates. MP4/H264 only, one track,1-2000samples,50MiB,10minutes;45-second local worker. At most100 combined key/change thumbnails; all frame measurements remain in JSON. Audio/other streams are not analyzed. Simple edit timestamp shifts applied, including raw pre-roll. This is a deterministic visual-change timeline, not semantic event understanding, edit/authenticity proof or a guarantee to catch every meaningful event. Similar-looking changes, motion/exposure, scaling and decoder concealment affect results. No trained model or upload.',
     ],
     keyframe: [
-      'MP4 Sync-Sample Analysis',
-      'Reads MP4 sample flags and lists sync samples with track composition timestamps. Select an MP4 and run or try the example. Sync samples are container/codec access points, not scene changes or proof of manipulation, and edit-list offsets are not applied.',
+      'All-Frame GOP and Keyframe Analysis',
+      'Decodes every supported MP4/H264 video sample in a local45-second worker, groups decode samples into GOPs and measures all frames at32x18 RGB resolution. Shows keyframe thumbnails, GOP sample/byte counts and deterministic timing, visual-change, near-black and low-change candidates. Unusual GOP counts differ by more than50%/two samples from the median, excluding the final partial group. Visual changes need RGB difference and histogram distance at least0.22; near-black needs98% dark pixels for0.5seconds, low-change needs at most0.001RGB difference for1second. These are measurements, not scene changes or editing proof; motion, exposure and normal encoding can trigger them. MP4/H264 only,1-2000samples,50MiB,10minutes, one video track, simple edits. Audio/other streams are not validated. Every raw track sample including pre-roll measured; timestamp shift is applied. No model or network.',
     ],
     'video-inspector': [
       'MP4 Structure Inspector',
@@ -288,6 +288,61 @@
       if (decoder.state !== 'closed') decoder.close();
     }
   }
+  async function allFrameMeasurements(file, mode = 'keyframe') {
+    if (!root.Worker) throw Error('Video worker unavailable.');
+    const result = await new Promise((resolve, reject) => {
+      const worker = new root.Worker('/video-measurements-worker.js'),
+        timer = setTimeout(() => {
+          worker.terminate();
+          reject(Error('All-frame analysis exceeded45-second limit.'));
+        }, 45000);
+      const finish = () => {
+        clearTimeout(timer);
+        worker.terminate();
+      };
+      worker.onmessage = ({ data }) => {
+        finish();
+        data.ok ? resolve(data.result) : reject(Error(data.error));
+      };
+      worker.onerror = () => {
+        finish();
+        reject(Error('All-frame worker failed.'));
+      };
+      worker.postMessage({ file });
+    });
+    const thumbnails = result.thumbnails;
+    delete result.thumbnails;
+    const frames = [];
+    for (const thumbnail of thumbnails.filter(
+      (t) => mode !== 'vid-timeline' || t.kind === 'VISUAL_SEGMENT_START',
+    )) {
+      const image = await createImageBitmap(thumbnail.blob),
+        canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      canvas.getContext('2d').drawImage(image, 0, 0);
+      image.close();
+      frames.push({
+        requestedSeconds: thumbnail.seconds,
+        browserTimeSeconds: thumbnail.seconds,
+        sampleNumber: thumbnail.sampleNumber,
+        kind: thumbnail.kind,
+        presentationFrameIndex: result.frames.find((f) => f.sampleNumber === thumbnail.sampleNumber)
+          .presentationIndex,
+        exact: true,
+        canvas,
+      });
+    }
+    return {
+      summary: {
+        file: file.name,
+        ...result,
+        limit:
+          'MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict.',
+      },
+      frames,
+    };
+  }
   function wait(video, event, action) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => done(new Error('Video decode/seek timed out.')), 12000);
@@ -308,6 +363,7 @@
     if (!file) throw new Error('Select a video or use Try example.');
     if (file.size > 50 * 1024 * 1024) throw new Error('Video limit: 50 MiB.');
     if (id === 'frame-extract') return exactFrame(file, time, frameIndex);
+    if (id === 'keyframe' || id === 'vid-timeline') return allFrameMeasurements(file, id);
     if (id === 'vid-metadata') {
       if (!root.MediaMetadata) throw Error('Local media metadata engine unavailable.');
       return {
@@ -387,6 +443,8 @@
   }
   function ready(id) {
     if (id === 'vid-metadata') return !!root.MediaMetadata;
+    if (id === 'keyframe' || id === 'vid-timeline')
+      return !!(root.Worker && root.VideoDecoder && root.OffscreenCanvas);
     if (id === 'frame-extract')
       return !!(root.VideoDecoder && root.EncodedVideoChunk && root.MP4Box);
     try {
@@ -487,6 +545,27 @@
           out.appendChild(
             n('strong', 'DEMO SAMPLE - real decoded/parser output. Your evidence is unchanged.'),
           );
+        if (result.summary.events) {
+          out.appendChild(n('h3', 'Measured timeline candidates'));
+          out.appendChild(
+            n(
+              'p',
+              result.summary.events.length
+                ? result.summary.events
+                    .map(
+                      (e) =>
+                        (e.seconds ?? e.startSeconds).toFixed(3) +
+                        's: ' +
+                        e.kind +
+                        (e.endSeconds !== undefined
+                          ? ' until ' + e.endSeconds.toFixed(3) + 's'
+                          : ''),
+                    )
+                    .join(' | ')
+                : 'No configured visual/timing candidates detected. This does not prove that no event or edit occurred.',
+            ),
+          );
+        }
         for (const frame of result.frames) {
           out.appendChild(
             n(
@@ -540,7 +619,16 @@
     run.addEventListener('click', () => execute(false));
     demo.addEventListener('click', () => execute(true));
   }
-  const api = { mount, analyze, ready, boxList, framePlan, exactFrame, guides };
+  const api = {
+    mount,
+    analyze,
+    ready,
+    boxList,
+    framePlan,
+    exactFrame,
+    allFrameMeasurements,
+    guides,
+  };
   root.VideoForensics = api;
   if (typeof module === 'object') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

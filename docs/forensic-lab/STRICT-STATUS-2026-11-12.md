@@ -1,6 +1,6 @@
 # Strict tool status, November 12 local checkpoint
 
-44 yes / 67 catalog tools. Updated after local upgrade batch 5; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
+46 yes / 67 catalog tools. Updated after local upgrade batch 6; the published PR381-383 stack remains the earlier 34-tool checkpoint. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
 Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. Batch 2 adds public read-only confirmation for transaction, block and hash lookup controllers. Custody/provenance promises remain incomplete; IPFS gateway retrieval remains unconfirmed.
 
@@ -30,8 +30,8 @@ Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:4
 | Document Forensics | Document Comparison | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Video Forensics | Metadata Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Video Forensics | Frame Extraction | Yes | Exact MP4/H.264 WebCodecs sample extraction with presentation index/PTS/edit adjustment; real B-frame/CFR/VFR checks and independent FFmpeg pixel comparison. Unsupported codecs/edits/rotations fail closed; browser color conversion differs. |
-| Video Forensics | Timeline Viewer | No | Six sampled thumbnails, not full visual event reconstruction. |
-| Video Forensics | Keyframe Analysis | No | MP4 sync flags only; no anomaly method. |
+| Video Forensics | Timeline Viewer | Yes | All supported H264 frames measured with visual-change segment boundaries, exact segment-start thumbnails and near-black/low-change intervals. Real three-cut/black/freeze fixtures pass; no semantic event, completeness or authenticity claim. MP4/H2641-2000frames only. |
+| Video Forensics | Keyframe Analysis | Yes | All supported H264 frames decoded and measured, grouped into GOPs with sync thumbnails, deterministic timing/GOP/visual-change/black/low-change candidates. Bframes/VFR counts/timestamps independently match ffprobe. Candidate anomalies, not edit/authenticity proof; audio/other streams not validated. |
 | Video Forensics | Video Inspector | No | MP4 structure only, no all-stream/all-frame integrity validation. |
 | Audio Forensics | Waveform Viewer | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |
 | Audio Forensics | Spectrogram | Yes | Working within stated formats/limits; see tool guide and overnight validation notes. |

@@ -281,7 +281,7 @@ async function run() {
           assert.equal(r.width, 480);
           assert.equal(r.durationSeconds, 3);
         }
-        if (id === 'keyframe') assert.equal(r.syncSampleCount, 3);
+        if (id === 'keyframe') {assert.equal(r.syncSampleCount,3);assert.equal(r.decodedFrameCount,30);assert.equal(r.groups.length,3);}
         if (category === 'audio' && id !== 'fingerprint') {
           assert.equal(r.durationSeconds, 2);
           assert.equal(r.wav.sampleRate, 16000);
@@ -817,6 +817,33 @@ async function run() {
     await page.waitForSelector('#flFileInput');
     await (await page.$('#flFileInput')).uploadFile(retainedFile);
     await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    const videoMeasurements=await page.evaluate(async()=>{
+      const results=[];
+      for(const name of ['measurement/cuts-gops.mp4','exact/b-frames.mp4','exact/vfr.mp4']){
+        const response=await fetch('/samples/video/'+name),file=new File([await response.arrayBuffer()],name);
+        const result=(await VideoForensics.analyze('keyframe',file)).summary;
+        if(name.includes('cuts-gops')){if(result.decodedFrameCount!==40)throw Error('Frame count mismatch.');const cuts=result.events.filter(e=>e.kind==='ABRUPT_VISUAL_CHANGE_CANDIDATE');if(cuts.length!==3)throw Error('Visual change count '+JSON.stringify(cuts));if(!result.events.some(e=>e.kind==='NEAR_BLACK_INTERVAL'))throw Error('Black interval missed.');}
+        results.push({file:name,result});
+      }
+      const response=await fetch('/samples/video/measurement/corrupted-sample.mp4');let rejected=false;try{await VideoForensics.analyze('keyframe',new File([await response.arrayBuffer()],'damaged.mp4'));}catch{rejected=true;}if(!rejected)throw Error('Damaged video falsely passed complete decode.');
+      return results;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'video-measurements-validation.json'),JSON.stringify(videoMeasurements,null,2));
+    console.log('PASS all-frame H264 measurements: independent frame-count/timestamps, Bframes/VFR, cuts/black/freeze and damaged-sample rejection');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/video/measurement/cuts-gops.mp4'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='cuts-gops.mp4');
+    for(const id of ['keyframe','vid-timeline']){
+      await openTool('video',id);
+      await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected video').click());
+      await page.waitForSelector('#flWorkspace pre');
+      const r=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));assert.equal(r.decodedFrameCount,40);
+      assert.deepEqual(r.events.filter(e=>e.kind==='ABRUPT_VISUAL_CHANGE_CANDIDATE').map(e=>e.seconds),[1,2,3]);
+      if(id==='vid-timeline')assert.equal((await page.$$('#flWorkspace canvas')).length,4);
+      assert(!(await page.$eval('#flWorkspace',e=>e.textContent)).includes('undefined'));
+      await capture('video-'+id+'-all-frames');
+    }
     const copyMatrix=await page.evaluate(async()=>{
       const actualWorker=window.Worker;
       window.Worker=class{constructor(){setTimeout(()=>this.onerror({message:'controlled test failure'}),0);}postMessage(){}terminate(){}};
