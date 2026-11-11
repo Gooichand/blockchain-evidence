@@ -26,11 +26,11 @@
       desc: 'Cryptographic hashing and file integrity verification.',
       formats: ['SHA-256', 'SHA-1', 'MD5', 'BIN', 'TXT'],
       tools: [
-        { id: 'sha256', name: 'SHA-256 Generator', icon: 'hash', status: 'available', desc: 'Generate SHA-256 hashes for evidence integrity.' },
-        { id: 'hash-compare', name: 'Hash Comparison', icon: 'git-compare', status: 'available', desc: 'Compare evidence hashes against verified records.' },
-        { id: 'integrity-check', name: 'File Integrity Checker', icon: 'file-check', status: 'available', desc: 'Detect alterations in collected evidence files.' },
-        { id: 'blockchain-verify', name: 'Blockchain Verification', icon: 'link', status: 'beta', desc: 'Verify hash anchoring on the Polygon blockchain.' },
-        { id: 'multi-hash', name: 'Multi Hash Generator', icon: 'layers', status: 'available', desc: 'Generate multiple digest algorithms at once.' },
+        { id: 'sha256', name: 'SHA-256 Generator', icon: 'hash', status: 'available', desc: 'Generate SHA-256 hashes for evidence integrity.', guide: 'This tool creates a SHA-256 fingerprint of a file. Add a file to the Evidence Vault, click Generate hashes, then copy the digest for your records. The same bytes produce the same digest, but generating a hash alone does not prove authenticity or verify an original record.' },
+        { id: 'hash-compare', name: 'Hash Comparison', icon: 'git-compare', status: 'available', desc: 'Compare evidence hashes against verified records.', guide: 'This tool checks whether two hexadecimal hashes are identical. Paste both hashes from the same algorithm and click Compare hashes; MATCH means they are equal and MISMATCH means they differ. A match does not prove where the hashes came from, and MD5 or SHA-1 should not be used as sole proof of authenticity.' },
+        { id: 'integrity-check', name: 'File Integrity Checker', icon: 'file-check', status: 'available', desc: 'Detect alterations in collected evidence files.', guide: 'This tool checks a file against an original SHA-256 baseline. Add the file to the Evidence Vault, paste the original 64-character hash, then click Check integrity. MATCH means the file matches that baseline and MISMATCH means it does not, but the tool cannot confirm whether your baseline is trustworthy.' },
+        { id: 'blockchain-verify', name: 'Blockchain Verification', icon: 'link', status: 'beta', desc: 'Verify hash anchoring on the Polygon blockchain.', guide: 'This tool checks whether a file hash is recorded in the configured Polygon Amoy testnet contract. Add the file to the Evidence Vault and click Verify on blockchain; only its SHA-256 digest is sent for a read-only lookup. ANCHORED means a matching contract record was found, NOT FOUND means none was found, and an unavailable error confirms neither; testnet anchoring does not prove authenticity or legal admissibility.' },
+        { id: 'multi-hash', name: 'Multi Hash Generator', icon: 'layers', status: 'available', desc: 'Generate multiple digest algorithms at once.', guide: 'This tool generates MD5, SHA-1, SHA-256, SHA-384 and SHA-512 fingerprints of one file. Add a file to the Evidence Vault, click Generate hashes, then copy the digest you need. MD5 and SHA-1 are for legacy compatibility; these results do not prove authenticity or blockchain anchoring.' },
       ],
     },
     {
@@ -588,6 +588,15 @@
     }
   }
 
+  // Opt-in guide text lives on each catalog entry so new tools can reuse it.
+  function renderToolGuide(tool) {
+    if (!tool.guide) return null;
+    return el('section', { class: 'fl-tool-guide', 'aria-label': 'What this tool does and how to use it',
+      style: 'margin:0 0 20px;padding:16px;border:1px solid var(--fl-line);border-radius:12px;background:var(--fl-bg-soft);line-height:1.6;' },
+      el('h3', { text: 'What it does and how to use it', style: 'margin:0 0 8px;font-size:0.95rem;' }),
+      el('p', { text: tool.guide, style: 'margin:0;font-size:0.875rem;color:var(--fl-body);' }));
+  }
+
   // Completed hash tools have their own truthful, local-only workspace.
   // Other categories keep their existing rendering and service behavior.
   function renderHashWorkspace(ws, cat, tool) {
@@ -601,6 +610,7 @@
       el('h2', { text: tool.name }),
       el('p', { text: isComparison ? 'Compare two hexadecimal digests using the same algorithm.' : tool.desc }),
       el('p', { text: tool.id === 'blockchain-verify' ? 'The file stays in your browser. Its SHA-256 digest is sent to the server for a read-only contract lookup. No wallet transaction or payment.' : 'Local browser processing. Files and hashes are not uploaded.' }))));
+    ws.appendChild(renderToolGuide(tool));
     const form = el('form', { class: 'fl-panel', style: 'padding:20px;' });
     const inputs = {};
     const addInput = (key, label, placeholder) => {
@@ -775,6 +785,8 @@
 
     ws.appendChild(breadcrumb(cat, tool, home));
     ws.appendChild(head);
+    const guide = renderToolGuide(tool);
+    if (guide) ws.appendChild(guide);
     ws.appendChild(statusBanner);
     ws.appendChild(evidenceHint);
     ws.appendChild(actions);
