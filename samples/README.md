@@ -10,6 +10,16 @@ Use these files directly from the repository. Do not open and save them in an ed
 
 Start your existing configured local DGC server, sign in as a forensic analyst and open Tools > Hash & Integrity. Add files through the Evidence Vault. None of the first four tools uploads a file; Blockchain Verification sends only its SHA-256 digest to your server for a read-only lookup. No wallet transaction is made.
 
+## Quick demo map
+
+| Tool | Sample file(s) or input | Expected result |
+| --- | --- | --- |
+| SHA-256 Generator | Upload `original.txt`. | Exact SHA-256: `f652c4875a5f6edfe7b0d31eca65a7f9b3ff4f1e62d372f5a8f374c54e73a9f2`. |
+| Hash Comparison | No upload needed. Paste the SHA256 digest listed below for `original.txt` into both fields, then replace the second with the digest for `changed.txt`. | Original vs original: **MATCH**. Original vs changed: **MISMATCH**. This compares pasted hashes, not uploaded files. |
+| Multi Hash Generator | Upload `original.txt`. Optionally repeat with `changed.txt`. | Five digests: MD5, SHA-1, SHA-256, SHA-384 and SHA-512, matching the values below for the selected file. All five differ between the files. |
+| File Integrity Checker | Upload `original.txt` and paste the original SHA256 baseline below; then upload `changed.txt` and paste that SAME original baseline again. | Original: **MATCH**. Changed: **MISMATCH**. The baseline must be trustworthy. |
+| Blockchain Verification | Upload `original.txt` using your actual configured Amoy contract and RPC. | **NOT FOUND (TESTNET)** only if that hash is absent from that contract. **ANCHORED (TESTNET)** only if a real matching record exists. Configuration/RPC/authentication errors mean **unavailable**, not either result. No anchor is supplied or created by these samples. |
+
 ## 1. SHA-256 Generator
 
 1. Add `samples/original.txt` to the Evidence Vault.
