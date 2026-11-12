@@ -1,0 +1,10 @@
+{
+  "originalSynthetic": true,
+  "neverCapturedOrSent": true,
+  "packetCount": 4,
+  "flowCount": 2,
+  "dnsQuestion": "demo.example",
+  "httpFirstLine": "GET /demo HTTP/1.1",
+  "tcpPackets": 3,
+  "udpPackets": 1
+}

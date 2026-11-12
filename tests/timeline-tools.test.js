@@ -120,3 +120,19 @@ test('derived DOCX source times skip invalid and timezone-free dates without gue
   expect(r.limit).toContain('not verified');
   delete global.DocumentForensics;
 });
+test('actual original PCAP timestamps derive events with references and source hash', async () => {
+  global.crypto = require('crypto').webcrypto;
+  global.NetworkForensics = require('../public/network-forensics');
+  const T = require('../public/timeline-tools');
+  const bytes = require('fs').readFileSync('public/samples/network/demo.pcap');
+  const file = {
+    name: 'demo.pcap',
+    size: bytes.length,
+    arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length),
+  };
+  const r = await T.analyze('evidence-timeline', file);
+  expect(r.displayedCount).toBe(4);
+  expect(r.events[0].sourceReference).toContain('packet 1; raw seconds');
+  expect(r.skippedSourceTimes).toHaveLength(0);
+  delete global.NetworkForensics;
+});

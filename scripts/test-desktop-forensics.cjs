@@ -140,19 +140,7 @@ async function run() {
       });
     }
     let completed = 0;
-    for (const [category, ids] of Object.entries(groups).filter(([category]) =>
-      [
-        'image',
-        'document',
-        'video',
-        'blockchain',
-        'audio',
-        'crypto',
-        'metadata',
-        'timeline',
-        'utility',
-      ].includes(category),
-    )) {
+    for (const [category, ids] of Object.entries(groups)) {
       for (const id of ids) {
         await openTool(category, id);
         await page.evaluate(() => {
@@ -283,6 +271,58 @@ async function run() {
         console.log('PASS', category, id);
       }
     }
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root, 'samples/network/demo.pcap'));
+    await page.waitForFunction(() => ForensicLab.getState().file?.name === 'demo.pcap');
+    await openTool('network', 'traffic-analysis');
+    await page.$eval('[aria-label="Flow fanout threshold"]', (e) => (e.value = '2'));
+    await page.$eval('[aria-label="Flow SYN threshold"]', (e) => (e.value = '1'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Analyze selected capture')
+        .click(),
+    );
+    await page.waitForFunction(() =>
+      document.querySelector('#flWorkspace pre')?.textContent.includes('anomalyCandidates'),
+    );
+    const flagged = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(flagged.anomalyCandidates.flags.length, 3);
+    await capture('network-flow-rules');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(retainedFile);
+    await page.waitForFunction(
+      () => ForensicLab.getState().file?.name === 'dgc-retained-user-input.bin',
+    );
+    await openTool('network', 'protocol-decode');
+    await page.select('[aria-label="Protocol input mode"]', 'custom');
+    await page.$eval('[aria-label="Protocol hex bytes"]', (e) => (e.value = '01 0005 48 69'));
+    await page.$eval(
+      '[aria-label="Custom protocol schema"]',
+      (e) =>
+        (e.value = JSON.stringify({
+          fields: [
+            { name: 'version', offset: 0, length: 1, type: 'uint' },
+            { name: 'length', offset: 1, length: 2, type: 'uint' },
+            { name: 'message', offset: 3, length: 2, type: 'utf8' },
+          ],
+        })),
+    );
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Analyze selected capture')
+        .click(),
+    );
+    await page.waitForFunction(() =>
+      document.querySelector('#flWorkspace pre')?.textContent.includes('fields'),
+    );
+    const custom = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.deepEqual(
+      custom.fields.map((x) => x.value),
+      [1, 5, 'Hi'],
+    );
+    await capture('network-custom-protocol');
     await openTool('document', 'doc-compare');
     if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
     await (
@@ -330,6 +370,94 @@ async function run() {
     console.log(
       'PASS real worker inventory of compressed PDF object stream and inert action marker',
     );
+    for (const [name, location, minEvents] of [
+      ['demo.pcap', 'network', 4],
+      ['tracked.docx', 'office', 2],
+    ]) {
+      const derived = await page.evaluate(
+        async ({ name, location }) => {
+          const r = await fetch('/samples/' + location + '/' + name);
+          return TimelineTools.analyze(
+            'evidence-timeline',
+            new File([await r.arrayBuffer()], name),
+          );
+        },
+        { name, location },
+      );
+      assert(derived.displayedCount >= minEvents);
+      assert.equal(derived.sources[0].sha256.length, 64);
+      assert(derived.events.every((e) => e.sourceReference));
+      console.log('PASS source-derived evidence chronology', name, derived.displayedCount);
+    }
+    await openTool('timeline', 'evidence-timeline');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root, 'samples/office/tracked.docx'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Build imported timeline')
+        .click(),
+    );
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#flWorkspace pre') ||
+        document.querySelector('#flWorkspace [role=alert]'),
+    );
+    assert(
+      (await page.$eval('#flWorkspace pre', (e) => e.textContent)).includes('sourceReference'),
+    );
+    await capture('timeline-derived-evidence');
+    await openTool('timeline', 'invest-timeline');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (
+      await page.$('#flFileInput')
+    ).uploadFile(path.join(root, 'samples/timeline/source-a.json'));
+    await (
+      await page.$('[aria-label="Additional investigation sources"]')
+    ).uploadFile(path.join(root, 'samples/timeline/source-b.json'));
+    await page.$eval('[aria-label="Correlation window seconds"]', (e) => (e.value = '30'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Build imported timeline')
+        .click(),
+    );
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#flWorkspace pre') ||
+        document.querySelector('#flWorkspace [role=alert]'),
+    );
+    const correlation = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(correlation.displayedCount, 3);
+    assert.equal(correlation.sources.length, 2);
+    assert.equal(correlation.correlationCandidates.length, 1);
+    assert.equal(correlation.correlationCandidates[0].secondsApart, 10);
+    await capture('timeline-cross-source-correlation');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (await page.$('#flFileInput')).uploadFile(retainedFile);
+    console.log(
+      'PASS multi-file timeline merge and exact-entity/time correlation through real controls',
+    );
+    await openTool('crypto', 'aes');
+    await page.select('[aria-label="AES operation"]', 'analyze-key');
+    await page.$eval('[aria-label="Cryptography input"]', (e) => (e.value = '00'.repeat(16)));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((e) => e.textContent === 'Run local tool')
+        .click(),
+    );
+    await page.waitForFunction(() => document.querySelector('#flWorkspace pre'));
+    const aesInfo = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(aesInfo.keyBits, 128);
+    for (const size of [16, 24, 32]) {
+      const key = await page.evaluate(
+        async (size) => CryptoTools.analyze('aes', '00'.repeat(size), 'analyze-key'),
+        size,
+      );
+      assert.equal(key.keyBits, size * 8);
+      assert.equal(key.standardAESLength, true);
+      assert.equal(key.providerImport, size !== 24);
+    }
+    assert(aesInfo.repeatingPeriodsBytes.includes(1));
+    await capture('crypto-aes-key-analysis');
     await openTool('document', 'ocr');
     if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
     await (
@@ -496,6 +624,21 @@ async function run() {
       await page.waitForSelector('#flWorkspace [role=alert]');
       assert((await page.$eval('#flWorkspace', (e) => e.textContent)).includes('unavailable'));
       await capture('blockchain-' + id + '-unavailable');
+    }
+    for (const [category, id] of [
+      ['image', 'ai-tamper'],
+      ['ai', 'ai-assistant'],
+      ['ai', 'ai-summary'],
+      ['ai', 'ai-report'],
+      ['ai', 'ai-tamper'],
+    ]) {
+      await openTool(category, id);
+      assert(
+        (await page.$eval('#flWorkspace', (e) => e.textContent))
+          .toLowerCase()
+          .includes('unavailable'),
+      );
+      await capture(category + '-' + id + '-unavailable');
     }
     assert.deepEqual(errors, [], 'Unexpected JavaScript exception(s)');
     console.log(
