@@ -1,5 +1,5 @@
 const { supabase } = require('../config');
-const crypto = require('crypto');
+const reportPayload = require('../lib/analysisReportPayload');
 const blockchainService = require('../services/blockchain/blockchainService');
 const integratedEvidenceService = require('../services/integratedEvidenceService');
 
@@ -122,6 +122,8 @@ function sanitizeReport(row) {
     case_id: row.case_id,
     status: row.status || 'draft',
     report_hash: row.report_hash || null,
+    report_hash_version: row.report_hash_version ?? reportPayload.LEGACY,
+    content_digest_check: reportPayload.verify(row),
     revision: row.revision ?? null,
     result_summary: row.result_summary || null,
     findings: row.findings || null,
@@ -580,20 +582,19 @@ const saveReport = async (req, res) => {
     ) {
       return res.status(400).json({ success: false, error: 'Invalid report content or revision' });
     }
-    // A3 will replace the legacy delimiter digest with a versioned payload.
-    const reportHash = crypto
-      .createHash('sha256')
-      .update(`${resultSummary || ''}|${findings || ''}`)
-      .digest('hex');
+    const reportHash = reportPayload.digest(resultSummary, findings);
     const result = await reportTransition(res, analyst, taskId, {
       p_operation: 'save',
       p_summary: resultSummary,
       p_findings: findings,
       p_report_hash: reportHash,
+      p_hash_version: reportPayload.CURRENT,
       p_submit: submit,
       p_expected_revision: revision ?? null,
     });
     if (!result) return;
+    const savedHash = result.report_hash;
+    const hashVersion = result.report_hash_version;
     const reportId = result.report_id;
     const status = result.status;
     const task = result;
@@ -606,16 +607,17 @@ const saveReport = async (req, res) => {
         data: {
           report_id: reportId,
           task_id: taskId,
-          report_hash: reportHash,
+          report_hash: savedHash,
           status,
           revision: result.revision,
+        report_hash_version: hashVersion,
         },
       });
 
     await logAudit(submit ? 'report_submitted' : 'report_saved', analyst, {
       report_id: reportId,
       task_id: taskId,
-      report_hash: reportHash.slice(0, 16) + '…',
+      report_hash: savedHash.slice(0, 16) + '…',
       submit,
     });
 
@@ -647,9 +649,10 @@ const saveReport = async (req, res) => {
       data: {
         report_id: reportId,
         task_id: taskId,
-        report_hash: reportHash,
+        report_hash: savedHash,
         status,
         revision: result.revision,
+        report_hash_version: hashVersion,
       },
     });
   } catch (error) {
@@ -675,7 +678,7 @@ const getReports = async (req, res) => {
     let query = supabase
       .from('analysis_reports')
       .select(
-        `id, task_id, evidence_id, case_id, status, report_hash, revision, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
+        `id, task_id, evidence_id, case_id, status, report_hash, report_hash_version, revision, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
          evidence!inner(id, name, file_type, hash)`,
       )
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);

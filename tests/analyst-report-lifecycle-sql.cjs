@@ -54,6 +54,36 @@ const assert = require('node:assert/strict');
   assert.deepEqual(results.map((x) => x.code).sort(), ['OK', 'STALE_REVISION']);
   await db.exec(`INSERT INTO analysis_reports(task_id,evidence_id,analyst_id) VALUES(2,2,1)`);
   assert.equal((await call('save', 2, 1)).code, 'DUPLICATE_REPORTS');
+  assert.equal(
+    (await db.query('SELECT report_hash_version FROM analysis_reports WHERE task_id=1')).rows[0]
+      .report_hash_version,
+    'legacy-delimited-v1',
+  );
+  await db.exec(
+    `INSERT INTO analysis_tasks(id,evidence_id,analyst_id,analyst_wallet) VALUES(3,1,1,'a');`,
+  );
+  const v2 = await db.query(
+    `SELECT analyst_report_transition('save',3,1,'a','summary','findings',$1,false,0,null,null,null,null,'canonical-json-v2') AS r`,
+    ['b'.repeat(64)],
+  );
+  assert.equal(v2.rows[0].r.report_hash_version, 'canonical-json-v2');
+  assert.equal(
+    (await db.query('SELECT report_hash_version FROM analysis_reports WHERE task_id=3')).rows[0]
+      .report_hash_version,
+    'canonical-json-v2',
+  );
+  // Reapplying this local migration preserves all existing digest bytes/versions.
+  const before = await db.query(
+    'SELECT id,report_hash,report_hash_version FROM analysis_reports ORDER BY id',
+  );
+  await db.exec(
+    fs.readFileSync(path.join(__dirname, '../migrations/2026-11-12-report-lifecycle.sql'), 'utf8'),
+  );
+  assert.deepEqual(
+    (await db.query('SELECT id,report_hash,report_hash_version FROM analysis_reports ORDER BY id'))
+      .rows,
+    before.rows,
+  );
   console.log(
     'PASS: actual PostgreSQL WASM SQL compile, revision/finality/idempotent retry, second-write rollback, queued competing creation, duplicate fail-closed. Multi-session lock contention not tested by this single-engine test.',
   );

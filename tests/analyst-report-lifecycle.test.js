@@ -39,7 +39,15 @@ beforeEach(() => {
 });
 test('save uses one RPC with scope and revision; no application report/task writes', async () => {
   mockRpc.mockResolvedValue({
-    data: { code: 'OK', report_id: 9, status: 'draft', revision: 2, did_submit: false },
+    data: {
+      code: 'OK',
+      report_id: 9,
+      report_hash: 'a'.repeat(64),
+      report_hash_version: 'canonical-json-v2',
+      status: 'draft',
+      revision: 2,
+      did_submit: false,
+    },
   });
   const r = await call('saveReport', {
     result_summary: 'one',
@@ -106,6 +114,8 @@ test('only winning submission emits completion notification', async () => {
       data: {
         code: 'OK',
         report_id: 9,
+        report_hash: 'a'.repeat(64),
+        report_hash_version: 'canonical-json-v2',
         status: 'submitted',
         revision: 2,
         did_submit: true,
@@ -114,7 +124,15 @@ test('only winning submission emits completion notification', async () => {
       },
     })
     .mockResolvedValueOnce({
-      data: { code: 'OK', report_id: 9, status: 'submitted', revision: 2, did_submit: false },
+      data: {
+        code: 'OK',
+        report_id: 9,
+        report_hash: 'a'.repeat(64),
+        report_hash_version: 'canonical-json-v2',
+        status: 'submitted',
+        revision: 2,
+        did_submit: false,
+      },
     });
   for (let n = 0; n < 2; n++)
     expect(
@@ -129,4 +147,32 @@ test('progress on completed/finalized task409 and strict progress validation', a
   for (const progress of ['50', -1, 101, 1.5])
     expect((await call('updateTaskProgress', { progress })).status).toHaveBeenCalledWith(400);
   expect(mockRpc).toHaveBeenCalledTimes(1);
+});
+
+test('legacy submitted retry returns stored legacy digest/version, not a silently replaced v2 digest', async () => {
+  mockRpc.mockResolvedValue({
+    data: {
+      code: 'OK',
+      report_id: 9,
+      report_hash: 'b'.repeat(64),
+      report_hash_version: 'legacy-delimited-v1',
+      status: 'submitted',
+      revision: 1,
+      did_submit: false,
+    },
+  });
+  const r = await call('saveReport', { findings: 'x', submit: true });
+  expect(r.json).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({
+        report_hash: 'b'.repeat(64),
+        report_hash_version: 'legacy-delimited-v1',
+      }),
+    }),
+  );
+  expect(mockRpc).toHaveBeenCalledWith(
+    'analyst_report_transition',
+    expect.objectContaining({ p_hash_version: 'canonical-json-v2' }),
+  );
+  expect(notifyUser).not.toHaveBeenCalled();
 });

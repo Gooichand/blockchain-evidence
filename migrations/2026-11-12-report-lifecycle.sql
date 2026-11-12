@@ -4,12 +4,18 @@
 BEGIN;
 ALTER TABLE public.analysis_reports ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 1;
 
+ALTER TABLE public.analysis_reports ADD COLUMN IF NOT EXISTS report_hash_version text NOT NULL DEFAULT 'legacy-delimited-v1';
+-- Retire the prior local candidate signature so upgrades do not leave a second
+-- overload which could bypass the version contract.
+DROP FUNCTION IF EXISTS public.analyst_report_transition(text,integer,integer,text,text,text,text,boolean,integer,integer,text,text,integer);
+
 CREATE OR REPLACE FUNCTION public.analyst_report_transition(
   p_operation text, p_task_id integer, p_analyst_id integer, p_wallet text,
   p_summary text DEFAULT NULL, p_findings text DEFAULT NULL,
   p_report_hash text DEFAULT NULL, p_submit boolean DEFAULT false,
   p_expected_revision integer DEFAULT NULL, p_progress integer DEFAULT NULL,
-  p_notes text DEFAULT NULL, p_priority text DEFAULT NULL, p_estimated integer DEFAULT NULL
+  p_notes text DEFAULT NULL, p_priority text DEFAULT NULL, p_estimated integer DEFAULT NULL,
+  p_hash_version text DEFAULT 'legacy-delimited-v1'
 ) RETURNS jsonb
 LANGUAGE plpgsql SECURITY INVOKER SET search_path = pg_catalog, public
 AS $$
@@ -33,7 +39,7 @@ BEGIN
   SELECT * INTO r FROM public.analysis_reports WHERE task_id = t.id FOR UPDATE;
 
   IF p_operation = 'save' THEN
-    IF p_submit IS NULL OR coalesce(length(p_summary),0) > 10000
+    IF p_hash_version IS NULL OR p_hash_version NOT IN ('legacy-delimited-v1','canonical-json-v2') OR p_submit IS NULL OR coalesce(length(p_summary),0) > 10000
        OR coalesce(length(p_findings),0) > 50000
        OR (coalesce(length(btrim(p_summary)),0) = 0 AND coalesce(length(btrim(p_findings)),0) = 0)
        OR p_report_hash IS NULL OR p_report_hash !~ '^[0-9a-f]{64}$' THEN
@@ -45,9 +51,9 @@ BEGIN
       IF p_submit AND r.status = 'submitted' AND t.status = 'completed'
         AND r.result_summary IS NOT DISTINCT FROM p_summary
         AND r.findings IS NOT DISTINCT FROM p_findings
-        AND r.report_hash = p_report_hash THEN
+        THEN
         RETURN jsonb_build_object('code','OK','report_id',r.id,'task_id',t.id,
-          'report_hash',r.report_hash,'status',r.status,'revision',r.revision,'did_submit',false);
+          'report_hash',r.report_hash,'report_hash_version',r.report_hash_version,'status',r.status,'revision',r.revision,'did_submit',false);
       END IF;
       RETURN jsonb_build_object('code','FINALIZED');
     END IF;
@@ -58,13 +64,13 @@ BEGIN
     END IF;
     IF r.id IS NULL THEN
       INSERT INTO public.analysis_reports(task_id,evidence_id,case_id,analyst_id,analyst_wallet,
-        status,report_hash,result_summary,findings,submitted_at,updated_at,revision)
+        status,report_hash,result_summary,findings,submitted_at,updated_at,revision,report_hash_version)
       VALUES(t.id,t.evidence_id,t.case_id,p_analyst_id,p_wallet,
         CASE WHEN p_submit THEN 'submitted' ELSE 'draft' END,p_report_hash,p_summary,p_findings,
-        CASE WHEN p_submit THEN stamp ELSE NULL END,stamp,1) RETURNING * INTO r;
+        CASE WHEN p_submit THEN stamp ELSE NULL END,stamp,1,p_hash_version) RETURNING * INTO r;
     ELSE
       UPDATE public.analysis_reports SET status = CASE WHEN p_submit THEN 'submitted' ELSE 'draft' END,
-        report_hash=p_report_hash,result_summary=p_summary,findings=p_findings,
+        report_hash=p_report_hash,report_hash_version=p_hash_version,result_summary=p_summary,findings=p_findings,
         submitted_at=CASE WHEN p_submit THEN stamp ELSE NULL END,updated_at=stamp,revision=revision+1
         WHERE id=r.id RETURNING * INTO r;
     END IF;
@@ -72,7 +78,7 @@ BEGIN
       progress=CASE WHEN p_submit THEN 100 ELSE greatest(coalesce(progress,0),50) END,
       started_at=coalesce(started_at,stamp),completed_at=CASE WHEN p_submit THEN stamp ELSE NULL END
       WHERE id=t.id;
-    RETURN jsonb_build_object('code','OK','report_id',r.id,'task_id',t.id,'report_hash',r.report_hash,
+    RETURN jsonb_build_object('code','OK','report_id',r.id,'task_id',t.id,'report_hash',r.report_hash,'report_hash_version',r.report_hash_version,
       'status',r.status,'revision',r.revision,'did_submit',p_submit,
       'requested_by',t.requested_by,'evidence_id',t.evidence_id,'case_id',t.case_id,'analysis_type',to_jsonb(t)->>'analysis_type');
   END IF;
@@ -96,6 +102,6 @@ BEGIN
   RETURN jsonb_build_object('code','OK','task_id',t.id,'progress',p_progress,'status',t.status);
 END;
 $$;
-REVOKE ALL ON FUNCTION public.analyst_report_transition(text,integer,integer,text,text,text,text,boolean,integer,integer,text,text,integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.analyst_report_transition(text,integer,integer,text,text,text,text,boolean,integer,integer,text,text,integer) TO service_role;
+REVOKE ALL ON FUNCTION public.analyst_report_transition(text,integer,integer,text,text,text,text,boolean,integer,integer,text,text,integer,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.analyst_report_transition(text,integer,integer,text,text,text,text,boolean,integer,integer,text,text,integer,text) TO service_role;
 COMMIT;
