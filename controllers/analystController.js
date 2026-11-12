@@ -800,95 +800,67 @@ const searchAll = async (req, res) => {
 // ---------------------------------------------------------------------------
 // GET /analyst/evidence  (evidence inventory with analyst involvement)
 // ---------------------------------------------------------------------------
+function inventoryInputs(query = {}) {
+  const paging=listInputs(query,[]);
+  if (!paging || (query.search!==undefined && (typeof query.search!=='string'||query.search.length>200)) ||
+      (query.file_type!==undefined && (typeof query.file_type!=='string'||query.file_type.length>100)) ||
+      (query.case_id!==undefined && !positiveInteger(query.case_id))) return null;
+  return {...paging,search:query.search?.replace(/[%_.*(),'"\\]/g,'').trim(),file_type:query.file_type,
+    case_id:query.case_id===undefined ? null:positiveInteger(query.case_id)};
+}
 const getAnalystEvidence = async (req, res) => {
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    const { data: tasks, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('evidence_id, case_id, status, priority')
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
-    if (taskError) throw taskError;
-
-    const evIds = [...new Set((tasks || []).map((t) => t.evidence_id).filter(Boolean))];
-    if (evIds.length === 0) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const { data: evidence, error } = (await supabase
-      .from('evidence')
-      .select('id, name, file_type, hash, ipfs_cid, blockchain_tx_hash, blockchain_verified, timestamp, case_id, file_size, description')
-      .in('id', evIds)
-      .order('timestamp', { ascending: false })) || {};
+    const inputs=inventoryInputs(req.query);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid inventory filters or pagination'});
+    const analyst=req.user,wallet=analyst.wallet_address||analyst.email;
+    // Inner embedded relation filters parent rows before count/range. No full
+    // assigned-ID materialization and no duplicate evidence rows per task.
+    let q=supabase.from('evidence').select(
+      'id,name,file_type,hash,ipfs_cid,blockchain_tx_hash,blockchain_verified,timestamp,case_id,file_size,description,case:cases(id,case_number),analysis_tasks!inner(id,status,assigned_at)',
+      {count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${wallet}`,{referencedTable:'analysis_tasks'});
+    if (inputs.search) q=q.or(`name.ilike.%${inputs.search}%,hash.ilike.%${inputs.search}%,file_type.ilike.%${inputs.search}%`);
+    if (inputs.file_type) q=q.eq('file_type',inputs.file_type);
+    if (inputs.case_id) q=q.eq('case_id',inputs.case_id);
+    q=q.order('timestamp',{ascending:false,nullsFirst:false}).order('id',{ascending:false})
+      .order('assigned_at',{referencedTable:'analysis_tasks',ascending:false,nullsFirst:false})
+      .order('id',{referencedTable:'analysis_tasks',ascending:false}).limit(1,{referencedTable:'analysis_tasks'})
+      .range((inputs.page-1)*inputs.limit,inputs.page*inputs.limit-1);
+    const {data,count,error}=await q;
     if (error) throw error;
-
-    const caseIds = [...new Set((evidence || []).map((e) => e.case_id).filter(Boolean))];
-    const caseMap = {};
-    if (caseIds.length > 0) {
-      const { data: caseRows, error: caseError } = (await supabase
-        .from('cases')
-        .select('id, case_number')
-        .in('id', caseIds)) || {};
-      if (!caseError) {
-        for (const c of caseRows || []) caseMap[c.id] = c.case_number;
-      }
-    }
-
-    res.json({
-      success: true,
-      data: (evidence || []).map((e) => ({
-        id: e.id,
-        name: e.name || `Evidence ${e.id}`,
-        file_type: e.file_type,
-        hash: e.hash,
-        ipfs_cid: e.ipfs_cid,
-        blockchain_tx_hash: e.blockchain_tx_hash,
-        blockchain_verified: Boolean(e.blockchain_verified),
-        timestamp: e.timestamp,
-        case_id: e.case_id,
-        case_number: e.case_id ? caseMap[e.case_id] || null : null,
-        file_size: e.file_size,
-        description: e.description,
-        task_status: (tasks || []).find((t) => t.evidence_id === e.id)?.status || 'none',
-      })),
-    });
+    if (!Number.isInteger(count)||count<0) throw new Error('Missing inventory count');
+    res.json({success:true,data:(data||[]).map(e=>({
+      id:e.id,name:e.name||`Evidence ${e.id}`,file_type:e.file_type,hash:e.hash,ipfs_cid:e.ipfs_cid,
+      blockchain_tx_hash:e.blockchain_tx_hash,blockchain_verified:Boolean(e.blockchain_verified),timestamp:e.timestamp,
+      case_id:e.case_id,case_number:e.case?.case_number||null,file_size:e.file_size,description:e.description,
+      task_status:e.analysis_tasks?.[0]?.status||'none',task_id:e.analysis_tasks?.[0]?.id||null
+    })),pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
   } catch (error) {
-    console.error('Analyst evidence error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load evidence inventory' });
+    console.error('Analyst evidence error:',error);
+    res.status(500).json({success:false,error:'Failed to load evidence inventory'});
   }
 };
 
-// ---------------------------------------------------------------------------
-// GET /analyst/cases
-// ---------------------------------------------------------------------------
-const getAnalystCases = async (req, res) => {
+// GET /analyst/cases: one parent row per assigned case, paged in the database.
+const getAnalystCases = async (req,res) => {
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    const { data: tasks, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('case_id, status')
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
-    if (taskError) throw taskError;
-
-    const caseIds = [...new Set((tasks || []).map((t) => t.case_id).filter(Boolean))];
-    if (caseIds.length === 0) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const { data: cases, error } = (await supabase
-      .from('cases')
-      .select('id, case_number, title, status, created_date, priority_level, jurisdiction')
-      .in('id', caseIds)
-      .order('created_date', { ascending: false })) || {};
-    if (error) throw error;
-
-    res.json({ success: true, data: cases || [] });
-  } catch (error) {
-    console.error('Analyst cases error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load cases' });
+    const inputs=inventoryInputs(req.query);
+    if (!inputs || req.query?.file_type!==undefined || req.query?.case_id!==undefined)
+      return res.status(400).json({success:false,error:'Invalid case filters or pagination'});
+    const analyst=req.user,wallet=analyst.wallet_address||analyst.email;
+    let q=supabase.from('cases').select('id,case_number,title,status,created_date,priority_level,jurisdiction,analysis_tasks!inner(id)',{count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${wallet}`,{referencedTable:'analysis_tasks'});
+    if (inputs.search) q=q.or(`case_number.ilike.%${inputs.search}%,title.ilike.%${inputs.search}%`);
+    const {data,count,error}=await q.order('created_date',{ascending:false,nullsFirst:false}).order('id',{ascending:false})
+      .limit(1,{referencedTable:'analysis_tasks'}).range((inputs.page-1)*inputs.limit,inputs.page*inputs.limit-1);
+    if(error) throw error;
+    if(!Number.isInteger(count)||count<0) throw new Error('Missing case count');
+    res.json({success:true,data:(data||[]).map(c=>({id:c.id,case_number:c.case_number,title:c.title,status:c.status,
+      created_date:c.created_date,priority_level:c.priority_level,jurisdiction:c.jurisdiction})),
+      pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
+  } catch(error) {
+    console.error('Analyst cases error:',error);
+    res.status(500).json({success:false,error:'Failed to load cases'});
   }
 };
 
