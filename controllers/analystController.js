@@ -21,6 +21,23 @@ const integratedEvidenceService = require('../services/integratedEvidenceService
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Reject partial parses, repeated query keys and unbounded database ranges.
+function positiveInteger(value, max = 2147483647) {
+  if (!['string', 'number'].includes(typeof value) || !/^[1-9][0-9]*$/.test(String(value))) return null;
+  const n = Number(value);
+  return Number.isSafeInteger(n) && n <= max ? n : null;
+}
+function listInputs(query, statuses, withPriority = false) {
+  const page = positiveInteger(query.page === undefined ? 1 : query.page, 1000000);
+  const limit = positiveInteger(query.limit === undefined ? 20 : query.limit, 100);
+  const status = query.status === undefined ? '' : query.status;
+  const priority = query.priority === undefined ? '' : query.priority;
+  if (!page || !limit || typeof status !== 'string' || (status && !statuses.includes(status)) ||
+      (withPriority && (typeof priority !== 'string' || (priority && !['critical','high','medium','low'].includes(priority)))) ||
+      (withPriority && query.search !== undefined && (typeof query.search !== 'string' || query.search.length > 200))) return null;
+  return {page, limit, status, priority};
+}
+
 /** Map a DB task row into a public DTO. */
 function sanitizeTask(row) {
   if (!row) return null;
@@ -273,10 +290,11 @@ const getQueue = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const { status, priority, search, page = 1, limit = 20 } = req.query;
+    const { status, priority, search } = req.query;
 
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const inputs = listInputs(req.query, ['pending','in_progress','completed','archived'], true);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid queue filters or pagination.'});
+    const {page:pageNum, limit:limitNum} = inputs;
     const offset = (pageNum - 1) * limitNum;
 
     let query = supabase
@@ -292,6 +310,7 @@ const getQueue = async (req, res) => {
 
     let data = null;
     let error = null;
+    let matchedEvidenceIds = null;
     if (search) {
       const safe = String(search).replace(/[%_.*(),'"]/g, '').trim();
       if (safe) {
@@ -306,6 +325,7 @@ const getQueue = async (req, res) => {
         if (ids.length === 0) {
           return res.json({ success: true, data: [], pagination: { page: pageNum, limit: limitNum, total: 0, pages: 0 } });
         }
+        matchedEvidenceIds = ids;
         query = query.in('evidence_id', ids);
       }
     }
@@ -314,10 +334,13 @@ const getQueue = async (req, res) => {
     ({ data, error } = await query);
     if (error) throw error;
 
-    const { count: total, error: countError } = (await supabase
-      .from('analysis_tasks')
-      .select('id', { count: 'exact', head: true })
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
+    let countQuery = supabase.from('analysis_tasks')
+      .select('id, evidence!inner(id)', { count: 'exact', head: true })
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
+    if (status) countQuery = countQuery.eq('status', status);
+    if (priority) countQuery = countQuery.eq('priority', priority);
+    if (matchedEvidenceIds) countQuery = countQuery.in('evidence_id', matchedEvidenceIds);
+    const { count: total, error: countError } = (await countQuery) || {};
     if (countError) throw countError;
 
     // Case numbers for context.
@@ -355,8 +378,8 @@ const getTaskDetail = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
@@ -416,8 +439,8 @@ const startAnalysis = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
@@ -473,8 +496,8 @@ const updateTaskProgress = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
@@ -516,8 +539,8 @@ const saveReport = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
@@ -644,10 +667,11 @@ const getReports = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status } = req.query;
 
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const inputs = listInputs(req.query, ['draft','submitted','approved','rejected']);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid report filters or pagination.'});
+    const {page:pageNum, limit:limitNum} = inputs;
     const offset = (pageNum - 1) * limitNum;
 
     let query = supabase
@@ -676,10 +700,11 @@ const getReports = async (req, res) => {
       }
     }
 
-    const { count: total, error: countError } = (await supabase
-      .from('analysis_reports')
-      .select('id', { count: 'exact', head: true })
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
+    let countQuery = supabase.from('analysis_reports')
+      .select('id, evidence!inner(id)', { count: 'exact', head: true })
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
+    if (status) countQuery = countQuery.eq('status', status);
+    const { count: total, error: countError } = (await countQuery) || {};
     if (countError) throw countError;
 
     res.json({
@@ -917,8 +942,8 @@ const verifyEvidenceIntegrity = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
@@ -953,8 +978,8 @@ const getEvidenceBlockchain = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
