@@ -38,6 +38,42 @@ function listInputs(query, statuses, withPriority = false) {
   return {page, limit, status, priority};
 }
 
+// Never fall back to non-atomic report/task writes if deployment is incomplete.
+async function reportTransition(res, analyst, taskId, params) {
+  const { data, error } = await supabase.rpc('analyst_report_transition', {
+    p_task_id: taskId,
+    p_analyst_id: analyst.id,
+    p_wallet: analyst.wallet_address || analyst.email,
+    ...params,
+  });
+  if (error) {
+    if (['PGRST202', '42883', '42501'].includes(error.code)) {
+      res
+        .status(503)
+        .json({
+          success: false,
+          code: 'REPORT_TRANSITION_UNAVAILABLE',
+          error: 'Report transitions are not available. Contact the administrator.',
+        });
+      return null;
+    }
+    throw error;
+  }
+  if (data?.code === 'OK') return data;
+  const errors = {
+    NOT_ASSIGNED: [404, 'Task not found or not assigned to you'],
+    INVALID_INPUT: [400, 'Invalid transition input'],
+    FINALIZED: [409, 'Submitted reports and completed tasks are locked'],
+    STALE_REVISION: [409, 'Report changed. Reload before saving'],
+    DUPLICATE_REPORTS: [409, 'Multiple reports exist for this task. Administrator review required'],
+  };
+  const [status, message] = errors[data?.code] || [503, 'Report transition unavailable'];
+  res
+    .status(status)
+    .json({ success: false, code: data?.code || 'REPORT_TRANSITION_UNAVAILABLE', error: message });
+  return null;
+}
+
 /** Map a DB task row into a public DTO. */
 function sanitizeTask(row) {
   if (!row) return null;
@@ -86,6 +122,7 @@ function sanitizeReport(row) {
     case_id: row.case_id,
     status: row.status || 'draft',
     report_hash: row.report_hash || null,
+    revision: row.revision ?? null,
     result_summary: row.result_summary || null,
     findings: row.findings || null,
     blockchain_verified: Boolean(row.blockchain_verified),
@@ -444,41 +481,32 @@ const startAnalysis = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
-    const { priority = 'medium', estimated_time_minutes = null, caseId = null } = req.body || {};
+    const { priority = 'medium', estimated_time_minutes = null } = req.body || {};
 
-    // Task may already exist (resume path).
-    const { data: existing, error: existingError } = (await supabase
+    if (
+      !['critical', 'high', 'medium', 'low'].includes(priority) ||
+      (estimated_time_minutes !== null && !positiveInteger(estimated_time_minutes, 525600))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid analysis options' });
+    }
+    // Resolve the assigned task, but let the locked transaction decide finality.
+    const { data: existing, error: existingError } = await supabase
       .from('analysis_tasks')
-      .select('id, status')
+      .select('id')
       .eq('evidence_id', evidenceId)
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
       .order('created_at', { ascending: false })
-      .limit(1)) || {};
+      .limit(1);
     if (existingError) throw existingError;
-
-    let taskId;
-    if (existing && existing.length > 0) {
-      taskId = existing[0].id;
-      const { error: updateError } = (await supabase
-        .from('analysis_tasks')
-        .update({
-          // Starting analysis always moves the task to in_progress; a pending
-          // task gets its started_at stamp, a reopened completed task keeps its
-          // original start time.
-          status: 'in_progress',
-          started_at: existing[0].status === 'pending' ? new Date().toISOString() : undefined,
-          priority,
-          estimated_time_minutes,
-        })
-        .eq('id', taskId)) || {};
-      if (updateError) throw updateError;
-    } else {
-      // Enforcement: analysis may only be started on evidence the analyst has
-      // a pre-existing assignment (analysis_tasks row) for. Creating a task
-      // here for arbitrary evidence would bypass the assignment contract that
-      // every other analyst endpoint enforces ('Evidence not assigned to you').
+    if (!existing?.length)
       return res.status(403).json({ success: false, error: 'Evidence not assigned to you' });
-    }
+    const taskId = existing[0].id;
+    const result = await reportTransition(res, analyst, taskId, {
+      p_operation: 'start',
+      p_priority: priority,
+      p_estimated: estimated_time_minutes,
+    });
+    if (!result) return;
 
     await logAudit('analysis_started', analyst, { task_id: taskId, evidence_id: evidenceId });
 
@@ -495,33 +523,27 @@ const startAnalysis = async (req, res) => {
 const updateTaskProgress = async (req, res) => {
   try {
     const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
     const taskId = positiveInteger(req.params.id);
     if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
-    const progress = Math.min(Math.max(parseInt(req.body?.progress, 10) || 0, 0), 100);
-    const notes = typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 5000) : undefined;
-
-    const { data: rows, error } = (await supabase
-      .from('analysis_tasks')
-      .select('id, status')
-      .eq('id', taskId)
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
-      .limit(1)) || {};
-    if (error) throw error;
-    if (!rows || rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Task not found or not assigned to you' });
+    const progress = req.body?.progress;
+    const notes = req.body?.notes;
+    if (
+      !Number.isInteger(progress) ||
+      progress < 0 ||
+      progress > 100 ||
+      (notes !== undefined && (typeof notes !== 'string' || notes.length > 5000))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid progress or notes' });
     }
-
-    const patch = { progress, status: progress >= 100 ? 'in_progress' : rows[0].status };
-    if (notes !== undefined) patch.notes = notes;
-    const { error: updateError } = (await supabase
-      .from('analysis_tasks')
-      .update(patch)
-      .eq('id', taskId)) || {};
-    if (updateError) throw updateError;
+    const patch = await reportTransition(res, analyst, taskId, {
+      p_operation: 'progress',
+      p_progress: progress,
+      p_notes: notes ?? null,
+    });
+    if (!patch) return;
 
     await logAudit('analysis_progress', analyst, { task_id: taskId, progress });
 
@@ -538,92 +560,57 @@ const updateTaskProgress = async (req, res) => {
 const saveReport = async (req, res) => {
   try {
     const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
     const taskId = positiveInteger(req.params.id);
     if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
-    const { data: taskRows, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('id, evidence_id, case_id, status, requested_by, analysis_type')
-      .eq('id', taskId)
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
-      .limit(1)) || {};
-    if (taskError) throw taskError;
-    if (!taskRows || taskRows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Task not found or not assigned to you' });
+    const resultSummary = req.body?.result_summary ?? null;
+    const findings = req.body?.findings ?? null;
+    const submit = req.body?.submit ?? false;
+    const revision = req.body?.expected_revision;
+    if (
+      (resultSummary !== null &&
+        (typeof resultSummary !== 'string' || resultSummary.length > 10000)) ||
+      (findings !== null && (typeof findings !== 'string' || findings.length > 50000)) ||
+      typeof submit !== 'boolean' ||
+      !(resultSummary?.trim() || findings?.trim()) ||
+      (revision !== undefined &&
+        (!Number.isInteger(revision) || revision < 0 || revision > 2147483646))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid report content or revision' });
     }
-    const task = taskRows[0];
-
-    const resultSummary = typeof req.body?.result_summary === 'string' ? req.body.result_summary.slice(0, 10000) : null;
-    const findings = typeof req.body?.findings === 'string' ? req.body.findings.slice(0, 50000) : null;
-    const submit = req.body?.submit === true;
-    if (!resultSummary && !findings) {
-      return res.status(400).json({ success: false, error: 'Report requires a result summary or findings' });
-    }
-
-    // Report hash anchors the report content (SHA-256 of summary + findings).
+    // A3 will replace the legacy delimiter digest with a versioned payload.
     const reportHash = crypto
       .createHash('sha256')
       .update(`${resultSummary || ''}|${findings || ''}`)
       .digest('hex');
-
-    const status = submit ? 'submitted' : 'draft';
-    const nowIso = new Date().toISOString();
-
-    const { data: existing, error: existingError } = (await supabase
-      .from('analysis_reports')
-      .select('id')
-      .eq('task_id', taskId)
-      .limit(1)) || {};
-    if (existingError) throw existingError;
-
-    let reportId;
-    if (existing && existing.length > 0) {
-      reportId = existing[0].id;
-      const { error: updateError } = (await supabase
-        .from('analysis_reports')
-        .update({
-          status,
-          report_hash: reportHash,
-          result_summary: resultSummary,
-          findings,
-          updated_at: nowIso,
-          submitted_at: submit ? nowIso : undefined,
-        })
-        .eq('id', reportId)) || {};
-      if (updateError) throw updateError;
-    } else {
-      const { data: newReport, error: insertError } = (await supabase
-        .from('analysis_reports')
-        .insert({
+    const result = await reportTransition(res, analyst, taskId, {
+      p_operation: 'save',
+      p_summary: resultSummary,
+      p_findings: findings,
+      p_report_hash: reportHash,
+      p_submit: submit,
+      p_expected_revision: revision ?? null,
+    });
+    if (!result) return;
+    const reportId = result.report_id;
+    const status = result.status;
+    const task = result;
+    // Exact repeated submissions return the saved result without another audit
+    // completion or notification. The function has already checked all bytes.
+    if (!result.did_submit && submit)
+      return res.json({
+        success: true,
+        message: 'Report already submitted',
+        data: {
+          report_id: reportId,
           task_id: taskId,
-          evidence_id: task.evidence_id,
-          case_id: task.case_id,
-          analyst_id: analyst.id,
-          analyst_wallet: analyst.wallet_address || analyst.email,
-          status,
           report_hash: reportHash,
-          result_summary: resultSummary,
-          findings,
-          submitted_at: submit ? nowIso : null,
-        })
-        .select('id')
-        .single()) || {};
-      if (insertError) throw insertError;
-      reportId = newReport.id;
-    }
-
-    // Submitting a report completes the task.
-    const taskPatch = submit
-      ? { status: 'completed', progress: 100, completed_at: nowIso }
-      : { status: 'in_progress', progress: Math.max(task.status === 'pending' ? 10 : 50, 50) };
-    const { error: taskUpdateError } = (await supabase
-      .from('analysis_tasks')
-      .update(taskPatch)
-      .eq('id', taskId)) || {};
-    if (taskUpdateError) throw taskUpdateError;
+          status,
+          revision: result.revision,
+        },
+      });
 
     await logAudit(submit ? 'report_submitted' : 'report_saved', analyst, {
       report_id: reportId,
@@ -642,7 +629,12 @@ const saveReport = async (req, res) => {
           'Analysis complete',
           `${analystName} submitted the ${task.analysis_type || 'forensic'} analysis report for evidence #${task.evidence_id}. The report is ready to review.`,
           'analysis_complete',
-          { task_id: taskId, report_id: reportId, evidence_id: task.evidence_id, case_id: task.case_id }
+          {
+            task_id: taskId,
+            report_id: reportId,
+            evidence_id: task.evidence_id,
+            case_id: task.case_id,
+          },
         );
       } catch (e) {
         console.error('analysis complete notification failed:', e.message);
@@ -652,7 +644,13 @@ const saveReport = async (req, res) => {
     res.json({
       success: true,
       message: submit ? 'Report submitted successfully' : 'Report draft saved',
-      data: { report_id: reportId, task_id: taskId, report_hash: reportHash, status },
+      data: {
+        report_id: reportId,
+        task_id: taskId,
+        report_hash: reportHash,
+        status,
+        revision: result.revision,
+      },
     });
   } catch (error) {
     console.error('Analyst report error:', error);
@@ -677,7 +675,7 @@ const getReports = async (req, res) => {
     let query = supabase
       .from('analysis_reports')
       .select(
-        `id, task_id, evidence_id, case_id, status, report_hash, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
+        `id, task_id, evidence_id, case_id, status, report_hash, revision, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
          evidence!inner(id, name, file_type, hash)`,
       )
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
