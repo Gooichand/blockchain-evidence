@@ -204,122 +204,78 @@ async function logAudit(action, analyst, details) {
 // ---------------------------------------------------------------------------
 // GET /analyst/stats
 // ---------------------------------------------------------------------------
-const getStats = async (req, res) => {
+// Bounded, independent sources. A timeout is unknown, never a fabricated zero.
+async function dashboardRead(read, timeoutMs = 2500) {
+  let timer;
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    let base = supabase
-      .from('analysis_tasks')
-      .select('id, evidence_id, case_id, status, priority, progress, assigned_at, started_at, completed_at', {
-        count: 'exact',
-      });
-    base = base.or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
-    const { data: tasks, count, error } = await base;
-    if (error) throw error;
-
-    const rows = tasks || [];
-    const pending = rows.filter((t) => t.status === 'pending');
-    const inProgress = rows.filter((t) => t.status === 'in_progress');
-    const completed = rows.filter((t) => t.status === 'completed');
-    const critical = rows.filter((t) => t.priority === 'critical' && t.status !== 'completed');
-
-    let avgMinutes = null;
-    if (completed.length > 0) {
-      const durations = completed
-        .map((t) =>
-          t.started_at && t.completed_at
-            ? (new Date(t.completed_at).getTime() - new Date(t.started_at).getTime()) / 60000
-            : null,
-        )
-        .filter((d) => d !== null && d >= 0);
-      if (durations.length > 0) {
-        avgMinutes = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
-      }
-    }
-
-    // Evidence verified (blockchain) among assigned evidence.
-    let verifiedEvidence = 0;
-    let integrityScore = null;
-    const evIds = [...new Set(rows.map((t) => t.evidence_id).filter(Boolean))];
-    if (evIds.length > 0) {
-      const { data: evRows, error: evError } = (await supabase
-        .from('evidence')
-        .select('id, blockchain_verified')
-        .in('id', evIds)) || {};
-      if (!evError) {
-        verifiedEvidence = (evRows || []).filter((e) => e.blockchain_verified).length;
-        integrityScore = Math.round(((verifiedEvidence / evRows.length) * 100));
-      }
-    }
-
-    // Blockchain sync status (read-only probe, never blocks the dashboard).
-    let blockchainSync = { state: 'unknown', block: null, network: null };
-    try {
+    return await Promise.race([
+      Promise.resolve().then(read).then(result => {
+        if (result?.error) throw result.error;
+        return {state:'ready',result};
+      }),
+      new Promise(resolve => { timer=setTimeout(()=>resolve({state:'unavailable'}),timeoutMs); })
+    ]);
+  } catch (_) { return {state:'unavailable'}; }
+  finally { clearTimeout(timer); }
+}
+const getStats = async (req, res) => {
+  const analyst=req.user;
+  const walletMatch=analyst.wallet_address || analyst.email;
+  const checkedAt=new Date().toISOString();
+  const [taskRead,labRead,activityRead,chainRead] = await Promise.all([
+    dashboardRead(()=>supabase.from('analysis_tasks')
+      .select('id,evidence_id,case_id,status,priority,progress,assigned_at,started_at,completed_at',{count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`).limit(10000)),
+    dashboardRead(()=>supabase.from('lab_equipment').select('name,category,status,detail,version').order('sort_order',{ascending:true})),
+    dashboardRead(()=>supabase.from('activity_logs').select('action,details,timestamp')
+      .eq('user_id',analyst.id).order('timestamp',{ascending:false}).limit(10)),
+    dashboardRead(async()=>{
       await blockchainService.initialize();
-      blockchainSync = {
-        state: blockchainService.isInitialized() ? 'synced' : 'unavailable',
-        block: await blockchainService.getBlockNumber(),
-        network: (blockchainService.getNetworkInfo && blockchainService.getNetworkInfo().name) || null,
-      };
-    } catch (blockchainError) {
-      blockchainSync.state = 'unavailable';
-    }
-
-    // Lab equipment status.
-    const { data: lab, error: labError } = (await supabase
-      .from('lab_equipment')
-      .select('name, category, status, detail, version')
-      .order('sort_order', { ascending: true })) || {};
-    if (labError) throw labError;
-
-    // Recent analyst activity (evidence-scoped, from the audit trail).
-    const { data: activity, error: actError } = (await supabase
-      .from('activity_logs')
-      .select('action, details, timestamp')
-      .eq('user_id', analyst.id)
-      .order('timestamp', { ascending: false })
-      .limit(10)) || {};
-    if (actError) throw actError;
-
-    res.json({
-      success: true,
-      data: {
-        assigned_cases: new Set(rows.map((t) => t.case_id).filter(Boolean)).size,
-        assigned_evidence: evIds.length,
-        pending: pending.length,
-        in_progress: inProgress.length,
-        completed: completed.length,
-        critical_priority: critical.length,
-        awaiting_review: rows.filter((t) => t.status === 'in_progress' && t.progress >= 100).length,
-        average_processing_minutes: avgMinutes,
-        evidence_verified: verifiedEvidence,
-        integrity_score: integrityScore,
-        blockchain: blockchainSync,
-        lab_equipment: (lab || []).map((l) => ({
-          name: l.name,
-          category: l.category,
-          status: l.status,
-          detail: l.detail,
-          version: l.version,
-        })),
-        recent_activity: (activity || []).map((a) => ({
-          action: a.action,
-          details: a.details,
-          timestamp: a.timestamp,
-        })),
-        analyst: {
-          id: analyst.id,
-          name: analyst.full_name,
-          email: analyst.email,
-        },
-        generated_at: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error('Analyst stats error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load analysis statistics' });
-  }
+      if (!blockchainService.isInitialized()) throw new Error('Unavailable');
+      const block=await blockchainService.getBlockNumber();
+      if (!Number.isSafeInteger(block) || block < 0) throw new Error('Invalid block');
+      return {block,network:blockchainService.getNetworkInfo?.().name || null};
+    })
+  ]);
+  const rows=Array.isArray(taskRead.result?.data) ? taskRead.result.data : [];
+  // Supabase row caps must not turn truncated aggregates into precise totals.
+  const completeTasks=taskRead.state==='ready' && Array.isArray(taskRead.result?.data) && taskRead.result.count===rows.length;
+  const evIds=[...new Set(rows.map(t=>t.evidence_id).filter(Boolean))];
+  const evidenceRead = completeTasks && evIds.length
+    ? await dashboardRead(()=>supabase.from('evidence').select('id,blockchain_verified').in('id',evIds).limit(10000))
+    : {state:completeTasks ? 'ready':'unavailable',result:{data:[]}};
+  const evRows=Array.isArray(evidenceRead.result?.data) ? evidenceRead.result.data : [];
+  const completeEvidence=completeTasks && evidenceRead.state==='ready' &&
+    evRows.length===evIds.length && new Set(evRows.map(e=>e.id)).size===evIds.length &&
+    evRows.every(e=>evIds.includes(e.id) && typeof e.blockchain_verified==='boolean');
+  const verified=completeEvidence ? evRows.filter(e=>e.blockchain_verified).length : null;
+  const completed=rows.filter(t=>t.status==='completed');
+  const durations=completed.map(t=>t.started_at && t.completed_at ?
+    (new Date(t.completed_at)-new Date(t.started_at))/60000 : NaN).filter(n=>Number.isFinite(n)&&n>=0);
+  const states={
+    tasks:{state:completeTasks?'ready':taskRead.state==='ready'?'partial':'unavailable',checked_at:checkedAt,source:'assigned analysis_tasks'},
+    evidence:{state:completeEvidence?'ready':evidenceRead.state==='ready'?'partial':'unavailable',checked_at:checkedAt,source:'stored blockchain_verified flags',fresh_integrity_check:false},
+    equipment:{state:labRead.state,checked_at:checkedAt},activity:{state:activityRead.state,checked_at:checkedAt},
+    blockchain:{state:chainRead.state,checked_at:checkedAt,source:'read-only RPC head, not evidence verification'}
+  };
+  res.json({success:true,data:{
+    assigned_cases:completeTasks ? new Set(rows.map(t=>t.case_id).filter(Boolean)).size : null,
+    assigned_evidence:completeTasks ? evIds.length : null,
+    pending:completeTasks ? rows.filter(t=>t.status==='pending').length : null,
+    in_progress:completeTasks ? rows.filter(t=>t.status==='in_progress').length : null,
+    completed:completeTasks ? completed.length : null,
+    critical_priority:completeTasks ? rows.filter(t=>t.priority==='critical'&&t.status!=='completed').length : null,
+    awaiting_review:completeTasks ? rows.filter(t=>t.status==='in_progress'&&t.progress>=100).length : null,
+    average_processing_minutes:completeTasks&&durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : null,
+    evidence_verified:verified,
+    integrity_score:completeEvidence&&evRows.length ? Math.round(verified/evRows.length*100) : null,
+    blockchain:{state:chainRead.state==='ready'?'synced':'unavailable',block:chainRead.result?.block ?? null,
+      network:chainRead.result?.network ?? null,checked_at:checkedAt,meaning:'Read-only RPC head, not evidence integrity'},
+    lab_equipment:labRead.state==='ready' ? (labRead.result.data || []).map(l=>({name:l.name,category:l.category,status:l.status,detail:l.detail,version:l.version})) : null,
+    recent_activity:activityRead.state==='ready' ? (activityRead.result.data || []).map(e=>({action:e.action,details:e.details,timestamp:e.timestamp})) : null,
+    sources:states,partial:Object.values(states).some(x=>x.state!=='ready'),
+    analyst:{id:analyst.id,name:analyst.full_name,email:analyst.email},generated_at:new Date().toISOString()
+  }});
 };
 
 // ---------------------------------------------------------------------------
