@@ -177,10 +177,10 @@
   // Modules own their precise method names, limits and capability checks.
   function localModule(catId) {
     return {image: window.ImageForensics, document: window.DocumentForensics,
-      video: window.VideoForensics, audio: undefined,
-      blockchain: undefined, crypto: undefined,
-      metadata: undefined, timeline: undefined,
-      utility: undefined, network: undefined, ai: undefined}[catId];
+      video: window.VideoForensics, audio: window.AudioForensics,
+      blockchain: window.BlockchainInspection, crypto: window.CryptoTools,
+      metadata: window.MetadataTools, timeline: window.TimelineTools,
+      utility: window.UtilityTools, network: undefined, ai: undefined}[catId];
   }
   function runtimeStatus(catId, tool) {
     const module = localModule(catId);
@@ -817,6 +817,30 @@
     const ws = document.getElementById('flWorkspace');
     if (!ws) return;
     clear(ws);
+    if (cat.id === 'utility' && window.UtilityTools) {
+      window.UtilityTools.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'timeline' && window.TimelineTools) {
+      window.TimelineTools.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'metadata' && window.MetadataTools) {
+      window.MetadataTools.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'crypto' && window.CryptoTools) {
+      window.CryptoTools.mount(ws, tool);
+      return;
+    }
+    if (cat.id === 'blockchain' && window.BlockchainInspection) {
+      window.BlockchainInspection.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'audio' && window.AudioForensics) {
+      window.AudioForensics.mount(ws, tool, () => state.file);
+      return;
+    }
     if (cat.id === 'video' && window.VideoForensics) {
       window.VideoForensics.mount(ws, tool, () => state.file);
       return;

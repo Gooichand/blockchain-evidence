@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/requireAuth');
 
 // H6 fix: network config, server wallet and IPFS file names were public.
 // Everything under /api/blockchain now requires an authenticated session.
+router.get('/inspect/:kind/:value', requireAuth, require('../controllers/blockchainInspectionController').inspect);
 router.get('/verification-health', requireAuth, require('../controllers/hashVerificationController').verificationHealth);
 router.get('/verify-hash/:hash', requireAuth, require('../controllers/hashVerificationController').verifyFileHash);
 router.get('/status', requireAuth, blockchainController.getSystemStatus);
