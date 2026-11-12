@@ -41,3 +41,8 @@ test('demo covers all tools and never promises a fabricated anchor', () => {
   expect(readme).toContain('There is no guaranteed anchored sample');
   expect(readme).toContain('No sample was anchored');
 });
+test('bundled browser demo bytes equal the independently tested synthetic fixtures', () => {
+  for (const name of ['original.txt', 'changed.txt']) {
+    expect(fs.readFileSync(path.join(root, 'public/samples/hash-integrity', name))).toEqual(fs.readFileSync(path.join(folder, name)));
+  }
+});

@@ -1,0 +1,10 @@
+{
+  "provenance": "Original FFmpeg testsrc2 synthetic clip, no real evidence or personal data.",
+  "fixture": "demo.mp4",
+  "format": "MP4 / H.264, 480x270, 10 frames per second, 3 seconds, 30 samples, keyframe interval 10",
+  "vid-metadata": "Decoded dimensions 480x270, duration about 3 seconds, MP4 track sampleCount 30",
+  "frame-extract": "One decoded canvas near requested second 1, with requested and browser timestamp labels",
+  "vid-timeline": "Six decoded canvases sampled at 0, 0.5, 1, 1.5, 2, 2.5 seconds",
+  "keyframe": "Three MP4 sync samples, not scene-change/tamper judgments",
+  "video-inspector": "Top-level ftyp, moov and mdat boxes cover complete fixture bytes; not all-frame validation"
+}

@@ -1,0 +1,4 @@
+DGC demo sample
+Synthetic evidence for a classroom demonstration only.
+Case: DEMO-001
+Value: 101

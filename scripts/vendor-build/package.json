@@ -1,0 +1,20 @@
+{
+  "name": "forensic-lab-vendor-build",
+  "private": true,
+  "scripts": {
+    "build": "node bundle.cjs"
+  },
+  "dependencies": {
+    "@peculiar/x509": "3.1.0",
+    "jsqr": "1.4.0",
+    "mediainfo.js": "0.3.8",
+    "multiformats": "14.0.5",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "4.10.38",
+    "qrcode": "1.5.4",
+    "reflect-metadata": "0.2.2"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

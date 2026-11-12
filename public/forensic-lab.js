@@ -1,6 +1,6 @@
 /* ============================================================================
    EVID-DGC Digital Forensics Laboratory
-   Framework + placeholder engine. No real forensic algorithms yet.
+   Bounded local measurements plus explicit live/dependency limitations.
    ============================================================================ */
 (function () {
   'use strict';
@@ -174,9 +174,26 @@
     },
   ];
 
+  // Modules own their precise method names, limits and capability checks.
+  function localModule(catId) {
+    return {image: window.ImageForensics, document: window.DocumentForensics,
+      video: window.VideoForensics, audio: undefined,
+      blockchain: undefined, crypto: undefined,
+      metadata: undefined, timeline: undefined,
+      utility: undefined, network: undefined, ai: undefined}[catId];
+  }
+  function runtimeStatus(catId, tool) {
+    const module = localModule(catId);
+    return module ? (module.ready(tool.id) ? 'available' : 'beta') : tool.status;
+  }
+
   /* ------------------------------------------------------------- services */
   CATALOG.forEach((c, i) => {
-    CATALOG[i].tools = c.tools.map((t) => Object.assign({}, t, { svc: c.id }));
+    const module = localModule(c.id);
+    CATALOG[i].tools = c.tools.map((t) => {
+      const guide = module && module.guides && module.guides[t.id];
+      return Object.assign({}, t, { svc: c.id }, guide ? { name: guide[0], desc: guide[1] } : {});
+    });
   });
 
   function mockResponse(tool, svc, file) {
@@ -414,7 +431,7 @@
     root.appendChild(nav);
     root.appendChild(el('div', { class: 'fl-sidebar-foot' },
       el('i', { 'data-lucide': 'shield-check', style: 'width:13px;height:13px;' }),
-      el('span', { text: 'Engines pending integration' }),
+      el('span', { text: 'Availability is capability, not authenticity' }),
     ));
 
     CATALOG.forEach((cat, idx) => {
@@ -444,7 +461,7 @@
             },
               el('i', { 'data-lucide': tool.icon, style: 'width:15px;height:15px;' }),
               el('span', { class: 'fl-tool-name', text: tool.name }),
-              statusDot(tool.status),
+              statusDot(runtimeStatus(cat.id, tool)),
             );
             btn.addEventListener('click', () => openTool(cat.id, tool.id));
             return btn;
@@ -631,6 +648,25 @@
       el('p', { text: tool.guide, style: 'margin:0;font-size:0.875rem;color:var(--fl-body);' }));
   }
 
+  // Demo inputs are bundled synthetic bytes. Expected results are never injected.
+  async function loadHashDemoInput(toolId, changed = false) {
+    const load = async name => {
+      const response = await fetch('/samples/hash-integrity/' + name, { cache: 'no-store', credentials: 'same-origin' });
+      if (!response.ok) throw new Error('Demo sample unavailable. Your evidence has not been changed.');
+      const bytes = await response.arrayBuffer();
+      if (bytes.byteLength > 1024) throw new Error('Unexpected demo sample size.');
+      return new File([bytes], 'Demo - ' + name, { type: 'text/plain' });
+    };
+    const original = await load('original.txt');
+    const file = changed ? await load('changed.txt') : original;
+    const options = {};
+    if (toolId === 'hash-compare') {
+      options.left = await computeSHA256(original);
+      options.right = await computeSHA256(file);
+    } else if (toolId === 'integrity-check') options.expected = await computeSHA256(original);
+    return { file, options };
+  }
+
   // Completed hash tools have their own truthful, local-only workspace.
   // Other categories keep their existing rendering and service behavior.
   function renderHashWorkspace(ws, cat, tool) {
@@ -675,18 +711,21 @@
     form.appendChild(btn);
     const output = el('section', { id: 'flHashResults', class: 'fl-panel', role: 'status', 'aria-live': 'polite', style: 'margin-top:16px;padding:20px;overflow-wrap:anywhere;' });
     output.appendChild(el('p', { text: 'Results will appear here after you run the tool.' }));
+    let sequence = 0;
     // Invalidate old results as soon as either input changes.
     form.addEventListener('input', () => {
+      sequence++;
       state.lastRun = null;
       clear(output);
       output.appendChild(el('p', { text: 'Inputs changed. Run the tool again.' }));
     });
-    let sequence = 0;
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const run = ++sequence;
-      const file = state.file;
       const options = Object.fromEntries(Object.entries(inputs).map(([key, node]) => [key, node.value]));
+      await execute(state.file, options);
+    });
+    async function execute(file, options, demoLabel) {
+      const run = ++sequence;
       btn.disabled = true;
       Object.values(inputs).forEach(node => { node.disabled = true; });
       clear(output);
@@ -697,6 +736,10 @@
         if (run !== sequence || !ws.contains(output)) return;
         state.lastRun = result;
         clear(output);
+        if (demoLabel) {
+          output.appendChild(el('p', { class: 'fl-demo-label', text: 'DEMO SAMPLE - ' + demoLabel + '. Your Evidence Vault file and typed inputs are unchanged.' }));
+          if (isComparison) output.appendChild(el('p', { text: 'Inputs computed from demo files: ' + options.left + ' / ' + options.right, style: 'overflow-wrap:anywhere;' }));
+        }
         output.appendChild(el('h3', { text: result.message }));
         if (result.match !== undefined) output.appendChild(el('strong', { text: result.match ? 'MATCH' : 'MISMATCH', style: 'color:' + (result.match ? '#166534' : '#b91c1c') }));
         if (result.anchored !== undefined) {
@@ -719,13 +762,54 @@
         if (!ws.contains(output)) return;
         state.lastRun = null;
         clear(output);
+        if (demoLabel) output.appendChild(el('p', { class: 'fl-demo-label', text: 'DEMO SAMPLE - ' + demoLabel + '. Your evidence is unchanged.' }));
         output.appendChild(el('p', { role: 'alert', text: error.message || 'Hash processing failed. Please retry.' }));
       } finally {
         btn.disabled = !isComparison && !state.file;
         Object.values(inputs).forEach(node => { node.disabled = false; });
       }
+    }
+    const examples = el('section', { 'aria-label': 'Demo examples', style: 'margin:16px 0;display:flex;gap:8px;flex-wrap:wrap;' });
+    const demoButtons = [];
+    let demoBusy = false;
+    const addDemo = (changed, text) => {
+      const demoButton = el('button', { type: 'button', class: 'fl-btn fl-btn-ghost', text: '\u25b6 ' + text,
+        'aria-label': text, title: 'Runs this real tool on a bundled synthetic sample. Your evidence is unchanged.' });
+      demoButton.addEventListener('click', async () => {
+        if (demoBusy || btn.disabled && (isComparison || state.file)) return;
+        demoBusy = true;
+        const preparation = ++sequence;
+        state.lastRun = null;
+        clear(output);
+        output.appendChild(el('p', { text: 'Loading demo sample...' }));
+        demoButtons.forEach(button => { button.disabled = true; });
+        try {
+          const demo = await loadHashDemoInput(tool.id, changed);
+          if (!ws.contains(output) || preparation !== sequence) return;
+          await execute(demo.file, demo.options, changed ? 'one-byte-changed copy compared with original' : 'bundled original.txt');
+        } catch (error) {
+          if (ws.contains(output) && preparation === sequence) {
+            clear(output);
+            output.appendChild(el('p', { role: 'alert', text: error.message || 'Demo failed. Your evidence is unchanged.' }));
+          }
+        } finally { demoBusy = false; demoButtons.forEach(button => { button.disabled = false; }); }
+      });
+      demoButtons.push(demoButton);
+      examples.appendChild(demoButton);
+    };
+    addDemo(false, isComparison || isIntegrity ? 'Try matching example' : 'Try example');
+    if (isComparison || isIntegrity) addDemo(true, 'Try changed example');
+    const restore = el('button', { type: 'button', class: 'fl-btn fl-btn-ghost', text: 'Return to my inputs' });
+    restore.addEventListener('click', () => {
+      sequence++;
+      state.lastRun = null;
+      clear(output);
+      output.appendChild(el('p', { text: 'Your Evidence Vault file and inputs are unchanged. Run the tool to see your own results.' }));
     });
+    examples.appendChild(restore);
     ws.appendChild(form);
+    ws.appendChild(el('p', { text: 'Try example runs the real tool on synthetic sample bytes without replacing your evidence. Blockchain examples make a real read-only lookup and may be unavailable or not found.' }));
+    ws.appendChild(examples);
     ws.appendChild(output);
   }
 
@@ -733,6 +817,18 @@
     const ws = document.getElementById('flWorkspace');
     if (!ws) return;
     clear(ws);
+    if (cat.id === 'video' && window.VideoForensics) {
+      window.VideoForensics.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'document' && window.DocumentForensics) {
+      window.DocumentForensics.mount(ws, tool, () => state.file);
+      return;
+    }
+    if (cat.id === 'image' && window.ImageForensics) {
+      window.ImageForensics.mount(ws, tool, () => state.file);
+      return;
+    }
     if (cat.id === 'hash') {
       renderHashWorkspace(ws, cat, tool);
       return;

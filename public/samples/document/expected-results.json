@@ -1,0 +1,9 @@
+{
+  "provenance": "Original synthetic PDF, text and scan; no real evidence or personal data.",
+  "pdf-inspector": {"sample": "demo.pdf", "expect": "One page, text DGC DEMO DOCUMENT and Amount: 100"},
+  "doc-metadata": {"sample": "demo.pdf", "expect": "Author DGC Demo, Title DGC Synthetic Document; editable values, not authenticated"},
+  "hidden-text": {"sample": "demo.pdf", "expect": "WHITE TEXT DEMO white-fill candidate and INVISIBLE TEXT DEMO invisible rendering candidate"},
+  "signature": {"sample": "demo.pdf", "expect": "No signature markers in this fixture, cryptographic verification NOT PERFORMED"},
+  "doc-compare": {"samples": ["original.txt", "changed.txt"], "expect": "equal false, Amount: 100 differs from Amount: 101"},
+  "ocr": {"sample": "ocr.png", "expect": "English recognition includes DGC DEMO and AMOUNT 100; OCR text requires human checking"}
+}

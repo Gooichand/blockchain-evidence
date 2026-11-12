@@ -1,0 +1,12 @@
+{
+  "provenance": "Original synthetic shapes and text, generated for DGC. No real evidence or personal data.",
+  "ela": {"sample": "edited.jpg", "expect": "JPEG quality-90 recompression difference visualization, not a tampering verdict"},
+  "clone-detect": {"sample": "repeated-blocks.png", "expect": "At least one exact repeated non-uniform grid tile pair; not general clone detection"},
+  "noise-analysis": {"sample": "original.jpg", "expect": "Luminance residual map and numerical standard deviation, no camera attribution"},
+  "img-metadata": {"sample": "original.jpg", "expect": {"Make": "DGC Demo", "Model": "Synthetic Canvas"}},
+  "histogram": {"sample": "original.jpg", "expect": "Each RGB channel sums to 196608 pixels"},
+  "compression": {"sample": "original.jpg", "expect": "JPEG quantization table entries, not double-compression detection"},
+  "color-channels": {"sample": "original.jpg", "expect": "Original plus three grayscale channel maps"},
+  "edge-detect": {"sample": "original.jpg", "expect": "Sobel gradient visualization"},
+  "ai-tamper": {"sample": null, "expect": "Unavailable until a validated model exists. No fake example or score."}
+}
