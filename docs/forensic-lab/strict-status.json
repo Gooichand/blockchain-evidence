@@ -1,5 +1,5 @@
 {
-  "strictYes": 34,
+  "strictYes": 47,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -49,8 +49,8 @@
       "category": "Image Forensics",
       "id": "clone-detect",
       "name": "Clone Detection",
-      "strictYes": false,
-      "reason": "Exact fixed-grid repeats only; no general clone matching."
+      "strictYes": true,
+      "reason": "Actual nonlocal ORB/Hamming correspondences and homography RANSAC groups in a CSP-safe local worker. Off-grid translation, rotation/scale and JPEG-recompression positives; unique/flat negatives pass. Candidate repeated regions, not edit/authenticity proof; natural repetitions can match and low texture/heavy changes can be missed."
     },
     {
       "category": "Image Forensics",
@@ -78,7 +78,7 @@
       "id": "compression",
       "name": "Compression Analysis",
       "strictYes": false,
-      "reason": "JPEG tables only, no double-compression detection."
+      "reason": "Original JPEG AC coefficients/histograms and narrow aligned lattice-enrichment candidates now work. Still No: only2 synthetic positive combinations,5 documented genuine-double misses, no independent real-photo benchmark or calibrated classifier. No candidate does not mean single compression."
     },
     {
       "category": "Image Forensics",
@@ -127,14 +127,14 @@
       "id": "hidden-text",
       "name": "Hidden Text Detector",
       "strictYes": false,
-      "reason": "Limited white/invisible text signals, not all concealment methods."
+      "reason": "Actual invisible/opacity state and rendered-white-region detection, including white-on-dark negative. Still incomplete for complex clipping/overpainting/masks/Type3/unmatched or extraction-omitted text; no extra strict credit."
     },
     {
       "category": "Document Forensics",
       "id": "signature",
       "name": "Signature Verification",
-      "strictYes": false,
-      "reason": "PDF signature structure markers, not CMS cryptographic verification."
+      "strictYes": true,
+      "reason": "Real detached CMS signed-byte verification for supported SHA-256/384/512 PDF signatures, tamper failures and older signed-revision/unsigned-append distinction. No trust/revocation/timestamp/permission-policy or legal-validity claim."
     },
     {
       "category": "Document Forensics",
@@ -154,22 +154,22 @@
       "category": "Video Forensics",
       "id": "frame-extract",
       "name": "Frame Extraction",
-      "strictYes": false,
-      "reason": "Browser seeking is approximate, not frame-exact."
+      "strictYes": true,
+      "reason": "Exact MP4/H.264 WebCodecs sample extraction with presentation index/PTS/edit adjustment; real B-frame/CFR/VFR checks and independent FFmpeg pixel comparison. Unsupported codecs/edits/rotations fail closed; browser color conversion differs."
     },
     {
       "category": "Video Forensics",
       "id": "vid-timeline",
       "name": "Timeline Viewer",
-      "strictYes": false,
-      "reason": "Six sampled thumbnails, not full visual event reconstruction."
+      "strictYes": true,
+      "reason": "All supported H264 frames measured with visual-change segment boundaries, exact segment-start thumbnails and near-black/low-change intervals. Real three-cut/black/freeze fixtures pass; no semantic event, completeness or authenticity claim. MP4/H2641-2000frames only."
     },
     {
       "category": "Video Forensics",
       "id": "keyframe",
       "name": "Keyframe Analysis",
-      "strictYes": false,
-      "reason": "MP4 sync flags only; no anomaly method."
+      "strictYes": true,
+      "reason": "All supported H264 frames decoded and measured, grouped into GOPs with sync thumbnails, deterministic timing/GOP/visual-change/black/low-change candidates. Bframes/VFR counts/timestamps independently match ffprobe. Candidate anomalies, not edit/authenticity proof; audio/other streams not validated."
     },
     {
       "category": "Video Forensics",
@@ -203,36 +203,36 @@
       "category": "Audio Forensics",
       "id": "fingerprint",
       "name": "Audio Fingerprinting",
-      "strictYes": false,
-      "reason": "Coarse spectral similarity, not unique acoustic fingerprint matching."
+      "strictYes": true,
+      "reason": "Actual time-ordered spectral landmark hashes and offset voting in a bounded local worker. WAV/gain/noise, trimmed MP3 and resampled AAC positives, reordered/different/repeated/simple-tone/silence negatives or inconclusives tested. Pairwise candidate acoustic correspondence, no unique identity/database/tamper or broad real-world accuracy claim."
     },
     {
       "category": "Blockchain",
       "id": "tx-verify",
       "name": "Transaction Verification",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual repository receipt/block controller passed public Amoy read-only RPC checks Nov12 02:21 IST and real local-EVM positive/negative tests. Receipt/block hashes agree; execution is not evidence anchoring. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "evidence-verify",
       "name": "Evidence Verification",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual hash controller passed public Amoy present/absent tests Nov12 02:21 IST, including legacy 0x-prefixed SHA-256 index; cross-checks stored record at same block and rejects conflicting indexes. Anchoring is not authenticity/legal provenance. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "block-explorer",
       "name": "Block Explorer",
-      "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "strictYes": true,
+      "reason": "Actual repository block/confirmation controller passed public Amoy read-only RPC check at block 52607676 Nov12 02:21 IST. First 100 transaction hashes, chain80002 only; reorgs possible. Not yet published/deployed."
     },
     {
       "category": "Blockchain",
       "id": "ipfs-viewer",
       "name": "IPFS Viewer",
       "strictYes": false,
-      "reason": "Local raw-block CID only, no gateway/UnixFS object retrieval."
+      "reason": "Multi-block UnixFS CAR/directory verification and reconstruction pass real local fixtures/tampered/missing-block cases. Public CAR gateway attempts timed out; retrieval remains unconfirmed, no strict credit."
     },
     {
       "category": "Blockchain",
@@ -259,8 +259,8 @@
       "category": "Cryptography",
       "id": "rsa",
       "name": "RSA Analysis",
-      "strictYes": false,
-      "reason": "Public arithmetic/SPKI import checks, not complete key/private validation."
+      "strictYes": true,
+      "reason": "Public RSA checks plus two-prime private JWK/PKCS8 arithmetic, 32-round probable-prime checks, CRT consistency and actual OAEP roundtrip; tested 2048/4096 bits. Not randomness/security certification."
     },
     {
       "category": "Cryptography",
@@ -315,8 +315,8 @@
       "category": "Metadata",
       "id": "pdf-metadata",
       "name": "PDF Metadata",
-      "strictYes": false,
-      "reason": "Editable properties only, no historical revisions."
+      "strictYes": true,
+      "reason": "Current properties plus preserved Prev-linked incremental revision snapshots/property changes and hashes, including standard xref tables/streams. Rewritten-away history is not recovered; author/date claims remain unverified."
     },
     {
       "category": "Timeline",
@@ -406,8 +406,8 @@
       "category": "Networking Tools",
       "id": "dns-lookup",
       "name": "DNS / WHOIS Lookup",
-      "strictYes": false,
-      "reason": "No live/native execution service."
+      "strictYes": true,
+      "reason": "Live A/AAAA/MX/NS/TXT/SOA/CAA and public IPv4/IPv6 PTR plus IANA-bootstrapped HTTPS RDAP registration reads. Actual example.com registry and dns.google PTR checks passed Nov12 02:45-02:47 IST. RDAP replaces legacy WHOIS; no DNSSEC, private registration data or ownership claim. Not deployed."
     },
     {
       "category": "Networking Tools",
@@ -427,8 +427,8 @@
       "category": "Networking Tools",
       "id": "ssl-inspect",
       "name": "SSL/TLS Inspector",
-      "strictYes": false,
-      "reason": "Offline Hello/chain signatures, no live server configuration/trust scan."
+      "strictYes": true,
+      "reason": "Actual fixed-port public TLS handshakes inspect peer certificate chain/signatures, Node-default-root authorization, hostname/validity, negotiated cipher/ALPN and TLS1.2/1.3 attempts. Real example.com positive and wrong-host/expired negatives pass. Not revocation, full cipher/vulnerability scan or browser trust. Private DNS answers blocked/pinned."
     },
     {
       "category": "Networking Tools",

@@ -43,6 +43,7 @@ function registerRoutes(app) {
   app.use('/api', caseRoutes);
   app.use('/api', activityRoutes);
   app.use('/api/blockchain', blockchainRoutes);
+  app.use('/api/network', require('./networkReadRoutes'));
   app.use('/api/monitoring', monitoringRoutes);
   app.use('/api', contactRoutes);
   app.use('/api', publicRoutes);

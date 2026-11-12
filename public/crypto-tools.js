@@ -7,8 +7,8 @@
       'Encrypts UTF-8 text with a newly generated AES-256-GCM key and random 96-bit IV, or decrypts an envelope containing its raw key. Paste text and choose Encrypt, or paste the complete envelope and choose Decrypt. The envelope includes the secret key: keep it private and separate the key before sharing ciphertext. Choose Analyze key for a raw hexadecimal AES key: checks 128/192/256-bit length and repeated bytes/patterns, then attempts Web Crypto import. Provider support varies (Chrome does not import AES-192). Pattern checks cannot establish entropy or secure randomness. This is a local utility, not secure key storage or a general forensic decryptor.',
     ],
     rsa: [
-      'RSA Public Key Checks',
-      'Paste an RSA public JWK or PEM PUBLIC KEY (SPKI). Checks modulus/exponent encoding, oddness, bounds, common small factors and GCD, then attempts a Web Crypto RSA-OAEP import. Reports a SHA-256 SPKI fingerprint. Passing does not prove two-prime generation, private-key correctness, secure randomness or certificate trust. Private keys are refused.',
+      'RSA Key Inspection and Validation',
+      'Paste a public or two-prime private RSA JWK, PEM PUBLIC KEY (SPKI), or unencrypted PEM PRIVATE KEY (PKCS8). Public keys receive encoding, modulus/exponent, small-factor and provider-import checks; they cannot prove private-key correctness. Private keys additionally check n=p*q, distinct probable primes (32 randomized Miller-Rabin rounds each), e*d modulo lcm(p-1,q-1), all CRT values and a real OAEP round trip. Private validation is limited to 2048-4096 bits; public keys up to 8192 bits. Private values never appear in results or leave this page. No encrypted PEM, multi-prime RSA, certificate trust, randomness proof or formal primality proof. Use synthetic keys, not production secrets.',
     ],
     jwt: [
       'JWT Payload Decoder',
@@ -56,48 +56,100 @@
       limit: 'Syntax/size inspection only. This is not cryptographic key validation.',
     };
   }
+  function rsaInteger(bytes) {
+    let n = 0n;
+    for (const b of bytes) n = n * 256n + BigInt(b);
+    return n;
+  }
+  function rsaGCD(a, b) {
+    while (b) [a, b] = [b, a % b];
+    return a;
+  }
+  function rsaPow(a, e, n) {
+    let v = 1n;
+    for (a %= n; e; e >>= 1n, a = (a * a) % n) if (e & 1n) v = (v * a) % n;
+    return v;
+  }
+  function rsaProbablePrime(n, rounds = 32) {
+    if (n < 2n) return false;
+    for (const p of [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n]) {
+      if (n === p) return true;
+      if (n % p === 0n) return false;
+    }
+    let d = n - 1n,
+      s = 0;
+    while (!(d & 1n)) {
+      d >>= 1n;
+      s++;
+    }
+    const bits = (n - 3n).toString(2).length,
+      bytes = new Uint8Array(Math.ceil(bits / 8));
+    for (let r = 0; r < rounds; r++) {
+      let x;
+      do {
+        root.crypto.getRandomValues(bytes);
+        bytes[0] &= 255 >>> (bytes.length * 8 - bits);
+        x = rsaInteger(bytes);
+      } while (x >= n - 3n);
+      x = rsaPow(x + 2n, d, n);
+      if (x === 1n || x === n - 1n) continue;
+      let witness = true;
+      for (let j = 1; j < s; j++) {
+        x = (x * x) % n;
+        if (x === n - 1n) {
+          witness = false;
+          break;
+        }
+      }
+      if (witness) return false;
+    }
+    return true;
+  }
   async function validateRSA(value) {
     const subtle = root.crypto?.subtle;
     if (!subtle) throw Error('Web Crypto unavailable; use HTTPS or localhost.');
+    if (typeof value !== 'string' || value.length > 32768) throw Error('RSA input limit: 32 KiB.');
     let jwk;
     if (value.trim().startsWith('-----BEGIN')) {
-      if (
-        !/^\s*-----BEGIN PUBLIC KEY-----[A-Za-z0-9+/=\s]+-----END PUBLIC KEY-----\s*$/.test(value)
-      )
-        throw Error('Only PEM PUBLIC KEY (SPKI), no private key or certificate.');
-      const der = Uint8Array.from(
-        atob(value.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s/g, '')),
-        (c) => c.charCodeAt(0),
-      );
+      const pem = value
+        .trim()
+        .match(/^-----BEGIN (PUBLIC KEY|PRIVATE KEY)-----([A-Za-z0-9+/=\s]+)-----END \1-----$/);
+      if (!pem)
+        throw Error('Only PEM PUBLIC KEY (SPKI) or unencrypted PRIVATE KEY (PKCS8) supported.');
+      const der = Uint8Array.from(atob(pem[2].replace(/\s/g, '')), (c) => c.charCodeAt(0));
+      const priv = pem[1] === 'PRIVATE KEY';
       const imported = await subtle.importKey(
-        'spki',
+        priv ? 'pkcs8' : 'spki',
         der,
         { name: 'RSA-OAEP', hash: 'SHA-256' },
         true,
-        ['encrypt'],
+        [priv ? 'decrypt' : 'encrypt'],
       );
       jwk = await subtle.exportKey('jwk', imported);
     } else jwk = JSON.parse(value);
-    const info = rsaInfo(jwk),
-      nb = un64(jwk.n),
-      eb = un64(jwk.e);
-    if (nb.length > 1024 || eb.length > 8)
-      throw Error('RSA check limit:8192-bit modulus and64-bit exponent.');
-    if (nb[0] === 0 || eb[0] === 0) throw Error('Noncanonical leading zero RSA integer.');
-    const integer = (bytes) => {
-      let n = 0n;
-      for (const b of bytes) n = n * 256n + BigInt(b);
-      return n;
+    if (!jwk || typeof jwk !== 'object' || jwk.kty !== 'RSA') throw Error('RSA JWK required.');
+    if ('oth' in jwk) throw Error('Multi-prime RSA is unsupported.');
+    const fields = ['d', 'p', 'q', 'dp', 'dq', 'qi'];
+    const privateKey = fields.some((k) => k in jwk);
+    if (privateKey && fields.some((k) => typeof jwk[k] !== 'string'))
+      throw Error('Complete two-prime private JWK required: d, p, q, dp, dq and qi.');
+    const info = rsaInfo({ kty: 'RSA', n: jwk.n, e: jwk.e });
+    const read = (k, max) => {
+      const b = un64(jwk[k]);
+      if (!b.length || b[0] === 0 || b.length > max)
+        throw Error('Noncanonical leading zero, empty or oversized RSA integer: ' + k);
+      return rsaInteger(b);
     };
-    const N = integer(nb),
-      E = integer(eb);
-    const gcd = (a, b) => {
-      while (b) {
-        [a, b] = [b, a % b];
-      }
-      return a;
-    };
-    const small = [
+    const N = read('n', 1024),
+      E = read('e', 8),
+      issues = [];
+    if (privateKey && (info.modulusBits < 2048 || info.modulusBits > 4096))
+      throw Error('Private RSA validation supports 2048-4096-bit keys only.');
+    if (N < 3n || N % 2n === 0n) issues.push('Modulus must be odd and greater than 2.');
+    if (E < 3n || E % 2n === 0n || E >= N)
+      issues.push('Exponent must be odd, at least 3, and below modulus.');
+    if (rsaGCD(N, E) !== 1n) issues.push('Modulus and exponent share a factor.');
+    const primes = [
       3n,
       5n,
       7n,
@@ -123,46 +175,92 @@
       89n,
       97n,
     ];
-    const issues = [];
-    if (N < 3n || N % 2n === 0n) issues.push('Modulus must be odd and greater than2.');
-    if (E < 3n || E % 2n === 0n || E >= N)
-      issues.push('Exponent must be odd, at least3, and below modulus.');
-    if (gcd(N, E) !== 1n) issues.push('Modulus and exponent share a factor.');
-    const factors = small.filter((p) => N % p === 0n).map(String);
+    const factors = primes.filter((p) => N % p === 0n).map(String);
     if (factors.length) issues.push('Modulus has a tested small prime factor.');
+    let privateChecks = null;
+    if (privateKey) {
+      const D = read('d', 512),
+        P = read('p', 512),
+        Q = read('q', 512),
+        DP = read('dp', 512),
+        DQ = read('dq', 512),
+        QI = read('qi', 512);
+      if (P <= 2n || Q <= 2n) throw Error('Invalid private prime factors.');
+      const L = ((P - 1n) / rsaGCD(P - 1n, Q - 1n)) * (Q - 1n);
+      privateChecks = {
+        modulusProductMatches: P * Q === N,
+        distinctFactors: P !== Q,
+        pProbablePrime: rsaProbablePrime(P),
+        qProbablePrime: rsaProbablePrime(Q),
+        privateExponentInRange: D > 0n && D < N,
+        exponentInverseMatches: (E * D) % L === 1n,
+        dpMatches: DP === D % (P - 1n),
+        dqMatches: DQ === D % (Q - 1n),
+        qInverseMatches: QI > 0n && QI < P && (QI * Q) % P === 1n,
+      };
+      for (const [name, pass] of Object.entries(privateChecks))
+        if (!pass) issues.push('Private check failed: ' + name);
+    }
     let providerImport = false,
-      fingerprint = null;
+      fingerprint = null,
+      oaepRoundTrip = null;
     if (!issues.length) {
       try {
-        const key = await subtle.importKey(
+        const pub = await subtle.importKey(
           'jwk',
           { kty: 'RSA', n: jwk.n, e: jwk.e },
           { name: 'RSA-OAEP', hash: 'SHA-256' },
           true,
           ['encrypt'],
         );
-        const spki = await subtle.exportKey('spki', key);
+        const spki = await subtle.exportKey('spki', pub);
         fingerprint = Array.from(new Uint8Array(await subtle.digest('SHA-256', spki)), (b) =>
           b.toString(16).padStart(2, '0'),
         ).join('');
         providerImport = true;
-      } catch (e) {
-        issues.push('Web Crypto import rejected key: ' + e.message);
+        if (privateKey) {
+          const clean = Object.fromEntries(['kty', 'n', 'e', ...fields].map((k) => [k, jwk[k]]));
+          const priv = await subtle.importKey(
+            'jwk',
+            clean,
+            { name: 'RSA-OAEP', hash: 'SHA-256' },
+            false,
+            ['decrypt'],
+          );
+          const challenge = root.crypto.getRandomValues(new Uint8Array(32));
+          const encrypted = await subtle.encrypt({ name: 'RSA-OAEP' }, pub, challenge);
+          const plain = new Uint8Array(await subtle.decrypt({ name: 'RSA-OAEP' }, priv, encrypted));
+          oaepRoundTrip =
+            plain.length === challenge.length && plain.every((b, i) => b === challenge[i]);
+          if (!oaepRoundTrip) issues.push('RSA-OAEP pairwise consistency failed.');
+        }
+      } catch (_) {
+        issues.push('Web Crypto import or OAEP pairwise consistency rejected key.');
       }
     }
     return {
-      ...info,
+      modulusBits: info.modulusBits,
+      exponent: info.exponent,
+      keyType: privateKey ? 'two-prime private' : 'public',
       syntaxAndArithmeticChecksPass: issues.length === 0,
       providerImport,
+      privateChecks,
+      probablePrimeRounds: privateKey ? 32 : null,
+      oaepRoundTrip,
+      validation: issues.length
+        ? 'FAILED'
+        : privateKey
+          ? 'PRIVATE CONSISTENCY CHECKS PASS'
+          : 'PUBLIC CHECKS PASS; PRIVATE VALIDATION UNAVAILABLE',
       issues,
       smallPrimeFactors: factors,
       spkiSHA256: fingerprint,
       strengthNote:
         info.modulusBits < 2048
-          ? 'Below2048 bits; unsuitable for modern RSA use.'
+          ? 'Below 2048 bits; unsuitable for modern RSA use.'
           : 'Size alone does not prove security.',
       limit:
-        'Public checks only, not complete RSA generation/private-key validation. No proof of two prime factors, private parameters, randomness, certificate trust or resistance to all known attacks.',
+        'Probabilistic consistency checks, not complete security certification or formal primality proof. A composite passes 32 independent Miller-Rabin rounds with probability at most 2^-64. Public keys cannot establish private-key correctness. No randomness, certificate trust, side-channel or all-attack assessment. Private values are omitted from results.',
     };
   }
   async function analyzeAESKey(value) {
@@ -413,7 +511,7 @@
         true,
         ['encrypt', 'decrypt'],
       );
-      return { value: JSON.stringify(await crypto.subtle.exportKey('jwk', pair.publicKey)) };
+      return { value: JSON.stringify(await crypto.subtle.exportKey('jwk', pair.privateKey)) };
     }
     const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
         'sign',
@@ -528,6 +626,7 @@
     un64,
     rsaInfo,
     validateRSA,
+    rsaProbablePrime,
     analyzeAESKey,
     jwtDecode,
     inspectChain,

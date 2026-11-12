@@ -1,0 +1,28 @@
+{
+  "source": "Original deterministic textured images, synthetic validation only. Not a natural-image accuracy benchmark.",
+  "sourceRegion": [
+    60,
+    55,
+    220,
+    205
+  ],
+  "translationPaste": [
+    355,
+    265
+  ],
+  "rotatedScaled": {
+    "scale": 1.15,
+    "degrees": 18,
+    "paste": [
+      340,
+      220
+    ]
+  },
+  "sha256": {
+    "flat.png": "f1f5046a8c73a42e58bb7c80c73724d08efd3d42decbb5842c75c97855a740c3",
+    "translated.png": "a6bf20038593fe5116166d92aa5f4eaccaf191e7dd6779a1e6e4aa60ff34a199",
+    "unique.png": "718534c150b69fb09f67707e9fa6a0eb004467101439044fdf8ddbf4c51c2556",
+    "recompressed.jpg": "4b214e6ba84ded201f57206c2f178a3eb87812866a4ab7e0e75bcda2d5ab4b10",
+    "rotated-scaled.jpg": "6db6110faedb1f616f71ddc2790a305872c5c2aa7b9821296181dce4318af858"
+  }
+}

@@ -5,9 +5,34 @@ const { requireAuth } = require('../middleware/requireAuth');
 
 // H6 fix: network config, server wallet and IPFS file names were public.
 // Everything under /api/blockchain now requires an authenticated session.
-router.get('/inspect/:kind/:value', requireAuth, require('../controllers/blockchainInspectionController').inspect);
-router.get('/verification-health', requireAuth, require('../controllers/hashVerificationController').verificationHealth);
-router.get('/verify-hash/:hash', requireAuth, require('../controllers/hashVerificationController').verifyFileHash);
+const { rateLimit } = require('express-rate-limit');
+const ipfsReadLimit = rateLimit({
+  windowMs: 60000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.get(
+  '/ipfs/read-car/:gateway/:cid',
+  requireAuth,
+  ipfsReadLimit,
+  require('../controllers/ipfsReadOnlyController').readCAR,
+);
+router.get(
+  '/inspect/:kind/:value',
+  requireAuth,
+  require('../controllers/blockchainInspectionController').inspect,
+);
+router.get(
+  '/verification-health',
+  requireAuth,
+  require('../controllers/hashVerificationController').verificationHealth,
+);
+router.get(
+  '/verify-hash/:hash',
+  requireAuth,
+  require('../controllers/hashVerificationController').verifyFileHash,
+);
 router.get('/status', requireAuth, blockchainController.getSystemStatus);
 router.get('/config', requireAuth, blockchainController.getBlockchainConfig);
 router.get('/stats', requireAuth, blockchainController.getBlockchainStats);

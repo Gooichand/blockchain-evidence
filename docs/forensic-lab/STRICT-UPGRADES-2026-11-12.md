@@ -1,0 +1,123 @@
+# Local strict upgrades, November 12
+
+Base: PR3 c508f907744c4551385737cf271764e3032e8765. Branch: local/strict-upgrades-20261112. No push, PR edit, merge, AI or spending.
+
+## Batch 1: 38/67 strict, four more than the published stack
+
+- RSA: public SPKI/JWK checks remain. Private two-prime JWK/unencrypted PKCS8 now receives n=p*q, distinct probable-prime factors (32 random Miller-Rabin rounds each), exponent inverse/CRT checks and actual RSA-OAEP roundtrip. Real 2048/4096-bit cases and tampered n/d/p/q/dp/dq/qi negatives pass. Private values never enter output. This does not certify entropy, mathematical primality, implementation side-channel safety or resistance to every attack. No production secrets used.
+- Frame extraction: MP4/H.264 samples are demuxed, selected in presentation order and decoded by WebCodecs at an exact track timestamp. Explicit frame index, edit-list mapping and full-resolution PNG. Real first/B/last frames matched independent FFmpeg reference decodes with RGB MAE below 3/255; RGB color conversion is not byte-identical. CFR and VFR time/index mappings pass. Unsupported codecs, multiple video tracks/descriptions, rotation/non-square pixels, unusual edits, encryption and excessive sample windows fail closed.
+- PDF metadata/history: preserved actual Prev-linked cross-reference sections are followed, with property snapshots/changes, revision byte boundaries, hashes and page counts. Standard table and stream fixtures pass; three real preserved revisions are displayed. Rewritten/deleted prior history cannot be recovered. Embedded dates and names remain unverified claims.
+- PDF signatures: actual detached CMS integrity verification of supported SHA-256/384/512 signatures. A real OpenSSL-signed PDF passes, altered signed bytes fail, and an old valid signature after a later unsigned append is clearly limited to its earlier revision. No certificate trust/revocation, trusted timestamp, legal validity, full PAdES, DocMDP permission-policy or current-display authenticity verdict. Unsupported/malformed signatures are unverified.
+
+## Validation
+
+- Full Jest: 26 suites / 184 tests pass.
+- Full real Chrome runner: all 48 original-data tool examples pass, plus new private RSA/negative CRT, exact AVC first/B/last versus independent FFmpeg, VFR mapping, actual uploaded tampered PDF and unsigned-append checks. Existing extended OCR/Office/media/timeline/visual-PDF checks remain passing.
+- Screenshots captured and visually inspected: RSA private consistency output, exact B-frame index 5 at 0.416667 seconds, three preserved PDF revisions, invalid tampered CMS signature and valid old signature with coversCurrentFile=false.
+- CMS dependencies isolated in scripts/cms-vendor-build to preserve existing certificate/QR/CID vendor bundles unchanged. PKIjs 3.3.3 and ASN1js 3.0.6 pinned, licenses/notices included, recursive vendor checksums refreshed. Isolated production audit: zero reported advisories at this checkpoint. This is not a repository-wide vulnerability clearance.
+- Synthetic OpenSSL signing private key exists only in a temporary directory and is deleted after generating fixtures. Committed certificate is public only. Original fixtures and their generators are included.
+
+Public Amoy reads, IPFS retrieval, full custody/provenance, live/native networking and AI scope are not newly credited by this batch. The 53 bounded implementation count is unchanged and is not the strict count.
+
+## Batch 2: 41/67 strict, three more public-read tools
+
+Actual current repository controllers were bundled with a read-only ethers public-RPC adapter and executed against https://polygon-amoy-bor-rpc.publicnode.com at 02:21 IST on November 12. This is not a claim that the deployed authenticated website has these unpublished changes. The archived public JSON is PUBLIC-AMOY-CHECK-2026-11-12.json. No wallet, private key, spend, transaction submission or deployment was involved.
+
+- Transaction Verification: genuine receipt for transaction 0x0d4d9667d1fd5c2b31c4daeb684e1b6105e87fc5b782ab16b01bc9f6d34424ff matched block 52607676/hash 0x6608c66533de25d2183885f994e136b85d1345dad4c5e448472f1585dd430969. Its successful execution is NOT an evidence-anchoring claim.
+- Block Explorer: actual block 52607676, two transaction hashes, chain 80002, timestamp and point-in-time confirmations returned by the actual controller.
+- Evidence Verification: known public synthetic digest 111...111 matched evidence ID1 at block52607678; zero digest was absent. A real compatibility bug was found and fixed: the deployed old contract indexes that record's SHA-256 string with a 0x prefix, while the newer input normalizes to bare hex. Both variants are now checked at the same block, the stored digest is normalized/cross-checked, and conflicting IDs fail closed. This is not proof of authenticity, physical custody or admissibility.
+
+Public RPCs can deny a particular runtime/network. The old example RPC hostname did not resolve from the local runner; dRPC/PublicNode returned403 to its non-browser HTTP client. PublicNode responded successfully from the independent browser network. No paid API or secret was used. Source endpoints were grounded from https://docs.polygon.technology/pos/reference/rpc-endpoints and https://onfinality.io/en/rpc-assistant/polygon-amoy-testnet; the provider page resolved as https://polygon.publicnode.com/?amoy.
+
+IPFS improvement is deliberately NOT another strict count: local multi-block UnixFS CAR reconstruction, every-block CID verification, directories, duplicate handling, untrusted previews and exact reconstructed bytes pass. A fixed-origin, authenticated, rate-limited, size/time-limited gateway route has no arbitrary URL/redirect/authentication/pinning/upload capability. Public IPFS.io/dweb.link CAR requests redirect to trustless-gateway.link; both independent public example CIDs timed out there. So live retrieval remains unconfirmed. Local examples never pretend to be retrieved/pinned objects. The default UI is local CAR verification and public mode discloses the CID only after the user clicks Run.
+
+Gateway semantics were checked against https://docs.ipfs.tech/reference/http/gateway/ and https://specs.ipfs.tech/http-gateways/trustless-gateway/. CAR header roots are treated as hints, not authority; the actually requested CID and every traversed block/link are verified. Duplicate blocks are accepted after hash verification. Missing linked blocks and changed bytes fail. No symlink opening or content execution. Isolated IPFS dependencies/licenses/notices are pinned separately; production audit reports zero advisories at this checkpoint, not a whole-repository clearance.
+
+Full suite: 28 suites /194 tests pass; all48 real desktop examples plus the existing extended tests pass. Updated real local-EVM deployment/store/seal/read tests pass after the legacy hash fix. Public Amoy test-evidence image and the actual local UnixFS UI were visually inspected. Strict count41/67=61.2%, bounded count53 unchanged. Existing PR381-383 remain untouched at their approved34-tool checkpoint.
+
+
+## Batch 3: live public DNS and registration reads
+
+Strict checkpoint: 42/67 locally, eight additions to the published 34-tool stack. No push or production deployment.
+
+- Exact catalog promise: resolve domains, reverse DNS and WHOIS records. RDAP is the supported current replacement for public gTLD WHOIS, not a claim to recover private/redacted registration details. ICANN sunset notice: https://www.icann.org/en/announcements/details/icann-update-launching-rdap-sunsetting-whois-27-01-2025-en .
+- Server Resolver performs A/AAAA/MX/NS/TXT/SOA/CAA and IPv4/IPv6 PTR; no connection to the queried host, port scanning, packet capture, DNSSEC validation or ownership verdict. Per-type ENODATA/errors stay explicit.
+- Static official IANA HTTPS bootstrap snapshot: https://data.iana.org/rdap/dns.json , publication2026-10-28T22:00:04Z. Sources and refresh requirements preserved in data/README.md. Only an IANA-listed HTTPS origin and normalized domain path are used; redirects disabled, 7-second timeout, 1MiB JSON cap, exact returned-domain cross-check. Stale/unsupported endpoints return errors, not fabricated WHOIS.
+- Authenticated /api/network/dns?query= route, 5/minute limit, no-store response. Private/special-use IPs, local names, URLs, unusual numeric-IP spellings and path/query injection rejected. RDAP data is rendered inert as text.
+- Example uses an actual public example.com lookup; preserves typed query and Evidence Vault. Explicitly discloses that only the requested query goes to server resolver/registry. No automatic query on page load.
+- Real local service and actual UI read example.com DNS and https://rdap.verisign.com/com/v1/domain/example.com successfully; public IPv4 and IPv6 Google-DNS PTR each returned dns.google. Screenshots label the local QA HTTP adapter honestly. Separate actual middleware tests cover anonymous denial and authenticated bad-input rejection. This does not establish deployed production UI/auth availability.
+- 29 suites/202 tests pass; 48 Chrome examples plus extended checks and actual live domain/PTR UI checks pass. Focused lint clean. Raw public source results are in PUBLIC-DNS-CHECK-2026-11-12.json.
+
+
+## Batch 4: acoustic landmark matching
+
+Strict checkpoint: 43/67 locally, nine additions over the published34. This replaces the coarse average-band comparison with actual time-sensitive acoustic fingerprint matching, not a claim of unique identity.
+
+- Original deterministic implementation, no AI/model, third-party fingerprint database, paid API or evidence upload. First30 seconds downmixed, weighted-bin resampling to8kHz, 1024-point Hann FFT/128-sample hop. Local spectral/time maxima form landmark pairs; quantized frequency/delta-time hashes vote for a consistent recording offset. Matching tolerates one hash-quantization step in frequencies/time and reports a32ms-grid offset.
+- Candidate threshold: at least20 distinct matched anchors on both sides, at least12% smaller-clip anchor coverage, at least2seconds matched span. A competing offset more than1.024seconds away with at least65% of the best support is ambiguous. Short, silent, simple-tone or low-diversity inputs are inconclusive. Caps4000peaks, one million landmark comparisons and25-second worker timeout. Feature processing uses a dedicated local worker; no identifying raw bytes returned to a server.
+- Actual Chrome decode + actual worker positive tests: same WAV; quieter/noisy WAV; original resampled as AAC; MP3 encoded, trimmed by0.734seconds and reduced gain. Detected MP3 offset -0.736seconds. Different original sequence and reordered same spectral segments do not match. Unit tests include repeated passages, silence, stationary tones, short/oversize inputs. Twenty additional deterministic unrelated synthetic sequences produce no candidate matches.
+- These are original synthetic fixtures, not a natural-recording accuracy benchmark. Speed/pitch changes, heavy noise, repeated material, stereo cancellation and browser codec support can fail or be inconclusive. No speaker, author, unique identity, ownership, database-search or tamper verdict. No false-positive/false-negative performance guarantee.
+- Actual selected-file/second-file UI runs tested for a negative, and the positive MP3 example tested without replacing the selected evidence or chosen second file. Screenshots inspected. Generator and exact transformed fixtures/manifests are in scripts/generate-acoustic-landmark-samples.py and public/samples/audio/landmarks/.
+-30 suites/206 tests pass;48 real Chrome tool examples plus extended checks and real worker codec/trim matrix pass. Reproducible extra collision check: node scripts/check-acoustic-landmark-collisions.cjs. Full positive/negative matrix in ACOUSTIC-LANDMARK-CHECK-2026-11-12.json. No production deployment.
+
+
+## Batch 5: classical copy-move feature matching
+
+Strict checkpoint44/67 locally, ten additions over published34. No push/deployment.
+
+- Replaces exact fixed-grid-only search with actual nonlocal ORB descriptors, Hamming nearest-neighbor ratio0.78/max55bits, spatial exclusion max32px/6%diagonal, and up to3 homography-RANSAC groups (3px residual, at least8 inliers and24px extent on both axes). Up to1200 features; input scales to1024px longest side.30-second dedicated local worker, no evidence upload or trained model. Displays red/cyan correspondence bounds and yellow feature links, all in analysis-image coordinates.
+- Actual Chrome worker tests: off-grid translated copy53inliers, JPEG-recompressed copy46inliers, 18degree/1.15scale copy45inliers; unique original and flat-image negatives have no supported group. Original synthetic textures are not a natural-image accuracy benchmark. Natural repetition can match; small, smooth or heavily altered copies can be missed. No edit/authenticity verdict. Source generators/manifests and matrix preserved.
+- Pinned @techstark/opencv-js4.12.0-release.1, production audit0advisories. Local vendored engine loads only for this tool. Package source names https://docs.opencv.org/4.12.0/opencv.js ; package https://github.com/TechStark/opencv-js . OpenCV/third-party license texts and modified-code notices retained. Build reports no non-free algorithms. No trained weights loaded or shipped.
+- Upstream dynamic Emscripten bindings failed the existing CSP. CSP was NOT weakened. Reproducible pinned build changes two name/dynCall factories to plain closures and extracts960 registered invoker factories at build time on synthetic pixels into static functions. Unknown bindings fail closed, no runtime string-code fallback. Actual worker passes the existing no-unsafe-eval CSP; separate core validation also passes with Function construction blocked. scripts/opencv-vendor-build/bundle.cjs checks upstream bytes and preserves notices; rerun actual CSP/fixture tests after any change.
+-31suites/209tests pass.48Chrome examples plus extended real ORB-worker positive/negative and acoustic codec/trim matrices pass. Screenshot inspected for correct source/target placement and preserved selected evidence. Matrix: COPY-MOVE-CHECK-2026-11-12.json.
+
+
+## Batch 6: all-frame keyframe/GOP and visual timeline measurements
+
+Strict46/67 locally, twelve additions over published34. New credits: Keyframe Analysis and Timeline Viewer, on their original GOP/anomaly and visual-timeline promises, not semantic understanding. Video Inspector staysNo.
+
+- Dedicated45-second local WebCodecs/OffscreenCanvas worker measures every sample in supported nonfragmented MP4/H264, one video track,1-2000frames,50MiB,10minutes,16MP/frame, one unencrypted description, square pixels/identity display and simple edits only. Full raw track including edit pre-roll is measured with timestamp shift. Audio/other tracks explicitly not validated.
+- Every AVCC NAL length/bounds and forbidden bit, sample range, duplicate timestamp, description and output count checked. Every expected sample must decode once. This is NOT compressed-stream integrity proof: initial deliberately corrupted SEI bytes were concealed/ignored by the decoder without error. A malformed NAL-length fixture now fails. Decoder concealment limitation preserved explicitly. No all-stream/Video Inspector strict credit.
+- Every decoded frame downsampled32x18 for RGB mean difference,48-bin RGB histogram distance, luminance and dark fraction. Abrupt change needs RGBdifference>=0.22 and histdistance>=0.22. Near-black:>=98%pixels belowluma8 for>=0.5s. Low-change:RGBdifference<=0.001 for>=1s. Presentation gap/overlap uses max5ms/half median frame duration. Normal motion/exposure and similar-looking events affect results. No model or semantic/tamper/authenticity claim.
+- GOP groups use actual decode-order sync boundaries, sample/byte counts and presentation ranges. Nonfinal group sample counts differing by more thanmax2/50%of median are flagged. GOPs may overlap presentation ranges under reordering; not a custody/edit conclusion.
+- Visual timeline uses measured segment boundaries and exact160px thumbnails at detected starts. Keyframe view includes sync/change thumbnails, maximum100combined; all frame metrics/events remain inJSON. This is now all-frame measured visual reconstruction, not six sparse seeks. It is not a guarantee to detect every meaningful event.
+- Independent ffprobe:40-frame irregular-GOP/3-cut synthetic video and24-frame Bframe/VFR clips match all output timestamps within0.34microseconds and sync counts exactly. Known cuts at1/2/3s, black1-2s, low-change intervals and irregular GOPs found. Invalid NAL-length sample rejected. Actual selected-file UI views verified, timestamps/frame labels have no undefined fields, exact four visual-segment thumbnails show red/black/blue/green. Selected evidence preserved. Original fixture generator and ffprobe reference included.
+-32suites212tests and48Chrome examples+extendedrealvideo/clone/acoustic matrices pass. Screenshots inspected. Validation matrix saved in VIDEO-MEASUREMENT-CHECK-2026-11-12.json. Nothing pushed/deployed.
+
+
+## Batch 7: live public TLS certificate/configuration inspection
+
+Strict47/67 locally, thirteen additions over published34. The SSL/TLS catalog promise is now supported by actual public handshakes, alongside existing offline Hello/chain analysis.
+
+- Explicit authenticated /api/network/tls?host= read,3requests/minute. Validated plain public hostname, server DNS answers must ALL be public; pinned same validated public IP for at most3handshakes on443 only. Rejects IP/URL/path input, private/special-use/mapped addresses and mixed DNS sets. No redirects, HTTP request, credentials, evidence upload or port scan.6second DNS and6second/handshake limits,30second UI deadline.
+- Main handshake offers modern TLS1.2-1.3 and h2/http1.1. Reads negotiated protocol/cipher/ALPN, peer chain (max12certificates), fingerprints, public key types, dates, pairwise issuer signatures, Node-default-root authorization/errors and independent hostname match. Separate same-host/IP TLS1.2 and1.3 attempts are observed, not a complete configuration/cipher scan. A failed version probe is unavailable, not proof that the server disables it.
+- Invalid peer certificates are deliberately readable for diagnosis and explicitly remain unauthorized; no application data is sent. Root authorization refers to the Node runtime's default CA roots, NOT browser/user trust. Peer chain may include a root from the local trust store, not proof server sent it. No revocation/OCSP/CT, full cipher/vulnerability scan, historical or long-term trust guarantee.
+- Real example.com UI/service: TLS1.3, default roots authorized, hostname match, certificate chain and TLS1.2/1.3 probes successful. Actual public negative examples: wrong.host.badssl.com reports ERR_TLS_CERT_ALTNAME_INVALID/hostnamefalse; expired.badssl.com reports CERT_HAS_EXPIRED while hostname stillmatches. Public test source: https://badssl.com/ and https://github.com/chromium/badssl.com/ . No private keys used.
+- Actual anonymous middleware and authenticated private-host rejection tests pass, as do mixed-privateDNS/pinning, untrusted cert and network-error tests. Actual UI preserves typed hostname and selected evidence. Screenshot clearlylabels local test HTTP adapter, not deployed authenticated production.
+-33suites217tests,48Chromeexamples+extendedactualTLS/video/clone/acoustic matrices pass; focusedlintclean. Public TLS positive/negative matrix: PUBLIC-TLS-CHECK-2026-11-12.json. No push/deployment or money.
+
+
+## Batch 8: improve concealed-text precision, no strict-count credit
+
+Strict remains47/67. Hidden Text Detector staysNo against its unqualified promise because complex clipping/overpainting/masks/Type3 runs/nonwhite low contrast/unmapped or extraction-omitted text can be missed. This batch is a real quality improvement, not an extra completed tool.
+
+- Actual graphics-state parser now tracks save/restore, rendering mode, fillRGB/gray and fillopacity; exact extracted text-run boxes are mapped through viewport/rotation and checked against actual rendered pixels. White fill alone is no longer called hidden: a fill-painting mode plus>=99.5% renderedwhite pixels (RGB>=248) in the mapped region is required. Visible white-on-dark negative passes. Invisible modes3/7 and near-zero fillopacity<=0.01 reported separately; off-page bounds reported only where PDF.js supplies a box. Unsupported/unmapped suspicious runs disclosed; no guesses.
+-10pages,4MP/page,15second/page render cap. Page rendering stays local, no AI/upload. Malformed/unsupportedPDF may fail; partial methods never become universal hidden-content proof.
+- Actual ReportLab original fixture: white-on-white, invisible and zero-opacity positives; visible black, visible white-on-dark and visible-after-state-restore negatives allpass. PDF.js omits the black off-page item from text-content extraction in the real fixture, so no claim to complete off-page detection. Pure tests separately exercise known off-page bounds.
+-34suites221tests and48Chromeexamples+extendedconcealed/video/clone/acoustic tests pass. Actual selected-file output and updated summary inspected. Evidence in CONCEALED-TEXT-CHECK-2026-11-12.json. No new strict credit, push or deployment.
+
+
+## Batch9: JPEG original-coefficient measurements, no strict-count credit
+
+Strict remains47/67. Compression Analysis staysNo: this narrow uncalibrated heuristic is not the complete original detection promise.
+
+- Pinned jpeg-js0.4.4 modified at build time to expose original quantized coefficient blocks before inverseDCT/RGB. Strict decoder,20MiB/4MP,192MiB approximate parser-allocation cap,25second terminated localworker. Actual first-component AC histograms (12frequencies, abs2-60) and current quantizers shown. No re-encoding, model or upload. BSD3/Apache2.0 notices and full license retained, sourceSHA256 pinned, build reproducible.
+- Tests standard-luma-quality hypotheses20-95 only, previous/current quantizer ratio1.5-10; requires>=4frequencies each with>=150 samples,>=10occupied bins,>=86% fit to rounded previous-quantizer lattice,>=25percentage-point enrichment over allowed-bin fraction. These are engineering thresholds, not a published calibrated classifier or probability. Reported previous-quality values are hypotheses, not recovered history.
+- Original independent Pillow fixture generation: aligned75->95 and85->95 candidates pass. Seven single-compression negatives including progressiveJPEG/flat pass. Five actual doubles deliberately remain missed:50->95,65->95,95->50,75->75 and3px gridshift85->95. This records false negatives rather than claiming single compression. Invalid/truncated/oversize rejects. Synthetic benchmark, no broad-photo accuracy claim.
+-35suites237tests,48realChromeexamples plus actualCSP-worker JPEGmatrix pass. Histogram/candidate/originalpreview/demo-label/retainedEvidence inspected in screenshot. No strict credit, push,PRedit,deployment or payment.
+- Method context, read on Nov12: https://ar5iv.labs.arxiv.org/html/1708.00930 documents aligned versus shifted-grid DCT-histogram traces and quality-order limitations (its CNN methods are NOT used); https://blog.ampedsoftware.com/2020/09/01/whats-in-your-past-a-guide-to-spotting-traces-of-double-jpeg-compression-with-amped-authenticate-part-2 explains comb/empty-bin DCT artifacts and custom-table/strong-second-compression caveats; https://github.com/jpeg-js/jpeg-js supplies parser/limit/license provenance. Sources support the general effect, not our thresholds/accuracy.
+
+
+## Batch11: JPEG allocation-order hardening, strict unchanged47/67
+
+Coefficient limits now run before the browser pixel-preview decoder, not afterwards. ActualCSP worker tests patched a JPEG SOF to3000x3000 (9MP) and supplied invalid bytes while intercepting createImageBitmap: both rejected with zero preview decodes; valid examples unchanged. Oversizeddimensions are rejected before jpeg-js allocates coefficient blocks. Full35suites238tests,48Chromeexamples/extended matrices pass. IPFS publicCAR recheck07:58 timedout; retrieval staysunconfirmed. No push/PRedit/deployment/cost.

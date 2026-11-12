@@ -22,7 +22,7 @@ test('marker absence is not an unsigned verdict', () => {
 });
 test('every document tool has an honest guide', () => {
   expect(Object.keys(guides)).toHaveLength(6);
-  expect(guides.signature[1]).toContain('does not cryptographically validate');
+  expect(guides.signature[1]).toContain('signature-byte integrity');
   expect(guides.ocr[1]).toContain('English');
 });
 test('OCR rejects unsupported input and oversized PDFs before worker creation', async () => {

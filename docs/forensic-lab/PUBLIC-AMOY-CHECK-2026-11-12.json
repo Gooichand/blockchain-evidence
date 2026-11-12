@@ -1,0 +1,69 @@
+{
+  "absent": {
+    "anchored": false,
+    "blockNumber": 52607678,
+    "chainId": 80002,
+    "contractAddress": "0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3",
+    "evidenceId": null,
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "note": "Polygon Amoy testnet only. Anchoring does not prove authenticity or legal admissibility.",
+    "status": 200,
+    "storedHashFormat": null,
+    "success": true
+  },
+  "block": {
+    "chainId": 80002,
+    "checkedAt": "2026-11-11T20:51:36.135Z",
+    "contractAddress": "0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3",
+    "data": {
+      "blockNumber": 52607676,
+      "confirmations": 1,
+      "hash": "0x6608c66533de25d2183885f994e136b85d1345dad4c5e448472f1585dd430969",
+      "parentHash": "0xeb913f55c5aa8648fbb8c4d2fc20da1d50e880153dd9dbc04d06a47877a31f8b",
+      "timestamp": 1794430295,
+      "transactionCount": 2,
+      "transactionHashes": [
+        "0x0d4d9667d1fd5c2b31c4daeb684e1b6105e87fc5b782ab16b01bc9f6d34424ff",
+        "0x1fdc4d49b94a4491074a96aeec71d578d4c0018ac4e724922c6589bf3cbb951b"
+      ],
+      "truncated": false
+    },
+    "head": 52607676,
+    "status": 200,
+    "success": true
+  },
+  "checkedAt": "2026-11-11T20:51:38.422Z",
+  "present": {
+    "anchored": true,
+    "blockNumber": 52607678,
+    "chainId": 80002,
+    "contractAddress": "0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3",
+    "evidenceId": "1",
+    "hash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "note": "Polygon Amoy testnet only. Anchoring does not prove authenticity or legal admissibility.",
+    "status": 200,
+    "storedHashFormat": "0x-prefixed",
+    "success": true
+  },
+  "source": "Actual repository controllers with a read-only public RPC test adapter; not the deployed authenticated website.",
+  "tx": {
+    "chainId": 80002,
+    "checkedAt": "2026-11-11T20:51:36.851Z",
+    "contractAddress": "0x39453ED8CF79Fe56150fe1E8348e75894e3dD9e3",
+    "data": {
+      "blockHash": "0x6608c66533de25d2183885f994e136b85d1345dad4c5e448472f1585dd430969",
+      "blockNumber": 52607676,
+      "confirmations": 2,
+      "from": "0xb321E35fC2f9aC32d07C629c06E652BE1b685b79",
+      "gasUsed": "79001",
+      "limit": "Execution receipt is not proof this transaction anchors any evidence. Confirmations can change after reorgs.",
+      "status": "EXECUTED_SUCCESSFULLY",
+      "timestamp": 1794430295,
+      "to": "0x6fe572B03E50735a7088268e14FD1Cc243B7233c",
+      "transactionHash": "0x0d4d9667d1fd5c2b31c4daeb684e1b6105e87fc5b782ab16b01bc9f6d34424ff"
+    },
+    "head": 52607677,
+    "status": 200,
+    "success": true
+  }
+}

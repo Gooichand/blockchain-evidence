@@ -1,0 +1,20 @@
+{
+  "@ipld/dag-cbor": "ipld_dag-cbor.txt",
+  "@ipld/dag-json": "ipld_dag-json.txt",
+  "@multiformats/murmur3": "multiformats_murmur3.txt",
+  "ipfs-unixfs": "ipfs-unixfs.txt",
+  "it-filter": "it-filter.txt",
+  "it-last": "it-last.txt",
+  "it-map": "it-map.txt",
+  "it-merge": "it-merge.txt",
+  "it-parallel": "it-parallel.txt",
+  "it-peekable": "it-peekable.txt",
+  "it-pushable": "it-pushable.txt",
+  "it-queueless-pushable": "it-queueless-pushable.txt",
+  "progress-events": "progress-events.txt",
+  "race-signal": "race-signal.txt",
+  "sparse-array": "sparse-array.txt",
+  "uint8-varint": "uint8-varint.txt",
+  "uint8arrays": "uint8arrays.txt",
+  "varint": "varint.txt"
+}

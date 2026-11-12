@@ -8,15 +8,15 @@
     ],
     'frame-extract': [
       'Video Frame Extraction',
-      'Seeks to a requested time and draws the browser-decoded frame. Select a video, enter seconds and run or try the example. Seeking can land near the requested timestamp and is not a frame-exact forensic extraction.',
+      'Extracts an exact decoded MP4/H.264 sample with WebCodecs, not approximate video-element seeking. Enter a zero-based presentation frame index, or leave it blank and enter seconds to select the sample covering that movie time. Reports sample number, presentation index, original track timestamp, edit-list adjustment and actual decoded timestamp; exports a full-resolution PNG. One video track, one sample description and a single rate-1 media edit (optional leading empty edit), 50 MiB, 10 minutes and at most 2000 dependent samples per request. Unsupported codecs, encrypted/fragmented structures, unusual edits, rotated/non-square-pixel tracks, duplicate timestamps and decode failures are rejected. Pixel color conversion is browser-dependent; PNG is a decoded image, not original compressed bytes or authenticity proof.',
     ],
     'vid-timeline': [
-      'Sampled Video Timeline',
-      'Decodes up to six evenly spaced thumbnails across the clip. Select a video and run to inspect the sampled moments. This is a sparse visual timeline, not event detection, and it can miss content between samples.',
+      'All-Frame Visual Timeline',
+      'Measures every supported MP4/H264 video frame at32x18 resolution, marks abrupt RGB/histogram changes and near-black/low-change intervals, and shows exact160px thumbnails at detected visual-segment starts. JSON lists time/frame bounds for all detected segments and candidates. MP4/H264 only, one track,1-2000samples,50MiB,10minutes;45-second local worker. At most100 combined key/change thumbnails; all frame measurements remain in JSON. Audio/other streams are not analyzed. Simple edit timestamp shifts applied, including raw pre-roll. This is a deterministic visual-change timeline, not semantic event understanding, edit/authenticity proof or a guarantee to catch every meaningful event. Similar-looking changes, motion/exposure, scaling and decoder concealment affect results. No trained model or upload.',
     ],
     keyframe: [
-      'MP4 Sync-Sample Analysis',
-      'Reads MP4 sample flags and lists sync samples with track composition timestamps. Select an MP4 and run or try the example. Sync samples are container/codec access points, not scene changes or proof of manipulation, and edit-list offsets are not applied.',
+      'All-Frame GOP and Keyframe Analysis',
+      'Decodes every supported MP4/H264 video sample in a local45-second worker, groups decode samples into GOPs and measures all frames at32x18 RGB resolution. Shows keyframe thumbnails, GOP sample/byte counts and deterministic timing, visual-change, near-black and low-change candidates. Unusual GOP counts differ by more than50%/two samples from the median, excluding the final partial group. Visual changes need RGB difference and histogram distance at least0.22; near-black needs98% dark pixels for0.5seconds, low-change needs at most0.001RGB difference for1second. These are measurements, not scene changes or editing proof; motion, exposure and normal encoding can trigger them. MP4/H264 only,1-2000samples,50MiB,10minutes, one video track, simple edits. Audio/other streams are not validated. Every raw track sample including pre-roll measured; timestamp shift is applied. No model or network.',
     ],
     'video-inspector': [
       'MP4 Structure Inspector',
@@ -89,6 +89,260 @@
       }
     });
   }
+  function framePlan(info, track, samples, time, frameIndex) {
+    if (!samples.length || info.videoTracks.length !== 1)
+      throw Error('Exactly one nonempty video track required.');
+    if (!track.codec.startsWith('avc1.'))
+      throw Error('Exact extraction currently supports MP4 H.264/avc1 only.');
+    let shift = 0,
+      displayStart = 0,
+      displayEnd = info.duration / info.timescale,
+      edits = track.edits || [];
+    if (edits.length) {
+      const media = edits.filter((e) => e.media_time >= 0),
+        empty = edits.filter((e) => e.media_time === -1);
+      if (
+        media.length !== 1 ||
+        empty.length > 1 ||
+        edits.length > 2 ||
+        (empty.length && edits[0].media_time !== -1) ||
+        edits.some((e) => e.media_rate_integer !== 1 || e.media_rate_fraction !== 0)
+      )
+        throw Error(
+          'Unsupported MP4 edit list: need one rate-1 media edit and optional leading empty edit.',
+        );
+      displayStart = (empty[0]?.segment_duration || 0) / info.timescale;
+      displayEnd = displayStart + media[0].segment_duration / info.timescale;
+      shift = displayStart - media[0].media_time / track.timescale;
+    }
+    const ordered = samples
+      .map((s, i) => ({ sample: s, decodeIndex: i, seconds: s.cts / s.timescale + shift }))
+      .filter((x) => x.seconds >= displayStart - 0.000001 && x.seconds < displayEnd - 0.000001)
+      .sort((a, b) => a.seconds - b.seconds);
+    if (!ordered.length || ordered.some((x, i) => i && x.sample.cts === ordered[i - 1].sample.cts))
+      throw Error('Empty or ambiguous duplicate presentation timestamps.');
+    let target;
+    if (frameIndex !== null && frameIndex !== undefined) {
+      if (!Number.isInteger(frameIndex) || frameIndex < 0 || frameIndex >= ordered.length)
+        throw Error('Frame index is outside the presentation sequence.');
+      target = ordered[frameIndex];
+    } else {
+      if (!Number.isFinite(time) || time < 0 || time >= info.duration / info.timescale)
+        throw Error('Enter a time within the movie duration.');
+      target = ordered.find(
+        (x) =>
+          time >= x.seconds - 0.000001 &&
+          time < x.seconds + x.sample.duration / x.sample.timescale - 0.000001,
+      );
+      if (!target)
+        throw Error('Requested movie time has no displayed sample (possibly an empty edit).');
+    }
+    let start = target.decodeIndex;
+    while (start > 0 && !samples[start].is_sync) start--;
+    if (!samples[start].is_sync) throw Error('No preceding sync sample.');
+    if (samples.length - start > 2000)
+      throw Error('Exact extraction dependency window exceeds 2000 samples.');
+    return {
+      target,
+      start,
+      presentationIndex: ordered.indexOf(target),
+      totalFrames: ordered.length,
+      shift,
+    };
+  }
+  async function exactFrame(file, time, frameIndex = null) {
+    if (!root.VideoDecoder || !root.EncodedVideoChunk || !root.MP4Box)
+      throw Error('Exact frame extraction requires WebCodecs and MP4 parser on HTTPS/localhost.');
+    const bytes = await file.arrayBuffer(),
+      parser = root.MP4Box.createFile();
+    boxList(bytes);
+    let info;
+    parser.onReady = (x) => {
+      info = x;
+    };
+    parser.onError = () => {
+      throw Error('MP4 parser rejected sample data.');
+    };
+    bytes.fileStart = 0;
+    parser.appendBuffer(bytes);
+    parser.flush();
+    if (!info || info.isFragmented) throw Error('Nonfragmented MP4 movie required.');
+    const track = info.videoTracks[0];
+    if (!track || info.duration / info.timescale > 600)
+      throw Error('One video track and maximum 10-minute duration required.');
+    const identity = [65536, 0, 0, 0, 65536, 0, 0, 0, 1073741824];
+    if (track.matrix && Array.from(track.matrix).some((x, i) => x !== identity[i]))
+      throw Error('Rotated or transformed tracks are unsupported for exact extraction.');
+    const samples = parser.getTrackSamplesInfo(track.id),
+      plan = framePlan(info, track, samples, time, frameIndex);
+    const entry = parser.getTrackById(track.id).mdia.minf.stbl.stsd.entries;
+    if (entry[0]?.pasp && entry[0].pasp.hSpacing !== entry[0].pasp.vSpacing)
+      throw Error('Non-square pixel aspect ratio is unsupported.');
+    if (entry.length !== 1 || !entry[0].avcC || entry[0].sinf)
+      throw Error('Single unencrypted AVC description required.');
+    if (track.video.width * track.video.height > 16777216)
+      throw Error('Maximum decoded frame: 16 megapixels.');
+    const avc = entry[0].avcC;
+    const config = {
+      codec: track.codec,
+      codedWidth: track.video.width,
+      codedHeight: track.video.height,
+      description: bytes.slice(avc.start + 8, avc.start + avc.size),
+      hardwareAcceleration: 'prefer-software',
+    };
+    if (!(await root.VideoDecoder.isConfigSupported(config)).supported)
+      throw Error('Browser does not support this exact AVC decoder configuration.');
+    const stamp = Math.round((plan.target.sample.cts / track.timescale) * 1e6);
+    let canvas = null,
+      actualTimestamp = null,
+      decoderError = null,
+      timer;
+    const decoder = new root.VideoDecoder({
+      output(frame) {
+        try {
+          if (frame.timestamp === stamp) {
+            if (canvas) throw Error('Ambiguous repeated decoded timestamp.');
+            canvas = document.createElement('canvas');
+            canvas.width = frame.displayWidth;
+            canvas.height = frame.displayHeight;
+            canvas.getContext('2d').drawImage(frame, 0, 0);
+            actualTimestamp = frame.timestamp;
+          }
+        } catch (e) {
+          decoderError = e;
+        } finally {
+          frame.close();
+        }
+      },
+      error(e) {
+        decoderError = e;
+      },
+    });
+    try {
+      decoder.configure(config);
+      await Promise.race([
+        (async () => {
+          for (let i = plan.start; i < samples.length; i++) {
+            const sample = samples[i];
+            if (
+              sample.description_index !== 0 ||
+              sample.offset < 0 ||
+              sample.offset + sample.size > bytes.byteLength
+            )
+              throw Error('Truncated sample or changed description.');
+            if (decoderError) throw decoderError;
+            decoder.decode(
+              new root.EncodedVideoChunk({
+                type: sample.is_sync ? 'key' : 'delta',
+                timestamp: Math.round((sample.cts / track.timescale) * 1e6),
+                duration: Math.round((sample.duration / track.timescale) * 1e6),
+                data: new Uint8Array(bytes, sample.offset, sample.size),
+              }),
+            );
+            if (decoder.decodeQueueSize > 16)
+              await new Promise((resolve) =>
+                decoder.addEventListener('dequeue', resolve, { once: true }),
+              );
+          }
+          await decoder.flush();
+        })(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(Error('Exact decoding timed out.')), 20000);
+        }),
+      ]);
+      if (decoderError) throw decoderError;
+      if (!canvas || actualTimestamp !== stamp)
+        throw Error('Selected frame was not decoded at the exact sample timestamp.');
+      return {
+        summary: {
+          file: file.name,
+          durationSeconds: info.duration / info.timescale,
+          width: canvas.width,
+          height: canvas.height,
+          extraction: 'EXACT DECODED SAMPLE',
+          codec: track.codec,
+          presentationFrameIndex: plan.presentationIndex,
+          presentationFrameCount: plan.totalFrames,
+          sampleNumber: plan.target.decodeIndex + 1,
+          sampleCTS: plan.target.sample.cts,
+          trackTimescale: track.timescale,
+          editShiftSeconds: plan.shift,
+          presentationSeconds: plan.target.seconds,
+          decodedTimestampMicroseconds: actualTimestamp,
+          decodeStatus: 'Selected exact sample decoded; not a whole-file authenticity check.',
+          limit:
+            'MP4/H.264 WebCodecs only; one video track/description, simple rate-1 edits. Browser color conversion may vary.',
+        },
+        frames: [
+          {
+            requestedSeconds: time,
+            browserTimeSeconds: plan.target.seconds,
+            presentationFrameIndex: plan.presentationIndex,
+            exact: true,
+            canvas,
+          },
+        ],
+      };
+    } finally {
+      clearTimeout(timer);
+      if (decoder.state !== 'closed') decoder.close();
+    }
+  }
+  async function allFrameMeasurements(file, mode = 'keyframe') {
+    if (!root.Worker) throw Error('Video worker unavailable.');
+    const result = await new Promise((resolve, reject) => {
+      const worker = new root.Worker('/video-measurements-worker.js'),
+        timer = setTimeout(() => {
+          worker.terminate();
+          reject(Error('All-frame analysis exceeded45-second limit.'));
+        }, 45000);
+      const finish = () => {
+        clearTimeout(timer);
+        worker.terminate();
+      };
+      worker.onmessage = ({ data }) => {
+        finish();
+        data.ok ? resolve(data.result) : reject(Error(data.error));
+      };
+      worker.onerror = () => {
+        finish();
+        reject(Error('All-frame worker failed.'));
+      };
+      worker.postMessage({ file });
+    });
+    const thumbnails = result.thumbnails;
+    delete result.thumbnails;
+    const frames = [];
+    for (const thumbnail of thumbnails.filter(
+      (t) => mode !== 'vid-timeline' || t.kind === 'VISUAL_SEGMENT_START',
+    )) {
+      const image = await createImageBitmap(thumbnail.blob),
+        canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      canvas.getContext('2d').drawImage(image, 0, 0);
+      image.close();
+      frames.push({
+        requestedSeconds: thumbnail.seconds,
+        browserTimeSeconds: thumbnail.seconds,
+        sampleNumber: thumbnail.sampleNumber,
+        kind: thumbnail.kind,
+        presentationFrameIndex: result.frames.find((f) => f.sampleNumber === thumbnail.sampleNumber)
+          .presentationIndex,
+        exact: true,
+        canvas,
+      });
+    }
+    return {
+      summary: {
+        file: file.name,
+        ...result,
+        limit:
+          'MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict.',
+      },
+      frames,
+    };
+  }
   function wait(video, event, action) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => done(new Error('Video decode/seek timed out.')), 12000);
@@ -105,9 +359,11 @@
       action();
     });
   }
-  async function analyze(id, file, time = 1) {
+  async function analyze(id, file, time = 1, frameIndex = null) {
     if (!file) throw new Error('Select a video or use Try example.');
     if (file.size > 50 * 1024 * 1024) throw new Error('Video limit: 50 MiB.');
+    if (id === 'frame-extract') return exactFrame(file, time, frameIndex);
+    if (id === 'keyframe' || id === 'vid-timeline') return allFrameMeasurements(file, id);
     if (id === 'vid-metadata') {
       if (!root.MediaMetadata) throw Error('Local media metadata engine unavailable.');
       return {
@@ -187,6 +443,10 @@
   }
   function ready(id) {
     if (id === 'vid-metadata') return !!root.MediaMetadata;
+    if (id === 'keyframe' || id === 'vid-timeline')
+      return !!(root.Worker && root.VideoDecoder && root.OffscreenCanvas);
+    if (id === 'frame-extract')
+      return !!(root.VideoDecoder && root.EncodedVideoChunk && root.MP4Box);
     try {
       return !!(
         document.createElement('video').canPlayType('video/mp4') &&
@@ -235,9 +495,18 @@
       value: '1',
       'aria-label': 'Frame time in seconds',
     });
+    const frameIndexInput = n('input', undefined, {
+      type: 'number',
+      min: '0',
+      step: '1',
+      'aria-label': 'Exact frame index',
+      placeholder: 'blank = use seconds',
+    });
     if (tool.id === 'frame-extract') {
       ws.appendChild(n('label', 'Frame time in seconds: '));
       ws.appendChild(time);
+      ws.appendChild(n('label', ' Or exact presentation frame index (zero-based): '));
+      ws.appendChild(frameIndexInput);
     }
     const run = n('button', 'Analyze selected video', {
         type: 'button',
@@ -262,22 +531,56 @@
           if (!r.ok) throw new Error('Video example unavailable.');
           file = new File([await r.arrayBuffer()], 'Demo - demo.mp4', { type: 'video/mp4' });
         }
-        const result = await analyze(tool.id, file, Number(time.value));
+        const result = await analyze(
+          tool.id,
+          file,
+          Number(time.value),
+          tool.id === 'frame-extract' && frameIndexInput.value !== ''
+            ? Number(frameIndexInput.value)
+            : null,
+        );
         if (!ws.contains(out)) return;
         out.replaceChildren();
         if (example)
           out.appendChild(
             n('strong', 'DEMO SAMPLE - real decoded/parser output. Your evidence is unchanged.'),
           );
+        if (result.summary.events) {
+          out.appendChild(n('h3', 'Measured timeline candidates'));
+          out.appendChild(
+            n(
+              'p',
+              result.summary.events.length
+                ? result.summary.events
+                    .map(
+                      (e) =>
+                        (e.seconds ?? e.startSeconds).toFixed(3) +
+                        's: ' +
+                        e.kind +
+                        (e.endSeconds !== undefined
+                          ? ' until ' + e.endSeconds.toFixed(3) + 's'
+                          : ''),
+                    )
+                    .join(' | ')
+                : 'No configured visual/timing candidates detected. This does not prove that no event or edit occurred.',
+            ),
+          );
+        }
         for (const frame of result.frames) {
           out.appendChild(
             n(
               'h3',
-              'Requested ' +
-                frame.requestedSeconds.toFixed(3) +
-                ' s; browser position ' +
-                frame.browserTimeSeconds.toFixed(3) +
-                ' s',
+              frame.exact
+                ? 'Exact presentation frame ' +
+                    frame.presentationFrameIndex +
+                    ' at ' +
+                    frame.browserTimeSeconds.toFixed(6) +
+                    ' s'
+                : 'Requested ' +
+                    frame.requestedSeconds.toFixed(3) +
+                    ' s; browser position ' +
+                    frame.browserTimeSeconds.toFixed(3) +
+                    ' s',
             ),
           );
           frame.canvas.style.maxWidth = '100%';
@@ -316,7 +619,16 @@
     run.addEventListener('click', () => execute(false));
     demo.addEventListener('click', () => execute(true));
   }
-  const api = { mount, analyze, ready, boxList, guides };
+  const api = {
+    mount,
+    analyze,
+    ready,
+    boxList,
+    framePlan,
+    exactFrame,
+    allFrameMeasurements,
+    guides,
+  };
   root.VideoForensics = api;
   if (typeof module === 'object') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,0 +1,1 @@
+Original synthetic red/black/blue/green 1second scenes,10fps, forced irregular GOP boundaries, H264 Bframes. FFprobe frame reference generated independently. The damaged sample is a negative and must not establish complete decoding. Reproduce with scripts/generate-video-measurement-samples.py. Apache-2.0 with this repository. Not an authenticity benchmark.

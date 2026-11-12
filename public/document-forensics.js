@@ -15,12 +15,12 @@
       'Recognizes English printed text from PNG, JPEG or scanned PDF using a locally bundled Tesseract model. Select a file and run or try the synthetic scan. PDFs are rendered at 2x scale, up to 10 pages / 40 million total pixels. Recognition can be wrong: check the source image. Handwriting and non-English text are not supported.',
     ],
     'hidden-text': [
-      'PDF Concealed-Text Signals',
-      'Inspects PDF text operators for invisible rendering mode or white fill color. Select a PDF and inspect the candidate text. White text may be visible on dark backgrounds, other concealment methods can be missed, and findings are not proof of deception.',
+      'PDF Concealed-Text Detector',
+      'Select a PDF and run. Tracks actual text rendering mode, fill color/opacity and save/restore, maps exact matching extracted text runs to rendered-page boxes, then measures those pixels. Reports invisible-mode, near-zero-opacity, outside-page and white-text-on-almost-entirely-white-region candidates. White-on-dark text is not called hidden just because its fill is white.10pages,4MP/page,15second/page render limit. This is not universal hidden-content detection: complex clipping/overpainting/masks/Type3 glyphs/nonwhite low contrast and unmatched text runs can be missed. Unmatched potential runs are reported, not silently claimed visible. Findings do not prove deception or authenticity. Local only, no AI or upload.',
     ],
     signature: [
-      'PDF Signature Structure Inspector',
-      'Inspects PDF bytes for signature fields, ByteRange and Contents entries. Select a PDF and inspect the structure report. This does not cryptographically validate CMS signatures, certificate trust, revocation or signed revisions; a real verification verdict is unavailable.',
+      'PDF Cryptographic Signature Verification',
+      'Select a PDF and run to verify supported detached CMS signatures against actual signed byte ranges. Supports adbe.pkcs7.detached / ETSI.CAdES.detached with SHA-256/384/512 and one CMS signer per signature. Valid means signature-byte integrity for the reported revision only. Certificate trust, revocation, trusted signing time, legal validity, full PAdES rules and modification permissions are NOT checked. Later unsigned updates are reported separately; they are not covered by an older signature. Encrypted/hybrid PDFs and unsupported signatures remain unverified. Local worker: 15 MiB, 20 signatures, 30 revisions, 25 seconds.',
     ],
     'doc-compare': [
       'Document Text and Visual Comparison',
@@ -165,6 +165,23 @@
       if (right) await right.destroy();
     }
   }
+  async function pdfEvidence(file, operation) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker('/pdf-evidence-worker.js');
+      const finish = (error, result) => {
+        clearTimeout(timer);
+        worker.terminate();
+        error ? reject(Error(error)) : resolve(result);
+      };
+      const timer = setTimeout(() => finish('PDF evidence worker exceeded 25 seconds.'), 25000);
+      worker.onmessage = (e) =>
+        e.data.ok
+          ? finish(null, e.data.result)
+          : finish(e.data.error || 'PDF evidence inspection failed.');
+      worker.onerror = () => finish('PDF evidence worker failed.');
+      worker.postMessage({ file, operation });
+    });
+  }
   function signatureStructure(bytes) {
     const text = new TextDecoder('latin1').decode(bytes);
     const ranges = [...text.matchAll(/\/ByteRange\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/g)]
@@ -201,38 +218,9 @@
       for (let number = 1; number <= doc.numPages; number++) {
         const page = await doc.getPage(number);
         if (hidden) {
-          const ops = await page.getOperatorList(),
-            found = [];
-          if (ops.fnArray.length > 200000) throw new Error('PDF page operator limit exceeded.');
-          let mode = 0,
-            white = false,
-            stack = [];
-          const O = root.pdfjsLib.OPS;
-          for (let i = 0; i < ops.fnArray.length; i++) {
-            const op = ops.fnArray[i],
-              arg = ops.argsArray[i];
-            if (op === O.save) stack.push([mode, white]);
-            else if (op === O.restore) {
-              [mode, white] = stack.pop() || [0, false];
-            } else if (op === O.setTextRenderingMode) mode = arg[0];
-            else if (op === O.setFillRGBColor) white = arg.every((v) => v >= 250);
-            else if (op === O.setFillGray) white = arg[0] >= 0.99;
-            else if (
-              [O.showText, O.showSpacedText].includes(op) &&
-              (mode === 3 || mode === 7 || white)
-            ) {
-              const text = (arg[0] || []).map((g) => g.unicode || '').join('');
-              if (text)
-                found.push({
-                  text,
-                  signal:
-                    mode === 3 || mode === 7
-                      ? 'invisible rendering mode'
-                      : 'white fill (background not evaluated)',
-                });
-            }
-          }
-          pages.push({ page: number, candidates: found });
+          if (doc.numPages > 10) throw Error('Concealed-text limit10pages.');
+          if (!root.ConcealedText) throw Error('Concealed-text engine unavailable.');
+          pages.push({ page: number, ...(await root.ConcealedText.inspect(page, root.pdfjsLib)) });
         } else {
           const content = await page.getTextContent();
           pages.push({ page: number, text: content.items.map((t) => t.str).join(' ') });
@@ -441,7 +429,7 @@
     }
     if (!/\.pdf$/i.test(file.name))
       throw new Error('This tool requires a PDF (metadata also accepts DOCX/XLSX/PPTX).');
-    if (id === 'signature') return signatureStructure(await file.arrayBuffer());
+    if (id === 'signature') return pdfEvidence(file, 'signatures');
     const result = await pdfInfo(file, id === 'hidden-text');
     if (id === 'pdf-inspector')
       return {
@@ -456,7 +444,7 @@
   }
   function ready(id) {
     if (id === 'ocr') return false;
-    if (id === 'signature') return false;
+    if (id === 'signature') return !!root.Worker && !!root.crypto?.subtle;
     return !!root.pdfjsLib;
   }
   function mount(ws, tool, getFile) {
@@ -466,7 +454,7 @@
       dot.className = 'fl-dot ' + (ready(tool.id) ? 'available' : 'beta');
       dot.title =
         tool.id === 'signature'
-          ? 'Structure inspection only; cryptographic verifier unavailable'
+          ? 'Local detached CMS verifier; trust and revocation NOT checked'
           : 'Local parser dependency ' + (ready(tool.id) ? 'loaded' : 'unavailable');
     }
     ws.appendChild(n('h2', title));
@@ -484,7 +472,9 @@
           ? 'Local processing; no document upload. Maximum 15 MiB / 10 PDF pages, 90 seconds. OCR text must be checked against the source.'
           : tool.id === 'doc-compare'
             ? 'Local processing; no document upload. Maximum 15 MiB per file; visual comparison up to 10 PDF pages. Text equality does not imply visual equality.'
-            : 'Local processing; no document upload. Maximum 15 MiB / 100 PDF pages. Embedded text and metadata are untrusted.',
+            : tool.id === 'hidden-text'
+              ? 'Local only; no upload.15MiB,10pages,4MP/page,15second/page render. Candidate signals, not deception or full hidden-content proof.'
+              : 'Local processing; no document upload. Maximum 15 MiB / 100 PDF pages. Embedded text and metadata are untrusted.',
       ),
     );
     let second = null;
@@ -521,7 +511,13 @@
           other = second;
         if (example) {
           const filename =
-            tool.id === 'ocr' ? 'ocr.png' : tool.id === 'doc-compare' ? 'original.txt' : 'demo.pdf';
+            tool.id === 'signature'
+              ? 'signatures/valid.pdf'
+              : tool.id === 'ocr'
+                ? 'ocr.png'
+                : tool.id === 'doc-compare'
+                  ? 'original.txt'
+                  : 'demo.pdf';
           const load = async (name) => {
             const r = await fetch('/samples/document/' + name);
             if (!r.ok) throw new Error('Example unavailable.');
@@ -545,6 +541,23 @@
               'DEMO SAMPLE - real tool output. Your evidence and second file are unchanged.',
             ),
           );
+        if (tool.id === 'hidden-text') {
+          out.appendChild(n('h3', 'Concealed-text candidates'));
+          for (const p of result.pages)
+            out.appendChild(
+              n(
+                'p',
+                'Page ' +
+                  p.page +
+                  ': ' +
+                  (p.candidates.length
+                    ? p.candidates
+                        .map((c) => c.text + ' [' + c.signals.join(', ') + ']')
+                        .join(' | ')
+                    : 'No supported candidate found. This does not establish that no hidden text exists.'),
+              ),
+            );
+        }
         if (result.visual) {
           out.appendChild(
             n(
@@ -608,6 +621,7 @@
     pixelDifference,
     comparePDFs,
     signatureStructure,
+    pdfEvidence,
     guides,
   };
   root.DocumentForensics = api;

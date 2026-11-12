@@ -110,7 +110,7 @@ test('RSA public checks catch even modulus, small factors and invalid exponents'
   expect((await C.validateRSA(key([101], [2]))).syntaxAndArithmeticChecksPass).toBe(false);
   await expect(
     C.validateRSA('-----BEGIN PRIVATE KEY-----\nx\n-----END PRIVATE KEY-----'),
-  ).rejects.toThrow('Only PEM');
+  ).rejects.toThrow();
   await expect(C.validateRSA(key([0, 101], [3]))).rejects.toThrow('leading zero');
 });
 test('AES raw key analysis checks all AES sizes, flags repetitions without claiming entropy', async () => {
@@ -146,3 +146,110 @@ test('AES key analysis reports provider rejection without hiding valid length an
     global.crypto = old;
   }
 });
+
+describe('RSA private two-prime consistency validation', () => {
+  let privateJWK, pair;
+  beforeAll(async () => {
+    pair = await webcrypto.subtle.generateKey(
+      {
+        name: 'RSA-OAEP',
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: 'SHA-256',
+      },
+      true,
+      ['encrypt', 'decrypt'],
+    );
+    privateJWK = await webcrypto.subtle.exportKey('jwk', pair.privateKey);
+  });
+  const changed = (value) => {
+    const b = C.un64(value);
+    b[b.length - 1] ^= 2;
+    return C.b64(b);
+  };
+  test('full JWK validates arithmetic, probable primes, CRT and actual OAEP roundtrip without disclosing secrets', async () => {
+    const r = await C.validateRSA(JSON.stringify(privateJWK));
+    expect(r.validation).toBe('PRIVATE CONSISTENCY CHECKS PASS');
+    expect(Object.values(r.privateChecks).every(Boolean)).toBe(true);
+    expect(r.oaepRoundTrip).toBe(true);
+    expect(r.probablePrimeRounds).toBe(32);
+    for (const k of ['n', 'd', 'p', 'q', 'dp', 'dq', 'qi'])
+      expect(JSON.stringify(r)).not.toContain(privateJWK[k]);
+  });
+  test('PKCS8 private PEM also validates and has same public fingerprint', async () => {
+    const der = await webcrypto.subtle.exportKey('pkcs8', pair.privateKey);
+    const pem =
+      '-----BEGIN PRIVATE KEY-----\n' +
+      Buffer.from(der).toString('base64') +
+      '\n-----END PRIVATE KEY-----';
+    const r = await C.validateRSA(pem);
+    expect(r.oaepRoundTrip).toBe(true);
+    expect(r.spkiSHA256).toBe((await C.validateRSA(JSON.stringify(privateJWK))).spkiSHA256);
+  });
+  test.each(['n', 'd', 'p', 'q', 'dp', 'dq', 'qi'])(
+    'tampered %s fails rather than provider normalization hiding it',
+    async (k) => {
+      const r = await C.validateRSA(JSON.stringify({ ...privateJWK, [k]: changed(privateJWK[k]) }));
+      expect(r.validation).toBe('FAILED');
+      expect(r.oaepRoundTrip).toBeNull();
+    },
+  );
+  test('partial or multi-prime private keys rejected', async () => {
+    const x = { ...privateJWK };
+    delete x.qi;
+    await expect(C.validateRSA(JSON.stringify(x))).rejects.toThrow('Complete');
+    await expect(C.validateRSA(JSON.stringify({ ...privateJWK, oth: [] }))).rejects.toThrow(
+      'Multi-prime',
+    );
+  });
+  test('Miller-Rabin detects prime and composite/Carmichael inputs', () => {
+    for (const p of [2n, 3n, 101n, 65537n, 2147483647n]) expect(C.rsaProbablePrime(p)).toBe(true);
+    for (const n of [0n, 1n, 4n, 341n, 561n, 1105n, 1729n, 3215031751n])
+      expect(C.rsaProbablePrime(n)).toBe(false);
+  });
+});
+
+test('invalid CRT inside PKCS8 is not silently repaired into a passing key', async () => {
+  const pair = await webcrypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+  const der = Buffer.from(await webcrypto.subtle.exportKey('pkcs8', pair.privateKey));
+  der[der.length - 1] ^= 2;
+  const pem =
+    '-----BEGIN PRIVATE KEY-----\n' + der.toString('base64') + '\n-----END PRIVATE KEY-----';
+  let r;
+  try {
+    r = await C.validateRSA(pem);
+  } catch (e) {
+    expect(e).toBeInstanceOf(Error);
+    return;
+  }
+  expect(r.validation).toBe('FAILED');
+  expect(r.privateChecks.qInverseMatches).toBe(false);
+});
+
+test('4096-bit private key validates within the supported size bound', async () => {
+  const pair = await webcrypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 4096,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+  const r = await C.validateRSA(
+    JSON.stringify(await webcrypto.subtle.exportKey('jwk', pair.privateKey)),
+  );
+  expect(r.modulusBits).toBe(4096);
+  expect(r.oaepRoundTrip).toBe(true);
+  expect(r.validation).toBe('PRIVATE CONSISTENCY CHECKS PASS');
+}, 20000);

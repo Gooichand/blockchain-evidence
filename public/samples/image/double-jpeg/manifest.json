@@ -1,0 +1,31 @@
+{
+  "source": "Original synthetic random texture/shapes; not a real-photo accuracy benchmark.",
+  "seed": 1729,
+  "positiveExpected": [
+    "double-75-95.jpg",
+    "double-85-95.jpg"
+  ],
+  "knownMisses": [
+    "double-50-95.jpg",
+    "double-65-95.jpg",
+    "double-95-50.jpg",
+    "double-75-75.jpg",
+    "shifted-double85-95.jpg"
+  ],
+  "sha256": {
+    "double-50-95.jpg": "475c28dc9279b9b59d8b85c2c4cc8bf6d365afc1e71e35c990cf577c8f3ebdb4",
+    "flat95.jpg": "2d2fb646a8ab08247dfa312095260dbd2910c7d311b389e8589f3138d75e1fb3",
+    "double-75-95.jpg": "af41588b572e6dbab4a0b05d84cd82bb447063db5f4d10b3ca0debc159276cac",
+    "double-75-75.jpg": "5639fadabcc623d5d0f81796ad08483dca0323726c3086e444d956638675ed75",
+    "single-progressive95.jpg": "ec49e794e5074808fbc8249c2d0b6f4ac6bd6156aef14262fc83d19f1a275f47",
+    "single-50.jpg": "2d3e97d903547cd100c62c2d57a6ef5371d6fe5ac4e95e2e43646663ed280a87",
+    "double-65-95.jpg": "95e408ef305f4e32c0495de0453592790369fd2f73f7fc5495871c929e98b777",
+    "single-65.jpg": "0ac60134c296dc1e27b1c7d15f68519c8be0f2f8a969c95cb85312f5a9b0bad3",
+    "double-85-95.jpg": "a6d41ac87f778fb2103245f79492fd59d7f3f6ac065c5b60992560b8deea179c",
+    "single-95.jpg": "dbae45e9465143bf2427dab15d33560c4a8b23f79ca61831b4a78daeb261185e",
+    "shifted-double85-95.jpg": "d1af319506d2b35dfca1649bea5f10509e9d55c83f7fd36a5a9031b5d0bd6f26",
+    "single-75.jpg": "dae1f66b4df093010917742cc8b9a21350304d9b4df9d6a442b6547bd8f6b656",
+    "double-95-50.jpg": "e8a0d965b842089800db839b36599fa0518cbcc9a39d98b2cf1950c44e3ff1c7",
+    "single-85.jpg": "1764644ff1daeda32766ae257f5f0b604cfed4176e4a90680256a929f073aa6f"
+  }
+}

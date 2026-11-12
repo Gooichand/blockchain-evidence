@@ -23,6 +23,18 @@ const mime = {
 };
 const server = http.createServer((req, res) => {
   res.setHeader('Content-Security-Policy', csp);
+  if (process.env.LIVE_TLS_QA === '1' && req.url.startsWith('/api/network/tls?')) {
+    const host = new URL(req.url, 'http://127.0.0.1').searchParams.get('host');
+    require('../services/publicTLSService').inspect(host).then(result => {res.writeHead(200, {'Content-Type':'application/json'});res.end(JSON.stringify(result));}).catch(()=>{res.writeHead(503, {'Content-Type':'application/json'});res.end(JSON.stringify({error:'Real TLS check unavailable.'}));});
+    return;
+  }
+  if (process.env.LIVE_DNS_QA === '1' && req.url.startsWith('/api/network/dns?')) {
+    const query = new URL(req.url, 'http://127.0.0.1').searchParams.get('query');
+    require('../services/dnsRegistrationService').lookup(query).then(result => {
+      res.writeHead(200, {'Content-Type':'application/json'});res.end(JSON.stringify(result));
+    }).catch(() => {res.writeHead(503, {'Content-Type':'application/json'});res.end(JSON.stringify({error:'Real public lookup failed.'}));});
+    return;
+  }
   if (req.url.startsWith('/api/')) {
     // Never invent a successful live lookup or production record.
     res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -139,6 +151,95 @@ async function run() {
         captureBeyondViewport: true,
       });
     }
+    // Exact decoder is independently compared with FFmpeg-generated reference pixels.
+    const exactChecks = await page.evaluate(async () => {
+      const bytes = await (await fetch('/samples/video/exact/b-frames.mp4')).arrayBuffer();
+      const file = new File([bytes], 'b-frames.mp4', { type: 'video/mp4' }),
+        checks = [];
+      for (const [index, expected] of [
+        [0, 1],
+        [5, 2],
+        [23, 3],
+      ]) {
+        const r = await VideoForensics.analyze('frame-extract', file, 0, index);
+        const image = await createImageBitmap(
+          await (await fetch('/samples/video/exact/expected-' + expected + '.png')).blob(),
+        );
+        const c = document.createElement('canvas');
+        c.width = image.width;
+        c.height = image.height;
+        c.getContext('2d').drawImage(image, 0, 0);
+        image.close();
+        const a = r.frames[0].canvas.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        const b = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        let sum = 0,
+          max = 0;
+        for (let i = 0; i < a.length; i++)
+          if (i % 4 !== 3) {
+            sum += Math.abs(a[i] - b[i]);
+            max = Math.max(max, Math.abs(a[i] - b[i]));
+          }
+        checks.push({
+          index,
+          actual: r.summary.presentationFrameIndex,
+          mae: sum / (c.width * c.height * 3),
+          max,
+          timestamp: r.summary.presentationSeconds,
+        });
+      }
+      const vfr = new File(
+        [await (await fetch('/samples/video/exact/vfr.mp4')).arrayBuffer()],
+        'vfr.mp4',
+      );
+      const variable = await VideoForensics.analyze('frame-extract', vfr, 0, 18);
+      if (
+        variable.summary.presentationFrameIndex !== 18 ||
+        Math.abs(variable.summary.presentationSeconds - 2) > 0.0001
+      )
+        throw Error('VFR presentation mapping failed.');
+      const vfrByTime = await VideoForensics.analyze('frame-extract', vfr, 2.05);
+      if (vfrByTime.summary.presentationFrameIndex !== 18) throw Error('VFR time mapping failed.');
+      const byTime = await VideoForensics.analyze('frame-extract', file, 0.46);
+      if (byTime.summary.presentationFrameIndex !== 5)
+        throw Error('Time did not select covering B-frame.');
+      let rejected = false;
+      try {
+        await VideoForensics.analyze('frame-extract', file, 0, 24);
+      } catch (e) {
+        rejected = true;
+      }
+      if (!rejected) throw Error('Out-of-range index accepted.');
+      return checks;
+    });
+    console.log('Exact pixel comparison diagnostics', JSON.stringify(exactChecks));
+    for (const c of exactChecks) {
+      assert.equal(c.index, c.actual);
+      assert(c.mae < 4, 'FFmpeg frame comparison MAE ' + c.mae);
+    }
+    console.log(
+      'PASS exact AVC first/B/last frames vs FFmpeg RGB reference',
+      JSON.stringify(exactChecks),
+    );
+    const privateChecks = await page.evaluate(async () => {
+      const { value } = await CryptoTools.example('rsa'),
+        j = JSON.parse(value),
+        r = await CryptoTools.validateRSA(value);
+      if (r.validation !== 'PRIVATE CONSISTENCY CHECKS PASS' || !r.oaepRoundTrip)
+        throw Error('Private RSA failed.');
+      for (const k of ['d', 'p', 'q', 'dp', 'dq', 'qi'])
+        if (JSON.stringify(r).includes(j[k])) throw Error('Private RSA value leaked to results.');
+      const b = CryptoTools.un64(j.qi);
+      b[b.length - 1] ^= 2;
+      j.qi = CryptoTools.b64(b);
+      const bad = await CryptoTools.validateRSA(JSON.stringify(j));
+      if (bad.validation !== 'FAILED' || bad.privateChecks.qInverseMatches)
+        throw Error('Bad CRT accepted.');
+      return { valid: r.validation, oaep: r.oaepRoundTrip, changedCRT: bad.validation };
+    });
+    console.log(
+      'PASS real Chrome private RSA pair and negative CRT',
+      JSON.stringify(privateChecks),
+    );
     let completed = 0;
     for (const [category, ids] of Object.entries(groups)) {
       for (const id of ids) {
@@ -168,7 +269,7 @@ async function run() {
             512 * 384,
           );
         if (id === 'img-metadata') assert.equal(r.metadata.Make, 'DGC Demo');
-        if (id === 'clone-detect') assert(r.exactTilePairs.length > 0);
+        if (id === 'clone-detect') {assert.equal(r.featureComparison.state,'CANDIDATE_REPEATED_REGIONS');assert(r.featureComparison.models[0].inlierCount>=8);}
         if (id === 'pdf-inspector') {
           assert(r.objectInventory.objectCount > 0);
           assert(r.objectInventory.objects.some((o) => o.dictionary));
@@ -176,12 +277,16 @@ async function run() {
         if (id === 'ocr') assert(r.text.includes('DGC DEMO'));
         if (id === 'hidden-text')
           assert(r.pages[0].candidates.some((x) => x.text.includes('INVISIBLE')));
-        if (id === 'signature') assert.equal(r.cryptographicVerification, 'NOT PERFORMED');
+        if (id === 'signature') {
+          assert.equal(r.signatures[0].cryptographicSignature, 'VALID FOR SIGNED BYTE RANGES');
+          assert.equal(r.signatures[0].certificateTrust, 'NOT CHECKED');
+        }
+        if (id === 'pdf-metadata') assert.equal(r.revisionHistory.preservedRevisionCount, 3);
         if (category === 'video') {
           assert.equal(r.width, 480);
           assert.equal(r.durationSeconds, 3);
         }
-        if (id === 'keyframe') assert.equal(r.syncSampleCount, 3);
+        if (id === 'keyframe') {assert.equal(r.syncSampleCount,3);assert.equal(r.decodedFrameCount,30);assert.equal(r.groups.length,3);}
         if (category === 'audio' && id !== 'fingerprint') {
           assert.equal(r.durationSeconds, 2);
           assert.equal(r.wav.sampleRate, 16000);
@@ -200,7 +305,7 @@ async function run() {
             ),
           );
         }
-        if (id === 'fingerprint') assert(Math.abs(r.cosineSimilarity - 1) < 1e-8);
+        if (id === 'fingerprint') {assert.equal(r.candidateMatch,true);assert(Math.abs(r.secondMinusFirstOffsetSeconds+0.734)<0.04);}
         if (id === 'rsa') {
           assert.equal(r.modulusBits, 2048);
           assert.equal(r.providerImport, true);
@@ -231,7 +336,13 @@ async function run() {
         if (category === 'timeline') assert.equal(r.displayedCount, 1);
         if (id === 'qr-scanner') assert.equal(r.text, 'DGC original QR demo');
         if (id === 'ipfs-viewer') {
-          assert.equal(r.matchesBlockBytes, true);
+          assert.equal(r.cidVerified, true);
+          assert.equal(
+            r.byteLength,
+            JSON.parse(fs.readFileSync(path.join(root, 'samples/ipfs/example.json'), 'utf8'))
+              .byteLength,
+          );
+          assert(r.verifiedBlockCount > 1);
           assert(r.untrustedUtf8Preview.includes('Original DGC'));
         }
         if (id === 'ssl-inspect') {
@@ -270,6 +381,58 @@ async function run() {
         completed++;
         console.log('PASS', category, id);
       }
+    }
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await (
+      await page.$('#flFileInput')
+    ).uploadFile(path.join(root, 'samples/video/exact/b-frames.mp4'));
+    await page.waitForFunction(() => ForensicLab.getState().file?.name === 'b-frames.mp4');
+    await openTool('video', 'frame-extract');
+    await page.$eval('[aria-label="Exact frame index"]', (e) => (e.value = '5'));
+    await page.evaluate(() =>
+      [...document.querySelectorAll('#flWorkspace button')]
+        .find((x) => x.textContent === 'Analyze selected video')
+        .click(),
+    );
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#flWorkspace pre') ||
+        document.querySelector('#flWorkspace [role=alert]'),
+    );
+    const bFrame = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+    assert.equal(bFrame.presentationFrameIndex, 5);
+    assert.equal(bFrame.extraction, 'EXACT DECODED SAMPLE');
+    assert(
+      (await page.$eval('#flWorkspace', (e) => e.textContent)).includes(
+        'Exact presentation frame 5 at 0.416667 s',
+      ),
+    );
+    await capture('video-exact-bframe');
+    for (const [name, expected] of [
+      ['tampered', 'INVALID'],
+      ['later-update', 'VALID FOR SIGNED BYTE RANGES'],
+    ]) {
+      if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+      await (
+        await page.$('#flFileInput')
+      ).uploadFile(path.join(root, 'samples/document/signatures/' + name + '.pdf'));
+      await page.waitForFunction((n) => ForensicLab.getState().file?.name === n, {}, name + '.pdf');
+      await openTool('document', 'signature');
+      await page.evaluate(() =>
+        [...document.querySelectorAll('#flWorkspace button')]
+          .find((x) => x.textContent === 'Analyze selected document')
+          .click(),
+      );
+      await page.waitForFunction(
+        () =>
+          document.querySelector('#flWorkspace pre') ||
+          document.querySelector('#flWorkspace [role=alert]'),
+      );
+      const r = JSON.parse(await page.$eval('#flWorkspace pre', (e) => e.textContent));
+      assert.equal(r.signatures[0].cryptographicSignature, expected);
+      if (name === 'later-update') assert.equal(r.signatures[0].coversCurrentFile, false);
+      await capture('document-signature-' + name);
+      console.log('PASS real uploaded PDF signature', name, expected);
     }
     if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
     await page.waitForSelector('#flFileInput');
@@ -639,6 +802,152 @@ async function run() {
           .includes('unavailable'),
       );
       await capture(category + '-' + id + '-unavailable');
+    }
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/audio/landmarks/original.wav'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='original.wav');
+    await openTool('audio','fingerprint');
+    await (await page.$('[aria-label="Second audio file"]')).uploadFile(path.join(root,'samples/audio/landmarks/different.wav'));
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected audio').click());
+    await page.waitForSelector('#flWorkspace pre');
+    assert.equal(JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent)).candidateMatch,false);
+    await capture('audio-fingerprint-selected-negative');
+    await page.click('[aria-label="Try audio example"]');await page.waitForSelector('#flWorkspace pre');
+    assert.equal(JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent)).candidateMatch,true);
+    assert.equal(await page.$eval('[aria-label="Second audio file"]',e=>e.files[0].name),'different.wav');
+    assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),'original.wav');
+    await capture('audio-fingerprint-landmark-match');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(retainedFile);
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='dgc-retained-user-input.bin');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/document/concealed/signals.pdf'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='signals.pdf');
+    await openTool('document','hidden-text');
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected document').click());
+    await page.waitForSelector('#flWorkspace pre');
+    const concealed=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+    const candidates=concealed.pages[0].candidates;
+    for(const label of ['WHITE ON WHITE HIDDEN','INVISIBLE RENDER MODE','ZERO OPACITY TEXT'])assert(candidates.some(x=>x.text===label),JSON.stringify(concealed));
+    assert(!candidates.some(x=>x.text.includes('VISIBLE WHITE ON DARK')||x.text==='VISIBLE BLACK TEXT'||x.text==='VISIBLE AFTER RESTORE'));
+    fs.writeFileSync(path.join(screenshotDir,'concealed-text-validation.json'),JSON.stringify(concealed,null,2));
+    await capture('document-concealed-text-measured');console.log('PASS actual PDF rendered white-region/white-on-dark negative, invisible and zero-opacity signals');
+    const videoMeasurements=await page.evaluate(async()=>{
+      const results=[];
+      for(const name of ['measurement/cuts-gops.mp4','exact/b-frames.mp4','exact/vfr.mp4']){
+        const response=await fetch('/samples/video/'+name),file=new File([await response.arrayBuffer()],name);
+        const result=(await VideoForensics.analyze('keyframe',file)).summary;
+        if(name.includes('cuts-gops')){if(result.decodedFrameCount!==40)throw Error('Frame count mismatch.');const cuts=result.events.filter(e=>e.kind==='ABRUPT_VISUAL_CHANGE_CANDIDATE');if(cuts.length!==3)throw Error('Visual change count '+JSON.stringify(cuts));if(!result.events.some(e=>e.kind==='NEAR_BLACK_INTERVAL'))throw Error('Black interval missed.');}
+        results.push({file:name,result});
+      }
+      const response=await fetch('/samples/video/measurement/corrupted-sample.mp4');let rejected=false;try{await VideoForensics.analyze('keyframe',new File([await response.arrayBuffer()],'damaged.mp4'));}catch{rejected=true;}if(!rejected)throw Error('Damaged video falsely passed complete decode.');
+      return results;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'video-measurements-validation.json'),JSON.stringify(videoMeasurements,null,2));
+    console.log('PASS all-frame H264 measurements: independent frame-count/timestamps, Bframes/VFR, cuts/black/freeze and damaged-sample rejection');
+    if (!(await page.$('#flFileInput'))) await page.click('[aria-label="Expand evidence vault"]');
+    await page.waitForSelector('#flFileInput');
+    await (await page.$('#flFileInput')).uploadFile(path.join(root,'samples/video/measurement/cuts-gops.mp4'));
+    await page.waitForFunction(()=>ForensicLab.getState().file?.name==='cuts-gops.mp4');
+    for(const id of ['keyframe','vid-timeline']){
+      await openTool('video',id);
+      await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Analyze selected video').click());
+      await page.waitForSelector('#flWorkspace pre');
+      const r=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));assert.equal(r.decodedFrameCount,40);
+      assert.deepEqual(r.events.filter(e=>e.kind==='ABRUPT_VISUAL_CHANGE_CANDIDATE').map(e=>e.seconds),[1,2,3]);
+      if(id==='vid-timeline')assert.equal((await page.$$('#flWorkspace canvas')).length,4);
+      assert(!(await page.$eval('#flWorkspace',e=>e.textContent)).includes('undefined'));
+      await capture('video-'+id+'-all-frames');
+    }
+    const copyMatrix=await page.evaluate(async()=>{
+      const actualWorker=window.Worker;
+      window.Worker=class{constructor(){setTimeout(()=>this.onerror({message:'controlled test failure'}),0);}postMessage(){}terminate(){}};
+      try{const r=await fetch('/samples/images/copy-move/unique.png');let failed=false;try{await ImageForensics.analyze('clone-detect',new File([await r.arrayBuffer()],'unique.png'));}catch(e){failed=e.message==='Classical feature engine unavailable.';}if(!failed)throw Error('Worker failure not handled.');}finally{window.Worker=actualWorker;}
+      const checks=[];
+      for(const [name,expected] of [['translated.png',true],['recompressed.jpg',true],['rotated-scaled.jpg',true],['unique.png',false],['flat.png',false]]){
+        const response=await fetch('/samples/images/copy-move/'+name);if(!response.ok)throw Error('Copy-move fixture missing.');
+        const result=await ImageForensics.analyze('clone-detect',new File([await response.arrayBuffer()],name));
+        const r=result.summary.featureComparison;if((r.models.length>0)!==expected)throw Error(name+' unexpected feature result');checks.push({file:name,expected,result:r});
+      }return checks;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'copy-move-validation.json'),JSON.stringify(copyMatrix,null,2));
+    console.log('PASS actual CSP-safe ORB worker: off-grid translation, JPEG, rotation/scale; unique/flat negatives');
+    const acousticMatrix = await page.evaluate(async()=>{
+      async function file(name){const r=await fetch('/samples/audio/landmarks/'+name);if(!r.ok)throw Error('Fixture unavailable.');return new File([await r.arrayBuffer()],name);}
+      const first=await file('original.wav'),checks=[];
+      for(const [name,expected] of [['original.wav',true],['trimmed.mp3',true],['resampled.m4a',true],['noisy.wav',true],['different.wav',false],['reordered.wav',false]]){
+        const r=(await AudioForensics.analyze('fingerprint',first,await file(name))).summary;
+        if(r.candidateMatch!==expected)throw Error(name+' unexpected fingerprint '+JSON.stringify(r));
+        if(name==='trimmed.mp3'&&Math.abs(r.secondMinusFirstOffsetSeconds+.734)>.04)throw Error('Incorrect acoustic offset.');
+        checks.push({file:name,expected,result:r});
+      }return checks;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'acoustic-landmark-validation.json'),JSON.stringify(acousticMatrix,null,2));
+    console.log('PASS real worker acoustic landmark matching: WAV, MP3 trim, AAC resample, gain/noise; different/reordered negatives');
+    const retainedBeforeJPEG=await page.evaluate(()=>ForensicLab.getState().file.name);
+    await openTool('image','compression');
+    await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(b=>b.textContent.includes('Try example')).click());
+    await page.waitForFunction(()=>document.querySelector('#flWorkspace pre')?.textContent.includes('ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE'));
+    assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),retainedBeforeJPEG);
+    await capture('image-double-jpeg-candidate');
+    const jpegMatrix=await page.evaluate(async()=>{
+      const out=[];for(const name of ['double-75-95.jpg','double-85-95.jpg','single-50.jpg','single-95.jpg','single-progressive95.jpg','double-50-95.jpg','double-65-95.jpg','double-95-50.jpg','double-75-75.jpg','shifted-double85-95.jpg','flat95.jpg']){
+        const file=await(await fetch('/samples/image/double-jpeg/'+name)).blob();const r=await new Promise((resolve,reject)=>{const w=new Worker('/double-jpeg-worker.js');const timer=setTimeout(()=>{w.terminate();reject(Error('JPEG worker timeout.'));},25000);w.onmessage=({data})=>{clearTimeout(timer);w.terminate();data.ok?resolve(data.result):reject(Error(data.error));};w.postMessage(file);});
+        const positive=['double-75-95.jpg','double-85-95.jpg'].includes(name);if((r.state==='ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE')!==positive)throw Error('JPEG case '+name+' unexpected.');out.push({file:name,result:r});
+      }return out;
+    });
+    const jpegPreflight=await page.evaluate(async()=>{
+      let previews=0;const original=globalThis.createImageBitmap;globalThis.createImageBitmap=()=>{previews++;throw Error('Unexpected preview before coefficient validation.');};
+      try{
+        const source=new Uint8Array(await(await fetch('/samples/image/double-jpeg/single-95.jpg')).arrayBuffer());
+        let sof=-1;for(let i=0;i<source.length-9;i++)if(source[i]===255&&source[i+1]===192){sof=i;break;}if(sof<0)throw Error('SOF missing.');
+        source[sof+5]=0x0b;source[sof+6]=0xb8;source[sof+7]=0x0b;source[sof+8]=0xb8;
+        const errors=[];for(const file of [new File([new Uint8Array([0,1,2])],'bad.jpg'),new File([source],'oversized-dimensions.jpg')]){
+          try{await ImageForensics.analyze('compression',file);throw Error('Invalid JPEG unexpectedly accepted.');}catch(e){errors.push(e.message);}
+        }
+        if(previews!==0||!errors[1].includes('maxResolutionInMP'))throw Error('JPEG preflight did not reject before preview: '+JSON.stringify({errors,previews}));
+        return {previews,errors};
+      }finally{globalThis.createImageBitmap=original;}
+    });
+    fs.writeFileSync(path.join(screenshotDir,'double-jpeg-preflight.json'),JSON.stringify(jpegPreflight,null,2));
+    fs.writeFileSync(path.join(screenshotDir,'double-jpeg-validation.json'),JSON.stringify(jpegMatrix,null,2));
+    console.log('PASS actual coefficient worker JPEG positives, single negatives and5 documented genuine-double misses');
+    await openTool('network','dns-lookup');
+    await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
+    await page.click('[aria-label="Try live DNS example"]');
+    if(process.env.LIVE_DNS_QA === '1'){
+      await page.waitForSelector('#flWorkspace pre');
+      const dnsResult=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+      assert.equal(dnsResult.records.A.state,'FOUND');assert.equal(dnsResult.registration.state,'FOUND');
+      assert.equal(await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value),'preserve-my-typed-domain.com');
+      assert.equal(await page.evaluate(()=>ForensicLab.getState().file.name),'dgc-retained-user-input.bin');
+      fs.writeFileSync(path.join(screenshotDir,'public-dns-domain-result.json'),JSON.stringify(dnsResult,null,2));
+      await page.evaluate(()=>{const e=document.createElement('p');e.textContent='LOCAL QA: actual UI + live DNS/RDAP service. Test HTTP adapter, not the deployed authenticated site. Auth checks are tested separately.';e.style='background:#fff0cc;padding:12px;';document.querySelector('#flWorkspace').prepend(e);});
+      await capture('network-dns-live-domain');
+      await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='8.8.8.8');
+      await page.evaluate(()=>[...document.querySelectorAll('#flWorkspace button')].find(e=>e.textContent==='Run public lookup').click());
+      await page.waitForFunction(()=>document.querySelector('#flWorkspace pre')?.textContent.includes('dns.google'));
+      const reverse=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));assert.equal(reverse.reverse.state,'FOUND');
+      fs.writeFileSync(path.join(screenshotDir,'public-dns-reverse-result.json'),JSON.stringify(reverse,null,2));
+      await capture('network-dns-live-reverse');console.log('PASS real public DNS/RDAP domain and PTR UI, typed input and evidence preserved');
+    }else{
+      await page.waitForSelector('#flWorkspace [role=alert]');
+      assert((await page.$eval('#flWorkspace',e=>e.textContent)).includes('unavailable'));
+    }
+    if(process.env.LIVE_TLS_QA==='1'){
+      await openTool('network','ssl-inspect');
+      await page.$eval('[aria-label="Public TLS hostname"]',e=>e.value='preserve-typed.example.net');
+      await page.click('[aria-label="Try live TLS example"]');
+      await page.waitForSelector('#flWorkspace pre');
+      const result=JSON.parse(await page.$eval('#flWorkspace pre',e=>e.textContent));
+      assert.equal(result.negotiated.state,'CONNECTED');assert.equal(result.negotiated.nodeDefaultTrustAuthorized,true);assert.equal(result.negotiated.hostnameMatches,true);assert(result.negotiated.certificateChain.length>=2);
+      assert.equal(await page.$eval('[aria-label="Public TLS hostname"]',e=>e.value),'preserve-typed.example.net');
+      fs.writeFileSync(path.join(screenshotDir,'public-tls-validation.json'),JSON.stringify(result,null,2));
+      await page.evaluate(()=>{const p=document.createElement('p');p.textContent='LOCAL QA: actual UI and live TLS service through a test HTTP adapter, not the deployed authenticated website. Auth/invalid-certificate handling tested separately.';p.style='padding:12px;background:#fff0cc;';document.querySelector('#flWorkspace').prepend(p);});
+      await capture('network-public-tls');console.log('PASS actual public TLS certificate chain/default roots/hostname/cipher/protocol UI');
     }
     assert.deepEqual(errors, [], 'Unexpected JavaScript exception(s)');
     console.log(
