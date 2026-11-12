@@ -4,6 +4,7 @@ const { supabase } = require('../config');
 const { canAccessCase, canAccessEvidence } = require('../middleware/caseAccess');
 const { logAudit } = require('../lib/audit');
 const blockchainService = require('../services/blockchain/blockchainService');
+const { isAnalyst, hasAssignment, assignmentFilter } = require('../lib/analystExportScope');
 
 /** Case/evidence snapshot export. The attached canonical JSON has a content
  * digest. That digest is not a PDF-byte integrity check or a digital signature.
@@ -140,14 +141,18 @@ async function loadCaseOr404(res, caseId) {
   return data;
 }
 
-async function loadEvidenceForCase(caseId) {
-  const { data, error } = await supabase
-    .from('evidence')
-    .select('*')
-    .eq('case_id', caseId)
-    .order('id', { ascending: true });
+async function loadEvidenceForCase(caseId, analyst) {
+  let query = supabase.from('evidence')
+    .select(analyst ? '*,analysis_tasks!inner(id)' : '*', analyst ? { count: 'exact' } : undefined)
+    .eq('case_id', caseId).order('id', { ascending: true });
+  if (analyst) query = query.or(assignmentFilter(analyst), { referencedTable: 'analysis_tasks' })
+    .limit(1, { referencedTable: 'analysis_tasks' });
+  const { data, count, error } = await query;
   if (error) throw error;
-  return data || [];
+  // Refuse an incomplete snapshot rather than silently exporting a capped list.
+  if (analyst && (!Number.isInteger(count) || count !== (data || []).length))
+    throw new Error('Assigned evidence snapshot exceeds available result window');
+  return (data || []).map(({ analysis_tasks, ...row }) => row);
 }
 
 async function loadCustody(filter) {
@@ -241,6 +246,10 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
   w.y = PAGE_H - 64 - 24;
   w.text('Text rendering: unsupported characters appear as [U+XXXX] code points. Original UTF-8 text is preserved in the attached snapshot.json.', {size:8,color:GREY});
   w.space(4);
+  if (reportType === 'case' && isAnalyst(generator)) {
+    w.text('Analyst scope: assigned evidence only. Custody and notes are limited to those evidence items. Case-wide notes and collection checklist are omitted.', {size:9,color:GREY});
+    w.space(4);
+  }
 
   // Case information
   if (caseRow) {
@@ -289,7 +298,10 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
 
   // Collection checklist (S9, ISO 27037 phases) - case reports only
   if (reportType === 'case') {
-    if (!checklist || !Array.isArray(checklist.items) || checklist.items.length === 0) {
+    if (isAnalyst(generator)) {
+      w.heading('Collection checklist');
+      w.text('Case-wide checklist omitted from this Analyst snapshot.', { color: GREY });
+    } else if (!checklist || !Array.isArray(checklist.items) || checklist.items.length === 0) {
       w.heading('Collection checklist');
       w.text('No collection checklist recorded for this case.', { color: GREY });
     } else {
@@ -373,23 +385,33 @@ function sendPdf(res, pdfBytes, reportHash, filename) {
   res.send(Buffer.from(pdfBytes));
 }
 
+function strictReportId(value) {
+  if (typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id <= 2147483647 ? id : null;
+}
+
 // GET /api/cases/:id/report.pdf
 const getCaseReportPdf = async (req, res) => {
   try {
-    const cid = parseInt(req.params.id, 10);
-    if (isNaN(cid)) return res.status(400).json({ error: 'Invalid case id' });
-    if (!(await canAccessCase(req.user, cid))) {
+    const cid = strictReportId(req.params.id);
+    if (!cid) return res.status(400).json({ error: 'Invalid case id' });
+    const analyst = isAnalyst(req.user);
+    if (!(analyst ? await hasAssignment(req.user, { case_id: cid }) : await canAccessCase(req.user, cid))) {
       return res.status(403).json({ error: 'You do not have access to this case' });
     }
     const caseRow = await loadCaseOr404(res, cid);
     if (!caseRow) return;
-    const [evidence, custody, notes, checklist, generator] = await Promise.all([
-      loadEvidenceForCase(cid),
+    const [evidence, allCustody, allNotes, checklist, generator] = await Promise.all([
+      loadEvidenceForCase(cid, analyst ? req.user : null),
       loadCustody({ caseId: cid }),
       loadNotes(cid, null),
-      loadChecklist(cid),
+      analyst ? Promise.resolve(null) : loadChecklist(cid),
       loadGenerator(req.user),
     ]);
+    const allowed = new Set(evidence.map(e => String(e.id)));
+    const custody = analyst ? allCustody.filter(c => c.evidence_id != null && allowed.has(String(c.evidence_id))) : allCustody;
+    const notes = analyst ? allNotes.filter(n => n.evidence_id != null && allowed.has(String(n.evidence_id))) : allNotes;
     const generatedAt = new Date().toISOString();
     const { pdfBytes, reportHash } = await buildReport({
       reportType: 'case', caseRow, evidence, custody, notes, checklist, generator, generatedAt,
@@ -409,11 +431,14 @@ const getCaseReportPdf = async (req, res) => {
 // GET /api/evidence/:id/report.pdf
 const getEvidenceReportPdf = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return res.status(400).json({ error: 'Invalid evidence id' });
+    const id = strictReportId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid evidence id' });
+    const analyst = isAnalyst(req.user);
+    if (analyst && !(await hasAssignment(req.user, { evidence_id: id })))
+      return res.status(403).json({ error: 'You do not have an analysis assignment for this evidence' });
     const { data: ev, error } = await supabase.from('evidence').select('*').eq('id', id).single();
     if (error || !ev) return res.status(404).json({ error: 'Evidence not found' });
-    if (!(await canAccessEvidence(req.user, ev))) {
+    if (!analyst && !(await canAccessEvidence(req.user, ev))) {
       return res.status(403).json({ error: 'You do not have access to this evidence' });
     }
     let caseRow = null;
