@@ -2,7 +2,7 @@
 
 34 yes / 67 catalog tools. A no can still have useful bounded behavior. These are not authenticity or legal-admissibility verdicts. Normal file/size/format limits remain in every guide. No count credit for renaming a partial tool.
 
-Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. Message: wamid.HBgMOTE4MzA5NjcwNDE2FQIAEhgUM0JGODUyRDYwNjNCOUFGMTc2QzgA. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. The five newer Blockchain tools have no such live confirmation.
+Hash > Blockchain Verification is yes based on the user's original Nov11 15:54:46 IST report of successful live read-only Amoy/contract availability. The health check reads chain/block/contract and verification interfaces. This does not prove any particular evidence hash is anchored. The five newer Blockchain tools have no such live confirmation.
 
 52 bounded local desktop implementations = 48 new original-data examples plus 4 old local Hash tools. Add the old user-confirmed live Hash lookup for 53 bounded implementations, NOT 53 complete tools. The five newer Blockchain reads are separately local-EVM tested only, not public-chain confirmed.
 
