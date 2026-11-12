@@ -174,11 +174,38 @@
     image.close();
     return { canvas: c, dimensions };
   }
+  async function compressionCoefficients(file) {
+    if (!file) throw Error('Select a JPEG.');
+    if (file.size > 20 * 1024 * 1024) throw Error('JPEG limit20MiB.');
+    if (!root.Worker) throw Error('JPEG coefficient worker unavailable.');
+    return await new Promise((resolve, reject) => {
+      const worker = new root.Worker('/double-jpeg-worker.js'),
+        timer = setTimeout(() => {
+          worker.terminate();
+          reject(Error('JPEG coefficient analysis exceeded25seconds.'));
+        }, 25000);
+      const finish = () => {
+        clearTimeout(timer);
+        worker.terminate();
+      };
+      worker.onmessage = ({ data }) => {
+        finish();
+        data.ok ? resolve(data.result) : reject(Error(data.error));
+      };
+      worker.onerror = () => {
+        finish();
+        reject(Error('JPEG coefficient worker failed.'));
+      };
+      worker.postMessage(file);
+    });
+  }
   async function analyze(id, file) {
     if (id === 'ai-tamper')
       throw new Error(
         'Unavailable: no validated AI detection model installed. No score or verdict was generated.',
       );
+    // Validate bounded original coefficients before allocating a browser pixel preview.
+    const compressionResult = id === 'compression' ? await compressionCoefficients(file) : null;
     const decoded = await decode(file),
       c = decoded.canvas,
       w = c.width,
@@ -286,27 +313,7 @@
     } else if (id === 'compression') {
       result.summary.jpegQuantizationTables = jpegTables(await file.arrayBuffer());
       result.summary.bytes = file.size;
-      if (!root.Worker) throw Error('JPEG coefficient worker unavailable.');
-      result.summary.doubleQuantization = await new Promise((resolve, reject) => {
-        const worker = new root.Worker('/double-jpeg-worker.js'),
-          timer = setTimeout(() => {
-            worker.terminate();
-            reject(Error('JPEG coefficient analysis exceeded25seconds.'));
-          }, 25000);
-        const finish = () => {
-          clearTimeout(timer);
-          worker.terminate();
-        };
-        worker.onmessage = ({ data }) => {
-          finish();
-          data.ok ? resolve(data.result) : reject(Error(data.error));
-        };
-        worker.onerror = () => {
-          finish();
-          reject(Error('JPEG coefficient worker failed.'));
-        };
-        worker.postMessage(file);
-      });
+      result.summary.doubleQuantization = compressionResult;
     } else if (id === 'img-metadata') {
       if (!root.exifr) throw new Error('Metadata parser unavailable. Reload the page.');
       result.summary.metadata = (await root.exifr.parse(await file.arrayBuffer(), true)) || {};

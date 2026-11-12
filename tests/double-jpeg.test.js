@@ -49,3 +49,12 @@ test('invalid, truncated and oversized fail closed', () => {
   expect(() => decode(bytes.subarray(0, Math.floor(bytes.length / 2)))).toThrow();
   expect(() => decode(new Uint8Array(20 * 1024 * 1024 + 1))).toThrow();
 });
+
+test('oversized JPEG dimensions fail before coefficient block allocation', () => {
+  const bytes = Buffer.from(fs.readFileSync(path.join(dir, 'single-95.jpg')));
+  const sof = bytes.indexOf(Buffer.from([255, 192]));
+  expect(sof).toBeGreaterThan(0);
+  bytes.writeUInt16BE(3000, sof + 5);
+  bytes.writeUInt16BE(3000, sof + 7);
+  expect(() => decode(bytes)).toThrow(/maxResolutionInMP/);
+});

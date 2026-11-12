@@ -899,6 +899,20 @@ async function run() {
         const positive=['double-75-95.jpg','double-85-95.jpg'].includes(name);if((r.state==='ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE')!==positive)throw Error('JPEG case '+name+' unexpected.');out.push({file:name,result:r});
       }return out;
     });
+    const jpegPreflight=await page.evaluate(async()=>{
+      let previews=0;const original=globalThis.createImageBitmap;globalThis.createImageBitmap=()=>{previews++;throw Error('Unexpected preview before coefficient validation.');};
+      try{
+        const source=new Uint8Array(await(await fetch('/samples/image/double-jpeg/single-95.jpg')).arrayBuffer());
+        let sof=-1;for(let i=0;i<source.length-9;i++)if(source[i]===255&&source[i+1]===192){sof=i;break;}if(sof<0)throw Error('SOF missing.');
+        source[sof+5]=0x0b;source[sof+6]=0xb8;source[sof+7]=0x0b;source[sof+8]=0xb8;
+        const errors=[];for(const file of [new File([new Uint8Array([0,1,2])],'bad.jpg'),new File([source],'oversized-dimensions.jpg')]){
+          try{await ImageForensics.analyze('compression',file);throw Error('Invalid JPEG unexpectedly accepted.');}catch(e){errors.push(e.message);}
+        }
+        if(previews!==0||!errors[1].includes('maxResolutionInMP'))throw Error('JPEG preflight did not reject before preview: '+JSON.stringify({errors,previews}));
+        return {previews,errors};
+      }finally{globalThis.createImageBitmap=original;}
+    });
+    fs.writeFileSync(path.join(screenshotDir,'double-jpeg-preflight.json'),JSON.stringify(jpegPreflight,null,2));
     fs.writeFileSync(path.join(screenshotDir,'double-jpeg-validation.json'),JSON.stringify(jpegMatrix,null,2));
     console.log('PASS actual coefficient worker JPEG positives, single negatives and5 documented genuine-double misses');
     await openTool('network','dns-lookup');

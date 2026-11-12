@@ -1,4 +1,4 @@
-# Local upgrade checkpoint, November 12 04:42 IST
+# Local upgrade checkpoint, November 12 08:00 IST
 
 Current local branch local/strict-upgrades-20261112 adds thirteen validated tools to the published stack: 47/67 strict, not 80%. See STRICT-UPGRADES-2026-11-12.md and strict-status.json. Published PR381-383 retain their original 34-tool checkpoint until separately approved publication.
 
@@ -18,8 +18,10 @@ Concealed-text precision now uses actual graphics-state/rendered-white-region me
 
 ## Validation and delivery state
 
-35suites237tests pass. All48actual Chrome examples pass, plus extended RSA/PDF/exact-frame/all-frame/acoustic/clone/concealed/JPEG matrices. Real external Amoy, DNS/RDAP and TLS checks have separate recorded evidence. Public IPFS gateway recheck04:41IST timed out, so retrieval is still unconfirmed. No private upload,AI,paid service,push,PRedit or deployment.
+35suites238tests pass. All48actual Chrome examples pass, plus extended RSA/PDF/exact-frame/all-frame/acoustic/clone/concealed/JPEG matrices. Real external Amoy, DNS/RDAP and TLS checks have separate recorded evidence. Public IPFS gateway recheck07:58IST timed out, so retrieval is still unconfirmed. No private upload,AI,paid service,push,PRedit or deployment.
 
 Current local source is on local/strict-upgrades-20261112, not the deployed website. Published PR381-383 are still the earlier34/67 checkpoint. Local QA does not prove production auth/configuration or browser support on every device.
 
 Earlier implementation claims are retained separately in ARCHIVED-LOCAL-STATUS-2026-11-12.md, clearly historical, so they cannot be mistaken for current limitations. Remaining strictNo tools and dependencies are listed in REMAINING-TOOLS-2026-11-12.md.
+
+JPEG coefficient limits now reject invalid/9MP input before browser pixel-preview allocation; actual worker/preview-interception negatives pass. Strict count unchanged.
