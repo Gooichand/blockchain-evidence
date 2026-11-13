@@ -1,19 +1,13 @@
-const crypto = require('crypto');
+const exportPayload = require('../lib/reportExportPayload');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { supabase } = require('../config');
 const { canAccessCase, canAccessEvidence } = require('../middleware/caseAccess');
 const { logAudit } = require('../lib/audit');
 const blockchainService = require('../services/blockchain/blockchainService');
+const { isAnalyst, hasAssignment, assignmentFilter } = require('../lib/analystExportScope');
 
-/**
- * M17: one-click evidence/case report export (PDF).
- *
- * A report carries the case details, the evidence list with SHA-256 hashes,
- * blockchain transaction links, the full custody timeline, the current case
- * notes, a signature block for the generating investigator, the generation
- * timestamp and a report hash: SHA-256 over the canonical JSON of everything
- * printed. Recomputing that hash from the same records proves the report has
- * not been altered.
+/** Case/evidence snapshot export. The attached canonical JSON has a content
+ * digest. That digest is not a PDF-byte integrity check or a digital signature.
  */
 
 const RED = rgb(0.72, 0.11, 0.16);
@@ -25,15 +19,17 @@ const PAGE_H = 841.89;
 const MARGIN = 50;
 const BOTTOM = 70;
 
-// pdf-lib standard fonts encode WinAnsi only; anything outside would throw.
+// Standard fonts do not cover all scripts. Preserve unsupported characters as
+// explicit Unicode code points instead of silently deleting evidentiary text.
+// The attached snapshot keeps the original UTF-8 strings unchanged.
 function safeText(value) {
   if (value === null || value === undefined) return '';
-  return String(value)
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/…/g, '...')
-    .replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+  return Array.from(String(value), ch => {
+    if (/\s/u.test(ch)) return ' ';
+    const cp = ch.codePointAt(0);
+    if ((cp >= 0x20 && cp <= 0x7e) || (cp >= 0xa0 && cp <= 0xff)) return ch;
+    return '[U+' + cp.toString(16).toUpperCase().padStart(4,'0') + ']';
+  }).join('');
 }
 
 function fmtSize(bytes) {
@@ -106,13 +102,14 @@ class ReportWriter {
   }
 
   kv(key, value, opts = {}) {
-    this.ensure(14);
-    const f = this.fonts.bold;
-    this.page.drawText(safeText(key), { x: MARGIN, y: this.y - 10, size: 10, font: f, color: DARK });
     const keyW = 130;
-    const lines = this.wrap(value === '' || value === null || value === undefined ? 'n/a' : value, 10, this.fonts.regular, PAGE_W - 2 * MARGIN - keyW);
-    for (const ln of lines) {
-      this.page.drawText(ln, { x: MARGIN + keyW, y: this.y - 10, size: 10, font: this.fonts.regular, color: opts.color || DARK });
+    const labelLines = this.wrap(key, 10, this.fonts.bold, keyW - 10);
+    const valueLines = this.wrap(value === '' || value === null || value === undefined ? 'n/a' : value,
+      10, this.fonts.regular, PAGE_W - 2 * MARGIN - keyW);
+    for (let i=0; i<Math.max(labelLines.length,valueLines.length);i++) {
+      this.ensure(14);
+      if (labelLines[i]) this.page.drawText(labelLines[i], {x:MARGIN,y:this.y-10,size:10,font:this.fonts.bold,color:DARK});
+      if (valueLines[i]) this.page.drawText(valueLines[i], {x:MARGIN+keyW,y:this.y-10,size:10,font:this.fonts.regular,color:opts.color || DARK});
       this.y -= 13;
     }
     this.y -= 1;
@@ -144,14 +141,18 @@ async function loadCaseOr404(res, caseId) {
   return data;
 }
 
-async function loadEvidenceForCase(caseId) {
-  const { data, error } = await supabase
-    .from('evidence')
-    .select('*')
-    .eq('case_id', caseId)
-    .order('id', { ascending: true });
+async function loadEvidenceForCase(caseId, analyst) {
+  let query = supabase.from('evidence')
+    .select(analyst ? '*,analysis_tasks!inner(id)' : '*', analyst ? { count: 'exact' } : undefined)
+    .eq('case_id', caseId).order('id', { ascending: true });
+  if (analyst) query = query.or(assignmentFilter(analyst), { referencedTable: 'analysis_tasks' })
+    .limit(1, { referencedTable: 'analysis_tasks' });
+  const { data, count, error } = await query;
   if (error) throw error;
-  return data || [];
+  // Refuse an incomplete snapshot rather than silently exporting a capped list.
+  if (analyst && (!Number.isInteger(count) || count !== (data || []).length))
+    throw new Error('Assigned evidence snapshot exceeds available result window');
+  return (data || []).map(({ analysis_tasks, ...row }) => row);
 }
 
 async function loadCustody(filter) {
@@ -202,55 +203,6 @@ async function loadChecklist(caseId) {
   return data && data.length ? data[0] : null;
 }
 
-function canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes, checklist }) {
-  return JSON.stringify({
-    report_type: reportType,
-    generated_at: generatedAt,
-    generated_by: { id: generator.id, name: generator.name, role: generator.role },
-    case: caseRow && {
-      id: caseRow.id,
-      case_number: caseRow.case_number || null,
-      title: caseRow.title || null,
-      status: caseRow.status || null,
-      case_type: caseRow.case_type || null,
-      jurisdiction: caseRow.jurisdiction || null,
-      created_date: caseRow.created_date || null,
-    },
-    evidence: evidence.map((e) => ({
-      id: e.id,
-      name: e.title || e.name || null,
-      file_name: e.file_name || null,
-      sha256: e.hash || null,
-      blockchain_tx_hash: e.blockchain_tx_hash || null,
-      ipfs_cid: e.ipfs_cid || e.ipfs_hash || null,
-    })),
-    custody: custody.map((c) => ({
-      id: c.id,
-      evidence_id: c.evidence_id,
-      action: c.action,
-      actor: c.actor,
-      created_at: c.created_at,
-      entry_hash: c.entry_hash,
-    })),
-    notes: notes.map((n) => ({
-      id: n.id,
-      note_group: n.note_group,
-      version: n.version,
-      author: n.author,
-      created_at: n.created_at,
-      content: n.content,
-    })),
-    checklist: checklist ? checklist.items.map((i) => ({
-      key: i.key,
-      phase: i.phase,
-      done: i.done,
-      value: i.value || null,
-      done_by: i.done_by || null,
-      done_at: i.done_at || null,
-    })) : null,
-  });
-}
-
 function drawEvidenceBlock(w, ev) {
   const title = `#${ev.id} ${ev.title || ev.name || ev.file_name || 'Untitled'}`;
   w.text(title, { size: 11, font: 'bold', gap: 4 });
@@ -270,8 +222,7 @@ function drawEvidenceBlock(w, ev) {
 }
 
 async function buildReport({ reportType, caseRow, evidence, custody, notes, checklist, generator, generatedAt }) {
-  const payload = canonicalPayload({ reportType, generatedAt, generator, caseRow, evidence, custody, notes, checklist });
-  const reportHash = crypto.createHash('sha256').update(payload).digest('hex');
+  const {payload, snapshotHash:reportHash} = exportPayload.create({reportType,generatedAt,generator,caseRow,evidence,custody,notes,checklist});
 
   const doc = await PDFDocument.create();
   doc.setTitle(`EVID-DGC ${reportType === 'case' ? 'Case' : 'Evidence'} Report ${caseRow && caseRow.case_number ? caseRow.case_number : ''}`.trim());
@@ -281,6 +232,7 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
     regular: await doc.embedFont(StandardFonts.Helvetica),
     bold: await doc.embedFont(StandardFonts.HelveticaBold),
   };
+  await doc.attach(Buffer.from(payload,'utf8'),'snapshot.json',{mimeType:'application/json',description:'Exact UTF-8 snapshot payload for the displayed SHA-256 content digest',creationDate:new Date(generatedAt),modificationDate:new Date(generatedAt)});
   const w = new ReportWriter(doc, fonts);
 
   // Header band
@@ -289,9 +241,15 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
   w.page.drawText('EVID-DGC', { x: MARGIN, y: PAGE_H - 34, size: 17, font: fonts.bold, color: RED });
   w.page.drawText(reportType === 'case' ? 'Case Evidence Report' : 'Evidence Item Report', { x: MARGIN, y: PAGE_H - 52, size: 11, font: fonts.regular, color: DARK });
   w.page.drawText(`Generated: ${fmtTime(generatedAt)}`, { x: PAGE_W - MARGIN - fonts.regular.widthOfTextAtSize(`Generated: ${fmtTime(generatedAt)}`, 8), y: PAGE_H - 34, size: 8, font: fonts.regular, color: GREY });
-  const hashLabel = `Report hash: ${reportHash.slice(0, 24)}...`;
+  const hashLabel = `Snapshot: ${reportHash.slice(0, 24)}...`;
   w.page.drawText(hashLabel, { x: PAGE_W - MARGIN - fonts.regular.widthOfTextAtSize(hashLabel, 8), y: PAGE_H - 48, size: 8, font: fonts.regular, color: GREY });
   w.y = PAGE_H - 64 - 24;
+  w.text('Text rendering: unsupported characters appear as [U+XXXX] code points. Original UTF-8 text is preserved in the attached snapshot.json.', {size:8,color:GREY});
+  w.space(4);
+  if (reportType === 'case' && isAnalyst(generator)) {
+    w.text('Analyst scope: assigned evidence only. Custody and notes are limited to those evidence items. Case-wide notes and collection checklist are omitted.', {size:9,color:GREY});
+    w.space(4);
+  }
 
   // Case information
   if (caseRow) {
@@ -340,7 +298,10 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
 
   // Collection checklist (S9, ISO 27037 phases) - case reports only
   if (reportType === 'case') {
-    if (!checklist || !Array.isArray(checklist.items) || checklist.items.length === 0) {
+    if (isAnalyst(generator)) {
+      w.heading('Collection checklist');
+      w.text('Case-wide checklist omitted from this Analyst snapshot.', { color: GREY });
+    } else if (!checklist || !Array.isArray(checklist.items) || checklist.items.length === 0) {
       w.heading('Collection checklist');
       w.text('No collection checklist recorded for this case.', { color: GREY });
     } else {
@@ -383,14 +344,16 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
   w.rule();
 
   // Integrity + signature
-  w.heading('Report integrity');
-  w.text('Report SHA-256', { size: 10, font: 'bold', gap: 2 });
+  w.heading('Snapshot digest and PDF status');
+  w.text('Snapshot SHA-256', { size: 10, font: 'bold', gap: 2 });
   w.text(reportHash, { size: 9, color: GREY });
   w.space(2);
-  w.text('This hash is computed over the canonical record set printed in this report (case, evidence hashes, custody entries, collection checklist and notes, with the generation timestamp). Recomputing it from the system records verifies that this report has not been altered.', { size: 8.5, color: GREY });
+  w.text('SHA-256 of the exact UTF-8 snapshot.json attachment, including generation time. Extract that attachment and hash its bytes to reproduce this digest. It identifies the attached snapshot, not the PDF bytes or the truth of source records. Changing PDF display text is not detected by this snapshot digest.', { size: 8.5, color: GREY });
   w.space(10);
 
-  w.heading('Signature');
+  w.text('PDF-byte integrity: not verified by this digest. Digital signature: UNSIGNED. The manual signing line below is not a cryptographic signature.', {size:8.5,color:GREY});
+  w.ensure(125);
+  w.heading('Generator and manual signing');
   w.kv('Generated by', `${generator.name}${generator.role ? ` - ${generator.role.replace(/_/g, ' ')}` : ''}`);
   w.kv('Generator ID', String(generator.id));
   w.space(16);
@@ -402,9 +365,9 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
 
   // Footers on every page
   const pages = doc.getPages();
-  const caseLabel = caseRow ? `Case ${caseRow.case_number || caseRow.id}` : 'Evidence report';
+  const caseLabel = caseRow ? `Case ID ${caseRow.id}` : 'Evidence report';
   pages.forEach((p, i) => {
-    const footer = `EVID-DGC ${caseLabel} - report hash ${reportHash.slice(0, 16)}... - page ${i + 1} of ${pages.length}`;
+    const footer = `EVID-DGC ${caseLabel} - snapshot ${reportHash.slice(0, 16)}... - page ${i + 1} of ${pages.length}`;
     p.drawLine({ start: { x: MARGIN, y: 48 }, end: { x: PAGE_W - MARGIN, y: 48 }, thickness: 0.5, color: rgb(0.85, 0.85, 0.87) });
     p.drawText(footer, { x: MARGIN, y: 36, size: 7.5, font: fonts.regular, color: LIGHT });
   });
@@ -416,27 +379,39 @@ async function buildReport({ reportType, caseRow, evidence, custody, notes, chec
 function sendPdf(res, pdfBytes, reportHash, filename) {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.setHeader('X-Report-Hash', reportHash);
+  res.setHeader('X-Report-Hash', reportHash); // Compatibility: a snapshot digest, never the PDF-byte hash.
+  res.setHeader('X-Snapshot-Hash', reportHash);
+  res.setHeader('X-Snapshot-Schema', exportPayload.VERSION);
   res.send(Buffer.from(pdfBytes));
+}
+
+function strictReportId(value) {
+  if (typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id <= 2147483647 ? id : null;
 }
 
 // GET /api/cases/:id/report.pdf
 const getCaseReportPdf = async (req, res) => {
   try {
-    const cid = parseInt(req.params.id, 10);
-    if (isNaN(cid)) return res.status(400).json({ error: 'Invalid case id' });
-    if (!(await canAccessCase(req.user, cid))) {
+    const cid = strictReportId(req.params.id);
+    if (!cid) return res.status(400).json({ error: 'Invalid case id' });
+    const analyst = isAnalyst(req.user);
+    if (!(analyst ? await hasAssignment(req.user, { case_id: cid }) : await canAccessCase(req.user, cid))) {
       return res.status(403).json({ error: 'You do not have access to this case' });
     }
     const caseRow = await loadCaseOr404(res, cid);
     if (!caseRow) return;
-    const [evidence, custody, notes, checklist, generator] = await Promise.all([
-      loadEvidenceForCase(cid),
+    const [evidence, allCustody, allNotes, checklist, generator] = await Promise.all([
+      loadEvidenceForCase(cid, analyst ? req.user : null),
       loadCustody({ caseId: cid }),
       loadNotes(cid, null),
-      loadChecklist(cid),
+      analyst ? Promise.resolve(null) : loadChecklist(cid),
       loadGenerator(req.user),
     ]);
+    const allowed = new Set(evidence.map(e => String(e.id)));
+    const custody = analyst ? allCustody.filter(c => c.evidence_id != null && allowed.has(String(c.evidence_id))) : allCustody;
+    const notes = analyst ? allNotes.filter(n => n.evidence_id != null && allowed.has(String(n.evidence_id))) : allNotes;
     const generatedAt = new Date().toISOString();
     const { pdfBytes, reportHash } = await buildReport({
       reportType: 'case', caseRow, evidence, custody, notes, checklist, generator, generatedAt,
@@ -456,11 +431,14 @@ const getCaseReportPdf = async (req, res) => {
 // GET /api/evidence/:id/report.pdf
 const getEvidenceReportPdf = async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return res.status(400).json({ error: 'Invalid evidence id' });
+    const id = strictReportId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid evidence id' });
+    const analyst = isAnalyst(req.user);
+    if (analyst && !(await hasAssignment(req.user, { evidence_id: id })))
+      return res.status(403).json({ error: 'You do not have an analysis assignment for this evidence' });
     const { data: ev, error } = await supabase.from('evidence').select('*').eq('id', id).single();
     if (error || !ev) return res.status(404).json({ error: 'Evidence not found' });
-    if (!(await canAccessEvidence(req.user, ev))) {
+    if (!analyst && !(await canAccessEvidence(req.user, ev))) {
       return res.status(403).json({ error: 'You do not have access to this evidence' });
     }
     let caseRow = null;
@@ -489,4 +467,4 @@ const getEvidenceReportPdf = async (req, res) => {
   }
 };
 
-module.exports = { getCaseReportPdf, getEvidenceReportPdf };
+module.exports = { getCaseReportPdf, getEvidenceReportPdf, buildReport, ReportWriter, safeText };

@@ -1,5 +1,5 @@
 const { supabase } = require('../config');
-const crypto = require('crypto');
+const reportPayload = require('../lib/analysisReportPayload');
 const blockchainService = require('../services/blockchain/blockchainService');
 const integratedEvidenceService = require('../services/integratedEvidenceService');
 
@@ -20,6 +20,59 @@ const integratedEvidenceService = require('../services/integratedEvidenceService
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// Reject partial parses, repeated query keys and unbounded database ranges.
+function positiveInteger(value, max = 2147483647) {
+  if (!['string', 'number'].includes(typeof value) || !/^[1-9][0-9]*$/.test(String(value))) return null;
+  const n = Number(value);
+  return Number.isSafeInteger(n) && n <= max ? n : null;
+}
+function listInputs(query, statuses, withPriority = false) {
+  const page = positiveInteger(query.page === undefined ? 1 : query.page, 1000000);
+  const limit = positiveInteger(query.limit === undefined ? 20 : query.limit, 100);
+  const status = query.status === undefined ? '' : query.status;
+  const priority = query.priority === undefined ? '' : query.priority;
+  if (!page || !limit || typeof status !== 'string' || (status && !statuses.includes(status)) ||
+      (withPriority && (typeof priority !== 'string' || (priority && !['critical','high','medium','low'].includes(priority)))) ||
+      (withPriority && query.search !== undefined && (typeof query.search !== 'string' || query.search.length > 200))) return null;
+  return {page, limit, status, priority};
+}
+
+// Never fall back to non-atomic report/task writes if deployment is incomplete.
+async function reportTransition(res, analyst, taskId, params) {
+  const { data, error } = await supabase.rpc('analyst_report_transition', {
+    p_task_id: taskId,
+    p_analyst_id: analyst.id,
+    p_wallet: analyst.wallet_address || analyst.email,
+    ...params,
+  });
+  if (error) {
+    if (['PGRST202', '42883', '42501'].includes(error.code)) {
+      res
+        .status(503)
+        .json({
+          success: false,
+          code: 'REPORT_TRANSITION_UNAVAILABLE',
+          error: 'Report transitions are not available. Contact the administrator.',
+        });
+      return null;
+    }
+    throw error;
+  }
+  if (data?.code === 'OK') return data;
+  const errors = {
+    NOT_ASSIGNED: [404, 'Task not found or not assigned to you'],
+    INVALID_INPUT: [400, 'Invalid transition input'],
+    FINALIZED: [409, 'Submitted reports and completed tasks are locked'],
+    STALE_REVISION: [409, 'Report changed. Reload before saving'],
+    DUPLICATE_REPORTS: [409, 'Multiple reports exist for this task. Administrator review required'],
+  };
+  const [status, message] = errors[data?.code] || [503, 'Report transition unavailable'];
+  res
+    .status(status)
+    .json({ success: false, code: data?.code || 'REPORT_TRANSITION_UNAVAILABLE', error: message });
+  return null;
+}
 
 /** Map a DB task row into a public DTO. */
 function sanitizeTask(row) {
@@ -69,6 +122,9 @@ function sanitizeReport(row) {
     case_id: row.case_id,
     status: row.status || 'draft',
     report_hash: row.report_hash || null,
+    report_hash_version: row.report_hash_version ?? reportPayload.LEGACY,
+    content_digest_check: reportPayload.verify(row),
+    revision: row.revision ?? null,
     result_summary: row.result_summary || null,
     findings: row.findings || null,
     blockchain_verified: Boolean(row.blockchain_verified),
@@ -148,122 +204,78 @@ async function logAudit(action, analyst, details) {
 // ---------------------------------------------------------------------------
 // GET /analyst/stats
 // ---------------------------------------------------------------------------
-const getStats = async (req, res) => {
+// Bounded, independent sources. A timeout is unknown, never a fabricated zero.
+async function dashboardRead(read, timeoutMs = 2500) {
+  let timer;
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    let base = supabase
-      .from('analysis_tasks')
-      .select('id, evidence_id, case_id, status, priority, progress, assigned_at, started_at, completed_at', {
-        count: 'exact',
-      });
-    base = base.or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
-    const { data: tasks, count, error } = await base;
-    if (error) throw error;
-
-    const rows = tasks || [];
-    const pending = rows.filter((t) => t.status === 'pending');
-    const inProgress = rows.filter((t) => t.status === 'in_progress');
-    const completed = rows.filter((t) => t.status === 'completed');
-    const critical = rows.filter((t) => t.priority === 'critical' && t.status !== 'completed');
-
-    let avgMinutes = null;
-    if (completed.length > 0) {
-      const durations = completed
-        .map((t) =>
-          t.started_at && t.completed_at
-            ? (new Date(t.completed_at).getTime() - new Date(t.started_at).getTime()) / 60000
-            : null,
-        )
-        .filter((d) => d !== null && d >= 0);
-      if (durations.length > 0) {
-        avgMinutes = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
-      }
-    }
-
-    // Evidence verified (blockchain) among assigned evidence.
-    let verifiedEvidence = 0;
-    let integrityScore = null;
-    const evIds = [...new Set(rows.map((t) => t.evidence_id).filter(Boolean))];
-    if (evIds.length > 0) {
-      const { data: evRows, error: evError } = (await supabase
-        .from('evidence')
-        .select('id, blockchain_verified')
-        .in('id', evIds)) || {};
-      if (!evError) {
-        verifiedEvidence = (evRows || []).filter((e) => e.blockchain_verified).length;
-        integrityScore = Math.round(((verifiedEvidence / evRows.length) * 100));
-      }
-    }
-
-    // Blockchain sync status (read-only probe, never blocks the dashboard).
-    let blockchainSync = { state: 'unknown', block: null, network: null };
-    try {
+    return await Promise.race([
+      Promise.resolve().then(read).then(result => {
+        if (result?.error) throw result.error;
+        return {state:'ready',result};
+      }),
+      new Promise(resolve => { timer=setTimeout(()=>resolve({state:'unavailable'}),timeoutMs); })
+    ]);
+  } catch (_) { return {state:'unavailable'}; }
+  finally { clearTimeout(timer); }
+}
+const getStats = async (req, res) => {
+  const analyst=req.user;
+  const walletMatch=analyst.wallet_address || analyst.email;
+  const checkedAt=new Date().toISOString();
+  const [taskRead,labRead,activityRead,chainRead] = await Promise.all([
+    dashboardRead(()=>supabase.from('analysis_tasks')
+      .select('id,evidence_id,case_id,status,priority,progress,assigned_at,started_at,completed_at',{count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`).limit(10000)),
+    dashboardRead(()=>supabase.from('lab_equipment').select('name,category,status,detail,version').order('sort_order',{ascending:true})),
+    dashboardRead(()=>supabase.from('activity_logs').select('action,details,timestamp')
+      .eq('user_id',analyst.id).order('timestamp',{ascending:false}).limit(10)),
+    dashboardRead(async()=>{
       await blockchainService.initialize();
-      blockchainSync = {
-        state: blockchainService.isInitialized() ? 'synced' : 'unavailable',
-        block: await blockchainService.getBlockNumber(),
-        network: (blockchainService.getNetworkInfo && blockchainService.getNetworkInfo().name) || null,
-      };
-    } catch (blockchainError) {
-      blockchainSync.state = 'unavailable';
-    }
-
-    // Lab equipment status.
-    const { data: lab, error: labError } = (await supabase
-      .from('lab_equipment')
-      .select('name, category, status, detail, version')
-      .order('sort_order', { ascending: true })) || {};
-    if (labError) throw labError;
-
-    // Recent analyst activity (evidence-scoped, from the audit trail).
-    const { data: activity, error: actError } = (await supabase
-      .from('activity_logs')
-      .select('action, details, timestamp')
-      .eq('user_id', analyst.id)
-      .order('timestamp', { ascending: false })
-      .limit(10)) || {};
-    if (actError) throw actError;
-
-    res.json({
-      success: true,
-      data: {
-        assigned_cases: new Set(rows.map((t) => t.case_id).filter(Boolean)).size,
-        assigned_evidence: evIds.length,
-        pending: pending.length,
-        in_progress: inProgress.length,
-        completed: completed.length,
-        critical_priority: critical.length,
-        awaiting_review: rows.filter((t) => t.status === 'in_progress' && t.progress >= 100).length,
-        average_processing_minutes: avgMinutes,
-        evidence_verified: verifiedEvidence,
-        integrity_score: integrityScore,
-        blockchain: blockchainSync,
-        lab_equipment: (lab || []).map((l) => ({
-          name: l.name,
-          category: l.category,
-          status: l.status,
-          detail: l.detail,
-          version: l.version,
-        })),
-        recent_activity: (activity || []).map((a) => ({
-          action: a.action,
-          details: a.details,
-          timestamp: a.timestamp,
-        })),
-        analyst: {
-          id: analyst.id,
-          name: analyst.full_name,
-          email: analyst.email,
-        },
-        generated_at: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error('Analyst stats error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load analysis statistics' });
-  }
+      if (!blockchainService.isInitialized()) throw new Error('Unavailable');
+      const block=await blockchainService.getBlockNumber();
+      if (!Number.isSafeInteger(block) || block < 0) throw new Error('Invalid block');
+      return {block,network:blockchainService.getNetworkInfo?.().name || null};
+    })
+  ]);
+  const rows=Array.isArray(taskRead.result?.data) ? taskRead.result.data : [];
+  // Supabase row caps must not turn truncated aggregates into precise totals.
+  const completeTasks=taskRead.state==='ready' && Array.isArray(taskRead.result?.data) && taskRead.result.count===rows.length;
+  const evIds=[...new Set(rows.map(t=>t.evidence_id).filter(Boolean))];
+  const evidenceRead = completeTasks && evIds.length
+    ? await dashboardRead(()=>supabase.from('evidence').select('id,blockchain_verified').in('id',evIds).limit(10000))
+    : {state:completeTasks ? 'ready':'unavailable',result:{data:[]}};
+  const evRows=Array.isArray(evidenceRead.result?.data) ? evidenceRead.result.data : [];
+  const completeEvidence=completeTasks && evidenceRead.state==='ready' &&
+    evRows.length===evIds.length && new Set(evRows.map(e=>e.id)).size===evIds.length &&
+    evRows.every(e=>evIds.includes(e.id) && typeof e.blockchain_verified==='boolean');
+  const verified=completeEvidence ? evRows.filter(e=>e.blockchain_verified).length : null;
+  const completed=rows.filter(t=>t.status==='completed');
+  const durations=completed.map(t=>t.started_at && t.completed_at ?
+    (new Date(t.completed_at)-new Date(t.started_at))/60000 : NaN).filter(n=>Number.isFinite(n)&&n>=0);
+  const states={
+    tasks:{state:completeTasks?'ready':taskRead.state==='ready'?'partial':'unavailable',checked_at:checkedAt,source:'assigned analysis_tasks'},
+    evidence:{state:completeEvidence?'ready':evidenceRead.state==='ready'?'partial':'unavailable',checked_at:checkedAt,source:'stored blockchain_verified flags',fresh_integrity_check:false},
+    equipment:{state:labRead.state,checked_at:checkedAt},activity:{state:activityRead.state,checked_at:checkedAt},
+    blockchain:{state:chainRead.state,checked_at:checkedAt,source:'read-only RPC head, not evidence verification'}
+  };
+  res.json({success:true,data:{
+    assigned_cases:completeTasks ? new Set(rows.map(t=>t.case_id).filter(Boolean)).size : null,
+    assigned_evidence:completeTasks ? evIds.length : null,
+    pending:completeTasks ? rows.filter(t=>t.status==='pending').length : null,
+    in_progress:completeTasks ? rows.filter(t=>t.status==='in_progress').length : null,
+    completed:completeTasks ? completed.length : null,
+    critical_priority:completeTasks ? rows.filter(t=>t.priority==='critical'&&t.status!=='completed').length : null,
+    awaiting_review:completeTasks ? rows.filter(t=>t.status==='in_progress'&&t.progress>=100).length : null,
+    average_processing_minutes:completeTasks&&durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : null,
+    evidence_verified:verified,
+    integrity_score:completeEvidence&&evRows.length ? Math.round(verified/evRows.length*100) : null,
+    blockchain:{state:chainRead.state==='ready'?'synced':'unavailable',block:chainRead.result?.block ?? null,
+      network:chainRead.result?.network ?? null,checked_at:checkedAt,meaning:'Read-only RPC head, not evidence integrity'},
+    lab_equipment:labRead.state==='ready' ? (labRead.result.data || []).map(l=>({name:l.name,category:l.category,status:l.status,detail:l.detail,version:l.version})) : null,
+    recent_activity:activityRead.state==='ready' ? (activityRead.result.data || []).map(e=>({action:e.action,details:e.details,timestamp:e.timestamp})) : null,
+    sources:states,partial:Object.values(states).some(x=>x.state!=='ready'),
+    analyst:{id:analyst.id,name:analyst.full_name,email:analyst.email},generated_at:new Date().toISOString()
+  }});
 };
 
 // ---------------------------------------------------------------------------
@@ -273,10 +285,11 @@ const getQueue = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const { status, priority, search, page = 1, limit = 20 } = req.query;
+    const { status, priority, search } = req.query;
 
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const inputs = listInputs(req.query, ['pending','in_progress','completed','archived'], true);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid queue filters or pagination.'});
+    const {page:pageNum, limit:limitNum} = inputs;
     const offset = (pageNum - 1) * limitNum;
 
     let query = supabase
@@ -292,6 +305,7 @@ const getQueue = async (req, res) => {
 
     let data = null;
     let error = null;
+    let matchedEvidenceIds = null;
     if (search) {
       const safe = String(search).replace(/[%_.*(),'"]/g, '').trim();
       if (safe) {
@@ -306,6 +320,7 @@ const getQueue = async (req, res) => {
         if (ids.length === 0) {
           return res.json({ success: true, data: [], pagination: { page: pageNum, limit: limitNum, total: 0, pages: 0 } });
         }
+        matchedEvidenceIds = ids;
         query = query.in('evidence_id', ids);
       }
     }
@@ -314,10 +329,13 @@ const getQueue = async (req, res) => {
     ({ data, error } = await query);
     if (error) throw error;
 
-    const { count: total, error: countError } = (await supabase
-      .from('analysis_tasks')
-      .select('id', { count: 'exact', head: true })
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
+    let countQuery = supabase.from('analysis_tasks')
+      .select('id, evidence!inner(id)', { count: 'exact', head: true })
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
+    if (status) countQuery = countQuery.eq('status', status);
+    if (priority) countQuery = countQuery.eq('priority', priority);
+    if (matchedEvidenceIds) countQuery = countQuery.in('evidence_id', matchedEvidenceIds);
+    const { count: total, error: countError } = (await countQuery) || {};
     if (countError) throw countError;
 
     // Case numbers for context.
@@ -355,8 +373,8 @@ const getTaskDetail = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
@@ -416,46 +434,37 @@ const startAnalysis = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
-    const { priority = 'medium', estimated_time_minutes = null, caseId = null } = req.body || {};
+    const { priority = 'medium', estimated_time_minutes = null } = req.body || {};
 
-    // Task may already exist (resume path).
-    const { data: existing, error: existingError } = (await supabase
+    if (
+      !['critical', 'high', 'medium', 'low'].includes(priority) ||
+      (estimated_time_minutes !== null && !positiveInteger(estimated_time_minutes, 525600))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid analysis options' });
+    }
+    // Resolve the assigned task, but let the locked transaction decide finality.
+    const { data: existing, error: existingError } = await supabase
       .from('analysis_tasks')
-      .select('id, status')
+      .select('id')
       .eq('evidence_id', evidenceId)
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
       .order('created_at', { ascending: false })
-      .limit(1)) || {};
+      .limit(1);
     if (existingError) throw existingError;
-
-    let taskId;
-    if (existing && existing.length > 0) {
-      taskId = existing[0].id;
-      const { error: updateError } = (await supabase
-        .from('analysis_tasks')
-        .update({
-          // Starting analysis always moves the task to in_progress; a pending
-          // task gets its started_at stamp, a reopened completed task keeps its
-          // original start time.
-          status: 'in_progress',
-          started_at: existing[0].status === 'pending' ? new Date().toISOString() : undefined,
-          priority,
-          estimated_time_minutes,
-        })
-        .eq('id', taskId)) || {};
-      if (updateError) throw updateError;
-    } else {
-      // Enforcement: analysis may only be started on evidence the analyst has
-      // a pre-existing assignment (analysis_tasks row) for. Creating a task
-      // here for arbitrary evidence would bypass the assignment contract that
-      // every other analyst endpoint enforces ('Evidence not assigned to you').
+    if (!existing?.length)
       return res.status(403).json({ success: false, error: 'Evidence not assigned to you' });
-    }
+    const taskId = existing[0].id;
+    const result = await reportTransition(res, analyst, taskId, {
+      p_operation: 'start',
+      p_priority: priority,
+      p_estimated: estimated_time_minutes,
+    });
+    if (!result) return;
 
     await logAudit('analysis_started', analyst, { task_id: taskId, evidence_id: evidenceId });
 
@@ -472,33 +481,27 @@ const startAnalysis = async (req, res) => {
 const updateTaskProgress = async (req, res) => {
   try {
     const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
-    const progress = Math.min(Math.max(parseInt(req.body?.progress, 10) || 0, 0), 100);
-    const notes = typeof req.body?.notes === 'string' ? req.body.notes.slice(0, 5000) : undefined;
-
-    const { data: rows, error } = (await supabase
-      .from('analysis_tasks')
-      .select('id, status')
-      .eq('id', taskId)
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
-      .limit(1)) || {};
-    if (error) throw error;
-    if (!rows || rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Task not found or not assigned to you' });
+    const progress = req.body?.progress;
+    const notes = req.body?.notes;
+    if (
+      !Number.isInteger(progress) ||
+      progress < 0 ||
+      progress > 100 ||
+      (notes !== undefined && (typeof notes !== 'string' || notes.length > 5000))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid progress or notes' });
     }
-
-    const patch = { progress, status: progress >= 100 ? 'in_progress' : rows[0].status };
-    if (notes !== undefined) patch.notes = notes;
-    const { error: updateError } = (await supabase
-      .from('analysis_tasks')
-      .update(patch)
-      .eq('id', taskId)) || {};
-    if (updateError) throw updateError;
+    const patch = await reportTransition(res, analyst, taskId, {
+      p_operation: 'progress',
+      p_progress: progress,
+      p_notes: notes ?? null,
+    });
+    if (!patch) return;
 
     await logAudit('analysis_progress', analyst, { task_id: taskId, progress });
 
@@ -515,97 +518,62 @@ const updateTaskProgress = async (req, res) => {
 const saveReport = async (req, res) => {
   try {
     const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-    const taskId = parseInt(req.params.id, 10);
-    if (isNaN(taskId)) {
+    const taskId = positiveInteger(req.params.id);
+    if (!taskId) {
       return res.status(400).json({ success: false, error: 'Invalid task ID' });
     }
 
-    const { data: taskRows, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('id, evidence_id, case_id, status, requested_by, analysis_type')
-      .eq('id', taskId)
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)
-      .limit(1)) || {};
-    if (taskError) throw taskError;
-    if (!taskRows || taskRows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Task not found or not assigned to you' });
+    const resultSummary = req.body?.result_summary ?? null;
+    const findings = req.body?.findings ?? null;
+    const submit = req.body?.submit ?? false;
+    const revision = req.body?.expected_revision;
+    if (
+      (resultSummary !== null &&
+        (typeof resultSummary !== 'string' || resultSummary.length > 10000)) ||
+      (findings !== null && (typeof findings !== 'string' || findings.length > 50000)) ||
+      typeof submit !== 'boolean' ||
+      !(resultSummary?.trim() || findings?.trim()) ||
+      (revision !== undefined &&
+        (!Number.isInteger(revision) || revision < 0 || revision > 2147483646))
+    ) {
+      return res.status(400).json({ success: false, error: 'Invalid report content or revision' });
     }
-    const task = taskRows[0];
-
-    const resultSummary = typeof req.body?.result_summary === 'string' ? req.body.result_summary.slice(0, 10000) : null;
-    const findings = typeof req.body?.findings === 'string' ? req.body.findings.slice(0, 50000) : null;
-    const submit = req.body?.submit === true;
-    if (!resultSummary && !findings) {
-      return res.status(400).json({ success: false, error: 'Report requires a result summary or findings' });
-    }
-
-    // Report hash anchors the report content (SHA-256 of summary + findings).
-    const reportHash = crypto
-      .createHash('sha256')
-      .update(`${resultSummary || ''}|${findings || ''}`)
-      .digest('hex');
-
-    const status = submit ? 'submitted' : 'draft';
-    const nowIso = new Date().toISOString();
-
-    const { data: existing, error: existingError } = (await supabase
-      .from('analysis_reports')
-      .select('id')
-      .eq('task_id', taskId)
-      .limit(1)) || {};
-    if (existingError) throw existingError;
-
-    let reportId;
-    if (existing && existing.length > 0) {
-      reportId = existing[0].id;
-      const { error: updateError } = (await supabase
-        .from('analysis_reports')
-        .update({
-          status,
-          report_hash: reportHash,
-          result_summary: resultSummary,
-          findings,
-          updated_at: nowIso,
-          submitted_at: submit ? nowIso : undefined,
-        })
-        .eq('id', reportId)) || {};
-      if (updateError) throw updateError;
-    } else {
-      const { data: newReport, error: insertError } = (await supabase
-        .from('analysis_reports')
-        .insert({
+    const reportHash = reportPayload.digest(resultSummary, findings);
+    const result = await reportTransition(res, analyst, taskId, {
+      p_operation: 'save',
+      p_summary: resultSummary,
+      p_findings: findings,
+      p_report_hash: reportHash,
+      p_hash_version: reportPayload.CURRENT,
+      p_submit: submit,
+      p_expected_revision: revision ?? null,
+    });
+    if (!result) return;
+    const savedHash = result.report_hash;
+    const hashVersion = result.report_hash_version;
+    const reportId = result.report_id;
+    const status = result.status;
+    const task = result;
+    // Exact repeated submissions return the saved result without another audit
+    // completion or notification. The function has already checked all bytes.
+    if (!result.did_submit && submit)
+      return res.json({
+        success: true,
+        message: 'Report already submitted',
+        data: {
+          report_id: reportId,
           task_id: taskId,
-          evidence_id: task.evidence_id,
-          case_id: task.case_id,
-          analyst_id: analyst.id,
-          analyst_wallet: analyst.wallet_address || analyst.email,
+          report_hash: savedHash,
           status,
-          report_hash: reportHash,
-          result_summary: resultSummary,
-          findings,
-          submitted_at: submit ? nowIso : null,
-        })
-        .select('id')
-        .single()) || {};
-      if (insertError) throw insertError;
-      reportId = newReport.id;
-    }
-
-    // Submitting a report completes the task.
-    const taskPatch = submit
-      ? { status: 'completed', progress: 100, completed_at: nowIso }
-      : { status: 'in_progress', progress: Math.max(task.status === 'pending' ? 10 : 50, 50) };
-    const { error: taskUpdateError } = (await supabase
-      .from('analysis_tasks')
-      .update(taskPatch)
-      .eq('id', taskId)) || {};
-    if (taskUpdateError) throw taskUpdateError;
+          revision: result.revision,
+        report_hash_version: hashVersion,
+        },
+      });
 
     await logAudit(submit ? 'report_submitted' : 'report_saved', analyst, {
       report_id: reportId,
       task_id: taskId,
-      report_hash: reportHash.slice(0, 16) + '…',
+      report_hash: savedHash.slice(0, 16) + '…',
       submit,
     });
 
@@ -619,7 +587,12 @@ const saveReport = async (req, res) => {
           'Analysis complete',
           `${analystName} submitted the ${task.analysis_type || 'forensic'} analysis report for evidence #${task.evidence_id}. The report is ready to review.`,
           'analysis_complete',
-          { task_id: taskId, report_id: reportId, evidence_id: task.evidence_id, case_id: task.case_id }
+          {
+            task_id: taskId,
+            report_id: reportId,
+            evidence_id: task.evidence_id,
+            case_id: task.case_id,
+          },
         );
       } catch (e) {
         console.error('analysis complete notification failed:', e.message);
@@ -629,7 +602,14 @@ const saveReport = async (req, res) => {
     res.json({
       success: true,
       message: submit ? 'Report submitted successfully' : 'Report draft saved',
-      data: { report_id: reportId, task_id: taskId, report_hash: reportHash, status },
+      data: {
+        report_id: reportId,
+        task_id: taskId,
+        report_hash: savedHash,
+        status,
+        revision: result.revision,
+        report_hash_version: hashVersion,
+      },
     });
   } catch (error) {
     console.error('Analyst report error:', error);
@@ -644,16 +624,17 @@ const getReports = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status } = req.query;
 
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const inputs = listInputs(req.query, ['draft','submitted','approved','rejected']);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid report filters or pagination.'});
+    const {page:pageNum, limit:limitNum} = inputs;
     const offset = (pageNum - 1) * limitNum;
 
     let query = supabase
       .from('analysis_reports')
       .select(
-        `id, task_id, evidence_id, case_id, status, report_hash, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
+        `id, task_id, evidence_id, case_id, status, report_hash, report_hash_version, revision, result_summary, findings, blockchain_verified, created_at, updated_at, submitted_at,
          evidence!inner(id, name, file_type, hash)`,
       )
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
@@ -676,10 +657,11 @@ const getReports = async (req, res) => {
       }
     }
 
-    const { count: total, error: countError } = (await supabase
-      .from('analysis_reports')
-      .select('id', { count: 'exact', head: true })
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
+    let countQuery = supabase.from('analysis_reports')
+      .select('id, evidence!inner(id)', { count: 'exact', head: true })
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`);
+    if (status) countQuery = countQuery.eq('status', status);
+    const { count: total, error: countError } = (await countQuery) || {};
     if (countError) throw countError;
 
     res.json({
@@ -818,95 +800,67 @@ const searchAll = async (req, res) => {
 // ---------------------------------------------------------------------------
 // GET /analyst/evidence  (evidence inventory with analyst involvement)
 // ---------------------------------------------------------------------------
+function inventoryInputs(query = {}) {
+  const paging=listInputs(query,[]);
+  if (!paging || (query.search!==undefined && (typeof query.search!=='string'||query.search.length>200)) ||
+      (query.file_type!==undefined && (typeof query.file_type!=='string'||query.file_type.length>100)) ||
+      (query.case_id!==undefined && !positiveInteger(query.case_id))) return null;
+  return {...paging,search:query.search?.replace(/[%_.*(),'"\\]/g,'').trim(),file_type:query.file_type,
+    case_id:query.case_id===undefined ? null:positiveInteger(query.case_id)};
+}
 const getAnalystEvidence = async (req, res) => {
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    const { data: tasks, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('evidence_id, case_id, status, priority')
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
-    if (taskError) throw taskError;
-
-    const evIds = [...new Set((tasks || []).map((t) => t.evidence_id).filter(Boolean))];
-    if (evIds.length === 0) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const { data: evidence, error } = (await supabase
-      .from('evidence')
-      .select('id, name, file_type, hash, ipfs_cid, blockchain_tx_hash, blockchain_verified, timestamp, case_id, file_size, description')
-      .in('id', evIds)
-      .order('timestamp', { ascending: false })) || {};
+    const inputs=inventoryInputs(req.query);
+    if (!inputs) return res.status(400).json({success:false,error:'Invalid inventory filters or pagination'});
+    const analyst=req.user,wallet=analyst.wallet_address||analyst.email;
+    // Inner embedded relation filters parent rows before count/range. No full
+    // assigned-ID materialization and no duplicate evidence rows per task.
+    let q=supabase.from('evidence').select(
+      'id,name,file_type,hash,ipfs_cid,blockchain_tx_hash,blockchain_verified,timestamp,case_id,file_size,description,case:cases(id,case_number),analysis_tasks!inner(id,status,assigned_at)',
+      {count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${wallet}`,{referencedTable:'analysis_tasks'});
+    if (inputs.search) q=q.or(`name.ilike.%${inputs.search}%,hash.ilike.%${inputs.search}%,file_type.ilike.%${inputs.search}%`);
+    if (inputs.file_type) q=q.eq('file_type',inputs.file_type);
+    if (inputs.case_id) q=q.eq('case_id',inputs.case_id);
+    q=q.order('timestamp',{ascending:false,nullsFirst:false}).order('id',{ascending:false})
+      .order('assigned_at',{referencedTable:'analysis_tasks',ascending:false,nullsFirst:false})
+      .order('id',{referencedTable:'analysis_tasks',ascending:false}).limit(1,{referencedTable:'analysis_tasks'})
+      .range((inputs.page-1)*inputs.limit,inputs.page*inputs.limit-1);
+    const {data,count,error}=await q;
     if (error) throw error;
-
-    const caseIds = [...new Set((evidence || []).map((e) => e.case_id).filter(Boolean))];
-    const caseMap = {};
-    if (caseIds.length > 0) {
-      const { data: caseRows, error: caseError } = (await supabase
-        .from('cases')
-        .select('id, case_number')
-        .in('id', caseIds)) || {};
-      if (!caseError) {
-        for (const c of caseRows || []) caseMap[c.id] = c.case_number;
-      }
-    }
-
-    res.json({
-      success: true,
-      data: (evidence || []).map((e) => ({
-        id: e.id,
-        name: e.name || `Evidence ${e.id}`,
-        file_type: e.file_type,
-        hash: e.hash,
-        ipfs_cid: e.ipfs_cid,
-        blockchain_tx_hash: e.blockchain_tx_hash,
-        blockchain_verified: Boolean(e.blockchain_verified),
-        timestamp: e.timestamp,
-        case_id: e.case_id,
-        case_number: e.case_id ? caseMap[e.case_id] || null : null,
-        file_size: e.file_size,
-        description: e.description,
-        task_status: (tasks || []).find((t) => t.evidence_id === e.id)?.status || 'none',
-      })),
-    });
+    if (!Number.isInteger(count)||count<0) throw new Error('Missing inventory count');
+    res.json({success:true,data:(data||[]).map(e=>({
+      id:e.id,name:e.name||`Evidence ${e.id}`,file_type:e.file_type,hash:e.hash,ipfs_cid:e.ipfs_cid,
+      blockchain_tx_hash:e.blockchain_tx_hash,blockchain_verified:Boolean(e.blockchain_verified),timestamp:e.timestamp,
+      case_id:e.case_id,case_number:e.case?.case_number||null,file_size:e.file_size,description:e.description,
+      task_status:e.analysis_tasks?.[0]?.status||'none',task_id:e.analysis_tasks?.[0]?.id||null
+    })),pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
   } catch (error) {
-    console.error('Analyst evidence error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load evidence inventory' });
+    console.error('Analyst evidence error:',error);
+    res.status(500).json({success:false,error:'Failed to load evidence inventory'});
   }
 };
 
-// ---------------------------------------------------------------------------
-// GET /analyst/cases
-// ---------------------------------------------------------------------------
-const getAnalystCases = async (req, res) => {
+// GET /analyst/cases: one parent row per assigned case, paged in the database.
+const getAnalystCases = async (req,res) => {
   try {
-    const analyst = req.user;
-    const walletMatch = analyst.wallet_address || analyst.email;
-
-    const { data: tasks, error: taskError } = (await supabase
-      .from('analysis_tasks')
-      .select('case_id, status')
-      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${walletMatch}`)) || {};
-    if (taskError) throw taskError;
-
-    const caseIds = [...new Set((tasks || []).map((t) => t.case_id).filter(Boolean))];
-    if (caseIds.length === 0) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const { data: cases, error } = (await supabase
-      .from('cases')
-      .select('id, case_number, title, status, created_date, priority_level, jurisdiction')
-      .in('id', caseIds)
-      .order('created_date', { ascending: false })) || {};
-    if (error) throw error;
-
-    res.json({ success: true, data: cases || [] });
-  } catch (error) {
-    console.error('Analyst cases error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load cases' });
+    const inputs=inventoryInputs(req.query);
+    if (!inputs || req.query?.file_type!==undefined || req.query?.case_id!==undefined)
+      return res.status(400).json({success:false,error:'Invalid case filters or pagination'});
+    const analyst=req.user,wallet=analyst.wallet_address||analyst.email;
+    let q=supabase.from('cases').select('id,case_number,title,status,created_date,priority_level,jurisdiction,analysis_tasks!inner(id)',{count:'exact'})
+      .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${wallet}`,{referencedTable:'analysis_tasks'});
+    if (inputs.search) q=q.or(`case_number.ilike.%${inputs.search}%,title.ilike.%${inputs.search}%`);
+    const {data,count,error}=await q.order('created_date',{ascending:false,nullsFirst:false}).order('id',{ascending:false})
+      .limit(1,{referencedTable:'analysis_tasks'}).range((inputs.page-1)*inputs.limit,inputs.page*inputs.limit-1);
+    if(error) throw error;
+    if(!Number.isInteger(count)||count<0) throw new Error('Missing case count');
+    res.json({success:true,data:(data||[]).map(c=>({id:c.id,case_number:c.case_number,title:c.title,status:c.status,
+      created_date:c.created_date,priority_level:c.priority_level,jurisdiction:c.jurisdiction})),
+      pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
+  } catch(error) {
+    console.error('Analyst cases error:',error);
+    res.status(500).json({success:false,error:'Failed to load cases'});
   }
 };
 
@@ -917,8 +871,8 @@ const verifyEvidenceIntegrity = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
@@ -953,8 +907,8 @@ const getEvidenceBlockchain = async (req, res) => {
   try {
     const analyst = req.user;
     const walletMatch = analyst.wallet_address || analyst.email;
-    const evidenceId = parseInt(req.params.id, 10);
-    if (isNaN(evidenceId)) {
+    const evidenceId = positiveInteger(req.params.id);
+    if (!evidenceId) {
       return res.status(400).json({ success: false, error: 'Invalid evidence ID' });
     }
 
