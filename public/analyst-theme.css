@@ -510,6 +510,9 @@
   white-space: nowrap;
 }
 
+/* The hidden attribute must beat the display above (report editor dirty badge). */
+.evid-badge[hidden] { display: none; }
+
 .badge-status-pending { background: #fef3c7; color: #92400e; }
 .badge-status-in_progress { background: #e0e7ff; color: #3730a3; }
 .badge-status-completed { background: #d1fae5; color: #065f46; }
