@@ -1,6 +1,6 @@
 # Local project quality checkpoint: 13 November 2026
 
-Branch: review/local-project-quality-20261113, based on unpublished Hash recheck 42d168b. Local only. No push, PR, login/auth change, Network tool work, Supabase access, migration or rollout.
+Branch: review/local-project-quality-20261113, rebased onto merged main `041b0ef`, including the unpublished Hash safety and vendor-integrity commits. Local only. No push, PR, login/auth change, Network tool work, Supabase access, migration or rollout.
 
 ## Upload/recovery fixes
 
@@ -19,13 +19,13 @@ Upload subset now has 31 tests, all passing. Files and owners are synthetic; sto
 
 Added maintained scripts/test-nonnetwork-unit.cjs with explicit exclusions and a source-token guard against newly mixed Network suites. Added scripts/test-nonnetwork-desktop.cjs so no temporary source filtering is needed. It runs real browser examples on localhost with synthetic identity/files and no successful live API responses. The Hash UI runner now accepts CHROME_PATH. No dependency/lock change.
 
-Final local unit run: 35 suites, 299 tests, all passing. Final desktop run: 44 real example workflows plus extended matrices, passing. These counts describe this branch/run, not production readiness. Original unfiltered tests include excluded Network/mixed suites and were not run under this assignment.
+Final local unit run: 43 suites, 371 tests, all passing. Final desktop run: 44 real example workflows plus extended matrices, passing. These counts describe this branch/run, not production readiness. Original unfiltered tests include excluded Network/mixed suites and were not run under this assignment.
 
 CI is a proposal under docs/qa only, not an active workflow. Immutable action SHAs, browser install, ignored native install scripts and artifact retention need review before activation. No hosted CI run is claimed.
 
 ## README
 
-Removed stale CI badge and old claims of only SHA-256 working, three suites/17 tests and no MFA code. Grounded capabilities in source paths and bounded tests. Separated merged main, unpublished local work and unmerged backend PR #385. Rendered and visually inspected top/test sections. No assets changed. Existing authentication code is not a proof of safe authentication; login work remains deferred.
+Removed stale CI badge and old claims of only SHA-256 working, three suites/17 tests and no MFA code. Grounded capabilities in source paths and bounded tests. Refreshed merged-main and unpublished-local-work distinctions: #385, #386 and #387 are merged. Rendered and visually inspected top/test sections. No assets changed. Existing authentication code is not a proof of safe authentication; login work remains deferred.
 
 ## Negative fixtures
 
@@ -33,4 +33,10 @@ Added 12 metadata tests for invalid/missing GPS, zero and boundary coordinates, 
 
 New real-browser generator makes a four-page synthetic PDF. Visible black text and white-on-dark text have no false candidates. Overpainted and fully clipped text also have no candidates: these are two confirmed detection limitations, not successes. The rendered pixels show the visible text and the blank concealed pages. Actual Office ZIP/XML fixtures reject entity declarations, malformed XML and oversized properties.
 
-These results do not close universal concealed-text detection, editable metadata authenticity, certificate trust, complete custody, native clipboard or a public positive anchored sample. PR #385 remains a separate held backend review; no merge or rollout is implied.
+These results do not close universal concealed-text detection, editable metadata authenticity, certificate trust, complete custody, native clipboard or a public positive anchored sample. The integrated branch includes merged #385/#386/#387. The held quality changes remain local; no publication or rollout is implied.
+
+## Rebased integration checkpoint
+
+Rebased cleanly onto main `041b0ef` on November 13. Fresh non-Network unit scope:43 suites/371 tests pass. Fresh desktop scope:44 examples plus extended matrices, Hash UI and generated-document negative checks pass. All nine Analyst UI fixture runners also pass after the rebase (Reports list/editor/download/safety, Dashboard, Inventory, Queue, Workspace and accessibility). No production writes or new database migration were run.
+
+Login/auth changes are out of scope and deferred. Passing local tests are not an authentication-safety claim.

@@ -28,9 +28,9 @@ Important limits include partial concealed-text coverage, synthetic/format-bound
 
 ## Branch and rollout status
 
-The separate Analyst backend A1-A8 candidate is under review in PR #385. It is not part of this main-based local quality branch and must not be described as deployed. It adds atomic lifecycle transitions/revisions, versioned report digests, bounded dashboard states, assigned inventory paging and assignment-scoped snapshot PDFs.
+Analyst backend PR #385, legacy evidence/case lookup fix #386 and Analyst UI PR #387 are merged in main at `041b0ef`. This local quality branch is rebased onto that main revision. These changes include atomic report lifecycle transitions/revisions, versioned report digests, bounded dashboard states, assigned inventory paging, assignment-scoped snapshot PDFs and paged Queue/Reports UI with report-editor safety. A read-only live dashboard check returned successful evidence/cases/stats responses; the exact Render deployment revision and a full integrated production workflow were not verified.
 
-Its rollout requires separate approval, existing-schema/duplicate-report inspection, service-role capability and combined UI/backend validation. Do not run its SQL migration or deploy its controller alone. A review PR is not permission to merge or change production. Snapshot digests identify attached JSON content, not PDF bytes; PDFs are unsigned.
+Any future rollout requires separate approval and combined UI/backend validation. Do not rerun the SQL migration or deploy controllers alone. A review PR is not permission to merge or change production. Snapshot digests identify attached JSON content, not PDF bytes; PDFs are unsigned.
 
 ## Architecture
 
@@ -74,9 +74,9 @@ CHROME_PATH=/path/to/chrome node scripts/test-hash-integrity-ui.cjs
 CHROME_PATH=/path/to/chrome SCREENSHOT_DIR=/tmp/be-results node scripts/test-nonnetwork-desktop.cjs
 ```
 
-The non-Network runner includes upload failure and concurrency regressions. The local quality checkpoint records 35 suites / 299 tests passing after the narrow upload fixes, plus 44 real browser example workflows. These are synthetic/local results, not proof of production behavior. Do not silently omit future failures to publish a green badge.
+The non-Network runner includes upload failure and concurrency regressions. The local quality checkpoint records 43 suites / 371 tests passing after rebasing onto merged main, plus 44 real browser example workflows. These are synthetic/local results, not proof of production behavior. Do not silently omit future failures to publish a green badge.
 
-The last completed non-Network contribution recheck recorded 31 suites/253 tests and 44 real local browser workflows, plus extended fixtures. Those counts describe that dated run, not every future branch state. New tests can change counts or reveal failures. The Hash clipboard handler uses a controlled OS boundary; native desktop clipboard remains unverified. No live positive anchored sample, production-data cleanliness or complete production end-to-end pass is claimed.
+An earlier non-Network contribution recheck recorded 31 suites/253 tests and 44 real local browser workflows, plus extended fixtures. Those counts describe that dated run, not every future branch state. New tests can change counts or reveal failures. The Hash clipboard handler uses a controlled OS boundary; native desktop clipboard remains unverified. No live positive anchored sample, production-data cleanliness or complete production end-to-end pass is claimed.
 
 There is currently no active test-CI workflow in `.github/workflows`; the old CI badge/link was stale. Existing workflows keep a service awake or regenerate diagrams, not run the complete regression suite. [CI proposal](docs/qa/LOCAL-CI-PROPOSAL.md) is inactive and needs review, action pinning and publication approval. Test fixtures/SQL must never be run against production. Visual artifacts must be inspected, not counted passed merely because export succeeded.
 
@@ -99,3 +99,7 @@ Some older guides/figures contain historical counts or setup assumptions. Check 
 ## License
 
 Apache-2.0, see [LICENSE](LICENSE). Contract source carries its own SPDX header.
+
+## Current verification limits
+
+Login/auth changes are out of scope and deferred. Passing local tests are not an authentication-safety claim. Report/UI fixture checks, isolated backend/database checks and a read-only live dashboard check are separate evidence, not one full browser-to-database end-to-end test.
