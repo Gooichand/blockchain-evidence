@@ -37,12 +37,16 @@ const uploadEvidence = async (req, res) => {
       const v = req.body[field];
       if (v == null || String(v).trim() === '') continue;
       if (String(v).length > max) {
-        return res.status(400).json({ success: false, error: `${field} must be ${max} characters or fewer` });
+        return res
+          .status(400)
+          .json({ success: false, error: `${field} must be ${max} characters or fewer` });
       }
       forensic[field] = String(v).trim();
     }
     if (collectionDate && isNaN(Date.parse(collectionDate))) {
-      return res.status(400).json({ success: false, error: 'collectionDate must be a valid date/time' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'collectionDate must be a valid date/time' });
     }
     let file = req.file;
     let uploadSession = null;
@@ -56,15 +60,23 @@ const uploadEvidence = async (req, res) => {
       if (!uploadSession || !uploadSession.assembled) {
         return res.status(400).json({
           success: false,
-          error: 'Unknown or incomplete upload session. Upload the file chunks and complete the session first.',
+          error:
+            'Unknown or incomplete upload session. Upload the file chunks and complete the session first.',
         });
       }
       if (uploadSession.createdBy !== uploadedBy) {
-        return res.status(403).json({ success: false, error: 'This upload session belongs to another user' });
+        return res
+          .status(403)
+          .json({ success: false, error: 'This upload session belongs to another user' });
       }
       const assembledBuffer = await uploadSessionStore.readAssembled(uploadSession.id);
       if (!assembledBuffer) {
-        return res.status(400).json({ success: false, error: 'The assembled file is no longer available - upload session may have expired' });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            error: 'The assembled file is no longer available - upload session may have expired',
+          });
       }
       file = {
         buffer: assembledBuffer,
@@ -80,7 +92,9 @@ const uploadEvidence = async (req, res) => {
 
     // Zero-byte files are not evidence and previously hung the pipeline (audit M2)
     if (file.size === 0) {
-      return res.status(400).json({ success: false, error: 'Empty files cannot be uploaded as evidence' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Empty files cannot be uploaded as evidence' });
     }
 
     // S2: verify the real file type from magic bytes; never trust the
@@ -101,13 +115,21 @@ const uploadEvidence = async (req, res) => {
         message: `Investigator confirmed upload of ${sniff.dangerReason}.`,
       });
     }
-    if (sniff.detected && sniff.detected.mime && !mimeCompatible(file.mimetype, sniff.detected.mime)) {
+    if (
+      sniff.detected &&
+      sniff.detected.mime &&
+      !mimeCompatible(file.mimetype, sniff.detected.mime)
+    ) {
       verificationFlags.push({
         code: 'file_type_mismatch',
         message: `File claims to be ${file.mimetype} but its content looks like ${sniff.detected.label} (${sniff.detected.mime}).`,
       });
     }
-    if (!sniff.detected && sniff.binaryTextClaim && String(file.mimetype || '').startsWith('text/')) {
+    if (
+      !sniff.detected &&
+      sniff.binaryTextClaim &&
+      String(file.mimetype || '').startsWith('text/')
+    ) {
       verificationFlags.push({
         code: 'content_sniff_mismatch',
         message: 'File is claimed as text but contains binary data.',
@@ -115,15 +137,21 @@ const uploadEvidence = async (req, res) => {
     }
 
     if (title && String(title).length > 200) {
-      return res.status(400).json({ success: false, error: 'Evidence title must be 200 characters or fewer' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Evidence title must be 200 characters or fewer' });
     }
     if (description && String(description).length > 5000) {
-      return res.status(400).json({ success: false, error: 'Description must be 5000 characters or fewer' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Description must be 5000 characters or fewer' });
     }
 
     // BUG FIX: Validate caseId exists and is an integer
-    const parsedCaseId = parseInt(caseId, 10);
-    if (!caseId || isNaN(parsedCaseId)) {
+    const validCaseId =
+      ['string', 'number'].includes(typeof caseId) && /^[1-9][0-9]*$/.test(String(caseId));
+    const parsedCaseId = validCaseId ? Number(caseId) : NaN;
+    if (!Number.isSafeInteger(parsedCaseId) || parsedCaseId > 2147483647) {
       return res.status(400).json({ success: false, error: 'Valid Case ID is required' });
     }
 
@@ -132,17 +160,25 @@ const uploadEvidence = async (req, res) => {
     }
 
     // SECURITY FIX: Verify the uploader has permissions in DB
-    if (!['admin', 'investigator', 'evidence_manager', 'legal_professional', 'court_official', 'forensic_analyst'].includes(authUser.role)) {
-      return res.status(403).json({ success: false, error: 'Insufficient permissions to upload evidence' });
+    if (
+      ![
+        'admin',
+        'investigator',
+        'evidence_manager',
+        'legal_professional',
+        'court_official',
+        'forensic_analyst',
+      ].includes(authUser.role)
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, error: 'Insufficient permissions to upload evidence' });
     }
 
     // C2 fix: the case must exist and the caller must have access to it.
     // Previously any caseId (including other users' cases or 999999) was accepted.
-    const { data: targetCase, error: caseLookupError } = (await supabase
-      .from('cases')
-      .select('id')
-      .eq('id', parsedCaseId)
-      .single()) || {};
+    const { data: targetCase, error: caseLookupError } =
+      (await supabase.from('cases').select('id').eq('id', parsedCaseId).single()) || {};
     if (caseLookupError || !targetCase) {
       return res.status(404).json({ success: false, error: 'Case not found' });
     }
@@ -160,13 +196,19 @@ const uploadEvidence = async (req, res) => {
 
     // Duplicate detection by content hash within the same case (audit M2)
     const uploadHash = crypto.createHash('sha256').update(file.buffer).digest('hex');
-    const { data: dupRows } = (await supabase
-      .from('evidence')
-      .select('id, title, name')
-      .eq('case_id', String(parsedCaseId))
-      .eq('hash', uploadHash)
-      .limit(1)) || {};
-    if (dupRows && dupRows.length > 0) {
+    const { data: dupRows, error: duplicateLookupError } =
+      (await supabase
+        .from('evidence')
+        .select('id, title, name')
+        .eq('case_id', String(parsedCaseId))
+        .eq('hash', uploadHash)
+        .limit(1)) || {};
+    if (duplicateLookupError || !Array.isArray(dupRows)) {
+      return res
+        .status(503)
+        .json({ success: false, error: 'Could not check for duplicate evidence. Please retry.' });
+    }
+    if (dupRows.length > 0) {
       return res.status(409).json({
         success: false,
         error: 'This exact file is already stored as evidence in this case',
@@ -183,7 +225,9 @@ const uploadEvidence = async (req, res) => {
     // guaranteed 500. The redundant query has been removed rather than restored.
 
     if (authUser.role === 'public_viewer') {
-      return res.status(403).json({ success: false, error: 'Public viewers cannot upload evidence' });
+      return res
+        .status(403)
+        .json({ success: false, error: 'Public viewers cannot upload evidence' });
     }
 
     // BUG FIX: Standardized MIME type validation with server-side size limits
@@ -255,7 +299,9 @@ const uploadEvidence = async (req, res) => {
     const errors = results?.errors || [];
 
     if (!results) {
-      return res.status(500).json({ success: false, error: 'Upload service failed to return results' });
+      return res
+        .status(500)
+        .json({ success: false, error: 'Upload service failed to return results' });
     }
 
     // M4: custody ledger entry for the intake of this evidence item
@@ -311,7 +357,10 @@ const uploadEvidence = async (req, res) => {
   } catch (error) {
     console.error('Evidence upload failed:', error);
     // SECURITY FIX: Never leak raw error messages in production
-    const message = process.env.NODE_ENV === 'production' ? 'Internal server error during upload.' : error.message;
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? 'Internal server error during upload.'
+        : error.message;
     res.status(500).json({ success: false, error: message });
   }
 };
