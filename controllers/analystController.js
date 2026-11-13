@@ -815,8 +815,13 @@ const getAnalystEvidence = async (req, res) => {
     const analyst=req.user,wallet=analyst.wallet_address||analyst.email;
     // Inner embedded relation filters parent rows before count/range. No full
     // assigned-ID materialization and no duplicate evidence rows per task.
+    // evidence.case_id is TEXT with no foreign key on some deployments (the
+    // live database included), so PostgREST cannot embed `cases` here: the
+    // embed fails the whole request with PGRST200. Fetch the page first, then
+    // resolve case numbers for just these rows in one follow-up lookup - the
+    // same pattern tasks and reports already use.
     let q=supabase.from('evidence').select(
-      'id,name,file_type,hash,ipfs_cid,blockchain_tx_hash,blockchain_verified,timestamp,case_id,file_size,description,case:cases(id,case_number),analysis_tasks!inner(id,status,assigned_at)',
+      'id,name,file_type,hash,ipfs_cid,blockchain_tx_hash,blockchain_verified,timestamp,case_id,file_size,description,analysis_tasks!inner(id,status,assigned_at)',
       {count:'exact'})
       .or(`analyst_id.eq.${analyst.id},analyst_wallet.eq.${wallet}`,{referencedTable:'analysis_tasks'});
     if (inputs.search) q=q.or(`name.ilike.%${inputs.search}%,hash.ilike.%${inputs.search}%,file_type.ilike.%${inputs.search}%`);
@@ -829,12 +834,24 @@ const getAnalystEvidence = async (req, res) => {
     const {data,count,error}=await q;
     if (error) throw error;
     if (!Number.isInteger(count)||count<0) throw new Error('Missing inventory count');
-    res.json({success:true,data:(data||[]).map(e=>({
+    // Case numbers come from a scoped lookup, not an embed (see above). A
+    // lookup failure only blanks case_number; the inventory still loads.
+    const caseMap={};
+    const pageCaseIds=[...new Set((data||[]).map(e=>positiveInteger(e.case_id)).filter(Boolean))];
+    if (pageCaseIds.length>0) {
+      const {data:caseRows,error:caseError}=(await supabase
+        .from('cases').select('id,case_number').in('id',pageCaseIds))||{};
+      if (!caseError) for (const c of caseRows||[]) caseMap[c.id]=c.case_number;
+    }
+    res.json({success:true,data:(data||[]).map(e=>{
+      const cid=positiveInteger(e.case_id);
+      return {
       id:e.id,name:e.name||`Evidence ${e.id}`,file_type:e.file_type,hash:e.hash,ipfs_cid:e.ipfs_cid,
       blockchain_tx_hash:e.blockchain_tx_hash,blockchain_verified:Boolean(e.blockchain_verified),timestamp:e.timestamp,
-      case_id:e.case_id,case_number:e.case?.case_number||null,file_size:e.file_size,description:e.description,
+      case_id:e.case_id,case_number:cid?caseMap[cid]||null:null,file_size:e.file_size,description:e.description,
       task_status:e.analysis_tasks?.[0]?.status||'none',task_id:e.analysis_tasks?.[0]?.id||null
-    })),pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
+      };
+    }),pagination:{page:inputs.page,limit:inputs.limit,total:count,pages:Math.ceil(count/inputs.limit)}});
   } catch (error) {
     console.error('Analyst evidence error:',error);
     res.status(500).json({success:false,error:'Failed to load evidence inventory'});
