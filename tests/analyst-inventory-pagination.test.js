@@ -1,15 +1,18 @@
 const mockCalls = [];
-let mockResult;
+// Per-table mock results: evidence.case_id has no FK, so case numbers arrive
+// through a second query on cases, never an embed.
+let mockResults;
 function mockBuilder(table) {
   const c = { table, ops: [] };
   mockCalls.push(c);
   const b = {};
-  for (const m of ['select', 'or', 'eq', 'order', 'limit', 'range'])
+  for (const m of ['select', 'or', 'eq', 'in', 'order', 'limit', 'range'])
     b[m] = (...args) => {
       c.ops.push([m, ...args]);
       return b;
     };
-  b.then = (yes, no) => Promise.resolve(mockResult).then(yes, no);
+  b.then = (yes, no) =>
+    Promise.resolve(mockResults[table] || { data: [], count: 0, error: null }).then(yes, no);
   return b;
 }
 jest.mock('../config', () => ({ supabase: { from: jest.fn((t) => mockBuilder(t)) } }));
@@ -24,7 +27,7 @@ async function call(handler, query = {}) {
 }
 beforeEach(() => {
   mockCalls.length = 0;
-  mockResult = { data: [], count: 0, error: null };
+  mockResults = {};
 });
 test.each(['getAnalystEvidence', 'getAnalystCases'])(
   '%s rejects malformed paging/filter inputs',
@@ -41,17 +44,20 @@ test.each(['getAnalystEvidence', 'getAnalystCases'])(
   },
 );
 test('evidence page filters parent rows through assigned tasks before database paging', async () => {
-  mockResult = {
-    data: [
-      {
-        id: 5,
-        name: 'Example',
-        case: { case_number: 'DEMO' },
-        analysis_tasks: [{ id: 8, status: 'in_progress' }],
-        private: 'omit',
-      },
-    ],
-    count: 25000,
+  mockResults = {
+    evidence: {
+      data: [
+        {
+          id: 5,
+          name: 'Example',
+          case_id: '42',
+          analysis_tasks: [{ id: 8, status: 'in_progress' }],
+          private: 'omit',
+        },
+      ],
+      count: 25000,
+    },
+    cases: { data: [{ id: 42, case_number: 'DEMO' }] },
   };
   const r = await call('getAnalystEvidence', {
     page: '2',
@@ -61,8 +67,16 @@ test('evidence page filters parent rows through assigned tasks before database p
     case_id: '9',
   });
   const c = mockCalls[0];
-  expect(mockCalls).toHaveLength(1);
+  expect(mockCalls).toHaveLength(2);
   expect(c.table).toBe('evidence');
+  // No PostgREST embed of cases: PGRST200 on deployments where
+  // evidence.case_id is TEXT without a foreign key.
+  const selectArg = c.ops.find(([m]) => m === 'select')[1];
+  expect(selectArg).not.toMatch(/cases\s*\(/);
+  expect(selectArg).not.toContain('case:cases');
+  expect(mockCalls[1].table).toBe('cases');
+  expect(mockCalls[1].ops).toContainEqual(['select', 'id,case_number']);
+  expect(mockCalls[1].ops).toContainEqual(['in', 'id', [42]]);
   expect(c.ops).toContainEqual([
     'or',
     'analyst_id.eq.7,analyst_wallet.eq.a@example.invalid',
@@ -94,9 +108,11 @@ test('evidence page filters parent rows through assigned tasks before database p
   expect(body.data[0].analysis_tasks).toBeUndefined();
 });
 test('case page scopes relational count, stable order and allowlisted rows', async () => {
-  mockResult = {
-    data: [{ id: 1, title: 'Example', analysis_tasks: [{ id: 3 }], private: 'omit' }],
-    count: 1,
+  mockResults = {
+    cases: {
+      data: [{ id: 1, title: 'Example', analysis_tasks: [{ id: 3 }], private: 'omit' }],
+      count: 1,
+    },
   };
   const r = await call('getAnalystCases', { search: 'Example' });
   expect(mockCalls[0].ops).toContainEqual([
@@ -120,7 +136,7 @@ test('known empty result has zero pages and no fallback unscoped read', async ()
   expect(mockCalls).toHaveLength(2);
 });
 test('missing exact count fails rather than publishing an invented total', async () => {
-  mockResult = { data: [], count: null };
+  mockResults = { evidence: { data: [], count: null } };
   const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
   expect((await call('getAnalystEvidence')).status).toHaveBeenCalledWith(500);
   spy.mockRestore();
