@@ -39,6 +39,7 @@
                             <i data-lucide="refresh-cw"></i> Refresh Queue
                         </button>
                     </div>
+                    <p class="dashboard-updated" id="dashboardUpdated" role="status"></p>
                     <div style="margin-top: 18px; max-width: 520px; position: relative;">
                         <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7); pointer-events: none;"></i>
                         <input type="search" id="analystGlobalSearch" placeholder="Search cases, evidence, hashes, reports…"
@@ -169,6 +170,7 @@
                         <p>Loading analysis queue…</p>
                     </div>
                 </div>
+                <div id="queuePager"></div>
             </section>
 
             <!-- ============================ WORKSPACE ============================ -->
@@ -206,12 +208,25 @@
                     <h2><i data-lucide="file-text"></i> Analysis Reports</h2>
                     <p class="section-sub" id="reportsSummary">Generated forensic reports</p>
                 </div>
+                <div class="queue-toolbar">
+                    <select id="reportsStatusFilter" aria-label="Filter reports by status">
+                        <option value="">All statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <button class="btn btn-outline btn-sm" id="reportsRefreshBtn" type="button">
+                        <i data-lucide="refresh-cw"></i> Refresh
+                    </button>
+                </div>
                 <div id="reportsRoot" aria-live="polite">
                     <div class="analyst-loading">
                         <div class="spinner" style="border-top-color:#7c3aed;"></div>
                         <p>Loading reports…</p>
                     </div>
                 </div>
+                <div id="reportsPager"></div>
             </section>
 
         </div>
