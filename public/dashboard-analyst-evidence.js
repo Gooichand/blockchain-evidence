@@ -502,4 +502,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bootAnalystEvidence);
 } else {
     bootAnalystEvidence();
-        }
+}
