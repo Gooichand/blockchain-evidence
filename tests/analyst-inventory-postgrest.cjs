@@ -54,11 +54,15 @@ async function call(handler, query = {}, id = 1) {
   assert.equal(first.pagination.total, 9);
   assert.equal(first.data[0].task_status, 'in_progress');
   assert.equal(first.data[0].task_id, 22);
+  // Case numbers resolve without any PostgREST embed (evidence.case_id has no
+  // FK on legacy deployments); absent cases stay null instead of failing.
+  assert.equal(first.data.find((x) => x.id === 9).case_number, 'DEMO-2');
   const second = await call('getAnalystEvidence', { page: '2', limit: '3' });
   assert.deepEqual(
     second.data.map((x) => x.id),
     [6, 5, 4],
   );
+  assert.equal(second.data.find((x) => x.id === 6).case_number, 'DEMO-1');
   const last = await call('getAnalystEvidence', { page: '3', limit: '3' });
   assert.deepEqual(
     last.data.map((x) => x.id),
@@ -79,6 +83,7 @@ async function call(handler, query = {}, id = 1) {
     other.data.map((x) => x.id),
     [10],
   );
+  assert.equal(other.data[0].case_number, 'DEMO-3');
   const nobody = await call('getAnalystEvidence', {}, 999);
   assert.deepEqual(nobody.data, []);
   assert.equal(nobody.pagination.pages, 0);
@@ -94,7 +99,7 @@ async function call(handler, query = {}, id = 1) {
     [1],
   );
   console.log(
-    'PASS: real PostgreSQL/PostgREST + installed Supabase client/controller. Stable nonoverlapping pages, exact scoped counts,1500duplicate assignments, latest-task tie-break, case filter, cross-analyst search negative, unassigned user and case paging.',
+    'PASS: real PostgreSQL/PostgREST + installed Supabase client/controller. Stable nonoverlapping pages, exact scoped counts,1500duplicate assignments, latest-task tie-break, case filter, cross-analyst search negative, unassigned user, case paging and embed-free case-number lookup.',
   );
 })().catch((e) => {
   console.error(e);
