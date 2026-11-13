@@ -139,7 +139,9 @@ class AnalystEvidenceDisplay {
             'Filter evidence inventory');
         this.clearNode(container);
 
-        if (this.evidenceError && state.total === 0) {
+        // A failed load must surface as an error even when an earlier page
+        // loaded fine (stale state.total would otherwise render "Empty page").
+        if (this.evidenceError) {
             container.appendChild(this.renderError(
                 'Could not load evidence inventory. ' + (this.evidenceError.message || 'Check your connection.'),
                 () => this.loadEvidence()));
@@ -205,7 +207,8 @@ class AnalystEvidenceDisplay {
             'Filter active cases');
         this.clearNode(container);
 
-        if (this.casesError && state.total === 0) {
+        // Same: a later-page failure is an error, not an empty page.
+        if (this.casesError) {
             container.appendChild(this.renderError(
                 'Could not load cases. ' + (this.casesError.message || 'Check your connection.'),
                 () => this.loadCases()));
