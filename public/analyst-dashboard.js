@@ -1085,6 +1085,10 @@ const AnalystDashboard = (() => {
     const saved = { summary: summaryInput.value, findings: findingsInput.value };
     let revision = existingReport && Number.isInteger(existingReport.revision) ? existingReport.revision : 0;
     let saving = false;
+    // Set when the report is finalized elsewhere (or submitted) while this
+    // editor holds text that was never sent: fields lock read-only with the
+    // local text preserved until the analyst explicitly loads the server copy.
+    let editorLocked = false;
     const dirtyBadge = el('span', { class: 'evid-badge badge-status-draft', text: 'Unsaved changes', hidden: true, role: 'status' });
 
     function isDirty() {
@@ -1118,9 +1122,24 @@ const AnalystDashboard = (() => {
 
     function setBusy(busy) {
       saving = busy;
-      saveBtn.disabled = busy;
-      submitBtn.disabled = busy;
-      structureBtn.disabled = busy;
+      const locked = busy || editorLocked;
+      saveBtn.disabled = locked;
+      submitBtn.disabled = locked;
+      structureBtn.disabled = locked;
+    }
+
+    // Lock the editor read-only without discarding the local text, and offer
+    // an explicit button to load the server version. Used when the server copy
+    // can no longer accept this editor's text (finalized elsewhere, or a
+    // submit succeeded while newer unsent edits exist).
+    function lockEditorPreserveText(message, buttonLabel) {
+      editorLocked = true;
+      summaryInput.disabled = true;
+      findingsInput.disabled = true;
+      setBusy(false);
+      msg.textContent = message + ' ';
+      const loadServer = el('button', { class: 'btn btn-outline btn-sm', type: 'button', text: buttonLabel, onclick: () => loadWorkspace() });
+      msg.appendChild(loadServer);
     }
 
     function handleSaveError(err) {
@@ -1132,9 +1151,17 @@ const AnalystDashboard = (() => {
         msg.appendChild(reload);
         return;
       }
+      if (err.status === 409 && code === 'FINALIZED') {
+        // Never auto-reload: that would replace unsaved local text with the
+        // finalized server report without confirmation. Preserve the text
+        // read-only and let the analyst choose when to view the server copy.
+        lockEditorPreserveText(
+          'This report was finalized elsewhere and is now read-only. Your unsaved text is preserved above; it cannot be saved to the finalized report.',
+          'Load finalized report');
+        return;
+      }
       const special = transitionMessage(err);
       msg.textContent = (special || 'Save failed: ' + (err.message || 'unknown error')) + ' Your text is preserved.';
-      if (err.status === 409 && code === 'FINALIZED') loadWorkspace();
     }
 
     saveBtn.addEventListener('click', async () => {
@@ -1145,19 +1172,23 @@ const AnalystDashboard = (() => {
       }
       setBusy(true);
       msg.textContent = 'Saving…';
+      // Snapshot what is actually sent; text typed while the request is in
+      // flight must stay dirty, not be silently marked saved.
+      const sentSummary = summaryInput.value;
+      const sentFindings = findingsInput.value;
       try {
         const res = await apiPut('/analyst/tasks/' + task.id + '/report', {
-          result_summary: summaryInput.value,
-          findings: findingsInput.value,
+          result_summary: sentSummary,
+          findings: sentFindings,
           submit: false,
           expected_revision: revision,
         });
         if (res && res.data && Number.isInteger(res.data.revision)) revision = res.data.revision;
-        saved.summary = summaryInput.value;
-        saved.findings = findingsInput.value;
+        saved.summary = sentSummary;
+        saved.findings = sentFindings;
         syncDirty();
         statusLine.textContent = 'Status: Draft · revision ' + revision + ' · saved ' + fmtDate(new Date().toISOString());
-        msg.textContent = 'Draft saved.';
+        msg.textContent = isDirty() ? 'Draft saved. Newer edits above are not saved yet.' : 'Draft saved.';
       } catch (err) {
         handleSaveError(err);
       } finally {
@@ -1175,22 +1206,33 @@ const AnalystDashboard = (() => {
       if (!confirmed) return;
       setBusy(true);
       msg.textContent = 'Submitting…';
+      const sentSummary = summaryInput.value;
+      const sentFindings = findingsInput.value;
       try {
         const res = await apiPut('/analyst/tasks/' + task.id + '/report', {
-          result_summary: summaryInput.value,
-          findings: findingsInput.value,
+          result_summary: sentSummary,
+          findings: sentFindings,
           submit: true,
           expected_revision: revision,
         });
         if (res && res.data && Number.isInteger(res.data.revision)) revision = res.data.revision;
-        saved.summary = summaryInput.value;
-        saved.findings = findingsInput.value;
+        saved.summary = sentSummary;
+        saved.findings = sentFindings;
         syncDirty();
-        wsEditor = null;
-        msg.textContent = 'Report submitted. Task completed.';
         loadQueue();
         loadDashboard(true);
-        loadWorkspace();
+        if (isDirty()) {
+          // Newer edits were typed while the submit was in flight. The sent
+          // snapshot is finalized; keep the unsent text visible read-only
+          // instead of discarding it with an automatic reload.
+          lockEditorPreserveText(
+            'Report submitted with the text sent. Your newer edits above were not submitted and cannot be saved to the finalized report.',
+            'View submitted report');
+        } else {
+          wsEditor = null;
+          msg.textContent = 'Report submitted. Task completed.';
+          loadWorkspace();
+        }
       } catch (err) {
         handleSaveError(err);
       } finally {
@@ -1222,14 +1264,7 @@ const AnalystDashboard = (() => {
     lab.appendChild(loadingBlock('Loading lab status…'));
     try {
       const stats = await apiGet('/analyst/stats');
-      const equipment = stats.data && stats.data.lab_equipment;
-      const src = stats.data && stats.data.sources && stats.data.sources.equipment;
-      if (src && src.state === 'unavailable') {
-        clear(lab);
-        lab.appendChild(errorBlock('Lab equipment status unavailable' + (src.checked_at ? ' (last checked ' + fmtDate(src.checked_at) + ')' : '') + '.', loadTools));
-        return;
-      }
-      renderLab(lab, equipment || []);
+      renderLab(lab, stats.data.lab_equipment || []);
     } catch (error) {
       clear(lab);
       lab.appendChild(errorBlock('Could not load lab status. ' + (error.message || ''), loadTools));
