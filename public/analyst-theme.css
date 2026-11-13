@@ -510,6 +510,9 @@
   white-space: nowrap;
 }
 
+/* The hidden attribute must beat the display above (report editor dirty badge). */
+.evid-badge[hidden] { display: none; }
+
 .badge-status-pending { background: #fef3c7; color: #92400e; }
 .badge-status-in_progress { background: #e0e7ff; color: #3730a3; }
 .badge-status-completed { background: #d1fae5; color: #065f46; }
@@ -1119,3 +1122,51 @@
 .analyst-search-primary { flex: 1; font-size: 0.88rem; color: var(--evid-slate-900); }
 .analyst-search-secondary { font-size: 0.78rem; color: var(--evid-gray-600); }
 .analyst-search-error { font-size: 0.78rem; color: var(--evid-red); }
+
+/* ------------------------------------------------------- V1-V8 additions */
+/* Pager (queue, reports, inventory, cases) */
+.pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.pager .pager-label { font-size: 0.84rem; font-weight: 600; color: var(--evid-slate-900); }
+.pager .pager-total { font-size: 0.78rem; color: var(--evid-gray-600); }
+.pager .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* Inventory/case toolbars reuse the queue toolbar layout */
+.inventory-toolbar { margin: 8px 0 12px; }
+.inventory-toolbar .inventory-pager-slot .pager { margin-top: 0; }
+
+/* Dashboard last-updated line */
+.dashboard-updated {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.dashboard-updated.dashboard-stale { color: #fde68a; }
+
+/* Metric card with an unavailable source */
+.metric-card.metric-unavailable .metric-value { color: var(--evid-gray-400); }
+
+/* Report editor helpers */
+.analyst-structure-btn { margin-top: 8px; color: var(--forensic-purple); }
+.analyst-field button[disabled],
+.queue-toolbar button[disabled],
+.report-actions button[disabled] { opacity: 0.55; cursor: wait; }
+
+/* Report row actions */
+.report-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.snapshot-action { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Narrow screens: keep tables readable by allowing horizontal scroll and
+   tightening cells instead of clipping controls. */
+@media (max-width: 768px) {
+  .reports-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .reports-table { min-width: 640px; }
+  .reports-table th, .reports-table td { padding: 10px 12px; font-size: 0.8rem; }
+  .pager { flex-wrap: wrap; }
+  .queue-toolbar { flex-wrap: wrap; }
+  .inventory-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+}
