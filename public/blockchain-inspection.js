@@ -16,7 +16,7 @@
     ],
     'ipfs-viewer': [
       'Verified IPFS / UnixFS Object Viewer',
-      'Paste a raw or DAG-PB SHA-256 CID. Choose local CAR to verify and reconstruct the linked UnixFS file/directory from a supplied CAR, or explicit public-gateway mode to retrieve a CAR through the signed-in server, then verify every block and link locally. Local raw mode checks a selected raw block only. Public gateway requests disclose the CID to trustless-gateway.link; no evidence is uploaded or pinned. Maximum 10 MiB CAR/1000 blocks/5 MiB reconstructed file/200 directory entries, 25-second worker. Previews are inert untrusted text; downloads may be unsafe to open. Pin status, authorship, malware safety and continued availability are not verified. Missing blocks, tampering and unsupported objects fail closed.',
+      'Paste a raw or DAG-PB SHA-256 CID. Choose local CAR to verify and reconstruct the linked UnixFS file/directory from a supplied CAR, or explicit public-gateway mode to retrieve a CAR through the signed-in server, then verify every block and link locally. Local raw mode checks a selected raw block only. Public gateway requests disclose the CID to the chosen public gateway (trustless-gateway.link or 4everland.io); no evidence is uploaded or pinned. A public gateway can be unreachable or rate-limited at any time; an unavailable gateway returns an explicit error, never a fabricated object. Maximum 10 MiB CAR/1000 blocks/5 MiB reconstructed file/200 directory entries, 25-second worker. Previews are inert untrusted text; downloads may be unsafe to open. Pin status, authorship, malware safety and continued availability are not verified. Missing blocks, tampering and unsupported objects fail closed.',
     ],
     'chain-custody': [
       'Recent Stored/Sealed Events',
@@ -110,7 +110,8 @@
     const canonical = root.LocalCID.CID.parse(cid.trim()).toV1().toString();
     let bytes;
     if (mode === 'gateway') {
-      if (!['trustless'].includes(gateway)) throw Error('Choose a supported public gateway.');
+      if (!['trustless', 'everland'].includes(gateway))
+        throw Error('Choose a supported public gateway.');
       const response = await fetch('/api/blockchain/ipfs/read-car/' + gateway + '/' + canonical, {
         credentials: 'same-origin',
         headers: root.apiClient?.getAuthHeaders?.() || {},
@@ -223,7 +224,10 @@
         ['gateway', 'Public gateway (CID disclosed)'],
       ])
         mode.appendChild(n('option', label, { value }));
-      for (const [value, label] of [['trustless', 'trustless-gateway.link']])
+      for (const [value, label] of [
+        ['trustless', 'trustless-gateway.link'],
+        ['everland', '4everland.io'],
+      ])
         gateway.appendChild(n('option', label, { value }));
       ws.append(mode, gateway);
     }
