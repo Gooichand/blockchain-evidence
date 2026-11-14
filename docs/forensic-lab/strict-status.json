@@ -1,5 +1,5 @@
 {
-  "strictYes": 50,
+  "strictYes": 51,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -308,8 +308,8 @@
       "category": "Metadata",
       "id": "office-metadata",
       "name": "Office Metadata",
-      "strictYes": false,
-      "reason": "Modern properties and embedded DOCX revisions; no complete Office history/legacy formats."
+      "strictYes": true,
+      "reason": "Modern DOCX/XLSX/PPTX core/app/custom properties and embedded DOCX revisions, plus legacy DOC/XLS/PPT OLE2 summary streams (author, last-saved-by, revision number, timestamps, user-defined fields) parsed with the vendored cfb engine and a bounded MS-OLEPS reader. Deleted or rewritten history is not recovered; author/date claims remain unverified. OFFICE-LEGACY-METADATA-2026-11-14.md."
     },
     {
       "category": "Metadata",

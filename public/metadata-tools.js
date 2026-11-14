@@ -16,7 +16,7 @@
     ],
     'office-metadata': [
       'Office Properties and Embedded Revisions',
-      'Reads DOCX/XLSX/PPTX core, app and custom XML properties and embedded DOCX tracked insertions, deletions, moves and comments. These author/date/text claims are editable, not a complete or verified revision history. XLSX/PPTX historical revisions and legacy DOC/XLS/PPT are unsupported.',
+      'Reads DOCX/XLSX/PPTX core, app and custom XML properties and embedded DOCX tracked insertions, deletions, moves and comments, or legacy DOC/XLS/PPT OLE2 summary streams (author, last-saved-by, revision number, timestamps, company). These author/date/text claims are editable, not a complete or verified revision history; deleted or rewritten history cannot be reconstructed. ODT is unsupported.',
     ],
     'pdf-metadata': [
       'PDF Properties and Preserved Revision History',
@@ -172,8 +172,8 @@
     if (!file) throw Error('Select a file or use Try example.');
     if (file.size > 15 * 1024 * 1024) throw Error('Metadata limit: 15 MiB.');
     if (id === 'office-metadata') {
-      if (!/\.(docx|xlsx|pptx)$/i.test(file.name))
-        throw Error('Office metadata supports DOCX/XLSX/PPTX.');
+      if (!/\.(docx|xlsx|pptx|doc|xls|ppt)$/i.test(file.name))
+        throw Error('Office metadata supports DOCX/XLSX/PPTX and legacy DOC/XLS/PPT.');
       return root.DocumentForensics.analyze('doc-metadata', file);
     }
     if (id === 'pdf-metadata') {

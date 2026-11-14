@@ -118,7 +118,7 @@
         { id: 'exif', name: 'EXIF Viewer', icon: 'camera', status: 'available', desc: 'Embedded EXIF/XMP/IPTC/ICC segments with per-segment presence reporting.' },
         { id: 'gps', name: 'GPS Viewer', icon: 'map-pin', status: 'available', desc: 'Geolocation data from captured media.' },
         { id: 'camera-info', name: 'Camera Information', icon: 'aperture', status: 'available', desc: 'Camera model, lens and settings extraction.' },
-        { id: 'office-metadata', name: 'Office Metadata', icon: 'file-spreadsheet', status: 'available', desc: 'Author and revision history from office files.' },
+        { id: 'office-metadata', name: 'Office Metadata', icon: 'file-spreadsheet', status: 'available', desc: 'Author and revision claims from modern and legacy office files.' },
         { id: 'pdf-metadata', name: 'PDF Metadata', icon: 'file-text', status: 'available', desc: 'PDF document properties and history.' },
       ],
     },

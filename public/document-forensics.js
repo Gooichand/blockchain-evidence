@@ -8,7 +8,7 @@
     ],
     'doc-metadata': [
       'Document Metadata Viewer',
-      'Reads PDF metadata or DOCX/XLSX/PPTX core, application and custom properties, plus embedded DOCX tracked changes/comments. Values and revision author/date claims are editable, not verified authorship or complete history. Legacy DOC/XLS/PPT and ODT are not supported.',
+      'Reads PDF metadata, DOCX/XLSX/PPTX core/application/custom properties plus embedded DOCX tracked changes/comments, or legacy DOC/XLS/PPT OLE2 summary streams (author, last-saved-by, revision number, timestamps, company). Values and revision author/date claims are editable, not verified authorship or complete history; deleted or rewritten history cannot be reconstructed. ODT is not supported.',
     ],
     ocr: [
       'English OCR',
@@ -32,6 +32,186 @@
     if (text !== undefined) x.textContent = text;
     for (const [k, v] of Object.entries(attrs)) x.setAttribute(k, v);
     return x;
+  }
+  /* Minimal MS-OLEPS property-set stream reader for legacy OLE2 summary
+     streams. Bounded: 2 MiB stream, 512 properties per section, values
+     decoded only for common scalar types; everything else is reported by
+     type name, never guessed. */
+  const SUMMARY_FIELDS = {
+    2: 'Title',
+    3: 'Subject',
+    4: 'Author',
+    5: 'Keywords',
+    6: 'Comments',
+    7: 'Template',
+    8: 'Last saved by',
+    9: 'Revision number',
+    10: 'Total editing time (100 ns units)',
+    11: 'Last printed',
+    12: 'Created',
+    13: 'Last saved',
+    14: 'Page count',
+    15: 'Word count',
+    16: 'Character count',
+    18: 'Application',
+  };
+  const DOCSUMMARY_FIELDS = {
+    2: 'Category',
+    3: 'Presentation target',
+    4: 'Bytes',
+    5: 'Lines',
+    6: 'Paragraphs',
+    7: 'Slides',
+    8: 'Notes',
+    9: 'Hidden slides',
+    12: 'Heading pairs',
+    13: 'Document parts',
+    14: 'Manager',
+    15: 'Company',
+    17: 'Character count with spaces',
+    21: 'Version',
+    23: 'Content type',
+    24: 'Content status',
+    25: 'Language',
+  };
+  function filetimeToIso(lo, hi) {
+    const ms = Number((BigInt(hi) << 32n) | BigInt(lo)) / 10000 - 11644473600000;
+    if (!Number.isFinite(ms) || ms < -8.64e12 || ms > 8.64e12) return null;
+    return new Date(ms).toISOString();
+  }
+  const USER_DEFINED_FMTID = [
+    0x05, 0xd5, 0xcd, 0xd5, 0x9c, 0x2e, 0x1b, 0x10, 0x93, 0x97, 0x08, 0x00, 0x2b, 0x2c, 0xf9, 0xae,
+  ];
+  function parsePropertySetStream(bytes, fieldNames) {
+    if (!(bytes instanceof Uint8Array)) bytes = new Uint8Array(bytes);
+    if (bytes.length > 2 * 1024 * 1024) throw Error('Property stream exceeds 2 MiB limit.');
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (bytes.length < 48 || dv.getUint16(0, true) !== 0xfffe)
+      throw Error('Not a property set stream.');
+    const sections = dv.getUint32(24, true);
+    if (sections !== 1 && sections !== 2) throw Error('Unexpected property section count.');
+    const out = [];
+    for (let s = 0; s < sections; s++) {
+      const sectionOffset = dv.getUint32(44 + s * 20, true);
+      if (sectionOffset + 8 > bytes.length) throw Error('Property section outside stream.');
+      const count = dv.getUint32(sectionOffset + 4, true);
+      if (count > 512) throw Error('Property count exceeds 512 limit.');
+      const isUserDefined = USER_DEFINED_FMTID.every(
+        (b, i) => bytes[28 + s * 20 + i] === b,
+      );
+      const names = {};
+      /* First pass: the dictionary (property 0) can sit after the entries
+         that use it, so collect names before reading values. Unlike normal
+         properties it has no type field and starts with the count. */
+      for (let p = 0; p < count; p++) {
+        const entry = sectionOffset + 8 + p * 8;
+        if (entry + 8 > bytes.length) throw Error('Property entry outside stream.');
+        if (dv.getUint32(entry, true) !== 0) continue;
+        const offset = sectionOffset + dv.getUint32(entry + 4, true);
+        try {
+          const n = dv.getUint32(offset, true);
+          if (n > 256) throw Error('overflow');
+          /* Name entries are 4-byte-aligned per MS-OLEPS, but some writers
+             (LibreOffice) pack them unpadded; prefer the parse that fits. */
+          const readNames = (padded) => {
+            const found = {};
+            let dp = offset + 4;
+            for (let d = 0; d < n; d++) {
+              if (dp + 8 > bytes.length) throw Error('overflow');
+              const nameId = dv.getUint32(dp, true);
+              const size = dv.getUint32(dp + 4, true);
+              if (size < 1 || size > 4096 || dp + 8 + size > bytes.length) throw Error('overflow');
+              found[nameId] = Array.from(bytes.subarray(dp + 8, dp + 8 + size))
+                .map((b) => (b >= 32 && b < 127 ? String.fromCharCode(b) : ''))
+                .join('');
+              dp += 8 + (padded ? (size + 3) & ~3 : size);
+            }
+            if (!Object.keys(found).every((k) => found[k])) throw Error('empty');
+            return found;
+          };
+          try {
+            Object.assign(names, readNames(false));
+          } catch {
+            Object.assign(names, readNames(true));
+          }
+        } catch {
+          /* dictionary unreadable: ids are reported numerically */
+        }
+      }
+      for (let p = 0; p < count; p++) {
+        const entry = sectionOffset + 8 + p * 8;
+        if (entry + 8 > bytes.length) throw Error('Property entry outside stream.');
+        const id = dv.getUint32(entry, true);
+        const offset = sectionOffset + dv.getUint32(entry + 4, true);
+        if (id === 0 || offset + 4 > bytes.length) continue;
+        const type = dv.getUint32(offset, true);
+        const field =
+          id === 1
+            ? 'Code page'
+            : isUserDefined
+              ? names[id] || 'User property ' + id
+              : fieldNames[id] || 'Property ' + id;
+        const scalar = type & 0xff;
+        let value;
+        try {
+          if (scalar === 2 && offset + 6 <= bytes.length)
+            value = id === 1 ? dv.getUint16(offset + 4, true) : dv.getInt16(offset + 4, true);
+          else if ((scalar === 3 || scalar === 19 || scalar === 20) && offset + 8 <= bytes.length)
+            value = dv.getInt32(offset + 4, true);
+          else if (scalar === 11 && offset + 6 <= bytes.length)
+            value = dv.getInt16(offset + 4, true) !== 0;
+          else if (scalar === 30 && offset + 8 <= bytes.length) {
+            const size = Math.min(dv.getUint32(offset + 4, true), bytes.length - offset - 8);
+            value = Array.from(bytes.subarray(offset + 8, offset + 8 + size))
+              .map((b) => (b >= 32 && b < 127 ? String.fromCharCode(b) : ''))
+              .join('');
+          } else if (scalar === 31 && offset + 8 <= bytes.length) {
+            const chars = Math.min(dv.getUint32(offset + 4, true), (bytes.length - offset - 8) >> 1);
+            let s16 = '';
+            for (let c = 0; c < chars; c++) {
+              const code = dv.getUint16(offset + 8 + c * 2, true);
+              if (code) s16 += String.fromCharCode(code);
+            }
+            value = s16;
+          } else if (scalar === 64 && offset + 12 <= bytes.length)
+            value = filetimeToIso(dv.getUint32(offset + 4, true), dv.getUint32(offset + 8, true));
+        } catch {
+          value = null;
+        }
+        if (value !== undefined && value !== null && value !== '')
+          out.push({ field, type: 'VT_' + scalar, value: String(value) });
+      }
+    }
+    return out;
+  }
+  const OLE2_MAGIC = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+  function legacyOfficeMetadata(bytes, extension, cfbApi) {
+    if (bytes.length < 512 || !OLE2_MAGIC.every((b, i) => bytes[i] === b))
+      throw Error('Not a valid OLE2 compound document. Modern DOCX/XLSX/PPTX use the modern path; ODT is unsupported.');
+    let cfb;
+    try {
+      cfb = cfbApi.read(bytes, { type: 'array' });
+    } catch {
+      throw Error('Legacy Office compound file could not be parsed.');
+    }
+    const out = {
+      format: extension.toUpperCase() + ' (legacy OLE2)',
+      properties: {},
+      limit:
+        'Embedded editable claims from the legacy summary streams only. Author, last-saved-by and dates are unverified claims; deleted or rewritten history cannot be reconstructed from absent bytes.',
+    };
+    for (const [stream, fields] of [
+      ['\u0005SummaryInformation', SUMMARY_FIELDS],
+      ['\u0005DocumentSummaryInformation', DOCSUMMARY_FIELDS],
+    ]) {
+      const entry = cfbApi.find(cfb, '/' + stream);
+      if (!entry || !entry.content || entry.content.length > 2 * 1024 * 1024) continue;
+      const rows = parsePropertySetStream(entry.content, fields);
+      if (rows.length) out.properties[stream.slice(1)] = rows;
+    }
+    if (!Object.keys(out.properties).length)
+      throw Error('No summary metadata streams found in this legacy Office file.');
+    return out;
   }
   function lineDiff(left, right) {
     const a = left.split(/\r?\n/),
@@ -364,6 +544,14 @@
         if (sourcePDF) await sourcePDF.destroy();
       }
     }
+    if (id === 'doc-metadata' && /\.(doc|xls|ppt)$/i.test(file.name)) {
+      if (!root.LocalCFB) throw Error('Legacy Office parser unavailable.');
+      return legacyOfficeMetadata(
+        new Uint8Array(await file.arrayBuffer()),
+        file.name.split('.').pop().toLowerCase(),
+        root.LocalCFB.CFB || root.LocalCFB,
+      );
+    }
     if (id === 'doc-metadata' && /\.(docx|xlsx|pptx)$/i.test(file.name)) {
       if (!root.JSZip) throw new Error('Office ZIP parser unavailable.');
       const zip = await root.JSZip.loadAsync(await file.arrayBuffer());
@@ -379,7 +567,7 @@
         embeddedRevisionEvents: [],
         properties: {},
         limit:
-          'Embedded editable claims only. Tracked DOCX insertions/deletions/moves and comments are not a complete saved-version history. XLSX/PPTX historical revisions are not reconstructed. Legacy DOC/XLS/PPT unsupported.',
+          'Embedded editable claims only. Tracked DOCX insertions/deletions/moves and comments are not a complete saved-version history. XLSX/PPTX historical revisions are not reconstructed.',
       };
       const parse = async (name) => {
         const entry = zip.file(name);
@@ -428,7 +616,9 @@
       return out;
     }
     if (!/\.pdf$/i.test(file.name))
-      throw new Error('This tool requires a PDF (metadata also accepts DOCX/XLSX/PPTX).');
+      throw new Error(
+        'This tool requires a PDF (metadata also accepts DOCX/XLSX/PPTX and legacy DOC/XLS/PPT).',
+      );
     if (id === 'signature') return pdfEvidence(file, 'signatures');
     const result = await pdfInfo(file, id === 'hidden-text');
     if (id === 'pdf-inspector')

@@ -11,6 +11,10 @@ const entries = {
     name: 'LocalQR',
     source: 'import QRCode from "qrcode"; import jsQR from "jsqr"; export { QRCode, jsQR };',
   },
+  'cfb-bundle.js': {
+    name: 'LocalCFB',
+    source: 'import * as CFB from "cfb"; export { CFB };',
+  },
   'cid-bundle.js': {
     name: 'LocalCID',
     source:
@@ -33,6 +37,8 @@ const entries = {
     path.join(pdf, 'LICENSE.md'),
     path.join(root, 'public/vendor/pdf-lib-LICENSE.md'),
   );
+  const cfb = path.join(__dirname, 'node_modules/cfb');
+  fs.copyFileSync(path.join(cfb, 'LICENSE'), path.join(root, 'public/vendor/cfb-LICENSE.md'));
   const media = path.join(__dirname, 'node_modules/mediainfo.js');
   fs.copyFileSync(
     path.join(media, 'dist/umd/index.min.js'),
