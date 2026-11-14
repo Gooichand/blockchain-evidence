@@ -10,7 +10,7 @@
 
 The application has role-based dashboards, case/evidence workflows, uploads, IPFS storage integration, optional testnet anchoring and a browser forensic workbench. Most workbench operations process files locally. Read-only blockchain tools send digests or lookup identifiers to the configured server; they do not need to upload the file or sign a transaction.
 
-The catalog has 67 entries. The recorded strict-capability baseline is 49/67, with 18 original promises still unmet; this is not a guarantee across all files or a new production check. Under the current no-Network work scope, 8 Network entries are excluded, leaving a 45/59 non-Network ledger baseline. See [the capability ledger](docs/forensic-lab/strict-status.json) and [remaining scope](docs/forensic-lab/REMAINING-TOOLS-2026-11-14.md). Dated reports may describe earlier local/publication states; prefer their stated timestamp and current branch state over an old headline count.
+The catalog has 67 entries. The recorded strict-capability baseline is 50/67, with 17 original promises still unmet; this is not a guarantee across all files or a new production check. Under the current no-Network work scope, 8 Network entries are excluded, leaving a 46/59 non-Network ledger baseline. See [the capability ledger](docs/forensic-lab/strict-status.json) and [remaining scope](docs/forensic-lab/REMAINING-TOOLS-2026-11-14.md). Dated reports may describe earlier local/publication states; prefer their stated timestamp and current branch state over an old headline count.
 
 ### Hash & Integrity
 
