@@ -54,3 +54,42 @@ test('off-page text, skew and empty region bounds are handled', () => {
   expect(r.candidates[0].signals).toContain('OUTSIDE_RENDERED_PAGE');
   expect(C.region(image(false), { left: -20, right: -10, top: 0, bottom: 10 })).toBeNull();
 });
+
+test('nested opacity/render-mode state restores without contaminating visible text', () => {
+  const r = C.operators(
+    {
+      fnArray: [1, 6, 1, 3, 7, 2, 7, 2, 7],
+      argsArray: [
+        [],
+        [[['ca', 0]]],
+        [],
+        [3],
+        text('inner'),
+        [],
+        text('outer'),
+        [],
+        text('visible'),
+      ],
+    },
+    O,
+  );
+  expect(r.map((x) => [x.text, x.alpha, x.mode])).toEqual([
+    ['inner', 0, 3],
+    ['outer', 0, 0],
+    ['visible', 1, 0],
+  ]);
+});
+test('large operator list is rejected before output, not treated as clean', () => {
+  expect(() => C.operators({ fnArray: Array(200001).fill(7), argsArray: [] }, O)).toThrow(
+    'operator limit',
+  );
+});
+test('visible black text on white background is a negative, not suspicious merely because region is white', () => {
+  const r = C.classify(
+    [{ text: 'text', mode: 0, fill: [0, 0, 0], alpha: 1 }],
+    { items: [item] },
+    image(false),
+    viewport,
+  );
+  expect(r.candidates).toHaveLength(0);
+});

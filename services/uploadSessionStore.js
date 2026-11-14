@@ -32,6 +32,30 @@ const ROOT = process.env.UPLOAD_TMP_DIR || path.join(os.tmpdir(), 'evid-dgc-uplo
 // ever becoming a path traversal.
 const ID_RE = /^upl_[a-f0-9]{24}$/;
 
+// Serialize mutations for one upload within this Node process. This is not a
+// distributed lock: multi-process/shared-volume deployments need coordination.
+const mutations = new Map();
+async function mutate(id, operation) {
+  assertId(id);
+  const previous = mutations.get(id) || Promise.resolve();
+  const current = previous.catch(() => {}).then(operation);
+  mutations.set(id, current);
+  try {
+    return await current;
+  } finally {
+    if (mutations.get(id) === current) mutations.delete(id);
+  }
+}
+async function currentMeta(id) {
+  const meta = await readMeta(id);
+  if (!meta || isExpired(meta)) {
+    const error = new Error('Upload session not found or expired');
+    error.status = 404;
+    throw error;
+  }
+  return meta;
+}
+
 function assertId(id) {
   if (!ID_RE.test(String(id || ''))) {
     const e = new Error('Invalid upload id');
@@ -59,7 +83,7 @@ async function readMeta(id) {
 }
 
 async function writeMeta(meta) {
-  const tmp = metaPath(meta.id) + '.tmp';
+  const tmp = metaPath(meta.id) + '.' + crypto.randomBytes(8).toString('hex') + '.tmp';
   await fs.promises.writeFile(tmp, JSON.stringify(meta));
   await fs.promises.rename(tmp, metaPath(meta.id));
 }
@@ -109,7 +133,7 @@ function expectedChunkSize(meta, index) {
   return meta.size - meta.chunkSize * (meta.totalChunks - 1);
 }
 
-async function saveChunk(meta, index, buf) {
+async function saveChunkUnlocked(meta, index, buf) {
   const expected = expectedChunkSize(meta, index);
   if (expected < 0) {
     const e = new Error(`Chunk index ${index} is out of range (0-${meta.totalChunks - 1})`);
@@ -117,12 +141,14 @@ async function saveChunk(meta, index, buf) {
     throw e;
   }
   if (!Buffer.isBuffer(buf) || buf.length !== expected) {
-    const e = new Error(`Chunk ${index} must be exactly ${expected} bytes (got ${buf ? buf.length : 0})`);
+    const e = new Error(
+      `Chunk ${index} must be exactly ${expected} bytes (got ${buf ? buf.length : 0})`,
+    );
     e.status = 400;
     throw e;
   }
   const finalPath = chunkPath(meta.id, index);
-  const tmpPath = finalPath + '.tmp';
+  const tmpPath = finalPath + '.' + crypto.randomBytes(8).toString('hex') + '.tmp';
   await fs.promises.writeFile(tmpPath, buf);
   await fs.promises.rename(tmpPath, finalPath); // atomic; a re-sent chunk just replaces
   meta.received[String(index)] = buf.length;
@@ -131,7 +157,7 @@ async function saveChunk(meta, index, buf) {
 }
 
 // Concatenate the chunks in order and hash in one pass, 8 MB at a time.
-async function assemble(meta) {
+async function assembleUnlocked(meta) {
   if (meta.assembled && meta.sha256) return meta;
   for (let i = 0; i < meta.totalChunks; i++) {
     if (meta.received[String(i)] == null) {
@@ -155,7 +181,9 @@ async function assemble(meta) {
   const stat = await fs.promises.stat(assembledPath(meta.id));
   if (stat.size !== meta.size) {
     await deleteSession(meta.id).catch(() => {});
-    const e = new Error(`Assembled file is ${stat.size} bytes but ${meta.size} were declared - upload aborted`);
+    const e = new Error(
+      `Assembled file is ${stat.size} bytes but ${meta.size} were declared - upload aborted`,
+    );
     e.status = 400;
     throw e;
   }
@@ -164,6 +192,28 @@ async function assemble(meta) {
   meta.expiresAt = Date.now() + ASSEMBLED_TTL_MS; // shorter window once on disk whole
   await writeMeta(meta);
   return meta;
+}
+
+async function saveChunk(meta, index, buf) {
+  return mutate(meta.id, async () => {
+    const latest = await currentMeta(meta.id);
+    if (latest.assembled) {
+      const error = new Error('This upload is already completed');
+      error.status = 409;
+      throw error;
+    }
+    const saved = await saveChunkUnlocked(latest, index, buf);
+    Object.assign(meta, saved);
+    return saved;
+  });
+}
+async function assemble(meta) {
+  return mutate(meta.id, async () => {
+    const latest = await currentMeta(meta.id);
+    const assembled = await assembleUnlocked(latest);
+    Object.assign(meta, assembled);
+    return assembled;
+  });
 }
 
 // Read the assembled file for the evidence pipeline. This re-introduces a

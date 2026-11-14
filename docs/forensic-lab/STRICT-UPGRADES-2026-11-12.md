@@ -121,3 +121,8 @@ Strict remains47/67. Compression Analysis staysNo: this narrow uncalibrated heur
 ## Batch11: JPEG allocation-order hardening, strict unchanged47/67
 
 Coefficient limits now run before the browser pixel-preview decoder, not afterwards. ActualCSP worker tests patched a JPEG SOF to3000x3000 (9MP) and supplied invalid bytes while intercepting createImageBitmap: both rejected with zero preview decodes; valid examples unchanged. Oversizeddimensions are rejected before jpeg-js allocates coefficient blocks. Full35suites238tests,48Chromeexamples/extended matrices pass. IPFS publicCAR recheck07:58 timedout; retrieval staysunconfirmed. No push/PRedit/deployment/cost.
+
+
+## Batch12: recursive vendor-manifest coverage hardening, strict unchanged47/67
+
+Audit found all225existing manifest records stillmatched, but the two batch9JPEG files were missing from the manifest. Added their exact hashes/sizes and a permanent recursive test requiring every vendor asset exactly once, with exact size/SHA256.227assets checked,36suites239tests pass. No executable/browser change since48Chromeexamples/extended matrices passed08:00. PublicIPFS recheck11:31 returned526, so stillunconfirmed/No. This batch is localonly, not included in publishedPR384 until a fresh approved push.

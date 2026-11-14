@@ -46,7 +46,11 @@ class IntegratedEvidenceService {
         });
       } catch (ipfsError) {
         console.error('IPFS pinning failed:', ipfsError.message);
-        results.errors.push({ service: 'IPFS', error: 'File storage pinning failed. Please retry the upload.', code: 'IPFS_FAILED' });
+        results.errors.push({
+          service: 'IPFS',
+          error: 'File storage pinning failed. Please retry the upload.',
+          code: 'IPFS_FAILED',
+        });
       }
 
       const blockchainMetadata = {
@@ -69,58 +73,60 @@ class IntegratedEvidenceService {
         console.error('Blockchain anchoring failed:', blockchainError.message);
         results.errors.push({
           service: 'Blockchain',
-          error: 'Blockchain anchoring is currently unavailable. The upload is stored and will be anchored automatically once the service wallet is authorized and funded.',
+          error:
+            'Blockchain anchoring is currently unavailable. The upload is stored but is not anchored; retry completion is not guaranteed.',
           code: 'ANCHOR_UNAVAILABLE',
         });
       }
 
       try {
-        const { data: evidence, error: dbError } = (await supabase
-          .from('evidence')
-          .insert({
-            case_id: metadata.caseId,
-            title: metadata.title || fileName,
-            name: metadata.title || fileName,
-            forensic_metadata: metadata.forensic || {},
-            extracted_metadata: (results.metadata && results.metadata.extracted) || {},
-            metadata_flags: (results.metadata && results.metadata.flags) || [],
-            file_name: fileName,
-            type: metadata.type,
-            // title, type, file_data, file_name and file_size are all NOT NULL in
-            // the evidence schema; the insert previously omitted four of them, so
-            // every upload died on a constraint violation.
-            //
-            // file_data is consumed as a locator, not as raw bytes: the UI does
-            // `<img src="${evidence.file_data}">`, `<iframe src=...>` and
-            // `link.href = evidence.file_data`. So it points at the IPFS gateway
-            // rather than duplicating the payload into Postgres, which is also
-            // what the architecture intends. If the pin failed we fall back to an
-            // inline data URI so the row stays valid and viewable in that case.
-            file_data: results.ipfs?.cid
-              ? ipfsStorageService.getGatewayUrl(results.ipfs.cid)
-              : `data:${metadata.mimeType || 'application/octet-stream'};base64,${fileBuffer.toString('base64')}`,
-            file_type: metadata.mimeType,
-            file_size: fileBuffer.length,
-            hash: results.hash,
-            ipfs_cid: results.ipfs?.cid || null,
-            blockchain_tx_hash: results.blockchain?.txHash || null,
-            blockchain_block_number: results.blockchain?.blockNumber || null,
-            gas_used: results.blockchain?.gasUsed || null,
-            submitted_by: uploadedBy,
-            description: metadata.description,
-            location: metadata.location,
-            collection_date: metadata.collectionDate,
-            blockchain_verified: !!results.blockchain,
-            blockchain_timestamp: results.blockchain ? new Date().toISOString() : null,
-            // C1 fix: honest anchoring status instead of a silent "pending" forever
-            blockchain_status: results.blockchain ? 'confirmed' : 'failed',
-            blockchain_error_message: results.blockchain
-              ? null
-              : 'Anchoring unavailable: service wallet not authorized or not funded',
-            timestamp: new Date().toISOString(),
-          })
-          .select()
-          .single()) || {};
+        const { data: evidence, error: dbError } =
+          (await supabase
+            .from('evidence')
+            .insert({
+              case_id: metadata.caseId,
+              title: metadata.title || fileName,
+              name: metadata.title || fileName,
+              forensic_metadata: metadata.forensic || {},
+              extracted_metadata: (results.metadata && results.metadata.extracted) || {},
+              metadata_flags: (results.metadata && results.metadata.flags) || [],
+              file_name: fileName,
+              type: metadata.type,
+              // title, type, file_data, file_name and file_size are all NOT NULL in
+              // the evidence schema; the insert previously omitted four of them, so
+              // every upload died on a constraint violation.
+              //
+              // file_data is consumed as a locator, not as raw bytes: the UI does
+              // `<img src="${evidence.file_data}">`, `<iframe src=...>` and
+              // `link.href = evidence.file_data`. So it points at the IPFS gateway
+              // rather than duplicating the payload into Postgres, which is also
+              // what the architecture intends. If the pin failed we fall back to an
+              // inline data URI so the row stays valid and viewable in that case.
+              file_data: results.ipfs?.cid
+                ? ipfsStorageService.getGatewayUrl(results.ipfs.cid)
+                : `data:${metadata.mimeType || 'application/octet-stream'};base64,${fileBuffer.toString('base64')}`,
+              file_type: metadata.mimeType,
+              file_size: fileBuffer.length,
+              hash: results.hash,
+              ipfs_cid: results.ipfs?.cid || null,
+              blockchain_tx_hash: results.blockchain?.txHash || null,
+              blockchain_block_number: results.blockchain?.blockNumber || null,
+              gas_used: results.blockchain?.gasUsed || null,
+              submitted_by: uploadedBy,
+              description: metadata.description,
+              location: metadata.location,
+              collection_date: metadata.collectionDate,
+              blockchain_verified: !!results.blockchain,
+              blockchain_timestamp: results.blockchain ? new Date().toISOString() : null,
+              // C1 fix: honest anchoring status instead of a silent "pending" forever
+              blockchain_status: results.blockchain ? 'confirmed' : 'failed',
+              blockchain_error_message: results.blockchain
+                ? null
+                : 'Anchoring unavailable: service wallet not authorized or not funded',
+              timestamp: new Date().toISOString(),
+            })
+            .select()
+            .single()) || {};
 
         if (dbError) throw dbError;
         results.database = evidence;
@@ -147,10 +153,10 @@ class IntegratedEvidenceService {
         console.error('blockchain_transactions log failed:', txLogErr.message);
       }
 
-      // Queue a retry so the anchor lands once the wallet is fixed
+      // Record a retry request. A queue write is not proof of eventual anchoring.
       if (!results.blockchain) {
         try {
-          await supabase.from('blockchain_retry_queue').insert({
+          const queueResult = await supabase.from('blockchain_retry_queue').insert({
             operation: 'storeEvidence',
             target_id: null,
             payload: {
@@ -162,8 +168,15 @@ class IntegratedEvidenceService {
             next_retry_at: new Date().toISOString(),
             status: 'pending',
           });
+          if (!queueResult || queueResult.error) throw new Error('Retry queue write failed');
         } catch (retryErr) {
           console.error('blockchain_retry_queue insert failed:', retryErr.message);
+          results.errors.push({
+            service: 'Blockchain',
+            error:
+              'The upload is stored, but anchoring retry could not be queued. Contact an administrator before relying on anchoring recovery.',
+            code: 'RETRY_QUEUE_FAILED',
+          });
         }
       }
 
@@ -188,11 +201,8 @@ class IntegratedEvidenceService {
 
   async verifyEvidence(evidenceId) {
     try {
-      const { data: evidence, error } = (await supabase
-        .from('evidence')
-        .select('*')
-        .eq('id', evidenceId)
-        .single()) || {};
+      const { data: evidence, error } =
+        (await supabase.from('evidence').select('*').eq('id', evidenceId).single()) || {};
 
       if (error || !evidence) {
         throw new Error('Evidence not found');
@@ -237,11 +247,8 @@ class IntegratedEvidenceService {
 
   async getEvidenceProof(evidenceId) {
     try {
-      const { data: evidence, error } = (await supabase
-        .from('evidence')
-        .select('*')
-        .eq('id', evidenceId)
-        .single()) || {};
+      const { data: evidence, error } =
+        (await supabase.from('evidence').select('*').eq('id', evidenceId).single()) || {};
 
       if (error || !evidence) {
         throw new Error('Evidence not found');

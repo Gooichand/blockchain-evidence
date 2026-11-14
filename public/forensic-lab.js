@@ -239,7 +239,10 @@
           const hash = await computeSHA256(file);
           const response = await fetch('/api/blockchain/verify-hash/' + hash, { credentials: 'same-origin', signal: AbortSignal.timeout(20000) });
           const result = await response.json();
-          if (!response.ok || result.success !== true || typeof result.anchored !== 'boolean' || result.hash !== hash || result.chainId !== 80002) {
+          if (!response.ok || result.success !== true || typeof result.anchored !== 'boolean' || result.hash !== hash || result.chainId !== 80002 ||
+              !/^0x[0-9a-fA-F]{40}$/.test(result.contractAddress || '') ||
+              !Number.isSafeInteger(result.blockNumber) || result.blockNumber < 0 ||
+              (result.anchored ? typeof result.evidenceId !== 'string' || !/^[1-9][0-9]*$/.test(result.evidenceId) : result.evidenceId !== null)) {
             throw new Error(result.error || 'Blockchain verification unavailable. No result was confirmed.');
           }
           return { ...result, status: 'completed', file: file.name, size: file.size,
@@ -759,7 +762,8 @@
         if (result.expected) output.appendChild(el('p', { text: 'Supplied baseline: ' + result.expected }));
         output.appendChild(el('p', { text: result.note }));
       } catch (error) {
-        if (!ws.contains(output)) return;
+        // An invalidated run must not replace restored inputs with an old error.
+        if (run !== sequence || !ws.contains(output)) return;
         state.lastRun = null;
         clear(output);
         if (demoLabel) output.appendChild(el('p', { class: 'fl-demo-label', text: 'DEMO SAMPLE - ' + demoLabel + '. Your evidence is unchanged.' }));

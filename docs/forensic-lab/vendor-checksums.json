@@ -47,6 +47,16 @@
       "sha256": "9e496ee399dca970ad81a28de63f3f7abda61a3357f34b5a3157fd6f64770da0"
     },
     {
+      "path": "public/vendor/jpeg-THIRD-PARTY-NOTICES.txt",
+      "bytes": 14286,
+      "sha256": "ba7ae5d62d9545178f8165ec380426ecad95c31410afcba3ca97c8954870b040"
+    },
+    {
+      "path": "public/vendor/jpeg-coefficients.js",
+      "bytes": 12786,
+      "sha256": "b65c01c3b2258a92c1d1acf0497ca8ae190c9a418c1bc6c895d2cf83d10de803"
+    },
+    {
       "path": "public/vendor/jszip-3.10.1.min.js",
       "bytes": 97630,
       "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"

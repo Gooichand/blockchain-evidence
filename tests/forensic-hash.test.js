@@ -76,3 +76,57 @@ describe('Hash & Integrity local services', () => {
     await expect(run('blockchain-verify')).rejects.toThrow('Select');
   });
 });
+
+// Hash recheck: independent exact-byte and size-boundary evidence.
+describe('SHA-256 complete-check boundaries', () => {
+  test.each([55,56,63,64,65,119,120,127,128,129,1024*1024])('exact binary bytes at %i bytes', async size => {
+    const bytes=Buffer.from(Array.from({length:size},(_,i)=>(i*137+255)%256));
+    expect((await run('sha256',file(bytes))).digests['SHA-256']).toBe(hash(bytes));
+  });
+  test('accepts exactly50MiB and rejects one byte over before reading',async()=>{
+    const bytes=Buffer.alloc(50*1024*1024,0x93);
+    expect((await run('sha256',file(bytes))).digests['SHA-256']).toBe(hash(bytes));
+    const read=jest.fn();
+    await expect(run('sha256',{size:bytes.length+1,arrayBuffer:read})).rejects.toThrow('50 MiB');
+    expect(read).not.toHaveBeenCalled();
+  });
+  test('file name and MIME do not affect digest, changed bytes do',async()=>{
+    const a=await run('sha256',file(Buffer.from([0,255,128,1]),'a.txt'));
+    const b=await run('sha256',file(Buffer.from([0,255,128,1]),'b.exe'));
+    const c=await run('sha256',file(Buffer.from([0,255,128,2]),'a.txt'));
+    expect(a.digests).toEqual(b.digests);expect(c.digests).not.toEqual(a.digests);
+  });
+});
+
+describe('Hash comparison complete-check matrix',()=>{
+  test.each([['md5',32],['sha1',40],['sha256',64],['sha384',96],['sha512',128]])('%s exact length %i equality and mismatch',async(algorithm,length)=>{
+    const a=hash('same bytes',algorithm),b=hash('different bytes',algorithm);
+    expect(a).toHaveLength(length);
+    expect((await run('hash-compare',null,{left:' \t'+a.toUpperCase(),right:a+'\r\n'})).match).toBe(true);
+    expect((await run('hash-compare',null,{left:a,right:b})).match).toBe(false);
+    await expect(run('hash-compare',null,{left:a.slice(1),right:a})).rejects.toThrow();
+    await expect(run('hash-compare',null,{left:a.slice(0,4)+' '+a.slice(4),right:a})).rejects.toThrow();
+  });
+  test.each(['0x'+'a'.repeat(64),'Ａ'.repeat(64),'a'.repeat(64)+'z','a'.repeat(10000)])('rejects prefixed/non-ASCII/trailing/oversized digest',async left=>{
+    await expect(run('hash-compare',null,{left,right:'a'.repeat(64)})).rejects.toThrow();
+  });
+});
+describe('Integrity baseline complete check',()=>{
+  test('accepts case/outer whitespace without changing baseline bytes',async()=>{
+    const digest=hash(Buffer.from([0,255,128,1]));
+    const r=await run('integrity-check',file(Buffer.from([0,255,128,1])),{expected:' \n'+digest.toUpperCase()+'\t'});
+    expect(r.match).toBe(true);expect(r.expected).toBe(digest);expect(r.note).toContain('does not authenticate');
+  });
+  test('empty-file baseline is valid and changed byte fails',async()=>{
+    const baseline=hash(Buffer.alloc(0));
+    expect((await run('integrity-check',file(Buffer.alloc(0)),{expected:baseline})).match).toBe(true);
+    expect((await run('integrity-check',file(Buffer.from([0])),{expected:baseline})).match).toBe(false);
+  });
+});
+describe('Multi hash complete byte-boundary matrix',()=>{
+  test.each([0,55,56,63,64,65,111,112,127,128,129,1024*1024])('all five algorithms at %i bytes',async size=>{
+    const bytes=Buffer.alloc(size,0xf3),r=await run('multi-hash',file(bytes));
+    expect(Object.keys(r.digests)).toHaveLength(5);
+    for(const [label,value] of Object.entries(r.digests)) expect(value).toBe(hash(bytes,label.toLowerCase().replace('-','')));
+  });
+});
