@@ -57,7 +57,7 @@
         { id: 'pdf-inspector', name: 'PDF Inspector', icon: 'file-search', status: 'available', desc: 'Deep inspection of PDF structure and objects.' },
         { id: 'doc-metadata', name: 'Metadata Viewer', icon: 'tags', status: 'available', desc: 'Hidden authorship and history metadata.' },
         { id: 'ocr', name: 'OCR Engine', icon: 'scan-text', status: 'coming-soon', desc: 'Optical character recognition for scanned documents.' },
-        { id: 'hidden-text', name: 'Hidden Text Detector', icon: 'eye-off', status: 'beta', desc: 'Uncover hidden and white-on-white text.' },
+        { id: 'hidden-text', name: 'Hidden Text Detector', icon: 'eye-off', status: 'beta', desc: 'Uncover hidden, clipped, overpainted and white-on-white text.' },
         { id: 'signature', name: 'Signature Verification', icon: 'pen-tool', status: 'beta', desc: 'Digital signature validation and analysis.' },
         { id: 'doc-compare', name: 'Document Comparison', icon: 'file-diff', status: 'beta', desc: 'Diff and change detection across revisions.' },
       ],

@@ -262,8 +262,50 @@ async function run() {
           assert(r.objectInventory.objects.some((o) => o.dictionary));
         }
         if (id === 'ocr') assert(r.text.includes('DGC DEMO'));
-        if (id === 'hidden-text')
+        if (id === 'hidden-text') {
           assert(r.pages[0].candidates.some((x) => x.text.includes('INVISIBLE')));
+          const layered = await page.evaluate(async () => {
+            const f = new File(
+              [
+                await (
+                  await fetch('/samples/document/concealed/signals.pdf')
+                ).arrayBuffer(),
+              ],
+              'signals.pdf',
+            );
+            return DocumentForensics.analyze('hidden-text', f);
+          });
+          assert.equal(
+            layered.pages[1].candidates.find((x) => x.text.includes('OVERPAINTED'))?.signal,
+            'OVERPAINTED_BY_LATER_FILL',
+          );
+          assert(
+            layered.pages[1].candidates.some(
+              (x) =>
+                x.text.includes('CLIPPED OUTSIDE') &&
+                x.signals.includes('CLIPPED_OUTSIDE_CLIP_REGION'),
+            ),
+          );
+          assert(
+            !layered.pages[1].candidates.some(
+              (x) => x.text.includes('IN CLIP') || x.text.includes('PAINTED AFTER'),
+            ),
+            'layering negatives must not be flagged',
+          );
+          const type3 = await page.evaluate(async () => {
+            const f = new File(
+              [
+                await (
+                  await fetch('/samples/document/concealed/type3-unmapped.pdf')
+                ).arrayBuffer(),
+              ],
+              'type3-unmapped.pdf',
+            );
+            return DocumentForensics.analyze('hidden-text', f);
+          });
+          assert.equal(type3.pages[0].candidates.length, 0);
+          assert.equal(type3.pages[0].unmappedTextOperators.length, 1);
+        }
         if (id === 'signature') {
           assert.equal(r.signatures[0].cryptographicSignature, 'VALID FOR SIGNED BYTE RANGES');
           assert.equal(r.signatures[0].certificateTrust, 'NOT CHECKED');
