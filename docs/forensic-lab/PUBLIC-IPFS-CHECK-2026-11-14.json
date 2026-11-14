@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-14T13:02:19.568Z",
+  "gateway": "everland",
+  "results": [
+    {
+      "cid": "bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354",
+      "note": "Empty UnixFS directory, deterministic public CIDv1 of QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+      "retrievedBytes": 100,
+      "cidVerified": true,
+      "verifiedBlockCount": 1,
+      "status": "RETRIEVED_AND_VERIFIED"
+    },
+    {
+      "cid": "bafybeie5nqv6kd3qnfjupgvz34woh3oksc3iau6abmyajn7qvtf6d2ho34",
+      "note": "Public directory (docs example QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG as CIDv1)",
+      "retrievedBytes": 6689,
+      "cidVerified": true,
+      "verifiedBlockCount": 7,
+      "status": "RETRIEVED_AND_VERIFIED"
+    }
+  ]
+}

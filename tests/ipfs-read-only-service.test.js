@@ -19,6 +19,22 @@ test('fixed-origin CAR retrieval forbids redirects and caps bytes/time without c
   });
   expect(options.headers.Authorization).toBeUndefined();
 });
+test('4everland subdomain gateway builds a fixed-template URL and rejects over-label CIDs', async () => {
+  axios.get.mockResolvedValue({
+    status: 200,
+    headers: { 'content-type': 'application/vnd.ipld.car;version=1' },
+    data: Buffer.from([3, 4]),
+  });
+  expect(await service.readCAR('everland', cid)).toEqual(Buffer.from([3, 4]));
+  const [url, options] = axios.get.mock.calls[0];
+  expect(url).toBe('https://' + cid + '.ipfs.4everland.io/?format=car&dag-scope=all');
+  expect(options.maxRedirects).toBe(0);
+  expect(options.headers.Authorization).toBeUndefined();
+  const longCid = 'b' + 'a'.repeat(70);
+  await expect(service.readCAR('everland', longCid)).rejects.toThrow('label');
+  expect(axios.get).toHaveBeenCalledTimes(1);
+  await expect(service.readCAR('trustless', longCid)).resolves.toEqual(Buffer.from([3, 4]));
+});
 test('arbitrary gateway, path/query injection and non-CAR responses rejected', async () => {
   for (const [g, c] of [
     ['http://127.0.0.1', cid],

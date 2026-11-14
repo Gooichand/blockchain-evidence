@@ -1,5 +1,5 @@
 {
-  "strictYes": 47,
+  "strictYes": 48,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -231,8 +231,8 @@
       "category": "Blockchain",
       "id": "ipfs-viewer",
       "name": "IPFS Viewer",
-      "strictYes": false,
-      "reason": "Multi-block UnixFS CAR/directory verification and reconstruction pass real local fixtures/tampered/missing-block cases. Public CAR gateway attempts timed out; retrieval remains unconfirmed, no strict credit."
+      "strictYes": true,
+      "reason": "Local multi-block CAR verification plus confirmed public retrieval: two public CIDs fetched through the fixed 4everland subdomain gateway and fully block/link-verified with the actual verifier on 2026-11-14 (docs/forensic-lab/PUBLIC-IPFS-CHECK-2026-11-14.json). trustless-gateway.link remained unreachable; gateway unavailability fails closed. Pin status, authorship and continued availability still not claimed."
     },
     {
       "category": "Blockchain",
