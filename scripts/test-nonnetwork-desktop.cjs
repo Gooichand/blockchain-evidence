@@ -947,6 +947,25 @@ async function run() {
     fs.writeFileSync(path.join(screenshotDir,'double-jpeg-preflight.json'),JSON.stringify(jpegPreflight,null,2));
     fs.writeFileSync(path.join(screenshotDir,'double-jpeg-validation.json'),JSON.stringify(jpegMatrix,null,2));
     console.log('PASS actual coefficient worker JPEG positives incl. broad-enrichment, single negatives,3 documented genuine-double misses and4 independent smooth-photo cases');
+    const prnuMatrix=await page.evaluate(async()=>{
+      const file=async(n)=>{const r=await fetch('/samples/image/prnu/'+n);if(!r.ok)throw Error('Fixture unavailable: '+n);return new File([await r.arrayBuffer()],n,{type:'image/jpeg'});};
+      const refs=async(d)=>[await file(d+'-flat-1.jpg'),await file(d+'-flat-2.jpg'),await file(d+'-flat-3.jpg')];
+      const out=[];
+      for(const [query,sameDev,crossDev] of [['C02-nat-1.jpg','C02','C15'],['C02-nat-2.jpg','C02','C15'],['C15-nat-1.jpg','C15','C02'],['C15-nat-2.jpg','C15','C02']]){
+        const same=(await ImageForensics.analyze('noise-analysis',await file(query),await refs(sameDev))).summary.prnu;
+        const cross=(await ImageForensics.analyze('noise-analysis',await file(query),await refs(crossDev))).summary.prnu;
+        if(!(same.peakCorrelation>cross.peakCorrelation*1.8&&same.pce>cross.pce*3))throw Error('PRNU separation failed for '+query+': '+JSON.stringify({same,cross}));
+        out.push({query,sameDevice:sameDev,same,crossDevice:crossDev,cross});
+      }
+      /* C01 is a documented weak-PRNU modern device (dataset paper agrees):
+         record its measurements without requiring separation. */
+      const weakSame=(await ImageForensics.analyze('noise-analysis',await file('C01-nat-1.jpg'),await refs('C01'))).summary.prnu;
+      const weakCross=(await ImageForensics.analyze('noise-analysis',await file('C01-nat-1.jpg'),await refs('C02'))).summary.prnu;
+      out.push({query:'C01-nat-1.jpg',documentedWeakDevice:true,same:weakSame,cross:weakCross});
+      return out;
+    });
+    fs.writeFileSync(path.join(screenshotDir,'prnu-validation.json'),JSON.stringify(prnuMatrix,null,2));
+    console.log('PASS real-camera PRNU same-device separation on C02/C15 naturals, weak device C01 disclosed');
     await openTool('network','dns-lookup');
     await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
     await page.click('[aria-label="Try live DNS example"]');

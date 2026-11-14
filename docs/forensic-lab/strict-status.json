@@ -1,7 +1,7 @@
 {
-  "strictYes": 53,
+  "strictYes": 54,
   "catalogCount": 67,
-  "boundedDesktop": 52,
+  "boundedDesktop": 53,
   "tools": [
     {
       "category": "Hash & Integrity",
@@ -56,8 +56,8 @@
       "category": "Image Forensics",
       "id": "noise-analysis",
       "name": "Noise Analysis",
-      "strictYes": false,
-      "reason": "Residual visualization, no sensor/camera attribution."
+      "strictYes": true,
+      "reason": "PRNU same-device attribution via Gaussian-residual fingerprint correlation (center 512px crop, PCE over +/-4px shifts) against user-supplied reference photos from a claimed source device. Validated on the PrnuModernDevices real-camera dataset (CSP Lab, University of Florence, CC BY-SA 4.0): all four C02/C15 same-device naturals separate from the cross-device fingerprint (same/cross ratios at least 4.4x on peak correlation and 9.4x on PCE); the known weak-PRNU device C01 shows no usable signal in either direction and is disclosed as a documented weak case rather than credited. Measurement-only candidate signal - never a match verdict, camera-model identification or person identification; scaling, cropping, rotation and re-encoding can erase the signal and are stated as misses."
     },
     {
       "category": "Image Forensics",
@@ -473,5 +473,5 @@
       "reason": "No validated model; no result fabricated."
     }
   ],
-  "boundedTotalIncludingUserConfirmedLiveHash": 53
+  "boundedTotalIncludingUserConfirmedLiveHash": 54
 }

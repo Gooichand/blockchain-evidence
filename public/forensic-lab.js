@@ -40,7 +40,7 @@
       tools: [
         { id: 'ela', name: 'Error Level Analysis', icon: 'contrast', status: 'beta', desc: 'Re-compression analysis to expose edited regions.' },
         { id: 'clone-detect', name: 'Clone Detection', icon: 'copy', status: 'beta', desc: 'Detect duplicated and cloned image regions.' },
-        { id: 'noise-analysis', name: 'Noise Analysis', icon: 'activity', status: 'beta', desc: 'Sensor noise pattern analysis for source attribution.' },
+        { id: 'noise-analysis', name: 'Noise Analysis', icon: 'activity', status: 'beta', desc: 'Sensor noise residuals and PRNU same-device measurements.' },
         { id: 'img-metadata', name: 'Metadata Viewer', icon: 'tags', status: 'available', desc: 'EXIF, GPS and camera metadata extraction.' },
         { id: 'histogram', name: 'Histogram Analysis', icon: 'bar-chart-3', status: 'available', desc: 'Pixel distribution analysis across color channels.' },
         { id: 'compression', name: 'Compression Analysis', icon: 'archive', status: 'available', desc: 'Detect double-compression artifacts.' },
