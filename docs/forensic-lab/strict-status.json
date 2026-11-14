@@ -1,7 +1,7 @@
 {
-  "strictYes": 54,
+  "strictYes": 55,
   "catalogCount": 67,
-  "boundedDesktop": 53,
+  "boundedDesktop": 54,
   "tools": [
     {
       "category": "Hash & Integrity",
@@ -112,8 +112,8 @@
       "category": "Document Forensics",
       "id": "doc-metadata",
       "name": "Metadata Viewer",
-      "strictYes": false,
-      "reason": "Modern properties/embedded DOCX revisions; no full history or legacy formats."
+      "strictYes": true,
+      "reason": "Modern DOCX/XLSX/PPTX core/app/custom properties plus embedded DOCX revision events (ins/del/move/comment) parsed with hard XML bounds (2MiB, no entity declarations, malformed rejected); legacy DOC/XLS/PPT OLE2 SummaryInformation/DocumentSummaryInformation streams parsed through the vendored cfb engine and bounded MS-OLEPS reader (author, last-saved-by, revision, timestamps, company, user-defined fields) with non-OLE2 bytes rejected. Deleted or rewritten history cannot be reconstructed from absent bytes and is stated as such. Desktop gate covers the legacy fixtures through this exact entry."
     },
     {
       "category": "Document Forensics",
@@ -473,5 +473,5 @@
       "reason": "No validated model; no result fabricated."
     }
   ],
-  "boundedTotalIncludingUserConfirmedLiveHash": 54
+  "boundedTotalIncludingUserConfirmedLiveHash": 55
 }

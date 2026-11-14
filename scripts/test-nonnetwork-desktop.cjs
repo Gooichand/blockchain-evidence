@@ -670,6 +670,23 @@ async function run() {
       }
       console.log('PASS original Office properties', name);
     }
+    for (const ext of ['doc', 'xls', 'ppt']) {
+      const legacy = await page.evaluate(async (ext) => {
+        const r = await fetch('/samples/document/legacy-summary.' + ext);
+        return DocumentForensics.analyze(
+          'doc-metadata',
+          new File([await r.arrayBuffer()], 'legacy-summary.' + ext),
+        );
+      }, ext);
+      const flat = Object.values(legacy.properties)
+        .flat()
+        .map((x) => x.field + '=' + x.value);
+      assert(flat.includes('Author=DGC Synthetic Author'), ext + ' author');
+      assert(flat.includes('Last saved by=DGC Synthetic Editor'), ext + ' editor');
+      assert(flat.includes('Company=DGC Synthetic Company'), ext + ' company');
+      assert(legacy.limit.includes('cannot be reconstructed'), ext + ' limit');
+    }
+    console.log('PASS doc-metadata legacy OLE2 summary streams with honest history limit');
     const officeSafety = await page.evaluate(async () => {
       const checks = [];
       for (const [label, entries] of [
