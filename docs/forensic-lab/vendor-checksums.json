@@ -2,14 +2,14 @@
   "description": "Integrity manifest of vendored assets, not an authenticity or vulnerability guarantee.",
   "files": [
     {
-      "path": "public/vendor/MediaInfoModule-0.3.8.wasm",
-      "bytes": 2599419,
-      "sha256": "1ee6839916d4928e09651805038b17439d98379d3dbd32f5a8bc642a2bc458e6"
+      "path": "public/vendor/cfb-bundle.js",
+      "bytes": 77143,
+      "sha256": "6d1357dfa05983a6ab1fd08b38f88ff0d44ac5d27e07198af0a6bdc60dd27caf"
     },
     {
-      "path": "public/vendor/cid-LICENSE.txt",
-      "bytes": 158,
-      "sha256": "9c17f5c830232d45eab60e1bdc8f5cb4df631ddf56fe29aeced3009256e544b0"
+      "path": "public/vendor/cfb-LICENSE.md",
+      "bytes": 11355,
+      "sha256": "279ce5f639ecd1767f96948f9fbe6f0aa8145cb280cf98473fb366eab5e6de26"
     },
     {
       "path": "public/vendor/cid-bundle.js",
@@ -17,14 +17,19 @@
       "sha256": "3d1fa9f5dfb8c4fd3c403867bb5e79b007c347d698db1e691cd4f7e3698e24b0"
     },
     {
-      "path": "public/vendor/cms-THIRD-PARTY-NOTICES.txt",
-      "bytes": 8152,
-      "sha256": "f984457e3bde01eb42775065ff8ab5a2c7ed346b9c9b63429808c1113938274f"
+      "path": "public/vendor/cid-LICENSE.txt",
+      "bytes": 158,
+      "sha256": "9c17f5c830232d45eab60e1bdc8f5cb4df631ddf56fe29aeced3009256e544b0"
     },
     {
       "path": "public/vendor/cms-bundle.js",
       "bytes": 853694,
       "sha256": "53215568300e76b5ce9890004d6c33dbb06487352a66cd70791f0cebb83342c2"
+    },
+    {
+      "path": "public/vendor/cms-THIRD-PARTY-NOTICES.txt",
+      "bytes": 8152,
+      "sha256": "f984457e3bde01eb42775065ff8ab5a2c7ed346b9c9b63429808c1113938274f"
     },
     {
       "path": "public/vendor/exifr-7.1.3.umd.js",
@@ -37,24 +42,24 @@
       "sha256": "e32a745bc4816c774d8e26bb9f04acde451b54669079e8b728d22fe9805c1225"
     },
     {
-      "path": "public/vendor/ipfs-THIRD-PARTY-NOTICES.txt",
-      "bytes": 122071,
-      "sha256": "efebc0871245a1dc5abeb539de3327494dc6286c9544bc5c79daae6214c095b4"
-    },
-    {
       "path": "public/vendor/ipfs-bundle.js",
       "bytes": 462374,
       "sha256": "9e496ee399dca970ad81a28de63f3f7abda61a3357f34b5a3157fd6f64770da0"
     },
     {
-      "path": "public/vendor/jpeg-THIRD-PARTY-NOTICES.txt",
-      "bytes": 14286,
-      "sha256": "ba7ae5d62d9545178f8165ec380426ecad95c31410afcba3ca97c8954870b040"
+      "path": "public/vendor/ipfs-THIRD-PARTY-NOTICES.txt",
+      "bytes": 122071,
+      "sha256": "efebc0871245a1dc5abeb539de3327494dc6286c9544bc5c79daae6214c095b4"
     },
     {
       "path": "public/vendor/jpeg-coefficients.js",
       "bytes": 12786,
       "sha256": "b65c01c3b2258a92c1d1acf0497ca8ae190c9a418c1bc6c895d2cf83d10de803"
+    },
+    {
+      "path": "public/vendor/jpeg-THIRD-PARTY-NOTICES.txt",
+      "bytes": 14286,
+      "sha256": "ba7ae5d62d9545178f8165ec380426ecad95c31410afcba3ca97c8954870b040"
     },
     {
       "path": "public/vendor/jszip-3.10.1.min.js",
@@ -77,6 +82,11 @@
       "sha256": "4997496865cae27ceba179fecb7c90fbe563f4e661fa17d038d3e2b008d2fdb5"
     },
     {
+      "path": "public/vendor/MediaInfoModule-0.3.8.wasm",
+      "bytes": 2599419,
+      "sha256": "1ee6839916d4928e09651805038b17439d98379d3dbd32f5a8bc642a2bc458e6"
+    },
+    {
       "path": "public/vendor/mp4box-0.5.4.min.js",
       "bytes": 162805,
       "sha256": "3b09dc606b37de1312d6c55c8bc55089a1e0a5aacef01c16bcaa9703725ad2a2"
@@ -95,11 +105,6 @@
       "path": "public/vendor/ocr/eng.traineddata",
       "bytes": 4113088,
       "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
-    },
-    {
-      "path": "public/vendor/ocr/tesseract-LICENSE.txt",
-      "bytes": 11357,
-      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
     },
     {
       "path": "public/vendor/ocr/tesseract-core-LICENSE.txt",
@@ -125,6 +130,11 @@
       "path": "public/vendor/ocr/tesseract-core-simd-lstm.wasm.js",
       "bytes": 3938657,
       "sha256": "ce20eda9533cbed1e6c2b4276fbae1e0adc61b6754b5513084be601787b457cf"
+    },
+    {
+      "path": "public/vendor/ocr/tesseract-LICENSE.txt",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
     },
     {
       "path": "public/vendor/ocr/tesseract.min.js",
@@ -165,11 +175,6 @@
       "path": "public/vendor/pdfjs-4.10.38.min.mjs",
       "bytes": 352645,
       "sha256": "27fc2a057a00f92a4334ad06e17dbd7259912954e9fb7f76400bcca5fd190a9c"
-    },
-    {
-      "path": "public/vendor/pdfjs-LICENSE.txt",
-      "bytes": 10174,
-      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
     },
     {
       "path": "public/vendor/pdfjs-cmaps/78-EUC-H.bcmap",
@@ -452,16 +457,6 @@
       "sha256": "2e4f70a8afd23a121030fc2e5b5f3816e903b11e7ba8b8c09654b31c80399c38"
     },
     {
-      "path": "public/vendor/pdfjs-cmaps/ETHK-B5-H.bcmap",
-      "bytes": 4426,
-      "sha256": "d2f10fa519336bc4efcc7b6deb9604b75429946b40d82e311cb3a97a1994c89a"
-    },
-    {
-      "path": "public/vendor/pdfjs-cmaps/ETHK-B5-V.bcmap",
-      "bytes": 158,
-      "sha256": "1fea3fd0d9f0f679f80505800851ef2e4131d81127e18c006938ffa2f4c8b247"
-    },
-    {
       "path": "public/vendor/pdfjs-cmaps/ETen-B5-H.bcmap",
       "bytes": 1125,
       "sha256": "87ee6b3f5bfda5fe26fa35431264c7d73070d10dbbf398a75185d63ae322c18d"
@@ -480,6 +475,16 @@
       "path": "public/vendor/pdfjs-cmaps/ETenms-B5-V.bcmap",
       "bytes": 172,
       "sha256": "18252fca90f472f479af1bddd60d6ab51c8e1b55dcf6845951426504934543e0"
+    },
+    {
+      "path": "public/vendor/pdfjs-cmaps/ETHK-B5-H.bcmap",
+      "bytes": 4426,
+      "sha256": "d2f10fa519336bc4efcc7b6deb9604b75429946b40d82e311cb3a97a1994c89a"
+    },
+    {
+      "path": "public/vendor/pdfjs-cmaps/ETHK-B5-V.bcmap",
+      "bytes": 158,
+      "sha256": "1fea3fd0d9f0f679f80505800851ef2e4131d81127e18c006938ffa2f4c8b247"
     },
     {
       "path": "public/vendor/pdfjs-cmaps/EUC-H.bcmap",
@@ -562,6 +567,16 @@
       "sha256": "fdc736d46e642625dccc8ad8c59f2c69fc7db7a13f2e799c6c6b779e707bb97a"
     },
     {
+      "path": "public/vendor/pdfjs-cmaps/GBpc-EUC-H.bcmap",
+      "bytes": 557,
+      "sha256": "3c4a4eb82f05abe51f6650985c630e180438bfdd491318f5d20d2ec29236e1c3"
+    },
+    {
+      "path": "public/vendor/pdfjs-cmaps/GBpc-EUC-V.bcmap",
+      "bytes": 181,
+      "sha256": "215bdfa2842705624b4cf4cd29b8e3c720f1e192365e0305c11030a424c84d7c"
+    },
+    {
       "path": "public/vendor/pdfjs-cmaps/GBT-EUC-H.bcmap",
       "bytes": 7290,
       "sha256": "dc5f44e48a39f3367ae28665027d8ab1d8cedb5a9dcc5068a900acd6709f60f9"
@@ -592,19 +607,19 @@
       "sha256": "d7a1b13ead9ab511cf2cd01de6ce8b02aa8e8767e84895337d7a3b67f039f93b"
     },
     {
-      "path": "public/vendor/pdfjs-cmaps/GBpc-EUC-H.bcmap",
-      "bytes": 557,
-      "sha256": "3c4a4eb82f05abe51f6650985c630e180438bfdd491318f5d20d2ec29236e1c3"
-    },
-    {
-      "path": "public/vendor/pdfjs-cmaps/GBpc-EUC-V.bcmap",
-      "bytes": 181,
-      "sha256": "215bdfa2842705624b4cf4cd29b8e3c720f1e192365e0305c11030a424c84d7c"
-    },
-    {
       "path": "public/vendor/pdfjs-cmaps/H.bcmap",
       "bytes": 553,
       "sha256": "a0233e21047ec00b852125b243cbcf30abee511155b6d8159c24f944384bc9ee"
+    },
+    {
+      "path": "public/vendor/pdfjs-cmaps/Hankaku.bcmap",
+      "bytes": 132,
+      "sha256": "b454701f7aecd7856769016dfd04ca64280a060f2c67a2466d50b4395d24974e"
+    },
+    {
+      "path": "public/vendor/pdfjs-cmaps/Hiragana.bcmap",
+      "bytes": 124,
+      "sha256": "2ed669394756dd9458651cd9995ab29ab691ecb7686659003306cdf22767a414"
     },
     {
       "path": "public/vendor/pdfjs-cmaps/HKdla-B5-H.bcmap",
@@ -667,14 +682,9 @@
       "sha256": "d073542b7dad1c4cbf01c1af5f0cd13218d1281a491956e310c55702fc8705c4"
     },
     {
-      "path": "public/vendor/pdfjs-cmaps/Hankaku.bcmap",
-      "bytes": 132,
-      "sha256": "b454701f7aecd7856769016dfd04ca64280a060f2c67a2466d50b4395d24974e"
-    },
-    {
-      "path": "public/vendor/pdfjs-cmaps/Hiragana.bcmap",
-      "bytes": 124,
-      "sha256": "2ed669394756dd9458651cd9995ab29ab691ecb7686659003306cdf22767a414"
+      "path": "public/vendor/pdfjs-cmaps/Katakana.bcmap",
+      "bytes": 100,
+      "sha256": "3b6ca6642fbf8822da00d5e58a8aa275216d5c32dbf2bd73e934197fc9fc5c53"
     },
     {
       "path": "public/vendor/pdfjs-cmaps/KSC-EUC-H.bcmap",
@@ -735,11 +745,6 @@
       "path": "public/vendor/pdfjs-cmaps/KSCpc-EUC-V.bcmap",
       "bytes": 166,
       "sha256": "031707887d6fc2378a36cdb6775334fd7a236c3f95048d8436abf43fe26fc49d"
-    },
-    {
-      "path": "public/vendor/pdfjs-cmaps/Katakana.bcmap",
-      "bytes": 100,
-      "sha256": "3b6ca6642fbf8822da00d5e58a8aa275216d5c32dbf2bd73e934197fc9fc5c53"
     },
     {
       "path": "public/vendor/pdfjs-cmaps/LICENSE",
@@ -1017,6 +1022,11 @@
       "sha256": "543923bead225732aba30976690ee89095a19628277b5863efecc2c728d5d7bf"
     },
     {
+      "path": "public/vendor/pdfjs-LICENSE.txt",
+      "bytes": 10174,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
       "path": "public/vendor/pdfjs-standard_fonts/FoxitDingbats.pfb",
       "bytes": 29513,
       "sha256": "845c752392b6c914fb989c75a08b7792b88f542d2499042ef2889f8c814a16ed"
@@ -1067,16 +1077,6 @@
       "sha256": "47967d055530e7357088a08403115425643ec2cdfd6201ba8af0fbd7116c1539"
     },
     {
-      "path": "public/vendor/pdfjs-standard_fonts/LICENSE_FOXIT",
-      "bytes": 1553,
-      "sha256": "b578cdd2345840ada550bd12519533812320d5f1d21cf4c1c7e1b1b0a31c98b7"
-    },
-    {
-      "path": "public/vendor/pdfjs-standard_fonts/LICENSE_LIBERATION",
-      "bytes": 4414,
-      "sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b"
-    },
-    {
       "path": "public/vendor/pdfjs-standard_fonts/LiberationSans-Bold.ttf",
       "bytes": 137052,
       "sha256": "361c61b82d575c5c35fd9157fda8b0194bcfcd0d88ea8521a4fb5dd53d33dddc"
@@ -1097,14 +1097,24 @@
       "sha256": "f8ace1f892b2bd9dc1792ba7f097fa7588f84fed48321480e04de5390828221f"
     },
     {
-      "path": "public/vendor/qr-THIRD-PARTY-NOTICES.txt",
-      "bytes": 26340,
-      "sha256": "26790baf37bc632b070586d121da574d7c798ac54e0585ae74aca630c2cd754b"
+      "path": "public/vendor/pdfjs-standard_fonts/LICENSE_FOXIT",
+      "bytes": 1553,
+      "sha256": "b578cdd2345840ada550bd12519533812320d5f1d21cf4c1c7e1b1b0a31c98b7"
+    },
+    {
+      "path": "public/vendor/pdfjs-standard_fonts/LICENSE_LIBERATION",
+      "bytes": 4414,
+      "sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b"
     },
     {
       "path": "public/vendor/qr-bundle.js",
       "bytes": 412300,
       "sha256": "a7ad9824567cf8b217d963f4f7538a29ed81b0989eaeaab12e938f89032c98ae"
+    },
+    {
+      "path": "public/vendor/qr-THIRD-PARTY-NOTICES.txt",
+      "bytes": 26340,
+      "sha256": "26790baf37bc632b070586d121da574d7c798ac54e0585ae74aca630c2cd754b"
     },
     {
       "path": "public/vendor/spark-md5-3.0.2.min.js",
@@ -1117,24 +1127,24 @@
       "sha256": "9c4214d48030b7e877ed2fd76044ea079a987c9b3f01f9b6964ba4a475a5a13d"
     },
     {
-      "path": "public/vendor/x509-LICENSE.txt",
-      "bytes": 1091,
-      "sha256": "3d5d1b1150b1fc25144d342daaba3875899b8dc2fcb172ea4810cc69affbe4d3"
-    },
-    {
-      "path": "public/vendor/x509-THIRD-PARTY-NOTICES.txt",
-      "bytes": 18777,
-      "sha256": "56abdfb68dd2a51ba312a2fd7782c718eb61fd7fd71d786b731a1d49c662d04f"
-    },
-    {
       "path": "public/vendor/x509-bundle.js",
       "bytes": 430823,
       "sha256": "5ee0416624f8a25a900233a5cf04ca1d105168f7cd815d8f458d6b684d46f62c"
     },
     {
+      "path": "public/vendor/x509-LICENSE.txt",
+      "bytes": 1091,
+      "sha256": "3d5d1b1150b1fc25144d342daaba3875899b8dc2fcb172ea4810cc69affbe4d3"
+    },
+    {
       "path": "public/vendor/x509-reflect-metadata-LICENSE.txt",
       "bytes": 9141,
       "sha256": "c5217b0544ea9c91d010863582d6f6b35ec50e4146c34dee085ddcec5dd92def"
+    },
+    {
+      "path": "public/vendor/x509-THIRD-PARTY-NOTICES.txt",
+      "bytes": 18777,
+      "sha256": "56abdfb68dd2a51ba312a2fd7782c718eb61fd7fd71d786b731a1d49c662d04f"
     }
   ]
 }

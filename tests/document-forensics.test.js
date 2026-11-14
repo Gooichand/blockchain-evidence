@@ -79,3 +79,51 @@ test('pixel comparison catches exact changed bounds without treating tolerance a
   expect(pixelDifference(a, a, 4, 4).changedPixels).toBe(0);
   expect(() => pixelDifference(a, b, 5, 4)).toThrow();
 });
+
+function legacyEngine() {
+  const fs = require('fs');
+  const LocalCFB = new Function(
+    fs.readFileSync('public/vendor/cfb-bundle.js', 'utf8') + ';return LocalCFB;',
+  )();
+  const window = { LocalCFB };
+  require('vm').runInNewContext(
+    fs.readFileSync('public/document-forensics.js', 'utf8'),
+    { window, Uint8Array, ArrayBuffer, DataView, BigInt, console },
+  );
+  return window.DocumentForensics;
+}
+function legacyFile(ext) {
+  const fs = require('fs');
+  const name = 'legacy-summary.' + ext;
+  const buf = fs.readFileSync('public/samples/document/' + name);
+  return {
+    name,
+    size: buf.length,
+    arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length),
+  };
+}
+test.each(['doc', 'xls', 'ppt'])(
+  'legacy %s OLE2 summary streams surface author, editor, dates and company as claims',
+  async (ext) => {
+    const r = await legacyEngine().analyze('doc-metadata', legacyFile(ext));
+    expect(r.format).toBe(ext.toUpperCase() + ' (legacy OLE2)');
+    const flat = Object.values(r.properties)
+      .flat()
+      .map((x) => [x.field, x.value]);
+    expect(Object.fromEntries(flat)['Author']).toBe('DGC Synthetic Author');
+    expect(Object.fromEntries(flat)['Last saved by']).toBe('DGC Synthetic Editor');
+    expect(Object.fromEntries(flat)['Company']).toBe('DGC Synthetic Company');
+    expect(Object.fromEntries(flat)['Title']).toBe('Synthetic legacy title');
+    expect(Object.fromEntries(flat)['Created']).toBe('2026-11-14T06:30:00.000Z');
+    expect(r.limit).toContain('cannot be reconstructed');
+  },
+);
+test('non-OLE2 bytes with a legacy extension are rejected, never guessed', async () => {
+  await expect(
+    legacyEngine().analyze('doc-metadata', {
+      name: 'renamed.doc',
+      size: 11,
+      arrayBuffer: async () => new TextEncoder().encode('hello world').buffer,
+    }),
+  ).rejects.toThrow('Not a valid OLE2');
+});

@@ -342,8 +342,29 @@ async function run() {
           });
           assert(truncated.segments['ICC profile'].includes('INCOMPLETE'));
         }
-        if (id === 'office-metadata')
+        if (id === 'office-metadata') {
           assert.equal(r.properties['docProps/core.xml'][0].value, 'DGC Synthetic');
+          for (const ext of ['doc', 'xls', 'ppt']) {
+            const legacy = await page.evaluate(async (ext) => {
+              const f = new File(
+                [
+                  await (
+                    await fetch('/samples/document/legacy-summary.' + ext)
+                  ).arrayBuffer(),
+                ],
+                'legacy-summary.' + ext,
+              );
+              return MetadataTools.analyze('office-metadata', f);
+            }, ext);
+            const flat = Object.values(legacy.properties)
+              .flat()
+              .map((x) => x.field + '=' + x.value);
+            assert(flat.includes('Author=DGC Synthetic Author'), ext + ' author');
+            assert(flat.includes('Last saved by=DGC Synthetic Editor'), ext + ' editor');
+            assert(flat.includes('Company=DGC Synthetic Company'), ext + ' company');
+            assert(legacy.limit.includes('cannot be reconstructed'), ext + ' limit');
+          }
+        }
         if (category === 'timeline') assert.equal(r.displayedCount, 1);
         if (id === 'qr-scanner') assert.equal(r.text, 'DGC original QR demo');
         if (id === 'ipfs-viewer') {
