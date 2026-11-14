@@ -12,7 +12,7 @@
     ],
     'noise-analysis': [
       'Luminance Residual Analysis',
-      'Computes local luminance residuals against a four-neighbour average. Run on an image to inspect the residual map and standard deviation. Texture, edges and compression affect this signal; it is not sensor fingerprinting or camera attribution.',
+      'Computes local luminance residuals against a four-neighbour average and, when reference images from a candidate device are added, PRNU same-device measurements: Gaussian-residual fingerprints averaged over the references, normalized-correlation peak and PCE on the center 512px at native resolution, validated on real multi-device smartphone fixtures. A higher correlation/PCE against one device set supports a common sensor; scaling, cropping, rotation, re-encoding and modern computational photography can erase the signal, and some modern devices show weak PRNU by nature. Measurements only - not a match verdict, camera-model or person identification. Texture, edges and compression affect the residual view. Up to8 reference images,20MiB/42MP each.',
     ],
     'img-metadata': [
       'Image Metadata Viewer',
@@ -199,27 +199,72 @@
       worker.postMessage(file);
     });
   }
-  async function analyze(id, file) {
+  /* PRNU path: native-resolution center window, no scaling. */
+  async function prnuWindow(file) {
+    if (file.size > 20 * 1024 * 1024) throw Error('Image limit: 20 MiB.');
+    const image = await createImageBitmap(file);
+    try {
+      const win = root.NoisePRNU.CROP + 12;
+      if (image.width < win || image.height < win) throw Error('Image below the 524x524 PRNU window.');
+      if (image.width * image.height > 42000000) throw Error('PRNU image limit42MP.');
+      const c = canvas(win, win),
+        x0 = (image.width - win) >> 1,
+        y0 = (image.height - win) >> 1;
+      c.getContext('2d').drawImage(image, x0, y0, win, win, 0, 0, win, win);
+      return c.getContext('2d').getImageData(0, 0, win, win);
+    } finally {
+      image.close();
+    }
+  }
+  async function prnuCompare(file, refs) {
+    if (!root.NoisePRNU) throw Error('PRNU engine unavailable. Reload the page.');
+    if (!refs.length) throw Error('Add at least one reference image from the candidate device.');
+    if (refs.length > 8) throw Error('PRNU reference limit8images.');
+    const q = await prnuWindow(file),
+      qres = root.NoisePRNU.residual(q.data, q.width, q.height),
+      rres = [];
+    for (const f of refs) {
+      const w = await prnuWindow(f);
+      rres.push(root.NoisePRNU.residual(w.data, w.width, w.height));
+    }
+    const fp = root.NoisePRNU.fingerprint(rres),
+      m = root.NoisePRNU.pce(qres, fp);
+    return {
+      referenceCount: rres.length,
+      cropSize: root.NoisePRNU.CROP,
+      shiftSearch: root.NoisePRNU.SEARCH,
+      gaussianSigma: root.NoisePRNU.SIGMA,
+      peakCorrelation: m.peakCorrelation,
+      pce: m.pce,
+      peakShift: m.peakShift,
+      measurementOnly:
+        'Same-device candidate signal from Gaussian-residual fingerprint correlation on the center 512px crop. A higher peak correlation and PCE against one device reference set than another supports a common sensor. Modern computational photography, scaling, cropping, rotation and re-encoding can erase the signal; a low value does not prove a different device. Measurements only - not a match verdict, camera-model identification or person identification.',
+    };
+  }
+  async function analyze(id, file, refs) {
     if (id === 'ai-tamper')
       throw new Error(
         'Unavailable: no validated AI detection model installed. No score or verdict was generated.',
       );
     // Validate bounded original coefficients before allocating a browser pixel preview.
     const compressionResult = id === 'compression' ? await compressionCoefficients(file) : null;
-    const decoded = await decode(file),
-      c = decoded.canvas,
-      w = c.width,
-      h = c.height,
-      ctx = c.getContext('2d'),
-      data = ctx.getImageData(0, 0, w, h).data;
+    /* PRNU mode needs native resolution; skip the scaled preview decode. */
+    const prnuOnly = id === 'noise-analysis' && refs?.length,
+      decoded = prnuOnly ? null : await decode(file),
+      c = decoded?.canvas,
+      w = c?.width,
+      h = c?.height,
+      data = c ? c.getContext('2d').getImageData(0, 0, w, h).data : null;
     const result = {
       summary: {
         file: file.name,
-        originalDimensions: decoded.dimensions,
-        analysisDimensions: [w, h],
-        note: 'Pixel analysis is scaled to at most 1024 px on the longest side. These measurements do not prove authenticity.',
+        originalDimensions: decoded ? decoded.dimensions : null,
+        analysisDimensions: decoded ? [w, h] : null,
+        note: decoded
+          ? 'Pixel analysis is scaled to at most 1024 px on the longest side. These measurements do not prove authenticity.'
+          : 'PRNU mode: native-resolution center crop, no scaled preview. These measurements do not prove authenticity.',
       },
-      visuals: [['Decoded image', c]],
+      visuals: decoded ? [['Decoded image', c]] : [],
     };
     if (id === 'histogram') {
       const bins = histogram(data),
@@ -251,12 +296,16 @@
         result.visuals.push([['Red', 'Green', 'Blue'][ch] + ' channel', pixelCanvas(output, w, h)]);
       }
     } else if (id === 'edge-detect' || id === 'noise-analysis') {
-      const r = spatial(data, w, h, id === 'edge-detect');
-      result.visuals.push([
-        id === 'edge-detect' ? 'Sobel magnitude' : 'Absolute luminance residual x8',
-        pixelCanvas(r.pixels, w, h),
-      ]);
-      if (id === 'noise-analysis') result.summary.residualStdDev = r.stddev;
+      if (prnuOnly) {
+        result.summary.prnu = await prnuCompare(file, refs);
+      } else {
+        const r = spatial(data, w, h, id === 'edge-detect');
+        result.visuals.push([
+          id === 'edge-detect' ? 'Sobel magnitude' : 'Absolute luminance residual x8',
+          pixelCanvas(r.pixels, w, h),
+        ]);
+        if (id === 'noise-analysis') result.summary.residualStdDev = r.stddev;
+      }
     } else if (id === 'clone-detect') {
       if (!root.Worker) throw Error('Local feature worker unavailable.');
       const matches = await new Promise((resolve, reject) => {
@@ -408,6 +457,26 @@
         ? 'Local engine ready. Results are measurements, not a tampering verdict.'
         : 'Unavailable: validated AI model or required browser dependency is missing.',
     );
+    let prnuRefs = null;
+    if (tool.id === 'noise-analysis') {
+      const input = node('input', undefined, {
+        type: 'file',
+        accept: 'image/jpeg,image/png,image/webp',
+        multiple: true,
+        'aria-label': 'Reference images from the candidate device (optional)',
+      });
+      input.addEventListener('change', () => {
+        prnuRefs = [...input.files];
+        out.replaceChildren(node('p', 'Reference set changed. Run the analysis again.'));
+      });
+      ws.appendChild(
+        node(
+          'p',
+          'Optional: add up to 8 unedited images from a candidate device (flat/uniform content works best) to measure PRNU same-device correlation on the center 512px at native resolution.',
+        ),
+      );
+      ws.appendChild(input);
+    }
     ws.appendChild(status);
     ws.appendChild(run);
     ws.appendChild(demo);
@@ -436,7 +505,7 @@
             type: name.endsWith('png') ? 'image/png' : 'image/jpeg',
           });
         }
-        const result = await analyze(tool.id, file);
+        const result = await analyze(tool.id, file, tool.id === 'noise-analysis' ? prnuRefs : null);
         if (!ws.contains(out) || token !== generation) return;
         out.replaceChildren();
         if (example)
