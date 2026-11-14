@@ -318,6 +318,30 @@ async function run() {
           );
         if (id === 'gps') assert.deepEqual(r.embeddedCoordinates, { latitude: 19, longitude: 73 });
         if (id === 'camera-info') assert.equal(r.camera.Make, 'DGC Synthetic');
+        if (id === 'exif') {
+          assert.equal(r.embeddedTags.Make, 'DGC Synthetic');
+          assert.equal(
+            r.segments['XMP'],
+            'found (base + extended APP1 segments merged)',
+          );
+          assert.equal(r.segments['ICC profile'], 'found (1 of 1 chunks)');
+          assert.equal(r.segments['IPTC IIM'], 'found');
+          assert.equal(r.segments['GPS'], 'found');
+          assert.equal(r.makerNote.present, true);
+          assert.equal(r.makerNote.decoded, false);
+          const truncated = await page.evaluate(async () => {
+            const f = new File(
+              [
+                await (
+                  await fetch('/samples/metadata/truncated-icc.jpg')
+                ).arrayBuffer(),
+              ],
+              'truncated-icc.jpg',
+            );
+            return MetadataTools.analyze('exif', f);
+          });
+          assert(truncated.segments['ICC profile'].includes('INCOMPLETE'));
+        }
         if (id === 'office-metadata')
           assert.equal(r.properties['docProps/core.xml'][0].value, 'DGC Synthetic');
         if (category === 'timeline') assert.equal(r.displayedCount, 1);

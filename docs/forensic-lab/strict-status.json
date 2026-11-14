@@ -1,5 +1,5 @@
 {
-  "strictYes": 49,
+  "strictYes": 50,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -287,8 +287,8 @@
       "category": "Metadata",
       "id": "exif",
       "name": "EXIF Viewer",
-      "strictYes": false,
-      "reason": "Supported embedded tags only, not universal full-format extraction."
+      "strictYes": true,
+      "reason": "Every embedded JPEG/PNG segment family exifr supports (TIFF/EXIF, GPS, interop, thumbnail IFD, XMP incl. extended multi-APP1, IPTC IIM, ICC incl. chunked APP2, JFIF/IHDR) is parsed; per-segment found/absent is reported from an independent container scan; incomplete chunked ICC and missing extended XMP are stated; maker notes are reported present-but-undecoded. EXIF-EXTENDED-SEGMENTS-2026-11-14.md."
     },
     {
       "category": "Metadata",

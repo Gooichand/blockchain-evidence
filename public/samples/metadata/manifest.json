@@ -1,0 +1,19 @@
+{
+  "files": {
+    "extended-segments.jpg": {
+      "bytes": 2964,
+      "origin": "Generated deterministically by scripts/generate-metadata-samples.py",
+      "note": "Synthetic JPEG with EXIF (Make/Model/GPS/UserComment/MakerNote), base + extended XMP across two APP1 segments, sRGB ICC in APP2, IPTC IIM in APP13."
+    },
+    "truncated-icc.jpg": {
+      "bytes": 1444,
+      "origin": "Generated deterministically by scripts/generate-metadata-samples.py",
+      "note": "Negative: APP2 declares ICC chunk 1 of 2; the second chunk never arrives. The parser must report ICC honestly, never invent a profile."
+    },
+    "extended-segments.png": {
+      "bytes": 1470,
+      "origin": "Generated deterministically by scripts/generate-metadata-samples.py",
+      "note": "Synthetic PNG with eXIf chunk, iCCP sRGB profile and iTXt XMP."
+    }
+  }
+}
