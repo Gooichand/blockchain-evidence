@@ -12,6 +12,21 @@
   ],
   "sha256": {
     "cuts-gops.mp4": "eb7388b91bd2c769e4c6fe43c3707421418203dfa4f3f5491694cc3fc1cc63ac",
-    "corrupted-sample.mp4": "baec4ad99b2518113256e7cf5f672c3eec40f5a6b4fe0f12daa706b226c5bc67"
+    "corrupted-sample.mp4": "baec4ad99b2518113256e7cf5f672c3eec40f5a6b4fe0f12daa706b226c5bc67",
+    "audio-ac3.mp4": "4e614809707afaaf2ef08879c6725d078858c110182a90892e6af611ba2f31a6",
+    "audio-aac.mp4": "41817136890a8b7ba408528a35a57dabb6972fd7456a265fa9ce9a23a0b35fbe",
+    "truncated-audio.mp4": "281a45b5608dd4b95fc0f9f32974394f0f889a482a70d246ca495a4792831e07",
+    "corrupted-audio.mp4": "e8edb7ded31f7c6989f5532050dc798acca91036017d3109ff748f3ea22a059c"
+  },
+  "audioFixtures": {
+    "audio-aac.mp4": {
+      "codec": "aac",
+      "sampleRate": 44100,
+      "channels": 1,
+      "audioPacketCount": 88
+    },
+    "truncated-audio.mp4": "final audio sample byte range exceeds file size; must fail closed",
+    "corrupted-audio.mp4": "6 bytes flipped inside 5th audio packet; must not be claimed as fully decoded",
+    "audio-ac3.mp4": "AC-3 track: browser-unsupported codec; must report NOT VALIDATED while video still decodes"
   }
 }

@@ -766,6 +766,23 @@ async function run() {
         results.push({file:name,result});
       }
       const response=await fetch('/samples/video/measurement/corrupted-sample.mp4');let rejected=false;try{await VideoForensics.analyze('keyframe',new File([await response.arrayBuffer()],'damaged.mp4'));}catch{rejected=true;}if(!rejected)throw Error('Damaged video falsely passed complete decode.');
+      const audio=await (async()=>{
+        const load=async(n)=>new File([await (await fetch('/samples/video/measurement/'+n)).arrayBuffer()],n);
+        const aac=(await VideoForensics.analyze('keyframe',await load('audio-aac.mp4'))).summary;
+        if(aac.audioStreams.length!==1||aac.audioStreams[0].validation!=='DECODED_ALL')throw Error('AAC stream not validated: '+JSON.stringify(aac.audioStreams));
+        if(aac.audioStreams[0].sampleCount!==88)throw Error('Audio sample count '+aac.audioStreams[0].sampleCount);
+        if(aac.audioStreams[0].sampleRate!==44100||aac.audioStreams[0].channels!==1)throw Error('Audio format mismatch '+JSON.stringify(aac.audioStreams[0]));
+        if(aac.audioStreams[0].decodedSampleFrames<=0)throw Error('No decoded audio frames.');
+        if(aac.ignoredOtherTrackCount!==0)throw Error('Track accounting wrong.');
+        for(const n of ['truncated-audio.mp4','corrupted-audio.mp4']){let r=false;try{await VideoForensics.analyze('keyframe',await load(n));}catch{r=true;}if(!r)throw Error(n+' falsely passed all-stream validation.');}
+        const ac3=(await VideoForensics.analyze('keyframe',await load('audio-ac3.mp4'))).summary;
+        if(ac3.audioStreams.length!==1||ac3.audioStreams[0].validation!=='NOT VALIDATED')throw Error('AC-3 should be NOT VALIDATED: '+JSON.stringify(ac3.audioStreams));
+        if(ac3.decodedFrameCount!==20)throw Error('AC-3 file video should still decode: '+ac3.decodedFrameCount);
+        const insp=(await VideoForensics.analyze('video-inspector',await load('audio-aac.mp4'))).summary;
+        if(!insp.streamValidation||!insp.streamValidation.audioStreams||insp.streamValidation.audioStreams[0].validation!=='DECODED_ALL')throw Error('video-inspector stream validation missing.');
+        return {aac:aac.audioStreams[0],ac3:ac3.audioStreams[0],inspectorStreamValidation:!!insp.streamValidation};
+      })();
+      results.push({audio});
       return results;
     });
     fs.writeFileSync(path.join(screenshotDir,'video-measurements-validation.json'),JSON.stringify(videoMeasurements,null,2));

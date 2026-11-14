@@ -1,13 +1,18 @@
 /* Decode every supported video sample locally. No seeking approximation or network. */
 'use strict';
 importScripts('/vendor/mp4box-0.5.4.min.js', '/video-measurements.js');
+const outOfProfile = (m) => {
+  const e = Error(m);
+  e.outOfProfile = true;
+  return e;
+};
 self.onmessage = async ({ data }) => {
   let decoder;
   try {
     if (!(data.file instanceof Blob) || data.file.size > 50 * 1024 * 1024)
-      throw Error('Video limit50MiB.');
+      throw outOfProfile('Video limit50MiB.');
     if (!self.VideoDecoder || !self.OffscreenCanvas)
-      throw Error('WebCodecs and OffscreenCanvas required.');
+      throw outOfProfile('WebCodecs and OffscreenCanvas required.');
     const bytes = await data.file.arrayBuffer(),
       parser = MP4Box.createFile();
     let info, parseError;
@@ -23,7 +28,7 @@ self.onmessage = async ({ data }) => {
       info.videoTracks.length !== 1 ||
       info.duration / info.timescale > 600
     )
-      throw Error('One nonfragmented MP4 video track, maximum10minutes required.');
+      throw outOfProfile('One nonfragmented MP4 video track, maximum10minutes required.');
     const track = info.videoTracks[0],
       samples = parser.getTrackSamplesInfo(track.id) || [],
       entry = parser.getTrackById(track.id).mdia.minf.stbl.stsd.entries;
@@ -36,15 +41,15 @@ self.onmessage = async ({ data }) => {
       !entry[0].avcC ||
       entry[0].sinf
     )
-      throw Error(
+      throw outOfProfile(
         'Require1-2000 MP4/H264 samples, first sample sync, one unencrypted AVC description.',
       );
-    if (track.video.width * track.video.height > 16777216) throw Error('16MP decoded frame limit.');
+    if (track.video.width * track.video.height > 16777216) throw outOfProfile('16MP decoded frame limit.');
     if (entry[0].pasp && entry[0].pasp.hSpacing !== entry[0].pasp.vSpacing)
-      throw Error('Non-square pixels unsupported.');
+      throw outOfProfile('Non-square pixels unsupported.');
     const identity = [65536, 0, 0, 0, 65536, 0, 0, 0, 1073741824];
     if (track.matrix && Array.from(track.matrix).some((x, i) => x !== identity[i]))
-      throw Error('Rotated/transformed display matrix unsupported.');
+      throw outOfProfile('Rotated/transformed display matrix unsupported.');
     let shift = 0;
     const edits = track.edits || [];
     if (edits.length) {
@@ -57,13 +62,13 @@ self.onmessage = async ({ data }) => {
         (empty.length && edits[0].media_time !== -1) ||
         edits.some((e) => e.media_rate_integer !== 1 || e.media_rate_fraction !== 0)
       )
-        throw Error('Only one rate1 edit and optional leading empty edit supported.');
+        throw outOfProfile('Only one rate1 edit and optional leading empty edit supported.');
       shift =
         (empty[0]?.segment_duration || 0) / info.timescale - media[0].media_time / track.timescale;
     }
     // Validate every AVCC length-delimited NAL before decoder concealment can hide a broken length.
     const lengthSize = (entry[0].avcC.lengthSizeMinusOne ?? 3) + 1;
-    if (![1, 2, 4].includes(lengthSize)) throw Error('Unsupported AVC NAL length field.');
+    if (![1, 2, 4].includes(lengthSize)) throw outOfProfile('Unsupported AVC NAL length field.');
     for (const sample of samples) {
       if (sample.offset < 0 || sample.offset + sample.size > bytes.byteLength)
         throw Error('Truncated sample.');
@@ -107,7 +112,7 @@ self.onmessage = async ({ data }) => {
         hardwareAcceleration: 'prefer-software',
       };
     if (!(await VideoDecoder.isConfigSupported(config)).supported)
-      throw Error('Browser AVC configuration unsupported.');
+      throw outOfProfile('Browser AVC configuration unsupported.');
     const canvas = new OffscreenCanvas(32, 18),
       ctx = canvas.getContext('2d', { willReadFrequently: true }),
       frames = [],
@@ -138,7 +143,7 @@ self.onmessage = async ({ data }) => {
             (delta.meanAbsoluteRGBDifference >= 0.22 && delta.histogramDistance >= 0.22);
           previousMeasure = measure;
           // Bounded sync/abrupt-change thumbnails; no full-resolution retention.
-          if ((row.s.is_sync || visualChange) && thumbs.length < 100) {
+          if (data.thumbnails !== false && (row.s.is_sync || visualChange) && thumbs.length < 100) {
             const scale = Math.min(1, 160 / Math.max(frame.displayWidth, frame.displayHeight)),
               c = new OffscreenCanvas(
                 Math.max(1, Math.round(frame.displayWidth * scale)),
@@ -181,6 +186,131 @@ self.onmessage = async ({ data }) => {
     await decoder.flush();
     if (error) throw error;
     if (seen.size !== samples.length) throw Error('Not every sample decoded exactly once.');
+    // Validate every supported audio stream sample-by-sample. A damaged supported
+    // stream fails the whole analysis; an unsupported codec is reported, not passed.
+    const audioStreams = [];
+    for (const atrack of info.audioTracks || []) {
+      const asamples = parser.getTrackSamplesInfo(atrack.id) || [],
+        aentries = parser.getTrackById(atrack.id).mdia.minf.stbl.stsd.entries,
+        stream = {
+          trackId: atrack.id,
+          codec: atrack.codec,
+          durationSeconds: atrack.duration / atrack.timescale,
+          sampleCount: asamples.length,
+        };
+      if (!asamples.length || asamples.length > 40000)
+        throw outOfProfile('Audio track must have1-40000 samples.');
+      const astamps = new Set(),
+        aranges = [];
+      for (const s of asamples) {
+        const stamp = Math.round((s.cts / atrack.timescale) * 1e6);
+        if (
+          astamps.has(stamp) ||
+          s.size <= 0 ||
+          s.offset < 0 ||
+          s.offset + s.size > bytes.byteLength
+        )
+          throw Error('Duplicate timestamp or truncated audio sample.');
+        astamps.add(stamp);
+        aranges.push([s.offset, s.offset + s.size]);
+      }
+      aranges.sort((a, b) => a[0] - b[0]);
+      if (aranges.some((r, i) => i && r[0] < aranges[i - 1][1]))
+        throw Error('Overlapping audio sample byte ranges.');
+      const aconfig = { codec: atrack.codec };
+      // WebCodecs wants the DecSpecificInfo (AudioSpecificConfig), not the whole esds box,
+      // and Chrome requires explicit sampleRate/numberOfChannels: parse them from the ASC
+      // (the sample entry can disagree with the actual stream).
+      if (atrack.codec.startsWith('mp4a.')) {
+        const esd = aentries[0] && aentries[0].esds && aentries[0].esds.esd,
+          dcd = esd && (esd.descs || []).find((d) => d.tag === 4),
+          dsi = dcd && (dcd.descs || []).find((d) => d.tag === 5),
+          asc = dsi && dsi.data && Uint8Array.from(dsi.data);
+        if (asc && asc.length >= 2) {
+          aconfig.description = asc.buffer;
+          const RATES = [
+              96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000,
+              7350,
+            ],
+            bits = asc.reduce((a, b) => a + b.toString(2).padStart(8, '0'), ''),
+            objectType = parseInt(bits.slice(0, 5), 2);
+          let freqIndex = parseInt(bits.slice(5, 9), 2),
+            rate = RATES[freqIndex] || 0;
+          if (freqIndex === 15) rate = parseInt(bits.slice(9, 33), 2);
+          const chanConfig = parseInt(bits.slice(9 + (freqIndex === 15 ? 24 : 0), 13 + (freqIndex === 15 ? 24 : 0)), 2);
+          if (!rate) throw outOfProfile('Unparseable AAC AudioSpecificConfig.');
+          aconfig.sampleRate = rate;
+          aconfig.numberOfChannels =
+            chanConfig || (atrack.audio && atrack.audio.channel_count) || 0;
+          if (bits.slice(16).includes('01010110111') && objectType === 2)
+            aconfig.codec = 'mp4a.40.5';
+          if (!aconfig.numberOfChannels) throw outOfProfile('AAC channel layout unsupported.');
+        } else {
+          aconfig.sampleRate = atrack.audio && atrack.audio.sample_rate;
+          aconfig.numberOfChannels = atrack.audio && atrack.audio.channel_count;
+        }
+      } else {
+        aconfig.sampleRate = atrack.audio && atrack.audio.sample_rate;
+        aconfig.numberOfChannels = atrack.audio && atrack.audio.channel_count;
+      }
+      if (!self.AudioDecoder || !(await AudioDecoder.isConfigSupported(aconfig)).supported) {
+        audioStreams.push({
+          ...stream,
+          validation: 'NOT VALIDATED',
+          reason: 'Browser does not support this audio codec; this stream was not decoded.',
+        });
+        continue;
+      }
+      let aerror,
+        decodedFrames = 0,
+        actualRate = 0,
+        actualChannels = 0;
+      const aseen = new Set(),
+        adecoder = new AudioDecoder({
+          output(frame) {
+            if (aseen.has(frame.timestamp)) aerror = Error('Duplicate decoded audio timestamp.');
+            aseen.add(frame.timestamp);
+            decodedFrames += frame.numberOfFrames;
+            actualRate = frame.sampleRate;
+            actualChannels = frame.numberOfChannels;
+            frame.close();
+          },
+          error(e) {
+            aerror = e;
+          },
+        });
+      try {
+        adecoder.configure(aconfig);
+        for (const s of asamples) {
+          if (aerror) throw aerror;
+          adecoder.decode(
+            new EncodedAudioChunk({
+              type: 'key',
+              timestamp: Math.round((s.cts / atrack.timescale) * 1e6),
+              duration: Math.round((s.duration / atrack.timescale) * 1e6),
+              data: new Uint8Array(bytes, s.offset, s.size),
+            }),
+          );
+          if (adecoder.decodeQueueSize > 32)
+            await new Promise((resolve) =>
+              adecoder.addEventListener('dequeue', resolve, { once: true }),
+            );
+        }
+        await adecoder.flush();
+        if (aerror) throw aerror;
+        if (aseen.size !== asamples.length)
+          throw Error('Not every audio sample decoded exactly once.');
+        audioStreams.push({
+          ...stream,
+          validation: 'DECODED_ALL',
+          sampleRate: actualRate,
+          channels: actualChannels,
+          decodedSampleFrames: decodedFrames,
+        });
+      } finally {
+        if (adecoder.state !== 'closed') adecoder.close();
+      }
+    }
     const result = VideoMeasurements.analyze(frames, samples, shift),
       thumbnails = [];
     for (const t of thumbs)
@@ -199,12 +329,17 @@ self.onmessage = async ({ data }) => {
         width: track.video.width,
         height: track.video.height,
         editShiftSeconds: shift,
-        ignoredNonVideoTrackCount: info.tracks.length - 1,
+        audioStreams,
+        ignoredOtherTrackCount: info.tracks.length - 1 - audioStreams.length,
         thumbnails,
       },
     });
   } catch (e) {
-    self.postMessage({ ok: false, error: e.message || 'All-frame video analysis failed.' });
+    self.postMessage({
+      ok: false,
+      error: e.message || 'All-frame video analysis failed.',
+      outOfProfile: !!e.outOfProfile,
+    });
   } finally {
     if (decoder && decoder.state !== 'closed') decoder.close();
   }
