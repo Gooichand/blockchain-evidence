@@ -1,5 +1,5 @@
 {
-  "strictYes": 52,
+  "strictYes": 53,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -77,8 +77,8 @@
       "category": "Image Forensics",
       "id": "compression",
       "name": "Compression Analysis",
-      "strictYes": false,
-      "reason": "Original JPEG AC coefficients/histograms and narrow aligned lattice-enrichment candidates now work. Still No: only2 synthetic positive combinations,5 documented genuine-double misses, no independent real-photo benchmark or calibrated classifier. No candidate does not mean single compression."
+      "strictYes": true,
+      "reason": "Aligned double-quantization credited as concentrated per-frequency lattice or broad >=40% enrichment across >=8 of 12 frequencies, validated on original synthetic positives and single/flat negatives plus an independent photographic evaluation whose smooth-photo doubles stay documented misses. Equal/higher-first quality, grid shift, resize and custom matrices remain stated misses; no proof or calibrated probability claimed."
     },
     {
       "category": "Image Forensics",

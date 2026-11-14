@@ -922,7 +922,13 @@ async function run() {
     const jpegMatrix=await page.evaluate(async()=>{
       const out=[];for(const name of ['double-75-95.jpg','double-85-95.jpg','single-50.jpg','single-95.jpg','single-progressive95.jpg','double-50-95.jpg','double-65-95.jpg','double-95-50.jpg','double-75-75.jpg','shifted-double85-95.jpg','flat95.jpg']){
         const file=await(await fetch('/samples/image/double-jpeg/'+name)).blob();const r=await new Promise((resolve,reject)=>{const w=new Worker('/double-jpeg-worker.js');const timer=setTimeout(()=>{w.terminate();reject(Error('JPEG worker timeout.'));},25000);w.onmessage=({data})=>{clearTimeout(timer);w.terminate();data.ok?resolve(data.result):reject(Error(data.error));};w.postMessage(file);});
-        const positive=['double-75-95.jpg','double-85-95.jpg'].includes(name);if((r.state==='ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE')!==positive)throw Error('JPEG case '+name+' unexpected.');out.push({file:name,result:r});
+        const positive=['double-75-95.jpg','double-85-95.jpg','double-50-95.jpg','double-65-95.jpg'].includes(name);if((r.state==='ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE')!==positive)throw Error('JPEG case '+name+' unexpected.');
+        if((name==='double-50-95.jpg'||name==='double-65-95.jpg')&&!String(r.candidateHypotheses[0]?.detectionBasis).includes('broad-lattice-enrichment'))throw Error('JPEG case '+name+' missing broad-enrichment basis.');
+        out.push({file:name,result:r});
+      }
+      for(const name of ['photo-double-50-95.jpg','photo-double-65-95.jpg','photo-single-50.jpg','photo-single-95.jpg']){
+        const file=await(await fetch('/samples/image/double-jpeg-independent/'+name)).blob();const r=await new Promise((resolve,reject)=>{const w=new Worker('/double-jpeg-worker.js');const timer=setTimeout(()=>{w.terminate();reject(Error('JPEG worker timeout.'));},25000);w.onmessage=({data})=>{clearTimeout(timer);w.terminate();data.ok?resolve(data.result):reject(Error(data.error));};w.postMessage(file);});
+        if(r.state!=='NO_SUPPORTED_LATTICE_CANDIDATE')throw Error('Independent photo case '+name+' unexpected '+r.state);out.push({file:name,documentedSmoothPhotoMiss:name.startsWith('photo-double'),result:r});
       }return out;
     });
     const jpegPreflight=await page.evaluate(async()=>{
@@ -940,7 +946,7 @@ async function run() {
     });
     fs.writeFileSync(path.join(screenshotDir,'double-jpeg-preflight.json'),JSON.stringify(jpegPreflight,null,2));
     fs.writeFileSync(path.join(screenshotDir,'double-jpeg-validation.json'),JSON.stringify(jpegMatrix,null,2));
-    console.log('PASS actual coefficient worker JPEG positives, single negatives and5 documented genuine-double misses');
+    console.log('PASS actual coefficient worker JPEG positives incl. broad-enrichment, single negatives,3 documented genuine-double misses and4 independent smooth-photo cases');
     await openTool('network','dns-lookup');
     await page.$eval('[aria-label="Public DNS domain or IP"]',e=>e.value='preserve-my-typed-domain.com');
     await page.click('[aria-label="Try live DNS example"]');

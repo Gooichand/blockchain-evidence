@@ -1,4 +1,4 @@
-/* Aligned double-quantization candidate measurements, no learned classifier. */
+/* Aligned double-quantization candidate measurements: concentrated per-frequency lattice and broad cross-frequency enrichment, no learned classifier. */
 (function (root) {
   'use strict';
   const BASE = [
@@ -38,7 +38,7 @@
           ratio = first / second;
         if (
           ratio < 1.5 ||
-          ratio > 10 ||
+          ratio > 15 ||
           frequency.sampleCount < 150 ||
           frequency.histogram.length < 10
         )
@@ -70,26 +70,47 @@
           observedLatticeFraction: observed,
           enrichment,
           support: observed >= 0.86 && enrichment >= 0.25,
+          broadSupport: enrichment >= 0.4,
         });
       }
-      const supported = bins.filter((b) => b.support);
-      if (bins.length >= 4 && supported.length >= 4)
+      const supported = bins.filter((b) => b.support),
+        broad = bins.filter((b) => b.broadSupport),
+        /* Strong first quantization spreads genuine image content between
+           lattice points, diluting each frequency's observed fraction while
+           the baseline-corrected enrichment stays high across frequencies.
+           Credit that only as a broad pattern: never as proof. */
+        perFrequency = bins.length >= 4 && supported.length >= 4,
+        broadBasis = bins.length >= 8 && broad.length >= 8;
+      if (perFrequency || broadBasis)
         candidates.push({
           previousStandardLumaQualityHypothesis: quality,
+          detectionBasis:
+            perFrequency && broadBasis
+              ? 'per-frequency-lattice+broad-lattice-enrichment'
+              : perFrequency
+                ? 'per-frequency-lattice'
+                : 'broad-lattice-enrichment',
           supportingFrequencies: supported.length,
+          broadSupportFrequencies: broad.length,
           examinedFrequencies: bins.length,
-          meanSupportedEnrichment:
-            supported.reduce((n, b) => n + b.enrichment, 0) / supported.length,
+          meanSupportedEnrichment: supported.length
+            ? supported.reduce((n, b) => n + b.enrichment, 0) / supported.length
+            : null,
+          meanEnrichment: bins.length
+            ? bins.reduce((n, b) => n + b.enrichment, 0) / bins.length
+            : null,
           frequencies: bins,
         });
     }
     candidates.sort(
       (a, b) =>
         b.supportingFrequencies - a.supportingFrequencies ||
-        b.meanSupportedEnrichment - a.meanSupportedEnrichment,
+        b.broadSupportFrequencies - a.broadSupportFrequencies ||
+        (b.meanSupportedEnrichment ?? b.meanEnrichment) -
+          (a.meanSupportedEnrichment ?? a.meanEnrichment),
     );
     return {
-      method: 'quantized-AC-lattice-enrichment-v1',
+      method: 'quantized-AC-lattice-enrichment-v2',
       width: decoded.width,
       height: decoded.height,
       progressive: decoded.progressive,
@@ -102,7 +123,7 @@
         : 'NO_SUPPORTED_LATTICE_CANDIDATE',
       doubleCompressionProven: false,
       limits:
-        'Supports only strong aligned lower-quality-then-higher-quality JPEG lattice artifacts with standard-luma-table hypotheses20-95. Not a calibrated probability or proof of re-encoding, editing or authenticity. Equal/higher-first quality, grid shifts, resizing, custom matrices, smooth/low-texture images and rounding can hide artifacts or create coincidences. No candidate does not mean single compression. First/luma component only,4MP/20MiB.',
+        'Supports only aligned lower-quality-then-higher-quality JPEG lattice artifacts with standard-luma-table hypotheses20-95, credited either as concentrated per-frequency lattice support or as broad enrichment across at least 8 of 12 examined frequencies. Not a calibrated probability or proof of re-encoding, editing or authenticity. Equal/higher-first quality, grid shifts, resizing, custom matrices, small or smooth/low-texture images (too few sampled frequencies) and rounding can hide artifacts or create coincidences. No candidate does not mean single compression. First/luma component only,4MP/20MiB.',
     };
   }
   const api = { analyze, quant };

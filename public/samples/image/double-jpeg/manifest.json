@@ -3,11 +3,11 @@
   "seed": 1729,
   "positiveExpected": [
     "double-75-95.jpg",
-    "double-85-95.jpg"
+    "double-85-95.jpg",
+    "double-50-95.jpg",
+    "double-65-95.jpg"
   ],
   "knownMisses": [
-    "double-50-95.jpg",
-    "double-65-95.jpg",
     "double-95-50.jpg",
     "double-75-75.jpg",
     "shifted-double85-95.jpg"
