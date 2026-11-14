@@ -1,0 +1,1 @@
+Independent photographic JPEG examples generated with Pillow from the ELA demo photo by scripts/generate-double-jpeg-independent.py. Apache-2.0 with repository. Broad lattice enrichment candidates are not proof of re-encoding, editing or authenticity.

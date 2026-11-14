@@ -1,0 +1,20 @@
+{
+  "source": "public/samples/image/original.jpg (ELA demo photo); independent of the synthetic seeded texture behind public/samples/image/double-jpeg.",
+  "negativeExpected": [
+    "photo-single-50.jpg",
+    "photo-single-95.jpg"
+  ],
+  "documentedMisses": {
+    "files": [
+      "photo-double-50-95.jpg",
+      "photo-double-65-95.jpg"
+    ],
+    "reason": "Genuine doubles, but this small smooth photo leaves only 3 of 12 examined frequencies above the sample/histogram eligibility floors, below the 8-frequency breadth required for a broad-enrichment candidate. Recorded as a miss, not as single compression."
+  },
+  "sha256": {
+    "photo-double-65-95.jpg": "a8ff85f4363f5508231e1283feba2b48d7bae29b3b16675096480849c9b8f4a0",
+    "photo-double-50-95.jpg": "18f43f3dfef05966e42c0a4fea9b6a42ed74d2986ea49a65e1f1ee8be1e44bdd",
+    "photo-single-50.jpg": "7d834344a682cb0c3fa96f648f70fb0057b1bf154172550ea2a301c5ce28fbef",
+    "photo-single-95.jpg": "32dc1f47060b1f0e079da59f3b2f418ae2e5e8208828d283e0e378f7ca62cf9a"
+  }
+}

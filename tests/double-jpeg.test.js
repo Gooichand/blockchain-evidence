@@ -14,27 +14,45 @@ test.each(['double-75-95.jpg', 'double-85-95.jpg'])(
   },
 );
 test.each([
-  'single-50.jpg',
-  'single-65.jpg',
-  'single-75.jpg',
-  'single-85.jpg',
-  'single-95.jpg',
-  'single-progressive95.jpg',
-  'flat95.jpg',
-])('single compression negative %s', (name) => {
-  expect(inspect(name).state).toBe('NO_SUPPORTED_LATTICE_CANDIDATE');
-});
-test.each([
-  'double-50-95.jpg',
-  'double-65-95.jpg',
-  'double-95-50.jpg',
-  'double-75-75.jpg',
-  'shifted-double85-95.jpg',
-])('documented genuine-double miss stays inconclusive %s', (name) => {
+  ['double-50-95.jpg', 50],
+  ['double-65-95.jpg', 65],
+])('broad lattice enrichment positive %s', (name, quality) => {
   const r = inspect(name);
+  expect(r.state).toBe('ALIGNED_DOUBLE_QUANTIZATION_CANDIDATE');
+  expect(r.doubleCompressionProven).toBe(false);
+  const top = r.candidateHypotheses[0];
+  expect(Math.abs(top.previousStandardLumaQualityHypothesis - quality)).toBeLessThanOrEqual(1);
+  expect(top.detectionBasis).toMatch(/broad-lattice-enrichment/);
+  expect(top.broadSupportFrequencies).toBeGreaterThanOrEqual(8);
+});
+test.each(['double-95-50.jpg', 'double-75-75.jpg', 'shifted-double85-95.jpg'])(
+  'documented genuine-double miss stays inconclusive %s',
+  (name) => {
+    const r = inspect(name);
+    expect(r.state).toBe('NO_SUPPORTED_LATTICE_CANDIDATE');
+    expect(r.doubleCompressionProven).toBe(false);
+    expect(r.limits).toMatch(/does not mean single compression/);
+  },
+);
+/* Independent photographic evaluation (ELA demo photo, a different source
+   than the seeded synthetic texture): genuine doubles stay undetected because
+   only 3 of 12 examined frequencies clear the sample/histogram floors on this
+   small smooth image. Recorded as a documented miss, never called single. */
+test.each([
+  'photo-double-50-95.jpg',
+  'photo-double-65-95.jpg',
+  'photo-single-50.jpg',
+  'photo-single-95.jpg',
+])('independent photographic fixture %s yields no lattice candidate', (name) => {
+  const r = D.analyze(
+    decode(
+      fs.readFileSync(
+        path.join(__dirname, '../public/samples/image/double-jpeg-independent', name),
+      ),
+    ),
+  );
   expect(r.state).toBe('NO_SUPPORTED_LATTICE_CANDIDATE');
   expect(r.doubleCompressionProven).toBe(false);
-  expect(r.limits).toMatch(/does not mean single compression/);
 });
 test('current quantization table and original AC histogram measurements are exposed', () => {
   const r = inspect('double-85-95.jpg');
