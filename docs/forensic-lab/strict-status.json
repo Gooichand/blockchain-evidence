@@ -1,5 +1,5 @@
 {
-  "strictYes": 48,
+  "strictYes": 49,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -175,8 +175,8 @@
       "category": "Video Forensics",
       "id": "video-inspector",
       "name": "Video Inspector",
-      "strictYes": false,
-      "reason": "MP4 structure only, no all-stream/all-frame integrity validation."
+      "strictYes": true,
+      "reason": "MP4 structure checks plus, inside the documented profile (one H264 video track, 1-2000 samples, 50MiB, 10min, simple edits), every video sample and every browser-supported audio stream (e.g. AAC) decoded exactly once; damaged supported streams fail closed (truncated/corrupted audio fixtures), browser-unsupported audio (AC-3 fixture) is reported NOT VALIDATED. Decoder concealment caveat documented. See docs/forensic-lab/VIDEO-AUDIO-VALIDATION-2026-11-14.md."
     },
     {
       "category": "Audio Forensics",

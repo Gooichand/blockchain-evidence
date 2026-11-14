@@ -16,7 +16,8 @@ test('all five tools state limits instead of authenticity verdicts', () => {
   expect(Object.keys(guides)).toHaveLength(5);
   expect(guides.keyframe[1]).toContain('not scene changes');
   expect(guides['frame-extract'][1]).toContain('exact decoded MP4/H.264');
-  expect(guides['video-inspector'][1]).toContain('does not validate every frame');
+  expect(guides['video-inspector'][1]).toContain('does not prove the file is complete, safe or authentic');
+  expect(guides['video-inspector'][1]).toContain('NOT VALIDATED');
 });
 
 describe('exact MP4 presentation planning', () => {

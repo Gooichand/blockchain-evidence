@@ -12,15 +12,15 @@
     ],
     'vid-timeline': [
       'All-Frame Visual Timeline',
-      'Measures every supported MP4/H264 video frame at32x18 resolution, marks abrupt RGB/histogram changes and near-black/low-change intervals, and shows exact160px thumbnails at detected visual-segment starts. JSON lists time/frame bounds for all detected segments and candidates. MP4/H264 only, one track,1-2000samples,50MiB,10minutes;45-second local worker. At most100 combined key/change thumbnails; all frame measurements remain in JSON. Audio/other streams are not analyzed. Simple edit timestamp shifts applied, including raw pre-roll. This is a deterministic visual-change timeline, not semantic event understanding, edit/authenticity proof or a guarantee to catch every meaningful event. Similar-looking changes, motion/exposure, scaling and decoder concealment affect results. No trained model or upload.',
+      'Measures every supported MP4/H264 video frame at32x18 resolution, marks abrupt RGB/histogram changes and near-black/low-change intervals, and shows exact160px thumbnails at detected visual-segment starts. JSON lists time/frame bounds for all detected segments and candidates. MP4/H264 only, one track,1-2000samples,50MiB,10minutes;45-second local worker. At most100 combined key/change thumbnails; all frame measurements remain in JSON. Every audio track with a browser-supported codec (for example AAC) is fully decoded and counted; unsupported audio codecs are reported NOT VALIDATED and damaged supported streams fail the analysis. Simple edit timestamp shifts applied, including raw pre-roll. This is a deterministic visual-change timeline, not semantic event understanding, edit/authenticity proof or a guarantee to catch every meaningful event. Similar-looking changes, motion/exposure, scaling and decoder concealment affect results. No trained model or upload.',
     ],
     keyframe: [
       'All-Frame GOP and Keyframe Analysis',
-      'Decodes every supported MP4/H264 video sample in a local45-second worker, groups decode samples into GOPs and measures all frames at32x18 RGB resolution. Shows keyframe thumbnails, GOP sample/byte counts and deterministic timing, visual-change, near-black and low-change candidates. Unusual GOP counts differ by more than50%/two samples from the median, excluding the final partial group. Visual changes need RGB difference and histogram distance at least0.22; near-black needs98% dark pixels for0.5seconds, low-change needs at most0.001RGB difference for1second. These are measurements, not scene changes or editing proof; motion, exposure and normal encoding can trigger them. MP4/H264 only,1-2000samples,50MiB,10minutes, one video track, simple edits. Audio/other streams are not validated. Every raw track sample including pre-roll measured; timestamp shift is applied. No model or network.',
+      'Decodes every supported MP4/H264 video sample in a local45-second worker, groups decode samples into GOPs and measures all frames at32x18 RGB resolution. Shows keyframe thumbnails, GOP sample/byte counts and deterministic timing, visual-change, near-black and low-change candidates. Unusual GOP counts differ by more than50%/two samples from the median, excluding the final partial group. Visual changes need RGB difference and histogram distance at least0.22; near-black needs98% dark pixels for0.5seconds, low-change needs at most0.001RGB difference for1second. These are measurements, not scene changes or editing proof; motion, exposure and normal encoding can trigger them. MP4/H264 only,1-2000samples,50MiB,10minutes, one video track, simple edits. Audio/other streams are not validated. Every raw track sample including pre-roll measured; timestamp shift is applied. Every browser-supported audio stream (for example AAC) is fully decoded and counted; unsupported audio codecs are reported NOT VALIDATED and damaged supported streams fail the analysis. No model or network.',
     ],
     'video-inspector': [
       'MP4 Structure Inspector',
-      'Checks top-level MP4 box boundaries and reads track/sample metadata. Select an MP4 and inspect its structure and decode status. Passing structural checks does not validate every frame or prove the file is complete, safe or authentic.',
+      'Checks top-level MP4 box boundaries, reads track/sample metadata and, for files inside the supported profile (one MP4/H264 video track, 1-2000 samples, 50 MiB, 10 minutes, simple edits), decodes every video sample and every browser-supported audio stream sample (for example AAC) exactly once. Damaged supported streams fail the analysis; unsupported audio codecs are reported NOT VALIDATED; files outside the profile get structure checks only with an explicit NOT RUN note. Decoder concealment may hide damaged content. Passing checks does not prove the file is complete, safe or authentic.',
     ],
   };
   function boxList(buffer) {
@@ -288,7 +288,7 @@
       if (decoder.state !== 'closed') decoder.close();
     }
   }
-  async function allFrameMeasurements(file, mode = 'keyframe') {
+  async function allFrameMeasurements(file, mode = 'keyframe', options = {}) {
     if (!root.Worker) throw Error('Video worker unavailable.');
     const result = await new Promise((resolve, reject) => {
       const worker = new root.Worker('/video-measurements-worker.js'),
@@ -302,13 +302,18 @@
       };
       worker.onmessage = ({ data }) => {
         finish();
-        data.ok ? resolve(data.result) : reject(Error(data.error));
+        if (data.ok) resolve(data.result);
+        else {
+          const e = Error(data.error);
+          e.outOfProfile = !!data.outOfProfile;
+          reject(e);
+        }
       };
       worker.onerror = () => {
         finish();
         reject(Error('All-frame worker failed.'));
       };
-      worker.postMessage({ file });
+      worker.postMessage({ file, thumbnails: options.thumbnails });
     });
     const thumbnails = result.thumbnails;
     delete result.thumbnails;
@@ -338,7 +343,7 @@
         file: file.name,
         ...result,
         limit:
-          'MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once; audio/other streams are NOT validated. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity or all-stream integrity verdict.',
+          'MP4/H264, one video track,1-2000frames,50MiB,10minutes. Every video sample decoded once. Every audio track with a browser-supported codec (for example AAC) is fully decoded and counted; unsupported audio codecs are reported NOT VALIDATED, and damaged supported streams fail the analysis. All track samples including edit pre-roll measured with simple edit timestamp shift. Decoder concealment may hide damaged content. No semantic/event/authenticity verdict.',
       },
       frames,
     };
@@ -402,6 +407,20 @@
       }
       if (['keyframe', 'video-inspector'].includes(id) && !mp4)
         throw new Error('This tool supports MP4/MOV containers only.');
+      if (id === 'video-inspector') {
+        try {
+          const validation = await allFrameMeasurements(file, id, { thumbnails: false });
+          result.summary.streamValidation = validation.summary;
+        } catch (e) {
+          if (!e.outOfProfile) throw e;
+          result.summary.streamValidation = {
+            validation: 'NOT RUN',
+            reason:
+              'This file is outside the supported all-stream validation profile: ' +
+              String(e.message || e),
+          };
+        }
+      }
       const capture = async (seconds) => {
         const target = Math.max(0, Math.min(seconds, video.duration - 0.001));
         if (Math.abs(video.currentTime - target) > 0.0001)
