@@ -93,3 +93,72 @@ test('visible black text on white background is a negative, not suspicious merel
   );
   expect(r.candidates).toHaveLength(0);
 });
+
+const O2 = {
+  ...O,
+  transform: 12,
+  constructPath: 91,
+  clip: 29,
+  eoClip: 30,
+  endPath: 28,
+  fill: 22,
+  eoFill: 23,
+  fillStroke: 24,
+  eoFillStroke: 25,
+};
+test('clip correlation flags text whose box center lies outside the clip rect', () => {
+  const ops = {
+    fnArray: [91, 29, 7],
+    argsArray: [
+      [[19], [10, 10, 20, 20]],
+      null,
+      text('clipped away'),
+    ],
+  };
+  const v = { transform: [1, 0, 0, 1, 0, 0] };
+  const out = C.operators(ops, O2, v);
+  expect(out[0].clips).toHaveLength(1);
+  const r = C.classify(
+    out,
+    { items: [{ str: 'clipped away', width: 30, height: 10, transform: [10, 0, 0, 10, 200, 50] }] },
+    image(false),
+    v,
+  );
+  expect(r.candidates[0].signals).toContain('CLIPPED_OUTSIDE_CLIP_REGION');
+});
+test('a later opaque fill covering the text box flags overpaint; earlier paint does not', () => {
+  const v = { transform: [1, 0, 0, 1, 0, 0] };
+  const ops = {
+    fnArray: [7, 91, 22],
+    argsArray: [text('covered'), [[19], [15, 45, 40, 15]], null],
+  };
+  const out = C.operators(ops, O2, v);
+  expect(out.paintEvents).toHaveLength(1);
+  const r = C.classify(
+    out,
+    { items: [{ str: 'covered', width: 30, height: 10, transform: [10, 0, 0, 10, 20, 50] }] },
+    image(false),
+    v,
+  );
+  expect(r.candidates[0].signals).toContain('OVERPAINTED_BY_LATER_FILL');
+  const earlier = {
+    fnArray: [91, 22, 7],
+    argsArray: [[[19], [15, 45, 40, 15]], null, text('covered')],
+  };
+  const r2 = C.classify(
+    C.operators(earlier, O2, v),
+    { items: [{ str: 'covered', width: 30, height: 10, transform: [10, 0, 0, 10, 20, 50] }] },
+    image(false),
+    v,
+  );
+  expect(r2.candidates).toHaveLength(0);
+});
+test('glyph runs without unicode mapping are disclosed, never claimed visible or hidden', () => {
+  const ops = { fnArray: [7], argsArray: [[[ {unicode:null}, {unicode:null} ]]] };
+  const out = C.operators(ops, O2, { transform: [1, 0, 0, 1, 0, 0] });
+  expect(out[0].unmappedGlyphs).toBe(2);
+  const r = C.classify(out, { items: [] }, image(false), { transform: [1, 0, 0, 1, 0, 0] });
+  expect(r.candidates).toHaveLength(0);
+  expect(r.unmappedTextOperators).toHaveLength(1);
+  expect(r.unmappedTextOperators[0].reason).toContain('no printable Unicode mapping');
+});

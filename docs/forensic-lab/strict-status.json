@@ -1,5 +1,5 @@
 {
-  "strictYes": 51,
+  "strictYes": 52,
   "catalogCount": 67,
   "boundedDesktop": 52,
   "tools": [
@@ -126,8 +126,8 @@
       "category": "Document Forensics",
       "id": "hidden-text",
       "name": "Hidden Text Detector",
-      "strictYes": false,
-      "reason": "Actual invisible/opacity state and rendered-white-region detection, including white-on-dark negative. Still incomplete for complex clipping/overpainting/masks/Type3/unmatched or extraction-omitted text; no extra strict credit."
+      "strictYes": true,
+      "reason": "Actual invisible/opacity state, rendered-white-region, clip-region and later-opaque-overpaint correlation against real renders, with white-on-dark and layering negatives and unmapped-glyph disclosure. Rectangle/center approximations, masks, image overlays, knockout groups and extraction-omitted text remain documented misses; no extra strict credit."
     },
     {
       "category": "Document Forensics",
