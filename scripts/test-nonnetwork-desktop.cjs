@@ -814,6 +814,39 @@ async function run() {
       assert((await page.$eval('#flWorkspace', (e) => e.textContent)).includes('unavailable'));
       await capture('blockchain-' + id + '-unavailable');
     }
+    {
+      await openTool('blockchain', 'chain-custody');
+      await page.waitForSelector('[aria-label="Handover from"]');
+      await page.type('[aria-label="Blockchain lookup value"]', '7');
+      await page.type('[aria-label="Handover from"]', 'Officer A (desktop test)');
+      await page.type('[aria-label="Handover to"]', 'Forensic Lab (desktop test)');
+      await page.type('[aria-label="Handover purpose"]', 'Seizure hand-in');
+      await page.evaluate(() =>
+        [...document.querySelectorAll('#flWorkspace button')]
+          .find((e) => e.textContent === 'Record handover locally')
+          .click(),
+      );
+      await page.waitForFunction(
+        () =>
+          document.querySelector('#flWorkspace').textContent.includes('LOCAL ONLY, unverified'),
+      );
+      let text = await page.$eval('#flWorkspace', (e) => e.textContent);
+      assert(text.includes('Officer A (desktop test) -> Forensic Lab (desktop test)'));
+      assert(text.includes('Local records only'));
+      await capture('blockchain-chain-custody-local-handover');
+      await page.evaluate(() =>
+        [...document.querySelectorAll('#flWorkspace button')]
+          .find((e) => e.textContent.includes('View sample records'))
+          .click(),
+      );
+      await page.waitForFunction(
+        () => document.querySelector('#flWorkspace').textContent.includes('SAMPLE - '),
+      );
+      text = await page.$eval('#flWorkspace', (e) => e.textContent);
+      assert(text.includes('not real evidence, not saved to your browser'));
+      await capture('blockchain-chain-custody-sample-records');
+      console.log('PASS chain-custody local handover record + clearly-marked sample records');
+    }
     for (const [category, id] of [
       ['image', 'ai-tamper'],
       ['ai', 'ai-assistant'],
