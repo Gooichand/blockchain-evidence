@@ -246,7 +246,7 @@
       "id": "provenance",
       "name": "Evidence Provenance",
       "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. Local-only custody history view now works in the browser (records are unshared, unsigned, unverified claims, clearly labelled); real provenance credit still needs shared verifiable records, defined identity authority and the contract/schema decision."
     },
     {
       "category": "Cryptography",

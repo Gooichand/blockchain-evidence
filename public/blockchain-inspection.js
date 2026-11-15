@@ -23,8 +23,8 @@
       'Enter an evidence ID. Reads only Stored and Sealed events in the last 2000 blocks, capped at 200 logs. The contract has no custody-transfer event, so a complete on-chain chain of custody is unavailable. Missing recent events do not mean no history exists. Below the live read you can keep handover records in this browser only: they are unverified local claims, not shared, not signed and not on the blockchain.',
     ],
     provenance: [
-      'Amoy Evidence Record',
-      'Enter an evidence ID. Reads the stored hash, untrusted metadata, uploader address, timestamp and seal flag at one block. These are contract claims, not physical-world origin, verified identity or full provenance.',
+      'Amoy Evidence Record + Local Custody History',
+      'Enter an evidence ID. Reads the stored hash, untrusted metadata, uploader address, timestamp and seal flag at one block. These are contract claims, not physical-world origin, verified identity or full provenance. Below the live read you can view the handover history kept in this browser only: unverified local claims, not shared, not signed and not on the blockchain. Record handovers in the Chain of Custody tool.',
     ],
   };
   const kinds = {
@@ -232,6 +232,78 @@
       ws.append(mode, gateway);
     }
     ws.append(input, run, demo, out);
+    if (tool.id === 'provenance' && root.CustodyStore) {
+      const store = root.CustodyStore.createLocalStore();
+      const panel = n('section', undefined, {
+        style: 'margin-top:28px;border-top:1px solid #ddd;padding-top:20px;',
+      });
+      panel.appendChild(n('h3', 'Local custody history (this browser only)'));
+      panel.appendChild(
+        n('p', root.CustodyStore.LIMIT, {
+          style:
+            'padding:12px;background:#f8fafc;line-height:1.6;border:1px solid #ddd;border-radius:10px;',
+        }),
+      );
+      const viewBtn = n('button', 'View local custody history', {
+          type: 'button',
+          class: 'fl-btn fl-btn-primary',
+        }),
+        histOut = n('section', undefined, { role: 'status', style: 'margin-top:16px;' });
+      panel.append(viewBtn, histOut);
+      ws.appendChild(panel);
+      viewBtn.onclick = async () => {
+        viewBtn.disabled = true;
+        try {
+          const evidenceId = validate(tool.id, input.value);
+          const records = await store.listHandovers(evidenceId);
+          histOut.replaceChildren();
+          if (!records.length) {
+            histOut.appendChild(
+              n(
+                'p',
+                'No local handover records for this evidence ID. Record them in the Chain of Custody tool - absence here is not proof none exist.',
+              ),
+            );
+            return;
+          }
+          histOut.appendChild(
+            n(
+              'strong',
+              'Claimed origin: ' +
+                records[0].from +
+                ' - ' +
+                records.length +
+                ' local handover record(s), LOCAL ONLY, unverified:',
+            ),
+          );
+          const ul = n('ul', undefined, { style: 'line-height:1.8;' });
+          records.forEach((r, i) =>
+            ul.appendChild(
+              n(
+                'li',
+                '#' +
+                  (i + 1) +
+                  ' ' +
+                  new Date(r.at).toLocaleString() +
+                  ': ' +
+                  r.from +
+                  ' -> ' +
+                  r.to +
+                  ' (' +
+                  r.purpose +
+                  ')' +
+                  (r.notes ? ' - ' + r.notes : ''),
+              ),
+            ),
+          );
+          histOut.appendChild(ul);
+        } catch (e) {
+          histOut.replaceChildren(n('p', e.message || 'Could not read local history.', { role: 'alert' }));
+        } finally {
+          viewBtn.disabled = false;
+        }
+      };
+    }
     if (tool.id === 'chain-custody' && root.CustodyStore) {
       const store = root.CustodyStore.createLocalStore();
       const panel = n('section', undefined, {

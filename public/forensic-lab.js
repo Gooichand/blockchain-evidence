@@ -95,7 +95,7 @@
         { id: 'block-explorer', name: 'Block Explorer', icon: 'blocks', status: 'beta', desc: 'Browse blocks and confirmations.' },
         { id: 'ipfs-viewer', name: 'IPFS Viewer', icon: 'database', status: 'coming-soon', desc: 'Inspect IPFS-stored evidence objects.' },
         { id: 'chain-custody', name: 'Chain of Custody', icon: 'link', status: 'available', desc: 'Follow custody events on-chain and record local-only handovers.' },
-        { id: 'provenance', name: 'Evidence Provenance', icon: 'waypoints', status: 'beta', desc: 'Trace evidence origin and history.' },
+        { id: 'provenance', name: 'Evidence Provenance', icon: 'waypoints', status: 'beta', desc: 'Trace evidence origin, history and local-only custody records.' },
       ],
     },
     {
