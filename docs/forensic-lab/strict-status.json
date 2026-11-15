@@ -337,7 +337,7 @@
       "id": "custody-timeline",
       "name": "Chain of Custody Timeline",
       "strictYes": false,
-      "reason": "Imported claims, no verified signed handoffs."
+      "reason": "Imported claims, no verified signed handoffs. Local custody records from the browser store now render through the same validated timeline path (clearly labelled LOCAL ONLY, unverified); strict credit still needs verifiable source records, trusted identity bindings and the contract/schema decision."
     },
     {
       "category": "Utilities",

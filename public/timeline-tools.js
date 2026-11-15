@@ -11,8 +11,8 @@
       'Combines investigation events from up to 10 local JSON files, fingerprints exact source bytes and sorts explicit-offset times. Optional extra source files are merged with the Evidence Vault JSON. Correlation candidates require an exact nonempty evidenceId match across different source files within the chosen time window. This is an explicit deterministic rule, not proof of causality, identity, accurate clocks or true events. Input event arrays need timestamp, type and description; event claims remain unverified.',
     ],
     'custody-timeline': [
-      'Imported Custody Timeline',
-      'Sorts imported JSON events of type custody. Entries remain unverified claims; actor can describe a claimed handoff. It does not verify identities, signatures, uninterrupted custody or on-chain records, and missing transfers cannot be detected.',
+      'Custody Timeline (Imported or Local Records)',
+      'Sorts imported JSON events of type custody, or the handover records kept in this browser by the Chain of Custody tool. Entries remain unverified claims; actor can describe a claimed handoff. It does not verify identities, signatures, uninterrupted custody or on-chain records, and missing transfers cannot be detected. Local records are LOCAL ONLY - not shared, not signed, not on the blockchain.',
     ],
   };
   const types = {
@@ -137,6 +137,37 @@
         }
     }
     return candidates;
+  }
+  /* Map local custody-store handovers into custody events and run them through
+     the same normalize() validation/sorting as imported JSON, so the display
+     path is identical and only the storage source differs. */
+  async function custodyFromStore(store, evidenceId) {
+    if (!store || typeof store.listHandovers !== 'function')
+      throw Error('Local custody store unavailable.');
+    evidenceId = String(evidenceId || '').trim();
+    if (!evidenceId) throw Error('Enter an evidence ID.');
+    const records = await store.listHandovers(evidenceId);
+    const raw = records.map((r) => ({
+      timestamp: r.at,
+      type: 'custody',
+      description:
+        (r.sample ? 'SAMPLE - ' : '') +
+        r.from +
+        ' -> ' +
+        r.to +
+        ' (' +
+        r.purpose +
+        ')' +
+        (r.notes ? ' - ' + r.notes : ''),
+      actor: r.from,
+      evidenceId: r.evidenceId,
+    }));
+    const result = normalize('custody-timeline', JSON.stringify(raw));
+    result.localRecordsOnly = true;
+    result.limit =
+      'Local custody records only - kept in this browser, not shared, not signed, not on the blockchain. ' +
+      result.limit;
+    return result;
   }
   async function deriveEvidence(file) {
     if (file.size > 5 * 1024 * 1024) throw Error('Derived timeline limit:5MiB.');
@@ -330,6 +361,61 @@
       }),
       out = n('section', undefined, { role: 'status', style: 'margin-top:20px;' });
     ws.append(run, demo, out);
+    if (tool.id === 'custody-timeline' && root.CustodyStore) {
+      const localPanel = n('section', undefined, { style: 'margin-top:12px;' });
+      const idInput = n('input', undefined, {
+          type: 'text',
+          placeholder: 'Evidence ID used in Chain of Custody',
+          'aria-label': 'Local custody evidence ID',
+          style: 'width:100%;box-sizing:border-box;margin-bottom:8px;',
+        }),
+        loadBtn = n('button', 'Load from local custody records', {
+          type: 'button',
+          class: 'fl-btn fl-btn-ghost',
+        });
+      localPanel.append(n('p', root.CustodyStore.LIMIT), idInput, loadBtn);
+      ws.appendChild(localPanel);
+      loadBtn.onclick = async () => {
+        loadBtn.disabled = true;
+        out.replaceChildren(n('p', 'Reading local records...'));
+        try {
+          const store = root.CustodyStore.createLocalStore();
+          const result = await custodyFromStore(store, idInput.value);
+          if (!ws.contains(out)) return;
+          out.replaceChildren();
+          out.appendChild(
+            n('strong', 'LOCAL RECORDS ONLY - unverified claims from this browser.'),
+          );
+          out.appendChild(n('p', result.limit));
+          if (!result.events.length) {
+            out.appendChild(
+              n(
+                'p',
+                'No local custody records for this evidence ID. Record them in the Chain of Custody tool - absence here is not proof none exist.',
+              ),
+            );
+            return;
+          }
+          const ul = n('ul', undefined, { style: 'line-height:1.8;' });
+          for (const e of result.events)
+            ul.appendChild(
+              n(
+                'li',
+                new Date(e.timestamp).toLocaleString() +
+                  ' - ' +
+                  e.description +
+                  (e.actor ? ' (claimed by ' + e.actor + ')' : ''),
+              ),
+            );
+          out.appendChild(ul);
+        } catch (e) {
+          if (ws.contains(out))
+            out.replaceChildren(n('p', e.message || 'Could not read local records.', { role: 'alert' }));
+        } finally {
+          loadBtn.disabled = false;
+        }
+      };
+    }
     async function execute(d) {
       run.disabled = demo.disabled = true;
       out.replaceChildren(n('p', 'Sorting locally...'));
@@ -439,7 +525,7 @@
     run.onclick = () => execute(false);
     demo.onclick = () => execute(true);
   }
-  const api = { mount, analyze, normalize, timestamp, correlate, deriveEvidence, ready, guides };
+  const api = { mount, analyze, normalize, timestamp, correlate, deriveEvidence, custodyFromStore, ready, guides };
   root.TimelineTools = api;
   if (typeof module === 'object') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

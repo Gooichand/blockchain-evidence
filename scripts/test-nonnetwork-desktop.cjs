@@ -865,6 +865,23 @@ async function run() {
       assert(hist.includes('Officer A (desktop test) -> Forensic Lab (desktop test)'));
       await capture('blockchain-provenance-local-history');
       console.log('PASS provenance shows local custody history with honest labelling');
+      await openTool('timeline', 'custody-timeline');
+      await page.waitForSelector('[aria-label="Local custody evidence ID"]');
+      await page.type('[aria-label="Local custody evidence ID"]', '7');
+      await page.evaluate(() =>
+        [...document.querySelectorAll('#flWorkspace button')]
+          .find((e) => e.textContent === 'Load from local custody records')
+          .click(),
+      );
+      await page.waitForFunction(
+        () =>
+          document.querySelector('#flWorkspace').textContent.includes('LOCAL RECORDS ONLY'),
+      );
+      const tl = await page.$eval('#flWorkspace', (e) => e.textContent);
+      assert(tl.includes('Officer A (desktop test) -> Forensic Lab (desktop test)'));
+      assert(tl.includes('not shared, not signed, not on the blockchain'));
+      await capture('timeline-custody-local-records');
+      console.log('PASS custody-timeline renders local custody records with honest labelling');
     }
     for (const [category, id] of [
       ['image', 'ai-tamper'],

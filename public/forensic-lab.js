@@ -129,7 +129,7 @@
       tools: [
         { id: 'evidence-timeline', name: 'Evidence Timeline', icon: 'list-ordered', status: 'available', desc: 'Chronological reconstruction of evidence events.' },
         { id: 'invest-timeline', name: 'Investigation Timeline', icon: 'history', status: 'available', desc: 'Case activity correlation across sources.' },
-        { id: 'custody-timeline', name: 'Chain of Custody Timeline', icon: 'link', status: 'beta', desc: 'Visual custody transfer sequence.' },
+        { id: 'custody-timeline', name: 'Chain of Custody Timeline', icon: 'link', status: 'beta', desc: 'Visual custody transfer sequence from imports or local records.' },
       ],
     },
     {
