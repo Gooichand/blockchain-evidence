@@ -239,7 +239,7 @@
       "id": "chain-custody",
       "name": "Chain of Custody",
       "strictYes": false,
-      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history."
+      "reason": "Real local-EVM tested; public Amoy not confirmed, no complete custody/provenance history. Local-only handover recording now works in the browser (records are unshared, unsigned, unverified claims, clearly labelled); real custody credit still needs shared verifiable records and the contract/schema decision."
     },
     {
       "category": "Blockchain",

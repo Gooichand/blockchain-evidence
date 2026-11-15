@@ -19,8 +19,8 @@
       'Paste a raw or DAG-PB SHA-256 CID. Choose local CAR to verify and reconstruct the linked UnixFS file/directory from a supplied CAR, or explicit public-gateway mode to retrieve a CAR through the signed-in server, then verify every block and link locally. Local raw mode checks a selected raw block only. Public gateway requests disclose the CID to the chosen public gateway (trustless-gateway.link or 4everland.io); no evidence is uploaded or pinned. A public gateway can be unreachable or rate-limited at any time; an unavailable gateway returns an explicit error, never a fabricated object. Maximum 10 MiB CAR/1000 blocks/5 MiB reconstructed file/200 directory entries, 25-second worker. Previews are inert untrusted text; downloads may be unsafe to open. Pin status, authorship, malware safety and continued availability are not verified. Missing blocks, tampering and unsupported objects fail closed.',
     ],
     'chain-custody': [
-      'Recent Stored/Sealed Events',
-      'Enter an evidence ID. Reads only Stored and Sealed events in the last 2000 blocks, capped at 200 logs. The contract has no custody-transfer event, so a complete chain of custody is unavailable. Missing recent events do not mean no history exists.',
+      'Recent Stored/Sealed Events + Local Handover Records',
+      'Enter an evidence ID. Reads only Stored and Sealed events in the last 2000 blocks, capped at 200 logs. The contract has no custody-transfer event, so a complete on-chain chain of custody is unavailable. Missing recent events do not mean no history exists. Below the live read you can keep handover records in this browser only: they are unverified local claims, not shared, not signed and not on the blockchain.',
     ],
     provenance: [
       'Amoy Evidence Record',
@@ -232,6 +232,117 @@
       ws.append(mode, gateway);
     }
     ws.append(input, run, demo, out);
+    if (tool.id === 'chain-custody' && root.CustodyStore) {
+      const store = root.CustodyStore.createLocalStore();
+      const panel = n('section', undefined, {
+        style: 'margin-top:28px;border-top:1px solid #ddd;padding-top:20px;',
+      });
+      panel.appendChild(n('h3', 'Local handover records (this browser only)'));
+      panel.appendChild(
+        n('p', root.CustodyStore.LIMIT, {
+          style:
+            'padding:12px;background:#f8fafc;line-height:1.6;border:1px solid #ddd;border-radius:10px;',
+        }),
+      );
+      const fFrom = n('input', undefined, {
+          type: 'text',
+          placeholder: 'From (person/unit)',
+          'aria-label': 'Handover from',
+          style: 'width:100%;box-sizing:border-box;margin-bottom:8px;',
+        }),
+        fTo = n('input', undefined, {
+          type: 'text',
+          placeholder: 'To (person/unit)',
+          'aria-label': 'Handover to',
+          style: 'width:100%;box-sizing:border-box;margin-bottom:8px;',
+        }),
+        fPurpose = n('input', undefined, {
+          type: 'text',
+          placeholder: 'Purpose',
+          'aria-label': 'Handover purpose',
+          style: 'width:100%;box-sizing:border-box;margin-bottom:8px;',
+        }),
+        fNotes = n('input', undefined, {
+          type: 'text',
+          placeholder: 'Notes (optional)',
+          'aria-label': 'Handover notes',
+          style: 'width:100%;box-sizing:border-box;margin-bottom:8px;',
+        }),
+        recordBtn = n('button', 'Record handover locally', {
+          type: 'button',
+          class: 'fl-btn fl-btn-primary',
+        }),
+        sampleBtn = n('button', '\u25b6 View sample records', {
+          type: 'button',
+          class: 'fl-btn fl-btn-ghost',
+        }),
+        listOut = n('section', undefined, { role: 'status', style: 'margin-top:16px;' });
+      panel.append(fFrom, fTo, fPurpose, fNotes, recordBtn, sampleBtn, listOut);
+      ws.appendChild(panel);
+      function renderRecords(records, heading) {
+        listOut.replaceChildren();
+        if (heading)
+          listOut.appendChild(
+            n('strong', heading),
+          );
+        if (!records.length) {
+          listOut.appendChild(n('p', 'No local handover records for this evidence ID.'));
+          return;
+        }
+        const ul = n('ul', undefined, { style: 'line-height:1.8;' });
+        for (const r of records)
+          ul.appendChild(
+            n(
+              'li',
+              (r.sample ? 'SAMPLE - ' : '') +
+                new Date(r.at).toLocaleString() +
+                ': ' +
+                r.from +
+                ' -> ' +
+                r.to +
+                ' (' +
+                r.purpose +
+                ')' +
+                (r.notes ? ' - ' + r.notes : ''),
+            ),
+          );
+        listOut.appendChild(ul);
+      }
+      recordBtn.onclick = async () => {
+        recordBtn.disabled = true;
+        try {
+          const evidenceId = validate(tool.id, input.value);
+          const rec = await store.recordHandover({
+            evidenceId,
+            from: fFrom.value,
+            to: fTo.value,
+            purpose: fPurpose.value,
+            notes: fNotes.value,
+          });
+          fFrom.value = fTo.value = fPurpose.value = fNotes.value = '';
+          renderRecords(
+            await store.listHandovers(evidenceId),
+            'Recorded locally at ' + new Date(rec.at).toLocaleString() + ' - LOCAL ONLY, unverified:',
+          );
+        } catch (e) {
+          listOut.replaceChildren(n('p', e.message || 'Could not record handover.', { role: 'alert' }));
+        } finally {
+          recordBtn.disabled = false;
+        }
+      };
+      sampleBtn.onclick = async () => {
+        sampleBtn.disabled = true;
+        try {
+          const demoStore = await root.CustodyStore.createDemoStore();
+          renderRecords(
+            await demoStore.listHandovers('SAMPLE-EV-001'),
+            'SAMPLE records only - not real evidence, not saved to your browser:',
+          );
+        } finally {
+          sampleBtn.disabled = false;
+        }
+      };
+    }
     async function execute(example) {
       run.disabled = demo.disabled = true;
       out.replaceChildren(
